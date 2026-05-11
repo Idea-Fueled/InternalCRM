@@ -27,11 +27,11 @@ axiosInstance.interceptors.response.use(
     (error) => {
         if (error.response) {
             if (error.response.status === 401) {
-                console.error("Unauthorized access! Token may be missing or expired.");
+                // Silently handle 401 - AuthContext or ProtectedRoute will redirect
             }
 
             if (error.response.status === 403) {
-                console.error("Access Denied! You do not have the required role.");
+                // Silently handle 403 - Permission denied
             }
         } else if (error.request) {
             console.error("Network error! Server might be down or not reachable.");

@@ -9,11 +9,11 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            setLoading(true);
             const res = await authService.checkAuth();
             setUser(res.data.user);
         } catch (err) {
             setUser(null);
+            // Don't show error toast for background auth check
         } finally {
             setLoading(false);
         }
@@ -24,18 +24,32 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (formData) => {
-        const res = await authService.login(formData);
-        await checkAuth(); // Refresh user state after login
-        return res;
+        try {
+            const res = await authService.login(formData);
+            await checkAuth(); 
+            return res;
+        } catch (error) {
+            throw error;
+        }
     };
 
     const logout = async () => {
-        await authService.logout();
-        setUser(null);
+        try {
+            await authService.logout();
+        } catch (err) {
+            console.error("Logout error:", err);
+        } finally {
+            setUser(null);
+            window.location.href = "/"; // Force redirect on logout
+        }
     };
 
+    const value = React.useMemo(() => ({
+        user, loading, login, logout, checkAuth
+    }), [user, loading]);
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, checkAuth }}>
+        <AuthContext.Provider value={value}>
             {children}
         </AuthContext.Provider>
     );
