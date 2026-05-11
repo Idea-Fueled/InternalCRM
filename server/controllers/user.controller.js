@@ -74,17 +74,17 @@ export const loginController = async (req, res) => {
             })
         }
 
+        // Token payload uses { id, role } — must match auth middleware
         const token = await generateToken(user._id, user.role);
-        
-        // Ensure secure cookie for cross-origin production
+
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true, 
+            secure: true,
             sameSite: "none",
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
-        console.log(`Login successful: ${email}`);
+        console.log(`Login successful for: ${email} (role: ${user.role})`);
 
         return res.status(200).json({
             message: "Login successful!",
@@ -101,6 +101,32 @@ export const loginController = async (req, res) => {
         return res.status(500).json({
             message: "Internal server error during login"
         })
+    }
+}
+
+// Returns the currently authenticated user from req.user (set by protectRoute)
+// No DB query needed — avoids any route ordering collision with /:_id
+export const getCurrentUser = (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+        const user = req.user.toObject ? req.user.toObject() : { ...req.user };
+        delete user.password;
+        return res.status(200).json({
+            success: true,
+            user: {
+                _id: user._id,
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                department: user.department || null
+            }
+        });
+    } catch (error) {
+        console.error("getCurrentUser error:", error);
+        return res.status(500).json({ message: "Failed to get current user" });
     }
 }
 
@@ -172,11 +198,11 @@ export const updateUser = async (req, res) => {
     }
 }
 
-//soft delete
+// Soft delete
 export const deleteUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const user = await User.findById(id);
+        const { _id } = req.params;
+        const user = await User.findById(_id);
         if (!user) {
             return res.status(404).json({
                 message: "User not found!"
@@ -197,8 +223,8 @@ export const deleteUser = async (req, res) => {
 
 export const restoreUser = async (req, res) => {
     try {
-        const { id } = req.params;
-        const user = await User.findById(id);
+        const { _id } = req.params;
+        const user = await User.findById(_id);
         if (!user) {
             return res.status(404).json({
                 message: "User not found!"
