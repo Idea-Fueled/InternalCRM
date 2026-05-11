@@ -12,6 +12,12 @@ const Card = ({ children, className = "" }) => (
 );
 
 const EmployeesDashboard = () => {
+    const [employees, setEmployees] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({ total: 0, active: 0, withOverdue: 0, inactive: 0 });
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
+    const [isDepartmentsModalOpen, setIsDepartmentsModalOpen] = useState(false);
     const [newEmployee, setNewEmployee] = useState({
         name: "",
         email: "",

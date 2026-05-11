@@ -26,6 +26,11 @@ const PRIORITY_COLORS = {
 };
 
 const KanbanDashboard = () => {
+    const [tasks, setTasks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [newTask, setNewTask] = useState({
         taskName: "",

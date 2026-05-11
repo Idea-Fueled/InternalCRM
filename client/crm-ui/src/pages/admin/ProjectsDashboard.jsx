@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { projectService } from "../../api/services";
+import { projectService, userService } from "../../api/services";
+import { toast } from "sonner";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 
@@ -9,6 +10,7 @@ const ProjectsDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [statusFilter, setStatusFilter] = useState("Status: All");
     const [users, setUsers] = useState([]);
     const [newProject, setNewProject] = useState({
         projectName: "",
