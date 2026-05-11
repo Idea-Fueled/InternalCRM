@@ -52,40 +52,54 @@ export const loginController = async (req, res) => {
 
         if (!email || !password) {
             return res.status(400).json({
-                message: "All fields are required!"
+                message: "Email and password are required!"
             })
         }
 
+        console.log(`Login attempt for: ${email}`);
+
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({
-                message: "User not found!"
+            console.log(`User not found: ${email}`);
+            return res.status(401).json({
+                message: "Invalid email or password. Please check your credentials."
             })
         }
 
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
+            console.log(`Invalid password for: ${email}`);
             return res.status(401).json({
-                message: "Invalid password!"
+                message: "Invalid email or password. Please check your credentials."
             })
         }
 
         const token = await generateToken(user._id, user.role);
+        
+        // Ensure secure cookie for cross-origin production
         res.cookie("token", token, {
             httpOnly: true,
-            secure: true,
+            secure: true, 
             sameSite: "none",
-            maxAge: 1 * 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
+        console.log(`Login successful: ${email}`);
+
         return res.status(200).json({
-            message: "Login successfully!",
-            data: user.email
+            message: "Login successful!",
+            user: {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                role: user.role
+            }
         })
 
     } catch (error) {
+        console.error("Login controller error:", error);
         return res.status(500).json({
-            message: error.message
+            message: "Internal server error during login"
         })
     }
 }

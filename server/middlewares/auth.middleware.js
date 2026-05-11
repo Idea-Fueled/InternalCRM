@@ -5,27 +5,30 @@ export const protectRoute = async (req, res, next) => {
     try {
         const token = req.cookies.token;
         if (!token) {
+            console.log("No token found in cookies");
             return res.status(401).json({
                 message: "Unauthorized - No token found!"
             })
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log(`Token verified for user ID: ${decoded.id}`);
 
         const user = await User.findById(decoded.id).select("-password");
 
         if (!user) {
-            return res.status(404).json({
-                message: "User not found!"
+            console.log(`User not found in DB for ID: ${decoded.id}`);
+            return res.status(401).json({
+                message: "User no longer exists!"
             })
         }
 
         req.user = user;
-
         next();
     } catch (error) {
+        console.error("Auth middleware error:", error.message);
         return res.status(401).json({
-            message: "Invalid token!"
+            message: "Invalid or expired token!"
         })
     }
 }
