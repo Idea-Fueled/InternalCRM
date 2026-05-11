@@ -21,7 +21,19 @@ router.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
 });
 router.get("/me", protectRoute, (req, res) => {
-    res.status(200).json({ user: req.user });
+    if (!req.user) {
+        return res.status(401).json({ message: "User not found" });
+    }
+    res.status(200).json({ 
+        user: {
+            _id: req.user._id,
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            department: req.user.department
+        }
+    });
 });
 
 export default router;

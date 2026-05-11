@@ -18,13 +18,15 @@ export default function WelcomePage() {
 
     useEffect(() => {
         if (user && !authLoading) {
+            console.log("Redirecting user based on role:", user.role);
             const roleRoutes = {
                 admin: "/admin/dashboard",
                 TL: "/teamlead/dashboard",
                 developer: "/developer/dashboard",
                 qa: "/qa/dashboard"
             };
-            navigate(roleRoutes[user.role] || "/admin/dashboard");
+            const target = roleRoutes[user.role] || "/admin/dashboard";
+            navigate(target, { replace: true });
         }
     }, [user, authLoading, navigate]);
 
@@ -38,7 +40,6 @@ export default function WelcomePage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Trim and validate fields
         const email = formData.email.trim();
         const password = formData.password.trim();
 
@@ -50,12 +51,8 @@ export default function WelcomePage() {
         try {
             setLoading(true);
             const res = await login({ email, password });
-            
-            if (res.status === 200 || res.status === 201) {
-                toast.success(res.data.message || "Login successful");
-            } else {
-                throw new Error("Login failed");
-            }
+            toast.success(res.data.message || "Login successful");
+            // useEffect will handle navigation once user state updates
         } catch (err) {
             console.error("Login error:", err);
             const errorMsg = err.response?.data?.message || "Invalid credentials. Please try again.";

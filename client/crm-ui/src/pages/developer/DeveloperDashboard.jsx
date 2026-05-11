@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { dashboardService, taskService } from '../../api/services';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
+import { useNavigate } from 'react-router-dom';
 import {
     CheckCircle2, Clock, AlertCircle, PlayCircle, ShieldCheck,
     Calendar, FileText, MessageSquare, AlertTriangle, ArrowRight,
@@ -18,6 +19,7 @@ const STATUS_COLORS = {
 };
 
 const DeveloperDashboard = () => {
+    const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [recentActivity, setRecentActivity] = useState([]);
     const [selectedTask, setSelectedTask] = useState(null);
@@ -50,6 +52,7 @@ const DeveloperDashboard = () => {
             if (formattedTasks.length > 0) setSelectedTask(formattedTasks[0]);
             
         } catch (err) {
+            console.error("Dashboard fetch error:", err);
             if (err.response?.status === 401) {
                 navigate("/");
             }

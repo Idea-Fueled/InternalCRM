@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { dashboardService, taskService } from '../../api/services';
@@ -28,6 +29,7 @@ const PRIORITY_COLORS = {
 };
 
 const QADashboard = () => {
+    const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0 });
     const [searchQuery, setSearchQuery] = useState("");
@@ -51,6 +53,9 @@ const QADashboard = () => {
             }
         } catch (error) {
             console.error("Failed to fetch QA dashboard data:", error);
+            if (error.response?.status === 401) {
+                navigate("/");
+            }
         } finally {
             setLoading(false);
         }

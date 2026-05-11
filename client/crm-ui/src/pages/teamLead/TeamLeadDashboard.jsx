@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { dashboardService, projectService, userService, taskService } from '../../api/services';
@@ -15,6 +15,7 @@ import {
   Activity
 } from 'lucide-react';
 const TeamLeadDashboard = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         totalTeamTasks: 0,
         activeProjects: 0,
@@ -74,6 +75,9 @@ const TeamLeadDashboard = () => {
                 }
             } catch (error) {
                 console.error("Failed to fetch team lead dashboard data", error);
+                if (error.response?.status === 401) {
+                    navigate("/");
+                }
             } finally {
                 setLoading(false);
             }
