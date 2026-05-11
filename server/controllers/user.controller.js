@@ -25,19 +25,17 @@ export const registerUser = async (req, res, next) => {
             name, email, password: hashedPassword, role, department
         });
 
-        const token = await generateToken(user._id, user.role);
-        res.cookie("token", token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "none",
-            maxAge: 1 * 24 * 60 * 60 * 1000
-        })
-
         await user.save();
 
         return res.status(201).json({
             message: "User created successfully!",
-            user
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                department: user.department
+            }
         })
     } catch (error) {
         return res.status(500).json({
