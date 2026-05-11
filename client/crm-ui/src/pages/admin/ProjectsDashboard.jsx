@@ -200,7 +200,8 @@ const ProjectsDashboard = () => {
                                     </div>
 
                                 </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                     )}
