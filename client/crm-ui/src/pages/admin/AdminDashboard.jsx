@@ -38,6 +38,9 @@ const AdminDashboard = () => {
             const sortedTasks = (taskRes.data.tasks || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
             setRecentTasks(sortedTasks.slice(0, 5));
         } catch (err) {
+            if (err.response?.status === 401) {
+                navigate("/");
+            }
             setError(err.response?.data?.message || "Failed to load dashboard data");
         } finally {
             setLoading(false);
@@ -199,21 +202,29 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5">
                                     {/* Feed Items */}
-                                    {recentTasks.map((task, i) => (
-                                        <div key={task._id || i} className="flex gap-4 text-sm relative">
-                                            {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100"></div>}
-                                            <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-100 text-blue-700 uppercase`}>
-                                                {task.taskName.charAt(0)}
+                                    {recentTasks.length === 0 ? (
+                                        <div className="h-full flex flex-col items-center justify-center py-10 opacity-60">
+                                            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                             </div>
-                                            <div className="pt-1.5">
-                                                <p className="text-slate-600 leading-snug">
-                                                    Task <span className="font-semibold text-slate-800">{task.taskName}</span> was created
-                                                </p>
-                                                <span className="text-xs font-medium text-slate-400 mt-1 block">Status: {task.status}</span>
-                                            </div>
+                                            <p className="text-sm font-semibold text-slate-500 text-center">No recent activity found</p>
                                         </div>
-                                    ))}
-                                    {recentTasks.length === 0 && <div className="text-slate-400 text-sm font-medium text-center">No recent activity</div>}
+                                    ) : (
+                                        recentTasks.map((task, i) => (
+                                            <div key={task._id || i} className="flex gap-4 text-sm relative">
+                                                {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100"></div>}
+                                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-100 text-blue-700 uppercase`}>
+                                                    {task.taskName.charAt(0)}
+                                                </div>
+                                                <div className="pt-1.5">
+                                                    <p className="text-slate-600 leading-snug">
+                                                        Task <span className="font-semibold text-slate-800">{task.taskName}</span> was created
+                                                    </p>
+                                                    <span className="text-xs font-medium text-slate-400 mt-1 block">Status: {task.status}</span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                                 <div className="p-3 border-t border-slate-100 bg-slate-50/50">
                                     <button className="w-full py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition">View Full History</button>

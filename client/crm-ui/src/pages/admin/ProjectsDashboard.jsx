@@ -17,6 +17,9 @@ const ProjectsDashboard = () => {
             // The backend populates teamLead
             setProjects(res.data.projects || []);
         } catch (err) {
+            if (err.response?.status === 401) {
+                navigate("/");
+            }
             setError(err.response?.data?.message || "Failed to load projects");
         } finally {
             setLoading(false);
@@ -104,91 +107,101 @@ const ProjectsDashboard = () => {
                     ) : (
                     <div className="space-y-3">
                         {/* Projects List (Card-Table Hybrid) */}
-                        {filteredProjects.map((project, i) => {
-                            const progress = project.status === "Completed" ? 100 : 50;
-                            const leadName = project.teamLead?.name || "Unassigned";
-                            const leadInitial = project.teamLead?.name?.charAt(0) || "U";
-                            const membersCount = project.teamMembers?.length || 0;
-                            const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A";
-                            const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
-
-                            return (
-                            <div key={project._id || i} className="group bg-white rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer">
-                                
-                                {/* Left: Name & Desc */}
-                                <div className="w-full xl:w-[30%]">
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{project._id.slice(-6).toUpperCase()}</span>
-                                        <h3 className="text-base font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
-                                    </div>
-                                    <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed pr-4">{project.description}</p>
+                        {filteredProjects.length === 0 ? (
+                            <div className="bg-white rounded-2xl p-20 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm opacity-60">
+                                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                    <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                                 </div>
-
-                                <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase">
-                                            {leadInitial}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Team Lead</span>
-                                            <span className="text-sm font-semibold text-slate-700">{leadName}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-                                        <div className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> {startDate}</div>
-                                        <span className="text-slate-300">-</span>
-                                        <div className="flex items-center gap-1.5">{endDate}</div>
-                                    </div>
-                                </div>
-
-                                {/* Middle 2: Stats & Progress */}
-                                <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                    <div className="flex items-center justify-between">
-                                        <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
-                                            project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                            project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                            'bg-slate-50 text-slate-500 border-slate-200'
-                                        }`}>
-                                            {project.status}
-                                        </span>
-                                        
-                                        <div className="flex items-center gap-3 text-xs">
-                                            <span className="flex items-center gap-1.5 font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
-                                                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                                {membersCount}
-                                            </span>
-                                            <span className="flex items-center gap-1 font-semibold text-slate-600">
-                                                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                                                Tasks
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="w-full">
-                                        <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
-                                            <span>PROGRESS</span>
-                                            <span>{progress}%</span>
-                                        </div>
-                                        <div className="w-full bg-slate-100 rounded-full h-1.5">
-                                            <div 
-                                                className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
-                                                style={{ width: `${progress}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right: Action */}
-                                <div className="w-full xl:w-[20%] flex items-center justify-end border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                    <button className="w-full sm:w-auto px-5 py-2.5 bg-slate-50 text-blue-600 font-bold text-sm rounded-xl border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-2 shadow-sm">
-                                        Open Kanban
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
-                                    </button>
-                                </div>
-
+                                <h3 className="text-xl font-bold text-slate-800">No projects found</h3>
+                                <p className="text-sm font-medium text-slate-500 mt-1 max-w-xs text-center">It looks like there are no projects matching your criteria. Start by creating a new one!</p>
+                                <button onClick={() => setIsModalOpen(true)} className="mt-6 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm">Create Project</button>
                             </div>
-                        )})}
-                        {projects.length === 0 && <div className="text-center p-10 text-slate-500">No projects found.</div>}
+                        ) : (
+                            filteredProjects.map((project, i) => {
+                                const progress = project.status === "Completed" ? 100 : 50;
+                                const leadName = project.teamLead?.name || "Unassigned";
+                                const leadInitial = project.teamLead?.name?.charAt(0) || "U";
+                                const membersCount = project.teamMembers?.length || 0;
+                                const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A";
+                                const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
+
+                                return (
+                                <div key={project._id || i} className="group bg-white rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer">
+                                    
+                                    {/* Left: Name & Desc */}
+                                    <div className="w-full xl:w-[30%]">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{project._id.slice(-6).toUpperCase()}</span>
+                                            <h3 className="text-base font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
+                                        </div>
+                                        <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed pr-4">{project.description}</p>
+                                    </div>
+
+                                    <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase">
+                                                {leadInitial}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Team Lead</span>
+                                                <span className="text-sm font-semibold text-slate-700">{leadName}</span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+                                            <div className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> {startDate}</div>
+                                            <span className="text-slate-300">-</span>
+                                            <div className="flex items-center gap-1.5">{endDate}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Middle 2: Stats & Progress */}
+                                    <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
+                                        <div className="flex items-center justify-between">
+                                            <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
+                                                project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                'bg-slate-50 text-slate-500 border-slate-200'
+                                            }`}>
+                                                {project.status}
+                                            </span>
+                                            
+                                            <div className="flex items-center gap-3 text-xs">
+                                                <span className="flex items-center gap-1.5 font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
+                                                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                    {membersCount}
+                                                </span>
+                                                <span className="flex items-center gap-1 font-semibold text-slate-600">
+                                                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                                                    Tasks
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="w-full">
+                                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
+                                                <span>PROGRESS</span>
+                                                <span>{progress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                                <div 
+                                                    className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                                                    style={{ width: `${progress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Right: Action */}
+                                    <div className="w-full xl:w-[20%] flex items-center justify-end border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
+                                        <button className="w-full sm:w-auto px-5 py-2.5 bg-slate-50 text-blue-600 font-bold text-sm rounded-xl border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                            Open Kanban
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
+                                        </button>
+                                    </div>
+
+                                </div>
+                            ))
+                        )}
                     </div>
                     )}
                     

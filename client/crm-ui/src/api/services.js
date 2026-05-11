@@ -37,3 +37,10 @@ export const userService = {
     deleteUser: (id) => axiosInstance.delete(`/users/delete/${id}`),
     restoreUser: (id) => axiosInstance.put(`/users/restore/${id}`),
 };
+
+// Auth Services
+export const authService = {
+    login: (data) => axiosInstance.post('/users/login', data),
+    register: (data) => axiosInstance.post('/users/register', data),
+    logout: () => axiosInstance.post('/users/logout'),
+};

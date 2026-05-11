@@ -50,6 +50,9 @@ const DeveloperDashboard = () => {
             if (formattedTasks.length > 0) setSelectedTask(formattedTasks[0]);
             
         } catch (err) {
+            if (err.response?.status === 401) {
+                navigate("/");
+            }
             setError(err.response?.data?.message || "Failed to load dashboard");
         } finally {
             setLoading(false);
@@ -159,34 +162,44 @@ const DeveloperDashboard = () => {
                                     </h2>
                                 </div>
                                 <div className="divide-y divide-slate-100">
-                                    {tasks.map(task => (
-                                        <div
-                                            key={task.id}
-                                            onClick={() => setSelectedTask(task)}
-                                            className={`p-5 flex items-center justify-between cursor-pointer transition-colors ${selectedTask?.id === task.id ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'hover:bg-slate-50 border-l-4 border-l-transparent'}`}
-                                        >
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-1.5">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                                                        {task.project}
-                                                    </span>
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${STATUS_COLORS[task.status]}`}>
-                                                        {task.status}
-                                                    </span>
-                                                </div>
-                                                <h3 className={`font-semibold text-base ${selectedTask?.id === task.id ? 'text-blue-700' : 'text-slate-800'}`}>
-                                                    {task.taskName}
-                                                </h3>
-                                                <div className="flex items-center text-xs text-slate-500 mt-2 font-medium">
-                                                    <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-                                                    {task.startDate} - <span className={new Date(task.endDate) < new Date() ? 'text-rose-500 ml-1 font-bold' : 'ml-1'}>{task.endDate}</span>
-                                                </div>
+                                    {tasks.length === 0 ? (
+                                        <div className="p-20 text-center flex flex-col items-center justify-center opacity-40">
+                                            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                                <FileText className="w-10 h-10 text-slate-400" />
                                             </div>
-                                            <div className="ml-4 text-slate-400">
-                                                <ArrowRight className={`w-5 h-5 transition-transform ${selectedTask?.id === task.id ? 'text-blue-500 translate-x-1' : ''}`} />
-                                            </div>
+                                            <h3 className="text-lg font-bold text-slate-800">No tasks assigned</h3>
+                                            <p className="text-sm font-medium text-slate-500 mt-1">Enjoy your free time or contact your Admin!</p>
                                         </div>
-                                    ))}
+                                    ) : (
+                                        tasks.map(task => (
+                                            <div
+                                                key={task.id}
+                                                onClick={() => setSelectedTask(task)}
+                                                className={`p-5 flex items-center justify-between cursor-pointer transition-colors ${selectedTask?.id === task.id ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'hover:bg-slate-50 border-l-4 border-l-transparent'}`}
+                                            >
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-3 mb-1.5">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                            {task.project}
+                                                        </span>
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${STATUS_COLORS[task.status]}`}>
+                                                            {task.status}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className={`font-semibold text-base ${selectedTask?.id === task.id ? 'text-blue-700' : 'text-slate-800'}`}>
+                                                        {task.taskName}
+                                                    </h3>
+                                                    <div className="flex items-center text-xs text-slate-500 mt-2 font-medium">
+                                                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                                                        {task.startDate} - <span className={new Date(task.endDate) < new Date() ? 'text-rose-500 ml-1 font-bold' : 'ml-1'}>{task.endDate}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="ml-4 text-slate-400">
+                                                    <ArrowRight className={`w-5 h-5 transition-transform ${selectedTask?.id === task.id ? 'text-blue-500 translate-x-1' : ''}`} />
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
                                 </div>
                             </div>
 
