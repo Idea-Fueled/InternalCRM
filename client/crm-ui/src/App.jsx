@@ -21,6 +21,8 @@ import QADashboard from "./pages/qa/QADashboard";
 import QAReviews from "./pages/qa/QAReviews";
 import QAKanban from "./pages/qa/QAKanban";
 
+import { Toaster } from "sonner";
+
 const App = () => {
 
   const router = createBrowserRouter([{
@@ -108,6 +110,7 @@ const App = () => {
 
   return (
     <AuthProvider>
+      <Toaster position="top-center" richColors />
       <RouterProvider router={router} />
     </AuthProvider>
   );
