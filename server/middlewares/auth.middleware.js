@@ -53,6 +53,16 @@ export const isTeamLead = (req, res, next) => {
     next();
 }
 
+// Allows EITHER admin OR Team Lead — use this instead of chaining isAdmin + isTeamLead
+export const isAdminOrTL = (req, res, next) => {
+    if (req.user.role !== "admin" && req.user.role !== "TL") {
+        return res.status(403).json({
+            message: "Access denied - Admin or Team Lead only"
+        })
+    }
+    next();
+}
+
 export const isDeveloper = (req, res, next) => {
     if (req.user.role !== "developer") {
         return res.status(403).json({
