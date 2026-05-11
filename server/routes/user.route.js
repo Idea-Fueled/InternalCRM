@@ -21,19 +21,30 @@ router.post("/logout", (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
 });
 router.get("/me", protectRoute, (req, res) => {
-    if (!req.user) {
-        return res.status(401).json({ message: "User not found" });
-    }
-    res.status(200).json({ 
-        user: {
-            _id: req.user._id,
-            id: req.user._id,
-            name: req.user.name,
-            email: req.user.email,
-            role: req.user.role,
-            department: req.user.department
+    try {
+        if (!req.user) {
+            return res.status(401).json({ message: "User not found" });
         }
-    });
+        
+        // Ensure we send a clean object
+        const user = req.user.toObject ? req.user.toObject() : req.user;
+        delete user.password;
+        
+        res.status(200).json({ 
+            success: true,
+            user: {
+                _id: user._id,
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                department: user.department
+            }
+        });
+    } catch (error) {
+        console.error("Error in /me route:", error);
+        res.status(500).json({ message: "Internal Server Error in /me" });
+    }
 });
 
 export default router;
