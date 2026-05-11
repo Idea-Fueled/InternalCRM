@@ -37,12 +37,30 @@ export default function WelcomePage() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Trim and validate fields
+        const email = formData.email.trim();
+        const password = formData.password.trim();
+
+        if (!email || !password) {
+            toast.error("Please enter both email and password.");
+            return;
+        }
+
         try {
             setLoading(true);
-            const res = await login({ email: formData.email, password: formData.password });
-            toast.success(res.data.message || "Login successful");
+            const res = await login({ email, password });
+            
+            if (res.status === 200 || res.status === 201) {
+                toast.success(res.data.message || "Login successful");
+            } else {
+                throw new Error("Login failed");
+            }
         } catch (err) {
-            toast.error(err.response?.data?.message || "Invalid credentials. Please try again.");
+            console.error("Login error:", err);
+            const errorMsg = err.response?.data?.message || "Invalid credentials. Please try again.";
+            toast.error(errorMsg);
+            setFormData(prev => ({ ...prev, password: "" }));
         } finally {
             setLoading(false);
         }
@@ -111,10 +129,10 @@ export default function WelcomePage() {
 
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || authLoading}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base py-3.5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? "Authenticating..." : "Sign In to Idea Fueled"}
+                            {loading ? "Authenticating..." : (authLoading ? "Initializing..." : "Sign In to Idea Fueled")}
                         </button>
                     </form>
 
