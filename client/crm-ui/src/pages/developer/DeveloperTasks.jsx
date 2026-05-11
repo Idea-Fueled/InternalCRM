@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 
 import { taskService } from '../../api/services';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
 
 const STATUS_COLORS = {
   'New': 'bg-slate-100 text-slate-700 border-slate-200',
@@ -24,6 +26,7 @@ const PRIORITY_COLORS = {
 };
 
 const DeveloperTasks = () => {
+    const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -32,31 +35,34 @@ const DeveloperTasks = () => {
     const [selectedTask, setSelectedTask] = useState(null);
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+    const fetchTasks = async () => {
+        if (!user?._id) return;
+        try {
+            setLoading(true);
+            const res = await taskService.getTasksByUser(user._id);
+            const formattedTasks = (res.data.tasks || []).map(t => ({
+                id: t._id,
+                taskName: t.taskName,
+                project: t.project?.projectName || "Unassigned",
+                status: t.status || "New",
+                startDate: t.startDate ? new Date(t.startDate).toLocaleDateString() : "N/A",
+                endDate: t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A",
+                priority: t.priority || "Medium",
+                description: t.description || "",
+                qaNotes: t.qaNotes || ""
+            }));
+            setTasks(formattedTasks);
+        } catch (err) {
+            console.error("Failed to load tasks", err);
+            toast.error("Failed to load tasks");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchTasks = async () => {
-            try {
-                setLoading(true);
-                const res = await taskService.getAllTasks();
-                const formattedTasks = (res.data.tasks || []).map(t => ({
-                    id: t._id,
-                    taskName: t.taskName,
-                    project: t.project?.name || "Unassigned",
-                    status: t.status || "New",
-                    startDate: t.startDate ? new Date(t.startDate).toLocaleDateString() : "N/A",
-                    endDate: t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A",
-                    priority: t.priority || "Medium",
-                    description: t.description || "",
-                    qaNotes: t.qaNotes || ""
-                }));
-                setTasks(formattedTasks);
-            } catch (err) {
-                console.error("Failed to load tasks", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchTasks();
-    }, []);
+    }, [user]);
 
     const handleTaskClick = (task) => {
         setSelectedTask(task);
@@ -81,8 +87,10 @@ const DeveloperTasks = () => {
             );
             setTasks(updatedTasks);
             setSelectedTask({ ...selectedTask, status: newStatus });
+            toast.success(`Task moved to ${newStatus}`);
         } catch (err) {
             console.error("Failed to update status", err);
+            toast.error("Failed to update status");
         }
     };
 

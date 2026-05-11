@@ -10,13 +10,9 @@ import { useAuth } from "../context/AuthContext";
 export default function WelcomePage() {
     const navigate = useNavigate();
     const { login, user, loading: authLoading } = useAuth();
-    const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
         email: "",
-        password: "",
-        name: "",
-        role: "admin", // Default for initial setup
-        department: ""
+        password: ""
     });
     const [loading, setLoading] = useState(false);
 
@@ -43,16 +39,10 @@ export default function WelcomePage() {
         e.preventDefault();
         try {
             setLoading(true);
-            if (isLogin) {
-                const res = await login({ email: formData.email, password: formData.password });
-                toast.success(res.data.message || "Login successful");
-            } else {
-                const res = await authService.register(formData);
-                toast.success(res.data.message || "Account created successfully");
-                setIsLogin(true);
-            }
+            const res = await login({ email: formData.email, password: formData.password });
+            toast.success(res.data.message || "Login successful");
         } catch (err) {
-            toast.error(err.response?.data?.message || "Authentication failed");
+            toast.error(err.response?.data?.message || "Invalid credentials. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -88,26 +78,11 @@ export default function WelcomePage() {
 
                 <div className="w-full max-w-md space-y-8 relative z-10 bg-white/70 backdrop-blur-2xl p-10 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white animate-in fade-in zoom-in-95 duration-700 delay-300 fill-mode-both">
                     <div className="text-center">
-                        <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">{isLogin ? "Welcome back" : "Get started"}</h2>
-                        <p className="text-slate-500 mt-1.5 text-sm font-medium">{isLogin ? "Sign in to access your dashboard." : "Create your account to start managing tasks."}</p>
+                        <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Welcome back</h2>
+                        <p className="text-slate-500 mt-1.5 text-sm font-medium">Sign in to access your dashboard.</p>
                     </div>
 
                     <form className="space-y-6" onSubmit={handleSubmit}>
-                        {!isLogin && (
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700 ml-1">Full Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    required
-                                    placeholder="John Doe"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full px-5 py-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm"
-                                />
-                            </div>
-                        )}
-
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
                             <input
@@ -134,53 +109,14 @@ export default function WelcomePage() {
                             />
                         </div>
 
-                        {!isLogin && (
-                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700 ml-1">Role</label>
-                                    <select 
-                                        name="role" 
-                                        value={formData.role} 
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-slate-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm"
-                                    >
-                                        <option value="admin">Admin</option>
-                                        <option value="TL">Team Lead</option>
-                                        <option value="developer">Developer</option>
-                                        <option value="qa">QA</option>
-                                    </select>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-semibold text-slate-700 ml-1">Department</label>
-                                    <input
-                                        type="text"
-                                        name="department"
-                                        placeholder="Engineering"
-                                        value={formData.department}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-slate-900 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm"
-                                    />
-                                </div>
-                             </div>
-                        )}
-
                         <button
                             type="submit"
                             disabled={loading}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base py-3.5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? "Authenticating..." : (isLogin ? "Sign In to Idea Fueled" : "Create Account")}
+                            {loading ? "Authenticating..." : "Sign In to Idea Fueled"}
                         </button>
                     </form>
-
-                    <div className="text-center pt-4">
-                        <button 
-                            onClick={() => setIsLogin(!isLogin)}
-                            className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                            {isLogin ? "Don't have an account? Register" : "Already have an account? Login"}
-                        </button>
-                    </div>
 
                     <div className="relative pt-8">
                         <div className="absolute inset-0 flex items-center">

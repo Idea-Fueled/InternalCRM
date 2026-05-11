@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
-import { userService, taskService } from "../../api/services";
+import { userService, taskService, authService } from "../../api/services";
+import { toast } from "sonner";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -11,61 +12,99 @@ const Card = ({ children, className = "" }) => (
 );
 
 const EmployeesDashboard = () => {
-    const [isDepartmentsModalOpen, setIsDepartmentsModalOpen] = useState(false);
-    const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
-    const [employees, setEmployees] = useState([]);
-    const [stats, setStats] = useState({ total: 0, active: 0, withOverdue: 0, inactive: 0 });
-    const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
+    const [newEmployee, setNewEmployee] = useState({
+        name: "",
+        email: "",
+        password: "",
+        role: "developer",
+        department: "Engineering",
+        teamLead: ""
+    });
+    const [isCreating, setIsCreating] = useState(false);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [userRes, taskRes] = await Promise.all([
+                userService.getAllUsers(),
+                taskService.getAllTasks()
+            ]);
+
+            if (userRes.data?.data && taskRes.data?.success) {
+                const allUsers = userRes.data.data;
+                const allTasks = taskRes.data.tasks;
+
+                const formattedEmployees = allUsers.map(u => {
+                    const userTasks = allTasks.filter(t => t.assignedTo?._id === u._id);
+                    const done = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
+                    const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
+                    
+                    return {
+                        id: u._id,
+                        name: u.name,
+                        role: u.role,
+                        email: u.email,
+                        dept: u.department || "Engineering",
+                        lead: u.teamLead?.name || "N/A",
+                        tasks: { total: userTasks.length, done, overdue },
+                        status: u.isActive ? (overdue > 0 ? "Overdue" : "Active") : "Inactive",
+                        raw: u
+                    };
+                });
+
+                setEmployees(formattedEmployees);
+                
+                setStats({
+                    total: formattedEmployees.length,
+                    active: formattedEmployees.filter(e => e.status !== "Inactive").length,
+                    withOverdue: formattedEmployees.filter(e => e.tasks.overdue > 0).length,
+                    inactive: formattedEmployees.filter(e => e.status === "Inactive").length
+                });
+            }
+        } catch (err) {
+            console.error("Failed to fetch employees data", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
-                const [userRes, taskRes] = await Promise.all([
-                    userService.getAllUsers(),
-                    taskService.getAllTasks()
-                ]);
-
-                if (userRes.data?.data && taskRes.data?.success) {
-                    const allUsers = userRes.data.data;
-                    const allTasks = taskRes.data.tasks;
-
-                    const formattedEmployees = allUsers.map(u => {
-                        const userTasks = allTasks.filter(t => t.assignedTo?._id === u._id);
-                        const done = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
-                        const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
-                        
-                        return {
-                            id: u._id,
-                            name: u.name,
-                            role: u.role,
-                            email: u.email,
-                            dept: u.department || "Engineering",
-                            lead: u.teamLead?.name || "N/A",
-                            tasks: { total: userTasks.length, done, overdue },
-                            status: u.isActive ? (overdue > 0 ? "Overdue" : "Active") : "Inactive",
-                            raw: u
-                        };
-                    });
-
-                    setEmployees(formattedEmployees);
-                    
-                    setStats({
-                        total: formattedEmployees.length,
-                        active: formattedEmployees.filter(e => e.status !== "Inactive").length,
-                        withOverdue: formattedEmployees.filter(e => e.tasks.overdue > 0).length,
-                        inactive: formattedEmployees.filter(e => e.status === "Inactive").length
-                    });
-                }
-            } catch (err) {
-                console.error("Failed to fetch employees data", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchData();
     }, []);
+
+    const handleAddEmployee = async (e) => {
+        e.preventDefault();
+        try {
+            setIsCreating(true);
+            await authService.register(newEmployee);
+            toast.success("Employee added successfully");
+            setIsAddEmployeeModalOpen(false);
+            setNewEmployee({
+                name: "",
+                email: "",
+                password: "",
+                role: "developer",
+                department: "Engineering",
+                teamLead: ""
+            });
+            fetchData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to add employee");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleStatusToggle = async (emp) => {
+        try {
+            const newStatus = !emp.raw.isActive;
+            await userService.updateUser(emp.id, { isActive: newStatus });
+            toast.success(`Employee ${newStatus ? 'activated' : 'deactivated'}`);
+            fetchData();
+        } catch (err) {
+            toast.error("Failed to update status");
+        }
+    };
 
     const filteredEmployees = employees.filter(e => 
         e.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -79,6 +118,8 @@ const EmployeesDashboard = () => {
         { name: "Marketing", members: employees.filter(e => e.dept === "Marketing").length },
         { name: "Quality Assurance", members: employees.filter(e => e.dept === "Quality Assurance").length },
     ];
+
+    const teamLeads = employees.filter(e => e.role === "TL" || e.role === "admin");
 
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
@@ -208,13 +249,16 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     <div className="flex items-center gap-4">
-                                        <span className={`px-3 py-1 text-xs font-bold rounded-full border ${
-                                            emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                            emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                            'bg-slate-50 text-slate-500 border-slate-200'
-                                        }`}>
+                                        <button 
+                                            onClick={() => handleStatusToggle(emp)}
+                                            className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${
+                                                emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' :
+                                                emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' :
+                                                'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                                            }`}
+                                        >
                                             {emp.status}
-                                        </span>
+                                        </button>
                                         <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100">
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
                                         </button>
@@ -280,7 +324,7 @@ const EmployeesDashboard = () => {
             {/* Add Employee Modal */}
             {isAddEmployeeModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col transform transition-all">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-800 tracking-tight">Add Employee</h2>
                             <button onClick={() => setIsAddEmployeeModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
@@ -288,41 +332,75 @@ const EmployeesDashboard = () => {
                             </button>
                         </div>
                         <div className="p-6">
-                            <form className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                            <form id="addEmployeeForm" onSubmit={handleAddEmployee} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Full Name *</label>
-                                    <input type="text" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" />
+                                    <input 
+                                        type="text" 
+                                        required
+                                        value={newEmployee.name}
+                                        onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                    />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Email *</label>
-                                    <input type="email" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" />
+                                    <input 
+                                        type="email" 
+                                        required
+                                        value={newEmployee.email}
+                                        onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                    />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Role</label>
-                                    <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer">
-                                        <option>Developer</option>
-                                        <option>Designer</option>
-                                        <option>Manager</option>
+                                    <select 
+                                        value={newEmployee.role}
+                                        onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                    >
+                                        <option value="developer">Developer</option>
+                                        <option value="TL">Team Lead</option>
+                                        <option value="qa">QA</option>
+                                        <option value="admin">Admin</option>
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Password *</label>
-                                    <input type="password" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" />
+                                    <input 
+                                        type="password" 
+                                        required
+                                        value={newEmployee.password}
+                                        onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                    />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Department</label>
-                                    <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer">
-                                        <option>—</option>
-                                        <option>Engineering</option>
-                                        <option>Design</option>
+                                    <select 
+                                        value={newEmployee.department}
+                                        onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                    >
+                                        <option value="Engineering">Engineering</option>
+                                        <option value="Design">Design</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="QA">QA</option>
+                                        <option value="Management">Management</option>
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Team Lead</label>
-                                    <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer">
-                                        <option>—</option>
-                                        <option>Marcus Chen</option>
-                                        <option>Sarah Kim</option>
+                                    <select 
+                                        value={newEmployee.teamLead}
+                                        onChange={(e) => setNewEmployee({...newEmployee, teamLead: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                    >
+                                        <option value="">—</option>
+                                        {teamLeads.map(tl => (
+                                            <option key={tl.id} value={tl.id}>{tl.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                             </form>
@@ -331,8 +409,13 @@ const EmployeesDashboard = () => {
                             <button onClick={() => setIsAddEmployeeModalOpen(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition text-sm">
                                 Cancel
                             </button>
-                            <button className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm">
-                                Create
+                            <button 
+                                type="submit"
+                                form="addEmployeeForm"
+                                disabled={isCreating}
+                                className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
+                            >
+                                {isCreating ? "Creating..." : "Create Employee"}
                             </button>
                         </div>
                     </div>

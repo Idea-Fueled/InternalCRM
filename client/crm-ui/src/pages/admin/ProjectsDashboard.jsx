@@ -9,17 +9,32 @@ const ProjectsDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState("Status: All");
+    const [users, setUsers] = useState([]);
+    const [newProject, setNewProject] = useState({
+        projectName: "",
+        description: "",
+        teamLead: "",
+        startDate: "",
+        endDate: "",
+        teamMembers: []
+    });
+    const [isCreating, setIsCreating] = useState(false);
+
+    const fetchInitialData = async () => {
+        try {
+            const res = await userService.getAllUsers();
+            setUsers(res.data.data || []);
+        } catch (err) {
+            console.error("Failed to load users", err);
+        }
+    };
+
     const fetchProjects = async () => {
         try {
             setLoading(true);
             const res = await projectService.getAllProjects();
-            // The backend populates teamLead
             setProjects(res.data.projects || []);
         } catch (err) {
-            if (err.response?.status === 401) {
-                navigate("/");
-            }
             setError(err.response?.data?.message || "Failed to load projects");
         } finally {
             setLoading(false);
@@ -28,14 +43,52 @@ const ProjectsDashboard = () => {
 
     useEffect(() => {
         fetchProjects();
+        fetchInitialData();
     }, []);
+
+    const handleCreateProject = async (e) => {
+        e.preventDefault();
+        try {
+            setIsCreating(true);
+            await projectService.createProject(newProject);
+            toast.success("Project created successfully");
+            setIsModalOpen(false);
+            setNewProject({
+                projectName: "",
+                description: "",
+                teamLead: "",
+                startDate: "",
+                endDate: "",
+                teamMembers: []
+            });
+            fetchProjects();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to create project");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const toggleMember = (userId) => {
+        setNewProject(prev => {
+            const exists = prev.teamMembers.includes(userId);
+            if (exists) {
+                return { ...prev, teamMembers: prev.teamMembers.filter(id => id !== userId) };
+            } else {
+                return { ...prev, teamMembers: [...prev.teamMembers, userId] };
+            }
+        });
+    };
 
     const filteredProjects = projects.filter(proj => {
         const matchesSearch = proj.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                              proj.description?.toLowerCase().includes(searchQuery.toLowerCase());
+                               proj.description?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === "Status: All" || proj.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
+
+    const teamLeads = users.filter(u => u.role === "TL" || u.role === "admin");
+
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
             <AdminSidebar />
@@ -62,7 +115,7 @@ const ProjectsDashboard = () => {
                         <div className="relative w-full xl:w-96">
                             <input
                                 type="text"
-                                placeholder="Search projects by name or ID..."
+                                placeholder="Search projects by name..."
                                 className="w-full pl-10 pr-4 py-2 bg-slate-50/50 border-none rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition text-sm font-medium placeholder-slate-400"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -82,12 +135,8 @@ const ProjectsDashboard = () => {
                                 <option>Status: All</option>
                                 <option>Active</option>
                                 <option>Completed</option>
-                            </select>
-                            <select className="px-4 py-2 bg-slate-50 border-none text-slate-600 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none">
-                                <option>Lead: All</option>
-                                <option>Marcus Chen</option>
-                                <option>Anita Patel</option>
-                                <option>Emily Rose</option>
+                                <option>On Track</option>
+                                <option>At Risk</option>
                             </select>
                             <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm ml-auto xl:ml-0">
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -170,10 +219,6 @@ const ProjectsDashboard = () => {
                                                     <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                                     {membersCount}
                                                 </span>
-                                                <span className="flex items-center gap-1 font-semibold text-slate-600">
-                                                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                                                    Tasks
-                                                </span>
                                             </div>
                                         </div>
                                         
@@ -231,68 +276,100 @@ const ProjectsDashboard = () => {
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <div className="px-6 py-5 space-y-4 text-sm overflow-y-auto flex-1 scrollbar-thin">
-                            <div>
-                                <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
-                                <input type="text" placeholder="e.g. E-Commerce Platform" className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" />
-                            </div>
-                            <div>
-                                <label className="block font-bold text-slate-800 mb-1.5">Description</label>
-                                <textarea placeholder="Brief project description" rows="3" className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700"></textarea>
-                            </div>
-                            <div>
-                                <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
-                                <div className="relative">
-                                    <select className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold">
-                                        <option>Rishabh Singh</option>
-                                        <option>Marcus Chen</option>
-                                        <option>Anita Patel</option>
-                                        <option>Emily Rose</option>
-                                    </select>
-                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                        <form onSubmit={handleCreateProject} className="flex flex-col flex-1 overflow-hidden">
+                            <div className="px-6 py-5 space-y-4 text-sm overflow-y-auto flex-1 scrollbar-thin">
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        required
+                                        value={newProject.projectName}
+                                        onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
+                                        placeholder="e.g. E-Commerce Platform" 
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Description</label>
+                                    <textarea 
+                                        value={newProject.description}
+                                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                                        placeholder="Brief project description" 
+                                        rows="3" 
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700"
+                                    ></textarea>
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
+                                    <div className="relative">
+                                        <select 
+                                            required
+                                            value={newProject.teamLead}
+                                            onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold"
+                                        >
+                                            <option value="">Select Team Lead</option>
+                                            {teamLeads.map(tl => (
+                                                <option key={tl._id} value={tl._id}>{tl.name}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Start Date <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="date" 
+                                            required
+                                            value={newProject.startDate}
+                                            onChange={(e) => setNewProject({...newProject, startDate: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium" 
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">End Date <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="date" 
+                                            required
+                                            value={newProject.endDate}
+                                            onChange={(e) => setNewProject({...newProject, endDate: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium" 
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
+                                    <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
+                                        {users.map((user) => (
+                                            <label key={user._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={newProject.teamMembers.includes(user._id)}
+                                                    onChange={() => toggleMember(user._id)}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer" 
+                                                />
+                                                <span className="text-slate-700 font-bold text-sm">{user.name} <span className="text-slate-400 font-medium ml-1">({user.role})</span></span>
+                                            </label>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Start Date <span className="text-red-500">*</span></label>
-                                    <input type="date" defaultValue="2026-05-01" className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium" />
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">End Date <span className="text-red-500">*</span></label>
-                                    <input type="date" className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-400 font-medium" />
-                                </div>
+                            <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    disabled={isCreating}
+                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-[#1d4ed8] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-sm disabled:opacity-50"
+                                >
+                                    {isCreating ? "Creating..." : "Create Project"}
+                                </button>
                             </div>
-                            <div>
-                                <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
-                                <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
-                                    {[
-                                        { name: "Akriti Sharma", role: "(Developer)" },
-                                        { name: "Sahil Verma", role: "(Developer)" },
-                                        { name: "Rishabh Singh", role: "(Backend Dev)" },
-                                        { name: "QA Engineer", role: "(QA)" }
-                                    ].map((member, idx) => (
-                                        <label key={idx} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
-                                            <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer" />
-                                            <span className="text-slate-700 font-bold text-sm">{member.name} <span className="text-slate-400 font-medium ml-1">{member.role}</span></span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
-                            <button onClick={() => setIsModalOpen(false)} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
-                                Cancel
-                            </button>
-                            <button onClick={() => setIsModalOpen(false)} className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-[#1d4ed8] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-sm">
-                                <div className="relative flex items-center justify-center">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg>
-                                    <svg className="w-2 h-2 text-[#1d4ed8] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-[1px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"/></svg>
-                                </div>
-                                Create Project
-                            </button>
-                        </div>
+                        </form>
                     </div>
                 </div>
             )}
