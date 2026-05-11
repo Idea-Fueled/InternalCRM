@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo-idea-fueled.png";
+import { useAuth } from "../../context/AuthContext";
 
 const AdminSidebar = ({ role = "admin" }) => {
     const navigate = useNavigate();
+    const { logout } = useAuth();
     const [isMinimized, setIsMinimized] = useState(() => {
         return localStorage.getItem("sidebarMinimized") === "true";
     });
@@ -19,6 +21,16 @@ const AdminSidebar = ({ role = "admin" }) => {
         const newState = !isMinimized;
         setIsMinimized(newState);
         localStorage.setItem("sidebarMinimized", newState);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/');
+        } catch (err) {
+            console.error("Logout failed:", err);
+            navigate('/');
+        }
     };
 
     const roleConfigs = {
@@ -139,7 +151,7 @@ const AdminSidebar = ({ role = "admin" }) => {
 
                 {/* Logout Button */}
                 <button
-                    onClick={() => navigate('/')}
+                    onClick={handleLogout}
                     className={`group flex items-center justify-center gap-3 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/20 hover:border-rose-600 transition-all duration-300 font-medium tracking-wide shadow-sm ${isMinimized ? 'px-0 w-10 h-10' : 'w-full px-4'}`}
                     title={isMinimized ? "Logout" : ""}
                 >

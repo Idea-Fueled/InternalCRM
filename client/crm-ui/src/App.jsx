@@ -1,5 +1,7 @@
 import React from "react";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import WelcomePage from "./pages/WelcomePage";
 import Layout from "./components/Layout";
 import AdminDashboard from "./pages/admin/AdminDashboard"
@@ -24,81 +26,90 @@ const App = () => {
   const router = createBrowserRouter([{
     path: "/",
     element: <Layout />,
-    children: [{
-      path: "/",
-      element: <WelcomePage />
-    },
-    {
-      path: "/admin/dashboard",
-      element: <AdminDashboard />
-    },
-    {
-      path: "/admin/employees",
-      element: <EmployeesDashboard />
-    },
-    {
-      path: "/admin/projects",
-      element: <ProjectsDashboard />
-    },
-    {
-      path: "/admin/kanban",
-      element: <KanbanDashboard />
-    },
-    {
-      path: "/admin/reports",
-      element: <ReportsDashboard />
-    },
-    {
-      path: "/admin/trash",
-      element: <TrashDashboard />
-    },
-    {
-      path: "/teamlead/dashboard",
-      element: <TeamLeadDashboard />
-    },
-    {
-      path: "/teamLead/projects",
-      element: <TeamLeadProjects />
-    },
-    {
-      path: "/teamLead/kanban",
-      element: <TeamLeadKanban />
-    },
-    {
-      path: "/teamLead/team",
-      element: <TeamLeadTeam />
-    },
-    {
-      path: "/developer/dashboard",
-      element: <DeveloperDashboard />
-    },
-    {
-      path: "/developer/my-tasks",
-      element: <DeveloperTasks />
-    },
-    {
-      path: "/developer/kanban",
-      element: <DeveloperKanban />
-    },
-    {
-      path: "/qa/dashboard",
-      element: <QADashboard />
-    },
-    {
-      path: "/qa/reviews",
-      element: <QAReviews />
-    },
-    {
-      path: "/qa/kanban",
-      element: <QAKanban />
-    }
+    children: [
+      {
+        path: "/",
+        element: <WelcomePage />
+      },
+      // Admin Routes
+      {
+        path: "/admin/dashboard",
+        element: <ProtectedRoute allowedRoles={["admin"]}><AdminDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/admin/employees",
+        element: <ProtectedRoute allowedRoles={["admin"]}><EmployeesDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/admin/projects",
+        element: <ProtectedRoute allowedRoles={["admin"]}><ProjectsDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/admin/kanban",
+        element: <ProtectedRoute allowedRoles={["admin"]}><KanbanDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/admin/reports",
+        element: <ProtectedRoute allowedRoles={["admin"]}><ReportsDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/admin/trash",
+        element: <ProtectedRoute allowedRoles={["admin"]}><TrashDashboard /></ProtectedRoute>
+      },
+      // Team Lead Routes
+      {
+        path: "/teamlead/dashboard",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><TeamLeadDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/teamLead/projects",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><TeamLeadProjects /></ProtectedRoute>
+      },
+      {
+        path: "/teamLead/kanban",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><TeamLeadKanban /></ProtectedRoute>
+      },
+      {
+        path: "/teamLead/team",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><TeamLeadTeam /></ProtectedRoute>
+      },
+      // Developer Routes
+      {
+        path: "/developer/dashboard",
+        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/developer/my-tasks",
+        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperTasks /></ProtectedRoute>
+      },
+      {
+        path: "/developer/kanban",
+        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperKanban /></ProtectedRoute>
+      },
+      // QA Routes
+      {
+        path: "/qa/dashboard",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><QADashboard /></ProtectedRoute>
+      },
+      {
+        path: "/qa/reviews",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><QAReviews /></ProtectedRoute>
+      },
+      {
+        path: "/qa/kanban",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><QAKanban /></ProtectedRoute>
+      },
+      {
+        path: "*",
+        element: <Navigate to="/" replace />
+      }
     ]
   }])
 
   return (
-    <div>
+    <AuthProvider>
       <RouterProvider router={router} />
-    </div>
+    </AuthProvider>
   );
 };
 

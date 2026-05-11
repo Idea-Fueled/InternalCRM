@@ -43,4 +43,5 @@ export const authService = {
     login: (data) => axiosInstance.post('/users/login', data),
     register: (data) => axiosInstance.post('/users/register', data),
     logout: () => axiosInstance.post('/users/logout'),
+    checkAuth: () => axiosInstance.get('/users/me'),
 };

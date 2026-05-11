@@ -12,4 +12,16 @@ router.put("/update/:_id", protectRoute, isAdmin, updateUser)
 router.delete("/delete/:_id", protectRoute, isAdmin, deleteUser)
 router.put("/restore/:_id", protectRoute, isAdmin, restoreUser);
 
+router.post("/logout", (req, res) => {
+    res.clearCookie("token", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none"
+    });
+    res.status(200).json({ message: "Logged out successfully" });
+});
+router.get("/me", protectRoute, (req, res) => {
+    res.status(200).json({ user: req.user });
+});
+
 export default router;

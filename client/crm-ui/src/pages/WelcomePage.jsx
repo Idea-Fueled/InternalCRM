@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Logo from "../components/Logo";
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom";
 import { useLottie } from "lottie-react";
 import welcomeLottie from "../../Lottie/welcome-page-lottie.json";
 import { authService } from "../api/services";
+import { useAuth } from "../context/AuthContext";
 
 export default function WelcomePage() {
     const navigate = useNavigate();
+    const { login, user, loading: authLoading } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
         email: "",
@@ -17,6 +19,18 @@ export default function WelcomePage() {
         department: "Management"
     });
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (user && !authLoading) {
+            const roleRoutes = {
+                admin: "/admin/dashboard",
+                TL: "/teamlead/dashboard",
+                developer: "/developer/dashboard",
+                qa: "/qa/dashboard"
+            };
+            navigate(roleRoutes[user.role] || "/admin/dashboard");
+        }
+    }, [user, authLoading, navigate]);
 
     const lottieOptions = {
         animationData: welcomeLottie,
@@ -30,13 +44,13 @@ export default function WelcomePage() {
         try {
             setLoading(true);
             if (isLogin) {
-                const res = await authService.login({ email: formData.email, password: formData.password });
+                const res = await login({ email: formData.email, password: formData.password });
                 toast.success(res.data.message || "Login successful");
             } else {
                 const res = await authService.register(formData);
                 toast.success(res.data.message || "Account created successfully");
+                setIsLogin(true);
             }
-            navigate("/admin/dashboard");
         } catch (err) {
             toast.error(err.response?.data?.message || "Authentication failed");
         } finally {
