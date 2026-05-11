@@ -16,7 +16,7 @@ export default function WelcomePage() {
         password: "",
         name: "",
         role: "admin", // Default for initial setup
-        department: "Management"
+        department: ""
     });
     const [loading, setLoading] = useState(false);
 
