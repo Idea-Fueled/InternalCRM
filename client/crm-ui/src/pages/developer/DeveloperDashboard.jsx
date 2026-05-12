@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     CheckCircle2, Clock, AlertCircle, PlayCircle, ShieldCheck,
     Calendar, FileText, MessageSquare, AlertTriangle, ArrowRight,
-    Activity, Star
+    Activity, Star, ClipboardList
 } from 'lucide-react';
 
 // RECENT_ACTIVITY will be handled by state
