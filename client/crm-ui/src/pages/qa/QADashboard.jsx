@@ -31,11 +31,11 @@ const PRIORITY_COLORS = {
 const QADashboard = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
-    const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0 });
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedTask, setSelectedTask] = useState(null);
-    const [recentActivity, setRecentActivity] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+    const [actionType, setActionType] = useState(null); // 'Approve' or 'Reject'
+    const [actionTaskId, setActionTaskId] = useState(null);
+    const [actionNote, setActionNote] = useState("");
+    const [actionAttachment, setActionAttachment] = useState("");
 
     const fetchDashboardData = async () => {
         try {
@@ -71,29 +71,33 @@ const QADashboard = () => {
         task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleApprove = async (taskId, e) => {
+    const openActionModal = (taskId, type, e) => {
         if (e) e.stopPropagation();
+        setActionTaskId(taskId);
+        setActionType(type);
+        setActionNote("");
+        setActionAttachment("");
+        setIsActionModalOpen(true);
+    };
+
+    const handleActionSubmit = async () => {
+        if (!actionTaskId || !actionType) return;
+        
+        const newStatus = actionType === 'Approve' ? 'Completed' : 'In Progress';
+        
         try {
-            await taskService.updateTaskStatus(taskId, "Completed");
-            setTasks(prev => prev.filter(t => t._id !== taskId));
-            if (selectedTask?._id === taskId) setSelectedTask(null);
+            await taskService.updateTaskStatus(actionTaskId, newStatus, actionNote, actionAttachment);
+            setTasks(prev => prev.filter(t => t._id !== actionTaskId));
+            if (selectedTask?._id === actionTaskId) setSelectedTask(null);
+            setIsActionModalOpen(false);
             fetchDashboardData();
         } catch (error) {
-            console.error("Failed to approve task", error);
+            console.error(`Failed to ${actionType.toLowerCase()} task`, error);
         }
     };
 
-    const handleReject = async (taskId, e) => {
-        if (e) e.stopPropagation();
-        try {
-            await taskService.updateTaskStatus(taskId, "In Progress");
-            setTasks(prev => prev.filter(t => t._id !== taskId));
-            if (selectedTask?._id === taskId) setSelectedTask(null);
-            fetchDashboardData();
-        } catch (error) {
-            console.error("Failed to reject task", error);
-        }
-    };
+    const handleApprove = (taskId, e) => openActionModal(taskId, 'Approve', e);
+    const handleReject = (taskId, e) => openActionModal(taskId, 'Reject', e);
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
@@ -430,6 +434,83 @@ const QADashboard = () => {
                                 >
                                     <CheckCircle2 className="w-4 h-4 mr-2" />
                                     Approve Task
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Action Modal (Approve/Reject) */}
+                {isActionModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                        <div 
+                            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+                            onClick={() => setIsActionModalOpen(false)}
+                        />
+                        <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative z-10 overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                            <div className={`p-6 flex items-center justify-between border-b ${actionType === 'Approve' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                                <h3 className={`text-lg font-bold flex items-center gap-2 ${actionType === 'Approve' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                                    {actionType === 'Approve' ? (
+                                        <><CheckCircle2 className="w-5 h-5" /> Approve Task</>
+                                    ) : (
+                                        <><XCircle className="w-5 h-5" /> Reject Task</>
+                                    )}
+                                </h3>
+                                <button 
+                                    onClick={() => setIsActionModalOpen(false)}
+                                    className="p-2 hover:bg-black/5 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-slate-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        {actionType === 'Approve' ? 'Approval Note' : 'Reason for Rejection'}
+                                    </label>
+                                    <textarea 
+                                        className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all min-h-[120px] resize-none"
+                                        placeholder={actionType === 'Approve' ? "Excellent work! Any final comments?" : "Please describe what needs to be fixed..."}
+                                        value={actionNote}
+                                        onChange={(e) => setActionNote(e.target.value)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                                        <span>Attachment (Optional)</span>
+                                        <span className="text-[10px] font-medium text-slate-400 normal-case">Link or File Name</span>
+                                    </label>
+                                    <div className="relative">
+                                        <Paperclip className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input 
+                                            type="text" 
+                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                            placeholder="Paste attachment link or file name..."
+                                            value={actionAttachment}
+                                            onChange={(e) => setActionAttachment(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+                                <button 
+                                    onClick={() => setIsActionModalOpen(false)}
+                                    className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleActionSubmit}
+                                    className={`flex-[2] px-4 py-3 text-white font-bold rounded-xl transition-all shadow-lg ${
+                                        actionType === 'Approve' 
+                                        ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-200' 
+                                        : 'bg-rose-500 hover:bg-rose-600 shadow-rose-200'
+                                    }`}
+                                >
+                                    Confirm {actionType}
                                 </button>
                             </div>
                         </div>
