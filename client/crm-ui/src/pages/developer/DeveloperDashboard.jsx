@@ -296,21 +296,24 @@ const DeveloperDashboard = () => {
 
                                             <div>
                                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Task Updates</h4>
-                                                <div className="space-y-3">
+                                                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                                     {selectedTask.updates.map(update => (
-                                                        <div key={update.id} className="flex items-start gap-3">
-                                                            <div className="mt-0.5">
+                                                        <div key={update.id} className="flex items-start gap-3 pb-3 border-b border-slate-50 last:border-0">
+                                                            <div className="mt-0.5 shrink-0">
                                                                 {update.type === 'status' && <Activity className="w-4 h-4 text-blue-400" />}
                                                                 {update.type === 'comment' && <MessageSquare className="w-4 h-4 text-slate-400" />}
-                                                                {update.type === 'qa' && <ShieldCheck className="w-4 h-4 text-rose-400" />}
+                                                                {update.type === 'qa' && <ShieldCheck className="w-4 h-4 text-indigo-400" />}
                                                                 {update.type === 'assignment' && <Star className="w-4 h-4 text-amber-400" />}
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-medium text-slate-700">{update.text}</p>
-                                                                <p className="text-[10px] font-bold text-slate-400 mt-0.5">{update.time}</p>
+                                                                <p className="text-sm font-medium text-slate-700 leading-snug">{update.text}</p>
+                                                                <p className="text-[10px] font-bold text-slate-400 mt-1">{update.time}</p>
                                                             </div>
                                                         </div>
                                                     ))}
+                                                    {selectedTask.updates.length === 0 && (
+                                                        <p className="text-xs text-slate-400 italic">No updates recorded yet.</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -346,21 +349,24 @@ const DeveloperDashboard = () => {
                                         Recent Notifications
                                     </h2>
                                 </div>
-                                <div className="p-5 space-y-4">
-                                        <div className="mt-8 pt-5 border-t border-slate-100 flex flex-col gap-3">
-                                            <h4 className="font-semibold text-slate-800 text-sm mb-2">Recent Activity</h4>
-                                            {recentActivity.map(activity => (
-                                                <div key={activity.id} className="flex gap-3 items-start">
-                                                    <div className="p-1.5 bg-slate-50 rounded-lg">{activity.icon}</div>
-                                                    <div>
-                                                        <p className="text-sm text-slate-700 font-medium">{activity.text}</p>
-                                                        <p className="text-xs text-slate-400 mt-0.5">{activity.time}</p>
-                                                    </div>
+                                <div className="p-5">
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                        {recentActivity.map(activity => (
+                                            <div key={activity.id} className="flex gap-3 items-start pb-3 border-b border-slate-50 last:border-0">
+                                                <div className="p-2 bg-slate-50 rounded-xl shrink-0">{activity.icon}</div>
+                                                <div>
+                                                    <p className="text-sm text-slate-700 font-medium leading-tight">{activity.text}</p>
+                                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">{activity.time}</p>
                                                 </div>
-                                            ))}
-                                            {recentActivity.length === 0 && <p className="text-sm text-slate-400">No recent activity</p>}
-                                        </div>
+                                            </div>
+                                        ))}
+                                        {recentActivity.length === 0 && (
+                                            <div className="py-10 text-center">
+                                                <p className="text-sm text-slate-400">No recent activity recorded.</p>
+                                            </div>
+                                        )}
                                     </div>
+                                </div>
                             </div>
 
                         </div>
