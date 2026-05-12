@@ -101,11 +101,11 @@ const AdminDashboard = () => {
     const teamLeads = users.filter(u => u.role === "TL" || u.role === "admin");
 
     const kpis = dashboardData ? [
-        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue" },
-        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", variant: "indigo" },
-        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", variant: "emerald" },
-        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", variant: "amber" },
-        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", variant: "rose" },
+        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue", bg: "bg-blue-50" },
+        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", variant: "indigo", bg: "bg-indigo-50" },
+        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", variant: "emerald", bg: "bg-emerald-50" },
+        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", variant: "amber", bg: "bg-amber-50" },
+        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", variant: "rose", bg: "bg-rose-50" },
     ] : [];
 
     return (
