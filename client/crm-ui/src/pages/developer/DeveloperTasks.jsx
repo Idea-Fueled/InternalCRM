@@ -299,29 +299,44 @@ const DeveloperTasks = () => {
                             <div className="p-6 border-t border-slate-100 bg-slate-50/80">
                                 <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Update Status</h4>
                                 
-                                <div className="flex items-center justify-between p-1 bg-slate-200/50 rounded-xl">
-                                    <button 
-                                        onClick={() => handleStatusUpdate('New')}
-                                        className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'New' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-                                    >
-                                        New
-                                    </button>
-                                    <button 
-                                        onClick={() => handleStatusUpdate('In Progress')}
-                                        className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'In Progress' ? 'bg-blue-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
-                                    >
-                                        In Progress
-                                    </button>
-                                    <button 
-                                        onClick={() => handleStatusUpdate('QA Review')}
-                                        className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'QA Review' ? 'bg-indigo-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
-                                    >
-                                        QA Review
-                                    </button>
-                                </div>
-                                <p className="text-[10px] text-center text-slate-400 mt-3 font-medium">
-                                    Tasks cannot be moved beyond QA Review by Developers.
-                                </p>
+                                {['QA Review', 'Completed', 'Done'].includes(selectedTask.status) ? (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                                        <div className="flex items-center justify-center text-amber-600 mb-1">
+                                            <AlertTriangle className="w-4 h-4 mr-2" />
+                                            <span className="text-xs font-bold uppercase tracking-wide">Status Locked</span>
+                                        </div>
+                                        <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
+                                            This task is currently in <span className="font-bold underline">{selectedTask.status}</span>. 
+                                            Only Admins or Team Leads can move it back to In Progress.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="flex items-center justify-between p-1 bg-slate-200/50 rounded-xl">
+                                            <button 
+                                                onClick={() => handleStatusUpdate('New')}
+                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'New' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                                            >
+                                                New
+                                            </button>
+                                            <button 
+                                                onClick={() => handleStatusUpdate('In Progress')}
+                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'In Progress' ? 'bg-blue-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                                            >
+                                                In Progress
+                                            </button>
+                                            <button 
+                                                onClick={() => handleStatusUpdate('QA Review')}
+                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'QA Review' ? 'bg-indigo-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                                            >
+                                                QA Review
+                                            </button>
+                                        </div>
+                                        <p className="text-[10px] text-center text-slate-400 mt-3 font-medium uppercase tracking-tight">
+                                            Tasks cannot be moved beyond QA Review by Developers.
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         </>
                     )}

@@ -321,19 +321,33 @@ const DeveloperDashboard = () => {
                                             </div>
                                         </div>
 
-                                        <div className="mt-8 pt-5 border-t border-slate-100 flex gap-3">
-                                            <button 
-                                                onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
-                                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm text-sm"
-                                            >
-                                                Update Status
-                                            </button>
-                                            <button 
-                                                onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
-                                                className="px-4 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm"
-                                            >
-                                                Add Comment
-                                            </button>
+                                        <div className="mt-8 pt-5 border-t border-slate-100">
+                                            {['QA Review', 'Completed', 'Done'].includes(selectedTask.status) ? (
+                                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                                                    <p className="text-xs text-amber-700 font-bold uppercase tracking-wider mb-1 flex items-center justify-center">
+                                                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Action Restricted
+                                                    </p>
+                                                    <p className="text-[11px] text-amber-600 font-medium">
+                                                        Status is currently <span className="font-bold underline">{selectedTask.status}</span>. 
+                                                        Only Admins or Team Leads can modify this task now.
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-3">
+                                                    <button 
+                                                        onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
+                                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm text-sm"
+                                                    >
+                                                        Update Status
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
+                                                        className="px-4 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm"
+                                                    >
+                                                        Add Comment
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (
