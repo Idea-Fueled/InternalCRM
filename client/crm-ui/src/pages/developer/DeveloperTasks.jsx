@@ -50,7 +50,14 @@ const DeveloperTasks = () => {
                 endDate: t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A",
                 priority: t.priority || "Medium",
                 description: t.description || "",
-                qaNotes: t.qaNotes || ""
+                qaNotes: t.qaNotes || "",
+                updates: (t.statusHistory || []).map(h => ({
+                    id: h._id,
+                    type: h.status === 'QA Review' ? 'qa' : 'status',
+                    status: h.status,
+                    notes: h.notes,
+                    time: new Date(h.changedAt).toLocaleString()
+                })).reverse()
             }));
             setTasks(formattedTasks);
         } catch (err) {
@@ -292,6 +299,43 @@ const DeveloperTasks = () => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Task Updates Section */}
+                                    <div>
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Task Updates</h4>
+                                        <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                            {selectedTask.updates?.map(update => (
+                                                <div key={update.id} className="flex gap-3">
+                                                    <div className="mt-1 shrink-0">
+                                                        {update.status === 'QA Review' ? (
+                                                            <ShieldCheck className="w-4 h-4 text-indigo-400" />
+                                                        ) : (
+                                                            <Activity className="w-4 h-4 text-blue-400" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm font-bold text-slate-700">{update.status}</p>
+                                                            {!update.notes && <p className="text-sm text-slate-400 font-medium">— No notes</p>}
+                                                        </div>
+                                                        {update.notes && (
+                                                            <div className={`mt-1.5 p-3 rounded-xl text-sm leading-relaxed ${
+                                                                update.status === 'In Progress' 
+                                                                ? 'bg-blue-50 border border-blue-100 text-blue-700 shadow-sm shadow-blue-50/50' 
+                                                                : 'bg-slate-50 border border-slate-100 text-slate-600'
+                                                            }`}>
+                                                                {update.notes}
+                                                            </div>
+                                                        )}
+                                                        <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{update.time}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {(!selectedTask.updates || selectedTask.updates.length === 0) && (
+                                                <p className="text-xs text-slate-400 italic bg-slate-50 p-4 rounded-xl text-center border border-dashed border-slate-200">No updates recorded yet.</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

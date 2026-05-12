@@ -49,12 +49,14 @@ const DeveloperDashboard = () => {
                 updates: (t.statusHistory || []).map(h => ({
                     id: h._id,
                     type: h.status === 'QA Review' ? 'qa' : 'status',
-                    text: `${h.status}: ${h.notes || 'No notes'}`,
+                    status: h.status,
+                    notes: h.notes,
                     time: new Date(h.changedAt).toLocaleString()
                 })).reverse()
             }));
             
             setTasks(formattedTasks);
+            if (formattedTasks.length > 0) setSelectedTask(formattedTasks[0]);
             
             // Extract recent activity from all tasks
             const activities = [];
@@ -309,8 +311,20 @@ const DeveloperDashboard = () => {
                                                                 {update.type === 'assignment' && <Star className="w-4 h-4 text-amber-400" />}
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-medium text-slate-700 leading-snug">{update.text}</p>
-                                                                <p className="text-[10px] font-bold text-slate-400 mt-1">{update.time}</p>
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="text-sm font-bold text-slate-700">{update.status}</p>
+                                                                    {!update.notes && <p className="text-sm text-slate-400 font-medium">— No notes</p>}
+                                                                </div>
+                                                                {update.notes && (
+                                                                    <div className={`mt-1.5 p-3 rounded-xl text-sm leading-relaxed ${
+                                                                        update.status === 'In Progress' 
+                                                                        ? 'bg-blue-50 border border-blue-100 text-blue-700 shadow-sm shadow-blue-50/50' 
+                                                                        : 'bg-slate-50 border border-slate-100 text-slate-600'
+                                                                    }`}>
+                                                                        {update.notes}
+                                                                    </div>
+                                                                )}
+                                                                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{update.time}</p>
                                                             </div>
                                                         </div>
                                                     ))}
