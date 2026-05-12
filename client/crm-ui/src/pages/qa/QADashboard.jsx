@@ -144,7 +144,6 @@ const QADashboard = () => {
                 <Topbar DashboardTile="QA Dashboard" role="qa" />
                 
                 <main className="flex-1 p-6 lg:p-8 overflow-y-auto custom-scrollbar">
-                    <div className="max-w-7xl mx-auto">
                         
                         {/* KPI Section */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -306,7 +305,6 @@ const QADashboard = () => {
                                         )}
                                     </div>
                                 </div>
-                            </div>
                         </div>
                     </div>
                 </main>
