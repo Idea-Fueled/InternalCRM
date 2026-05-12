@@ -346,7 +346,7 @@ const EmployeesDashboard = () => {
                             </button>
                         </div>
                         <div className="p-6">
-                            <form id="addEmployeeForm" onSubmit={handleAddEmployee} className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                            <form id="addEmployeeForm" onSubmit={handleAddEmployee} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Full Name *</label>
                                     <input 

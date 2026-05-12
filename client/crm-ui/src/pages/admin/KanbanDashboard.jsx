@@ -115,7 +115,7 @@ const KanbanDashboard = () => {
                             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Plus className="w-5 h-5 text-blue-600" />Create New Task</h2>
                             <button onClick={() => { setIsTaskModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition"><X className="w-5 h-5" /></button>
                         </div>
-                        <form onSubmit={handleCreateTask} className="flex flex-col flex-1 overflow-hidden">
+                        <form onSubmit={handleCreateTask} noValidate className="flex flex-col flex-1 overflow-hidden">
                             <div className="p-6 space-y-5 text-sm overflow-y-auto flex-1 custom-scrollbar">
                                 <div>
                                     <label className="block font-bold text-slate-700 mb-1.5">Task Title <span className="text-red-500">*</span></label>

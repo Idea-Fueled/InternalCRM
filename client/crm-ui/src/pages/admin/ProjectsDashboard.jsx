@@ -298,7 +298,7 @@ const ProjectsDashboard = () => {
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <form onSubmit={handleCreateProject} className="flex flex-col flex-1 overflow-hidden">
+                        <form onSubmit={handleCreateProject} noValidate className="flex flex-col flex-1 overflow-hidden">
                             <div className="px-6 py-5 space-y-4 text-sm overflow-y-auto flex-1 scrollbar-thin">
                                 <div>
                                     <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>

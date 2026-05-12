@@ -99,7 +99,7 @@ export default function WelcomePage() {
                         <p className="text-slate-500 mt-1.5 text-sm font-medium">Sign in to access your dashboard.</p>
                     </div>
 
-                    <form className="space-y-6" onSubmit={handleSubmit}>
+                    <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                         <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
                             <input
