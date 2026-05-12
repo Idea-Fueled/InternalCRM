@@ -67,6 +67,7 @@ const QADashboard = () => {
 
     const filteredTasks = tasks.filter(task => 
         task.taskName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        task.project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -191,7 +192,7 @@ const QADashboard = () => {
                                         <div className="flex-1">
                                             <div className="flex items-center gap-3 mb-2">
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
-                                                    {task.project?.name || "No Project"}
+                                                    {task.project?.projectName || task.project?.name || "No Project"}
                                                 </span>
                                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
                                                     {task.priority || "Medium"}

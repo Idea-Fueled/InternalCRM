@@ -38,7 +38,7 @@ const DeveloperDashboard = () => {
             const formattedTasks = (tasksRes.data.tasks || []).map(t => ({
                 id: t._id,
                 taskName: t.taskName,
-                project: t.project?.name || "Unassigned",
+                project: t.project?.projectName || t.project?.name || "Unassigned",
                 status: t.status || "New",
                 startDate: t.startDate ? new Date(t.startDate).toLocaleDateString() : "N/A",
                 endDate: t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A",
@@ -270,10 +270,16 @@ const DeveloperDashboard = () => {
                                         </div>
 
                                         <div className="mt-8 pt-5 border-t border-slate-100 flex gap-3">
-                                            <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm text-sm">
+                                            <button 
+                                                onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
+                                                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm text-sm"
+                                            >
                                                 Update Status
                                             </button>
-                                            <button className="px-4 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm">
+                                            <button 
+                                                onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
+                                                className="px-4 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm"
+                                            >
                                                 Add Comment
                                             </button>
                                         </div>

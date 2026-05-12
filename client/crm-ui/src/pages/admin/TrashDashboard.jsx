@@ -22,7 +22,7 @@ const TrashDashboard = () => {
                 type: "Task",
                 name: t.taskName,
                 deletedAt: t.updatedAt ? new Date(t.updatedAt).toLocaleString() : "N/A",
-                info: `Project: ${t.project?.name || "Unassigned"}`,
+                info: `Project: ${t.project?.projectName || t.project?.name || "Unassigned"}`,
                 status: "Deleted"
             }));
 

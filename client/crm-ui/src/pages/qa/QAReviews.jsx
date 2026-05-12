@@ -41,6 +41,7 @@ const QAReviews = () => {
 
     const filteredTasks = tasks.filter(task => 
         task.taskName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        task.project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -132,7 +133,7 @@ const QAReviews = () => {
                                         >
                                             <div className="flex justify-between items-start mb-4">
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100">
-                                                    {task.project?.name || "No Project"}
+                                                    {task.project?.projectName || task.project?.name || "No Project"}
                                                 </span>
                                                 <div className="flex gap-1.5 items-center">
                                                     {taskOverdue && (
@@ -237,7 +238,7 @@ const QAReviews = () => {
                                         {selectedTask.priority} Priority
                                     </span>
                                     <span className="text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-                                        {selectedTask.project?.name || "No Project"}
+                                        {selectedTask.project?.projectName || selectedTask.project?.name || "No Project"}
                                     </span>
                                 </div>
 
