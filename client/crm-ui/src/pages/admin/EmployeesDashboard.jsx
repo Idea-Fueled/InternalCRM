@@ -28,6 +28,7 @@ const EmployeesDashboard = () => {
     });
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
 
     const fetchData = async () => {
         try {
@@ -214,7 +215,7 @@ const EmployeesDashboard = () => {
                                 <h3 className="text-lg font-bold text-slate-700">Loading employees...</h3>
                             </div>
                         ) : filteredEmployees.length > 0 ? filteredEmployees.map((emp, i) => (
-                            <div key={i} className="group bg-white rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300">
+                            <div key={i} onClick={() => setSelectedEmployee(emp)} className="group bg-white rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 cursor-pointer">
                                 {/* Left: Avatar, Name, Role */}
                                 <div className="flex items-center gap-4 w-full lg:w-1/3">
                                     <div className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm
@@ -439,6 +440,121 @@ const EmployeesDashboard = () => {
                                 className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
                             >
                                 {isCreating ? "Creating..." : "Create Employee"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Employee Detail Modal */}
+            {selectedEmployee && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onClick={() => setSelectedEmployee(null)}>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+                        {/* Header */}
+                        <div className="relative h-32 bg-gradient-to-r from-blue-600 to-indigo-700">
+                            <button onClick={() => setSelectedEmployee(null)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors backdrop-blur-sm">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                            <div className="absolute -bottom-12 left-8">
+                                <div className="w-24 h-24 rounded-2xl bg-white p-1 shadow-lg">
+                                    <div className="w-full h-full rounded-xl bg-blue-50 flex items-center justify-center text-3xl font-bold text-blue-600 border border-blue-100 uppercase">
+                                        {selectedEmployee.name.charAt(0)}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="pt-16 pb-8 px-8 overflow-y-auto">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{selectedEmployee.name}</h2>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-sm font-semibold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider">{selectedEmployee.role}</span>
+                                        <span className="text-slate-300">•</span>
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                                            selectedEmployee.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                            selectedEmployee.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                            'bg-slate-50 text-slate-500 border-slate-200'
+                                        }`}>
+                                            {selectedEmployee.status}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button onClick={() => handleStatusToggle(selectedEmployee)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition text-sm flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        Toggle Access
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Stats */}
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Performance Metrics</h3>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <p className="text-2xl font-bold text-slate-800">{selectedEmployee.tasks.done}</p>
+                                            <p className="text-xs font-semibold text-slate-500">Tasks Completed</p>
+                                        </div>
+                                        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <p className="text-2xl font-bold text-slate-800">{selectedEmployee.tasks.total}</p>
+                                            <p className="text-xs font-semibold text-slate-500">Total Tasks</p>
+                                        </div>
+                                        <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 col-span-2">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-2xl font-bold text-rose-600">{selectedEmployee.tasks.overdue}</p>
+                                                    <p className="text-xs font-semibold text-rose-500">Overdue Tasks</p>
+                                                </div>
+                                                <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center text-rose-600">
+                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Details */}
+                                <div className="space-y-4">
+                                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Contact & Organization</h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl">
+                                            <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-500">
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Email Address</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedEmployee.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl">
+                                            <div className="w-10 h-10 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-500">
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Department</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedEmployee.dept}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl">
+                                            <div className="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center text-emerald-500">
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Team Lead</p>
+                                                <p className="text-sm font-bold text-slate-700">{selectedEmployee.lead}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 border-t border-slate-100 flex justify-end bg-slate-50/50">
+                            <button onClick={() => setSelectedEmployee(null)} className="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition text-sm">
+                                Close Profile
                             </button>
                         </div>
                     </div>
