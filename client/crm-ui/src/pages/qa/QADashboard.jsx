@@ -165,102 +165,94 @@ const QADashboard = () => {
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                             {/* Main List Section */}
                             <div className="xl:col-span-2 space-y-6">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/50 p-4 rounded-2xl">
-                                    <h2 className="text-xl font-bold text-slate-800 flex items-center">
-                                        <ShieldCheck className="w-6 h-6 mr-3 text-indigo-600" />
+                                <div className="flex items-center justify-between bg-white/50 p-4 rounded-2xl mb-2">
+                                    <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                                        <ShieldCheck className="w-5 h-5 mr-2 text-indigo-500" />
                                         Pending Reviews
-                                        <span className="bg-indigo-600 text-white text-[11px] font-black px-2 py-0.5 rounded-full ml-3 shadow-sm shadow-indigo-200">
+                                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full ml-3">
                                             {tasks.length}
                                         </span>
                                     </h2>
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2">
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <input 
                                                 type="text" 
                                                 placeholder="Search reviews..." 
-                                                className="pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all w-full sm:w-64 shadow-sm"
+                                                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-48 shadow-sm"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
                                         </div>
-                                        <button className="p-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
-                                            <Filter className="w-5 h-5" />
+                                        <button className="flex items-center justify-center p-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm">
+                                            <Filter className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="space-y-4">
                                     {loading ? (
-                                        <div className="flex items-center justify-center p-12">
-                                            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-                                        </div>
+                                        <div className="text-center p-8 text-slate-500 font-medium italic">Loading tasks...</div>
                                     ) : filteredTasks.map(task => (
                                         <div 
                                             key={task._id}
                                             onClick={() => setSelectedTask(task)}
-                                            className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-200 transition-all cursor-pointer group relative overflow-hidden"
+                                            className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex flex-col sm:flex-row gap-4 sm:items-center justify-between"
                                         >
-                                            <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center">
-                                                <div className="flex-1 space-y-4">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
-                                                            {task.project?.projectName || task.project?.name || "No Project"}
-                                                        </span>
-                                                        <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
-                                                            {task.priority || "Medium"}
-                                                        </span>
-                                                        <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg bg-amber-50 text-amber-600 border border-amber-100 flex items-center gap-1.5">
-                                                            <Clock className="w-3.5 h-3.5" /> QA Review
-                                                        </span>
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
+                                                        {task.project?.projectName || task.project?.name || "No Project"}
+                                                    </span>
+                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
+                                                        {task.priority || "Medium"}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-50 text-amber-600 flex items-center border border-amber-100">
+                                                        <Clock className="w-3 h-3 mr-1" /> QA Review
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">
+                                                    {task.taskName}
+                                                </h3>
+                                                <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold uppercase">
+                                                            {task.assignedTo?.name?.substring(0, 2) || "U"}
+                                                        </div>
+                                                        <span>{task.assignedTo?.name || "Unassigned"}</span>
                                                     </div>
-
-                                                    <h3 className="text-xl font-bold text-slate-800 group-hover:text-indigo-600 transition-colors leading-tight">
-                                                        {task.taskName}
-                                                    </h3>
-
-                                                    <div className="flex flex-wrap items-center gap-5 text-sm font-bold text-slate-500">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-black shadow-sm">
-                                                                {task.assignedTo?.name?.substring(0, 2).toUpperCase() || "U"}
-                                                            </div>
-                                                            <span className="text-slate-700">{task.assignedTo?.name || "Unassigned"}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-slate-400">
-                                                            <Calendar className="w-4 h-4" />
-                                                            <span>Due {task.endDate ? new Date(task.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "N/A"}</span>
-                                                        </div>
-                                                        <div className="flex items-center gap-2 text-slate-300">
-                                                            <Paperclip className="w-4 h-4" />
-                                                            <span>{task.attachments?.length || 0}</span>
-                                                        </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <Calendar className="w-3.5 h-3.5" />
+                                                        <span>Due {task.endDate ? new Date(task.endDate).toLocaleDateString() : "N/A"}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-slate-300">
+                                                        <Paperclip className="w-3.5 h-3.5" />
+                                                        <span>{task.attachments?.length || 0}</span>
                                                     </div>
                                                 </div>
+                                            </div>
 
-                                                <div className="flex items-center gap-3 w-full lg:w-auto shrink-0">
-                                                    <button 
-                                                        onClick={(e) => handleReject(task._id, e)}
-                                                        className="flex-1 lg:flex-none flex items-center justify-center px-6 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-bold rounded-2xl transition-all border border-rose-100 active:scale-95"
-                                                    >
-                                                        <XCircle className="w-5 h-5 mr-2" />
-                                                        Reject
-                                                    </button>
-                                                    <button 
-                                                        onClick={(e) => handleApprove(task._id, e)}
-                                                        className="flex-1 lg:flex-none flex items-center justify-center px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold rounded-2xl transition-all shadow-lg shadow-emerald-200 active:scale-95"
-                                                    >
-                                                        <CheckCircle2 className="w-5 h-5 mr-2" />
-                                                        Approve
-                                                    </button>
-                                                </div>
+                                            <div className="flex items-center gap-2 sm:pl-4 sm:border-l border-slate-100">
+                                                <button 
+                                                    onClick={(e) => handleReject(task._id, e)}
+                                                    className="flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-semibold rounded-xl transition-colors border border-rose-100 w-full sm:w-auto"
+                                                >
+                                                    <XCircle className="w-4 h-4 mr-1.5" />
+                                                    Reject
+                                                </button>
+                                                <button 
+                                                    onClick={(e) => handleApprove(task._id, e)}
+                                                    className="flex items-center justify-center px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm shadow-emerald-200 w-full sm:w-auto"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                                                    Approve
+                                                </button>
                                             </div>
                                         </div>
                                     ))}
                                     {filteredTasks.length === 0 && !loading && (
-                                        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-                                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
-                                                <ShieldCheck className="w-8 h-8" />
-                                            </div>
+                                        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center opacity-60">
+                                            <ShieldCheck className="w-12 h-12 text-slate-300 mb-4" />
                                             <h3 className="text-lg font-bold text-slate-700">All caught up!</h3>
                                             <p className="text-slate-500 text-sm">No tasks pending QA review.</p>
                                         </div>
