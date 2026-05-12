@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
     Calendar, MoreVertical, Paperclip, Clock, X,
     CheckCircle2, PlayCircle, ShieldCheck, FileText,
-    AlertTriangle, MessageSquare, ArrowRight, History
+    AlertTriangle, MessageSquare, ArrowRight, History, Lock
 } from 'lucide-react';
 import { taskService } from '../api/services';
 
@@ -24,7 +24,7 @@ const PRIORITY_COLORS = {
 };
 
 /** Reusable Kanban board with drag-drop + status change modal + task detail sidebar */
-const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
+const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     // Drag state
     const dragTaskId = useRef(null);
     const dragFromCol = useRef(null);
@@ -45,6 +45,13 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
 
     // ─── Drag Handlers ────────────────────────────────────────────────────────
     const onDragStart = (e, taskId, colId) => {
+        // Developer restrictions
+        if (role === 'developer' && ['QA Review', 'Completed', 'Done'].includes(colId)) {
+            e.preventDefault();
+            toast.error(`Tasks in ${colId} are locked for Developers`);
+            return;
+        }
+
         dragTaskId.current = taskId;
         dragFromCol.current = colId;
         e.dataTransfer.effectAllowed = 'move';
@@ -62,6 +69,14 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
         e.preventDefault();
         setDragOverCol(null);
         if (!dragTaskId.current || dragFromCol.current === targetColId) return;
+
+        // Developer restrictions
+        if (role === 'developer' && ['Completed', 'Done'].includes(targetColId)) {
+            toast.error('Developers cannot move tasks to Completed or Done');
+            dragTaskId.current = null;
+            dragFromCol.current = null;
+            return;
+        }
         // Open confirmation modal instead of immediately updating
         setPendingChange({
             taskId: dragTaskId.current,
@@ -282,13 +297,14 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
                                         {colTasks.map(task => {
                                             const overdue = isOverdue(task);
                                             const hist = getHistory(task);
+                                            const isLocked = role === 'developer' && ['QA Review', 'Completed', 'Done'].includes(col.id);
                                             return (
                                                 <div
                                                     key={getTaskId(task)}
-                                                    draggable
+                                                    draggable={!isLocked}
                                                     onDragStart={e => onDragStart(e, getTaskId(task), col.id)}
                                                     onClick={() => setSelectedTask(task)}
-                                                    className={`bg-white p-4 rounded-xl shadow-sm border ${overdue ? 'border-rose-200' : 'border-slate-200'} cursor-grab active:cursor-grabbing hover:shadow-md hover:border-blue-300 transition-all group select-none`}
+                                                    className={`bg-white p-4 rounded-xl shadow-sm border ${overdue ? 'border-rose-200' : 'border-slate-200'} ${isLocked ? 'cursor-default opacity-90' : 'cursor-grab active:cursor-grabbing hover:shadow-md hover:border-blue-300'} transition-all group select-none`}
                                                 >
                                                     <div className="flex justify-between items-start mb-2.5">
                                                         <button
@@ -304,6 +320,11 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
                                                             {overdue && (
                                                                 <span className="text-[10px] font-bold px-1.5 py-1 rounded-md bg-rose-100 text-rose-600 flex items-center" title="Overdue">
                                                                     <AlertTriangle className="w-3 h-3" />
+                                                                </span>
+                                                            )}
+                                                            {isLocked && (
+                                                                <span className="text-[10px] font-bold px-1.5 py-1 rounded-md bg-slate-100 text-slate-500 flex items-center border border-slate-200" title="Locked: QA Review / Completed / Done">
+                                                                    <Lock className="w-3 h-3" />
                                                                 </span>
                                                             )}
                                                             <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
