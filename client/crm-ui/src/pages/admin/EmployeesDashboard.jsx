@@ -454,158 +454,124 @@ const EmployeesDashboard = () => {
             )}
             {/* Employee Detail Modal */}
             {selectedEmployee && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onClick={() => setSelectedEmployee(null)}>
-                    <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[750px] max-h-[95vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200 border border-slate-200" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/30 backdrop-blur-[2px] p-4" onClick={() => setSelectedEmployee(null)}>
+                    <div className="bg-white rounded-[20px] shadow-xl w-full max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
                         
-                        {/* Header Section */}
-                        <div className="p-8 pb-4 flex items-start justify-between border-b border-slate-100">
-                            <div className="flex items-center gap-6">
-                                <div className="w-16 h-16 rounded-[18px] bg-white border-2 border-blue-500 p-0.5 shadow-sm flex items-center justify-center">
-                                    <div className="w-full h-full rounded-[14px] bg-blue-50 flex items-center justify-center text-2xl font-bold text-blue-600 uppercase">
+                        {/* Compact Header */}
+                        <div className="px-6 py-5 flex items-start justify-between border-b border-slate-50">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-[14px] bg-white border border-blue-200 p-0.5 shadow-sm flex items-center justify-center">
+                                    <div className="w-full h-full rounded-[10px] bg-blue-50 flex items-center justify-center text-xl font-bold text-blue-600 uppercase">
                                         {selectedEmployee.name.charAt(0)}
                                     </div>
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold text-slate-800 tracking-tight">{selectedEmployee.name}</h2>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-3 py-1 rounded-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                                            <Laptop className="w-3 h-3" /> {selectedEmployee.role}
-                                        </span>
-                                        <span className="text-[11px] font-bold text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1 rounded-[10px] flex items-center gap-1.5">
-                                            <Building className="w-3 h-3 text-slate-400" /> {selectedEmployee.dept}
-                                        </span>
-                                        <span className={`text-[11px] font-bold px-3 py-1 rounded-[10px] border flex items-center gap-1.5 ${
-                                            selectedEmployee.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                            selectedEmployee.status === 'Overdue' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                            'bg-slate-50 text-slate-500 border-slate-200'
+                                    <h2 className="text-lg font-bold text-slate-800 leading-none">{selectedEmployee.name}</h2>
+                                    <div className="flex items-center gap-1.5 mt-2">
+                                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded-[6px] uppercase tracking-wider">{selectedEmployee.role}</span>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] flex items-center gap-1 ${
+                                            selectedEmployee.status === 'Active' ? 'bg-emerald-50 text-emerald-600' :
+                                            selectedEmployee.status === 'Overdue' ? 'bg-rose-50 text-rose-600' :
+                                            'bg-slate-50 text-slate-500'
                                         }`}>
-                                            {selectedEmployee.status === 'Active' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />} {selectedEmployee.status}
+                                            <div className={`w-1 h-1 rounded-full ${
+                                                selectedEmployee.status === 'Active' ? 'bg-emerald-500' :
+                                                selectedEmployee.status === 'Overdue' ? 'bg-rose-500' : 'bg-slate-400'
+                                            }`}></div>
+                                            {selectedEmployee.status}
                                         </span>
                                     </div>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedEmployee(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
-                                <X className="w-6 h-6" />
+                            <button onClick={() => setSelectedEmployee(null)} className="p-1.5 text-slate-300 hover:text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto px-8 pb-8 custom-scrollbar space-y-8 pt-6">
+                        <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar space-y-6 pt-5">
                             
-                            {/* Info Grid */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="p-5 bg-slate-50/50 border border-slate-100 rounded-[20px] transition-all hover:bg-white hover:shadow-sm">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                        <Mail className="w-3 h-3" /> Email
-                                    </p>
-                                    <p className="text-sm font-bold text-slate-700">{selectedEmployee.email}</p>
+                            {/* Compact Info Grid */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.email}</p>
                                 </div>
-                                <div className="p-5 bg-slate-50/50 border border-slate-100 rounded-[20px] transition-all hover:bg-white hover:shadow-sm">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                        <User className="w-3 h-3" /> Team Lead
-                                    </p>
-                                    <p className="text-sm font-bold text-slate-700">{selectedEmployee.lead}</p>
+                                <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Team Lead</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.lead}</p>
                                 </div>
-                                <div className="p-5 bg-slate-50/50 border border-slate-100 rounded-[20px] transition-all hover:bg-white hover:shadow-sm">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                        <Building className="w-3 h-3" /> Department
-                                    </p>
-                                    <p className="text-sm font-bold text-slate-700">{selectedEmployee.dept}</p>
+                                <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Department</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.dept}</p>
                                 </div>
-                                <div className="p-5 bg-slate-50/50 border border-slate-100 rounded-[20px] transition-all hover:bg-white hover:shadow-sm">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
-                                        <Calendar className="w-3 h-3" /> Joined
-                                    </p>
-                                    <p className="text-sm font-bold text-slate-700">{selectedEmployee.joinedDate}</p>
+                                <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Joined</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.joinedDate}</p>
                                 </div>
                             </div>
 
-                            {/* Stats Boxes */}
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="p-6 bg-blue-50/50 border border-blue-100 rounded-[22px] text-center group hover:bg-blue-50 transition-colors">
-                                    <p className="text-3xl font-black text-blue-600 leading-none mb-2">{selectedEmployee.tasks.total}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                            {/* Small Stats */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="py-3 bg-blue-50/30 border border-blue-50 rounded-[12px] text-center">
+                                    <p className="text-xl font-bold text-blue-600">{selectedEmployee.tasks.total}</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
                                 </div>
-                                <div className="p-6 bg-emerald-50/50 border border-emerald-100 rounded-[22px] text-center group hover:bg-emerald-50 transition-colors">
-                                    <p className="text-3xl font-black text-emerald-600 leading-none mb-2">{selectedEmployee.tasks.done}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Done</p>
+                                <div className="py-3 bg-emerald-50/30 border border-emerald-50 rounded-[12px] text-center">
+                                    <p className="text-xl font-bold text-emerald-600">{selectedEmployee.tasks.done}</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Done</p>
                                 </div>
-                                <div className="p-6 bg-rose-50/50 border border-rose-100 rounded-[22px] text-center group hover:bg-rose-50 transition-colors">
-                                    <p className="text-3xl font-black text-rose-600 leading-none mb-2">{selectedEmployee.tasks.overdue}</p>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Overdue</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                    <div 
-                                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-1000 ease-out" 
-                                        style={{ width: `${(selectedEmployee.tasks.done / (selectedEmployee.tasks.total || 1)) * 100}%` }}
-                                    ></div>
+                                <div className="py-3 bg-rose-50/30 border border-rose-50 rounded-[12px] text-center">
+                                    <p className="text-xl font-bold text-rose-600">{selectedEmployee.tasks.overdue}</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Overdue</p>
                                 </div>
                             </div>
 
-                            {/* Tasks Table */}
-                            <div className="space-y-4">
-                                <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2.5 px-1">
-                                    <ClipboardList className="w-4 h-4 text-slate-400" /> Tasks ({selectedEmployee.tasks.total})
+                            {/* Tasks Section */}
+                            <div className="space-y-3">
+                                <h3 className="text-[12px] font-bold text-slate-700 flex items-center gap-2">
+                                    <ClipboardList className="w-3.5 h-3.5 text-slate-400" /> Recent Tasks
                                 </h3>
-                                <div className="border border-slate-100 rounded-[20px] overflow-hidden shadow-sm">
-                                    <table className="w-full text-left">
-                                        <thead className="bg-slate-50 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                            <tr>
-                                                <th className="px-6 py-4">Task</th>
-                                                <th className="px-6 py-4">Project</th>
-                                                <th className="px-6 py-4">Status</th>
-                                                <th className="px-6 py-4">Deadline</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50 bg-white">
-                                            {selectedEmployee.tasks.list?.length > 0 ? selectedEmployee.tasks.list.map((task, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50/50 transition-colors">
-                                                    <td className="px-6 py-4 font-bold text-slate-700 text-sm">{task.taskName}</td>
-                                                    <td className="px-6 py-4 text-slate-500 text-[13px] font-medium">{task.project?.projectName || task.project?.name || 'Unassigned'}</td>
-                                                    <td className="px-6 py-4">
-                                                        <span className={`text-[10px] font-bold px-3 py-1 rounded-[8px] uppercase tracking-wider ${
-                                                            task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600' :
-                                                            task.status === 'In Progress' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
-                                                        }`}>
-                                                            {task.status}
-                                                        </span>
-                                                    </td>
-                                                    <td className="px-6 py-4">
-                                                        <div className={`text-[13px] font-bold flex items-center gap-1.5 ${
-                                                            task.endDate && new Date(task.endDate) < new Date() && !['Completed', 'Done'].includes(task.status) ? 'text-rose-500' : 'text-slate-400'
-                                                        }`}>
-                                                            {task.endDate && new Date(task.endDate) < new Date() && !['Completed', 'Done'].includes(task.status) && <AlertCircle className="w-3.5 h-3.5" />}
-                                                            {task.endDate ? new Date(task.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-') : 'N/A'}
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            )) : (
-                                                <tr>
-                                                    <td colSpan="4" className="px-6 py-12 text-center text-slate-400 italic text-sm">No tasks assigned yet</td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </table>
+                                <div className="space-y-2">
+                                    {selectedEmployee.tasks.list?.length > 0 ? selectedEmployee.tasks.list.slice(0, 5).map((task, idx) => (
+                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-[12px] hover:border-blue-100 transition-colors shadow-sm">
+                                            <div className="min-w-0 flex-1">
+                                                <p className="text-[13px] font-bold text-slate-700 truncate">{task.taskName}</p>
+                                                <p className="text-[10px] text-slate-400 font-medium truncate">{task.project?.projectName || 'Internal'}</p>
+                                            </div>
+                                            <div className="flex flex-col items-end gap-1">
+                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                                    task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600' :
+                                                    task.status === 'In Progress' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                    {task.status}
+                                                </span>
+                                                <span className="text-[9px] font-bold text-slate-300">
+                                                    {task.endDate ? new Date(task.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : ''}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className="p-6 text-center bg-slate-50/50 rounded-[12px] border border-dashed border-slate-200">
+                                            <p className="text-[12px] text-slate-400 font-medium">No tasks assigned</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Activity History */}
-                            <div className="space-y-4 pt-2">
-                                <h3 className="text-[14px] font-bold text-slate-800 flex items-center gap-2.5 px-1">
-                                    <History className="w-4 h-4 text-slate-400" /> Activity History
-                                </h3>
-                                <div className="p-10 bg-slate-50/50 border border-dashed border-slate-200 rounded-[24px] text-center">
-                                    <p className="text-sm font-semibold text-slate-400">No activity history recorded</p>
+                            {/* History Placeholder */}
+                            <div className="pt-2">
+                                <div className="p-4 bg-slate-50/30 border border-dashed border-slate-200 rounded-[12px] text-center">
+                                    <p className="text-[11px] font-bold text-slate-400 flex items-center justify-center gap-2">
+                                        <History className="w-3 h-3" /> No recent activity
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Footer */}
-                        <div className="px-8 py-6 border-t border-slate-100 flex justify-end bg-white">
-                            <button onClick={() => setSelectedEmployee(null)} className="px-10 py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl border border-slate-200 transition-all text-sm shadow-sm active:scale-95">
-                                Close
+                        {/* Minimal Footer */}
+                        <div className="px-6 py-4 border-t border-slate-50 flex justify-end bg-white">
+                            <button onClick={() => setSelectedEmployee(null)} className="px-6 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-all text-[12px] active:scale-95 shadow-lg shadow-slate-200">
+                                Done
                             </button>
                         </div>
                     </div>
