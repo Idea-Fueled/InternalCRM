@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo-idea-fueled.png";
 import { useAuth } from "../../context/AuthContext";
+import { toast } from "sonner";
 
 const AdminSidebar = ({ role = "admin" }) => {
     const navigate = useNavigate();
     const { logout } = useAuth();
+    const [loggingOut, setLoggingOut] = useState(false);
     const [isMinimized, setIsMinimized] = useState(() => {
         return localStorage.getItem("sidebarMinimized") === "true";
     });
@@ -25,11 +27,16 @@ const AdminSidebar = ({ role = "admin" }) => {
 
     const handleLogout = async () => {
         try {
+            setLoggingOut(true);
             await logout();
-            navigate('/');
+            toast.success("Logout successful");
+            setTimeout(() => {
+                navigate('/');
+            }, 800);
         } catch (err) {
             console.error("Logout failed:", err);
-            navigate('/');
+            toast.error("Logout failed. Please try again.");
+            setLoggingOut(false);
         }
     };
 
@@ -82,7 +89,6 @@ const AdminSidebar = ({ role = "admin" }) => {
 
     return (
         <>
-            {/* Mobile Overlay */}
             {isMobileOpen && (
                 <div 
                     className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
@@ -91,7 +97,6 @@ const AdminSidebar = ({ role = "admin" }) => {
             )}
             <div className={`fixed lg:static h-screen z-50 bg-[#0B1121] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0B1121] to-[#040814] text-slate-300 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/60 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isMinimized ? 'lg:w-20' : 'w-72'}`}>
 
-            {/* Toggle Button (Desktop only) */}
             <button
                 onClick={toggleSidebar}
                 className="hidden lg:block absolute -right-3.5 top-9 bg-slate-800 text-slate-400 hover:text-white rounded-full p-1.5 shadow-lg shadow-black/40 border border-slate-700 z-50 hover:bg-slate-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50"
@@ -136,7 +141,6 @@ const AdminSidebar = ({ role = "admin" }) => {
             <div className={`p-4 mt-auto transition-all duration-300 ${isMinimized ? 'flex flex-col items-center px-2' : 'px-5'}`}>
                 {!isMinimized && <div className="border-t border-slate-800/80 my-4"></div>}
                 
-                {/* User Profile Preview */}
                 <div className={`flex items-center gap-3 mb-4 ${isMinimized ? 'justify-center' : 'px-1'}`}>
                     <div className={`w-9 h-9 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 shadow-sm ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>
                         {initial}
@@ -149,16 +153,20 @@ const AdminSidebar = ({ role = "admin" }) => {
                     )}
                 </div>
 
-                {/* Logout Button */}
                 <button
                     onClick={handleLogout}
-                    className={`group flex items-center justify-center gap-3 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/20 hover:border-rose-600 transition-all duration-300 font-medium tracking-wide shadow-sm ${isMinimized ? 'px-0 w-10 h-10' : 'w-full px-4'}`}
+                    disabled={loggingOut}
+                    className={`group flex items-center justify-center gap-3 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/20 hover:border-rose-600 transition-all duration-300 font-medium tracking-wide shadow-sm disabled:opacity-70 disabled:cursor-not-allowed ${isMinimized ? 'px-0 w-10 h-10' : 'w-full px-4'}`}
                     title={isMinimized ? "Logout" : ""}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 flex-shrink-0 transition-transform ${isMinimized ? '' : 'group-hover:-translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    {!isMinimized && <span className="text-sm">Logout</span>}
+                    {loggingOut ? (
+                        <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className={`w-5 h-5 flex-shrink-0 transition-transform ${isMinimized ? '' : 'group-hover:-translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    )}
+                    {!isMinimized && <span className="text-sm">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
                 </button>
             </div>
         </div>
