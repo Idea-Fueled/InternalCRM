@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
     Calendar, MoreVertical, Paperclip, Clock, X,
@@ -28,6 +29,10 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
     const dragTaskId = useRef(null);
     const dragFromCol = useRef(null);
     const [dragOverCol, setDragOverCol] = useState(null);
+
+    // Search params for deep linking
+    const [searchParams, setSearchParams] = useSearchParams();
+    const initialProject = searchParams.get('project') || 'All';
 
     // Status change modal
     const [pendingChange, setPendingChange] = useState(null); // { taskId, fromStatus, toStatus }
@@ -171,7 +176,25 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
         return opts.sort();
     }, [tasks]);
 
-    const [projectFilter, setProjectFilter] = useState('All');
+    const [projectFilter, setProjectFilter] = useState(initialProject);
+
+    // Update URL when filter changes
+    useEffect(() => {
+        if (projectFilter === 'All') {
+            searchParams.delete('project');
+        } else {
+            searchParams.set('project', projectFilter);
+        }
+        setSearchParams(searchParams, { replace: true });
+    }, [projectFilter, searchParams, setSearchParams]);
+
+    // Handle external URL changes (e.g. browser back button)
+    useEffect(() => {
+        const urlProject = searchParams.get('project') || 'All';
+        if (urlProject !== projectFilter) {
+            setProjectFilter(urlProject);
+        }
+    }, [searchParams]);
 
     const filteredTasks = (tasks || []).filter(t => {
         const matchesSearch = !searchQuery || (
@@ -268,9 +291,15 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
                                                     className={`bg-white p-4 rounded-xl shadow-sm border ${overdue ? 'border-rose-200' : 'border-slate-200'} cursor-grab active:cursor-grabbing hover:shadow-md hover:border-blue-300 transition-all group select-none`}
                                                 >
                                                     <div className="flex justify-between items-start mb-2.5">
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[60%]">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setProjectFilter(getProject(task));
+                                                            }}
+                                                            className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[60%] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
+                                                        >
                                                             {getProject(task)}
-                                                        </span>
+                                                        </button>
                                                         <div className="flex gap-1.5 shrink-0">
                                                             {overdue && (
                                                                 <span className="text-[10px] font-bold px-1.5 py-1 rounded-md bg-rose-100 text-rose-600 flex items-center" title="Overdue">

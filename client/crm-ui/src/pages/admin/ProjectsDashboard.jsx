@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { projectService, userService } from "../../api/services";
 import { toast } from "sonner";
 import AdminSidebar from "../../components/admin/AdminSidebar";
@@ -9,6 +10,7 @@ const ProjectsDashboard = () => {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status: All");
     const [users, setUsers] = useState([]);
@@ -177,7 +179,11 @@ const ProjectsDashboard = () => {
                                 const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
 
                                 return (
-                                <div key={project._id || i} className="group bg-white rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer">
+                                <div 
+                                    key={project._id || i} 
+                                    onClick={() => navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`)}
+                                    className="group bg-white rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer"
+                                >
                                     
                                     {/* Left: Name & Desc */}
                                     <div className="w-full xl:w-[30%]">
@@ -240,7 +246,13 @@ const ProjectsDashboard = () => {
 
                                     {/* Right: Action */}
                                     <div className="w-full xl:w-[20%] flex items-center justify-end border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                        <button className="w-full sm:w-auto px-5 py-2.5 bg-slate-50 text-blue-600 font-bold text-sm rounded-xl border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                            }}
+                                            className="w-full sm:w-auto px-5 py-2.5 bg-slate-50 text-blue-600 font-bold text-sm rounded-xl border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-2 shadow-sm"
+                                        >
                                             Open Kanban
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
                                         </button>
