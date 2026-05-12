@@ -517,7 +517,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                             Status Change History
                                         </h3>
                                         <div className="space-y-3">
-                                            {hist.map((entry, idx) => (
+                                            {hist.slice().reverse().map((entry, idx) => (
                                                 <div key={idx} className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4">
                                                     <div className="flex items-center gap-2 mb-2">
                                                         <span className="text-xs font-bold text-indigo-700 px-2 py-0.5 bg-indigo-100 rounded-full">
