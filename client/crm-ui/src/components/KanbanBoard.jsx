@@ -5,7 +5,7 @@ import {
     CheckCircle2, PlayCircle, ShieldCheck, FileText,
     AlertTriangle, MessageSquare, ArrowRight, History
 } from 'lucide-react';
-import { taskService } from '../../api/services';
+import { taskService } from '../api/services';
 
 const COLUMNS = [
     { id: 'New', title: 'New', color: 'bg-slate-100', dot: 'bg-slate-400', dragOver: 'ring-slate-400', icon: Clock },
