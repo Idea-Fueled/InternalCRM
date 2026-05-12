@@ -23,6 +23,7 @@ const ProjectsDashboard = () => {
         teamMembers: []
     });
     const [isCreating, setIsCreating] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
     const fetchInitialData = async () => {
         try {
@@ -52,11 +53,18 @@ const ProjectsDashboard = () => {
 
     const handleCreateProject = async (e) => {
         e.preventDefault();
+        setSubmitted(true);
+
+        if (!newProject.projectName || !newProject.teamLead || !newProject.startDate || !newProject.endDate) {
+            return;
+        }
+
         try {
             setIsCreating(true);
             await projectService.createProject(newProject);
             toast.success("Project created successfully");
             setIsModalOpen(false);
+            setSubmitted(false);
             setNewProject({
                 projectName: "",
                 description: "",
@@ -286,7 +294,7 @@ const ProjectsDashboard = () => {
                                 </div>
                                 Create New Project
                             </h2>
-                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
+                            <button onClick={() => { setIsModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
@@ -300,8 +308,11 @@ const ProjectsDashboard = () => {
                                         value={newProject.projectName}
                                         onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
                                         placeholder="e.g. E-Commerce Platform" 
-                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.projectName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700`} 
                                     />
+                                    {submitted && !newProject.projectName && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Project Name is required!</p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block font-bold text-slate-800 mb-1.5">Description</label>
@@ -320,13 +331,16 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.teamLead}
                                             onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
-                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold"
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.teamLead ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold`}
                                         >
                                             <option value="">Select Team Lead</option>
                                             {teamLeads.map(tl => (
                                                 <option key={tl._id} value={tl._id}>{tl.name}</option>
                                             ))}
                                         </select>
+                                        {submitted && !newProject.teamLead && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Team Lead is required!</p>
+                                        )}
                                         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
                                         </div>
@@ -340,8 +354,11 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.startDate}
                                             onChange={(e) => setNewProject({...newProject, startDate: e.target.value})}
-                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium" 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.startDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
                                         />
+                                        {submitted && !newProject.startDate && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Start Date is required!</p>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="block font-bold text-slate-800 mb-1.5">End Date <span className="text-red-500">*</span></label>
@@ -350,8 +367,11 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.endDate}
                                             onChange={(e) => setNewProject({...newProject, endDate: e.target.value})}
-                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium" 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
                                         />
+                                        {submitted && !newProject.endDate && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">End Date is required!</p>
+                                        )}
                                     </div>
                                 </div>
                                 <div>
@@ -372,7 +392,7 @@ const ProjectsDashboard = () => {
                                 </div>
                             </div>
                             <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
+                                <button type="button" onClick={() => { setIsModalOpen(false); setSubmitted(false); }} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
                                     Cancel
                                 </button>
                                 <button 

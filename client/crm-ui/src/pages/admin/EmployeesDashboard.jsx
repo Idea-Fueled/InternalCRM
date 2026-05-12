@@ -27,6 +27,7 @@ const EmployeesDashboard = () => {
         teamLead: ""
     });
     const [isCreating, setIsCreating] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
 
     const fetchData = async () => {
         try {
@@ -80,11 +81,18 @@ const EmployeesDashboard = () => {
 
     const handleAddEmployee = async (e) => {
         e.preventDefault();
+        setSubmitted(true);
+
+        if (!newEmployee.name || !newEmployee.email || !newEmployee.password) {
+            return;
+        }
+
         try {
             setIsCreating(true);
             await authService.register(newEmployee);
             toast.success("Employee added successfully");
             setIsAddEmployeeModalOpen(false);
+            setSubmitted(false);
             setNewEmployee({
                 name: "",
                 email: "",
@@ -333,7 +341,7 @@ const EmployeesDashboard = () => {
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200">
                         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
                             <h2 className="text-lg font-bold text-slate-800 tracking-tight">Add Employee</h2>
-                            <button onClick={() => setIsAddEmployeeModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
+                            <button onClick={() => { setIsAddEmployeeModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
@@ -346,8 +354,11 @@ const EmployeesDashboard = () => {
                                         required
                                         value={newEmployee.name}
                                         onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                        className={`w-full px-3 py-2 bg-white border ${submitted && !newEmployee.name ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
                                     />
+                                    {submitted && !newEmployee.name && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Name is required!</p>
+                                    )}
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Email *</label>
@@ -356,8 +367,11 @@ const EmployeesDashboard = () => {
                                         required
                                         value={newEmployee.email}
                                         onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                        className={`w-full px-3 py-2 bg-white border ${submitted && !newEmployee.email ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
                                     />
+                                    {submitted && !newEmployee.email && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Email is required!</p>
+                                    )}
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Role</label>
@@ -379,8 +393,11 @@ const EmployeesDashboard = () => {
                                         required
                                         value={newEmployee.password}
                                         onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                        className={`w-full px-3 py-2 bg-white border ${submitted && !newEmployee.password ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
                                     />
+                                    {submitted && !newEmployee.password && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Password is required!</p>
+                                    )}
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Department</label>
@@ -412,7 +429,7 @@ const EmployeesDashboard = () => {
                             </form>
                         </div>
                         <div className="p-5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
-                            <button onClick={() => setIsAddEmployeeModalOpen(false)} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition text-sm">
+                            <button onClick={() => { setIsAddEmployeeModalOpen(false); setSubmitted(false); }} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition text-sm">
                                 Cancel
                             </button>
                             <button 

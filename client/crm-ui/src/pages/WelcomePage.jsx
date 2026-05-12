@@ -37,14 +37,16 @@ export default function WelcomePage() {
     };
     const { View } = useLottie(lottieOptions, { className: "w-full h-auto drop-shadow-2xl" });
 
+    const [submitted, setSubmitted] = useState(false);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setSubmitted(true);
         
         const email = formData.email.trim();
         const password = formData.password.trim();
 
         if (!email || !password) {
-            toast.error("Please enter both email and password.");
             return;
         }
 
@@ -107,8 +109,11 @@ export default function WelcomePage() {
                                 placeholder="name@ideafueled.com"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className="w-full px-5 py-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm"
+                                className={`w-full px-5 py-4 rounded-2xl border ${submitted && !formData.email ? 'border-red-500 bg-red-50/30' : 'border-slate-200/80 bg-slate-50/50'} text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm`}
                             />
+                            {submitted && !formData.email && (
+                                <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Email is required!</p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -120,8 +125,11 @@ export default function WelcomePage() {
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className="w-full px-5 py-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm"
+                                className={`w-full px-5 py-4 rounded-2xl border ${submitted && !formData.password ? 'border-red-500 bg-red-50/30' : 'border-slate-200/80 bg-slate-50/50'} text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm`}
                             />
+                            {submitted && !formData.password && (
+                                <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Password is required!</p>
+                            )}
                         </div>
 
                         <button
