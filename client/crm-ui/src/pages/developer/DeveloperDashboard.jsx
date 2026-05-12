@@ -258,9 +258,12 @@ const DeveloperDashboard = () => {
                         <div className="space-y-8">
 
                             {/* Task Details Preview */}
-                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-fit">
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-fit mb-8 relative z-10">
                                 <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Task Details</h2>
+                                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                        Task Details
+                                    </h2>
                                 </div>
 
                                 {selectedTask ? (
