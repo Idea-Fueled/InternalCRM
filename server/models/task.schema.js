@@ -56,6 +56,14 @@ const taskSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    statusHistory: [
+        {
+            status: { type: String },
+            notes: { type: String, default: "" },
+            attachment: { type: String, default: "" },
+            changedAt: { type: Date, default: Date.now }
+        }
+    ]
 
 },
     { timestamps: true }

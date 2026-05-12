@@ -23,7 +23,7 @@ export const taskService = {
     getTasksByProject: (projectId) => axiosInstance.get(`/tasks/project/${projectId}`),
     getTasksByUser: (userId) => axiosInstance.get(`/tasks/user/${userId}`),
     createTask: (data) => axiosInstance.post('/tasks/create', data),
-    updateTaskStatus: (id, status) => axiosInstance.put(`/tasks/${id}/status`, { status }),
+    updateTaskStatus: (id, status, notes = "", attachment = "") => axiosInstance.put(`/tasks/${id}/status`, { status, notes, attachment }),
     updateTask: (id, data) => axiosInstance.put(`/tasks/${id}`, data),
     deleteTask: (id) => axiosInstance.delete(`/tasks/${id}`),
     getDeletedTasks: () => axiosInstance.get('/tasks/trash'),

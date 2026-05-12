@@ -134,11 +134,11 @@ export const updateTask = async (req, res) => {
     }
 };
 
-// Update Task Status
+// Update Task Status (with optional notes and attachment logged to statusHistory)
 export const updateTaskStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status, notes, attachment } = req.body;
 
         if (!status) {
             return res.status(400).json({
@@ -155,12 +155,23 @@ export const updateTaskStatus = async (req, res) => {
             });
         }
 
+        // Build history entry
+        const historyEntry = {
+            status,
+            notes: notes || "",
+            attachment: attachment || "",
+            changedAt: new Date()
+        };
+
         const task = await Task.findOneAndUpdate(
             { _id: id, isDeleted: false },
-            { status },
+            {
+                status,
+                $push: { statusHistory: historyEntry }
+            },
             { new: true }
         )
-        .populate("project", "name status")
+        .populate("project", "name status projectName")
         .populate("assignedTo", "name email");
 
         if (!task) {
