@@ -15,7 +15,8 @@ import {
   X, 
   ShieldCheck, 
   FileText,
-  Activity
+  Activity,
+  AlertTriangle
 } from 'lucide-react';
 
 const PRIORITY_COLORS = {
