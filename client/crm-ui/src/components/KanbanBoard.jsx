@@ -258,8 +258,8 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                     <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             ) : (
-                <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
-                    <div className="flex gap-6 h-full min-w-max px-1">
+                <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 no-scrollbar lg:custom-scrollbar">
+                    <div className="flex gap-4 h-full min-w-max px-2">
                         {COLUMNS.map(col => {
                             const colTasks = filteredTasks.filter(t => t.status === col.id);
                             const isOver = dragOverCol === col.id;
@@ -269,7 +269,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                     onDragOver={e => onDragOver(e, col.id)}
                                     onDragLeave={onDragLeave}
                                     onDrop={e => onDrop(e, col.id)}
-                                    className={`w-80 flex flex-col h-full rounded-2xl transition-all duration-200 ${col.color} border ${isOver ? `border-2 ${col.dragOver} ring-2 ${col.dragOver}` : 'border-slate-200/60'}`}
+                                    className={`w-[290px] flex flex-col h-full rounded-2xl transition-all duration-200 ${col.color} border ${isOver ? `border-2 ${col.dragOver} ring-2 ${col.dragOver}` : 'border-slate-200/60'}`}
                                 >
                                     {/* Column Header */}
                                     <div className="p-4 flex items-center justify-between shrink-0">
