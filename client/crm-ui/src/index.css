@@ -65,3 +65,41 @@
 .kanban-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #cbd5e1;
 }
+/* Premium Stat Cards */
+.premium-stat-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom-width: 4px !important;
+  transition: all 0.3s ease;
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.premium-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.premium-stat-card.blue { background-color: rgba(239, 246, 255, 0.6); border-bottom-color: #3b82f6 !important; }
+.premium-stat-card.indigo { background-color: rgba(238, 242, 255, 0.6); border-bottom-color: #6366f1 !important; }
+.premium-stat-card.emerald { background-color: rgba(236, 253, 245, 0.6); border-bottom-color: #10b981 !important; }
+.premium-stat-card.amber { background-color: rgba(255, 251, 235, 0.6); border-bottom-color: #f59e0b !important; }
+.premium-stat-card.rose { background-color: rgba(255, 241, 242, 0.6); border-bottom-color: #f43f5e !important; }
+.premium-stat-card.slate { background-color: rgba(248, 250, 252, 0.6); border-bottom-color: #94a3b8 !important; }
+
+
+/* Premium Large Cards */
+.premium-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.7);
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+  background-color: white;
+  border-bottom: 3px solid #f1f5f9;
+  overflow: hidden;
+}
+

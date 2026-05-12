@@ -102,25 +102,23 @@ const DeveloperDashboard = () => {
                     <>
                     {/* KPI Section */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <div className="premium-stat-card slate">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Tasks</p>
-                            <div className="flex items-end gap-2">
-                                <span className="text-3xl font-extrabold text-slate-800">{totalAssigned}</span>
-                            </div>
+                            <span className="text-3xl font-extrabold text-slate-800">{totalAssigned}</span>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center">
+                        <div className="premium-stat-card slate">
                             <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center"><Clock className="w-3.5 h-3.5 mr-1" /> New</p>
                             <span className="text-3xl font-extrabold text-slate-700">{tasksNew}</span>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center border-b-4 border-b-blue-500">
+                        <div className="premium-stat-card blue">
                             <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2 flex items-center"><PlayCircle className="w-3.5 h-3.5 mr-1" /> In Progress</p>
                             <span className="text-3xl font-extrabold text-blue-700">{tasksInProgress}</span>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-center border-b-4 border-b-indigo-500">
+                        <div className="premium-stat-card indigo">
                             <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-2 flex items-center"><ShieldCheck className="w-3.5 h-3.5 mr-1" /> QA Review</p>
                             <span className="text-3xl font-extrabold text-indigo-700">{tasksQA}</span>
                         </div>
-                        <div className="bg-rose-50 p-5 rounded-2xl border border-rose-200 shadow-sm flex flex-col justify-center border-b-4 border-b-rose-500">
+                        <div className="premium-stat-card rose">
                             <p className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-2 flex items-center"><AlertCircle className="w-3.5 h-3.5 mr-1" /> Overdue</p>
                             <span className="text-3xl font-extrabold text-rose-600">{overdueTasks.length}</span>
                         </div>

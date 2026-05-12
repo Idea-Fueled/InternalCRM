@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
-    <div className={`bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 ${className}`}>
+    <div className={`premium-card ${className}`}>
         {children}
     </div>
 );
@@ -101,11 +101,11 @@ const AdminDashboard = () => {
     const teamLeads = users.filter(u => u.role === "TL" || u.role === "admin");
 
     const kpis = dashboardData ? [
-        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", bg: "bg-blue-50" },
-        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", bg: "bg-indigo-50" },
-        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", bg: "bg-emerald-50" },
-        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", bg: "bg-amber-50" },
-        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", bg: "bg-red-50" },
+        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue" },
+        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", variant: "indigo" },
+        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", variant: "emerald" },
+        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", variant: "amber" },
+        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", variant: "rose" },
     ] : [];
 
     return (
@@ -145,19 +145,18 @@ const AdminDashboard = () => {
                         <>
                             {/* KPIs - Modern Compact Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                        {kpis.map((kpi, i) => (
-                            <div key={i} className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 hover:shadow-md hover:border-blue-200 transition-all duration-300 relative overflow-hidden group">
-                                <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${kpi.bg} opacity-50 group-hover:scale-150 transition-transform duration-500 ease-out`}></div>
-                                <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 relative z-10">{kpi.label}</h4>
-                                <div className="flex items-baseline gap-2 relative z-10">
-                                    <span className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">{kpi.value}</span>
-                                    <span className={`text-xs font-semibold text-slate-400`}>
-                                        {kpi.trend}
-                                    </span>
-                                </div>
+                                {kpis.map((kpi, i) => (
+                                    <div key={i} className={`premium-stat-card ${kpi.variant}`}>
+                                        <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 relative z-10">{kpi.label}</h4>
+                                        <div className="flex items-baseline gap-2 relative z-10">
+                                            <span className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">{kpi.value}</span>
+                                            <span className={`text-xs font-semibold text-slate-400`}>
+                                                {kpi.trend}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
 
                     {/* Main Content Sections */}
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

@@ -110,23 +110,34 @@ const TeamLeadDashboard = () => {
 
                     {/* KPI Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {kpis.map((kpi, idx) => (
-                            <div key={idx} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow group">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500 mb-1">{kpi.title}</p>
-                                        <h3 className="text-3xl font-bold text-slate-800">{kpi.value}</h3>
+                        {kpis.map((kpi, idx) => {
+                            const variants = {
+                                'bg-blue-50': 'blue',
+                                'bg-indigo-50': 'indigo',
+                                'bg-emerald-50': 'emerald',
+                                'bg-amber-50': 'amber',
+                                'bg-rose-50': 'rose'
+                            };
+                            const variant = variants[kpi.bg] || 'slate';
+                            
+                            return (
+                                <div key={idx} className={`premium-stat-card ${variant} !p-6`}>
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{kpi.title}</p>
+                                            <h3 className="text-3xl font-bold text-slate-800">{kpi.value}</h3>
+                                        </div>
+                                        <div className={`p-3 rounded-xl ${kpi.bg.replace('50', '100')} ${kpi.color} group-hover:scale-110 transition-transform`}>
+                                            <kpi.icon className="w-6 h-6" />
+                                        </div>
                                     </div>
-                                    <div className={`p-3 rounded-xl ${kpi.bg} ${kpi.color} group-hover:scale-110 transition-transform`}>
-                                        <kpi.icon className="w-6 h-6" />
+                                    <div className="mt-4 flex items-center text-[10px] font-bold uppercase tracking-wide text-emerald-600">
+                                        <TrendingUp className="w-3.5 h-3.5 mr-1" />
+                                        <span>+12% Performance</span>
                                     </div>
                                 </div>
-                                <div className="mt-4 flex items-center text-sm text-emerald-600 font-medium">
-                                    <TrendingUp className="w-4 h-4 mr-1" />
-                                    <span>+12% from last month</span>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Middle Section: Projects and Activity */}

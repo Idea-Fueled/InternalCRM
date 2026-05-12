@@ -10,7 +10,7 @@ import {
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
-    <div className={`bg-white rounded-2xl shadow-sm border border-slate-200/60 p-5 ${className}`}>
+    <div className={`premium-card ${className}`}>
         {children}
     </div>
 );
@@ -171,20 +171,20 @@ const EmployeesDashboard = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
-                            { label: "Total Employees", value: stats.total, color: "text-blue-500", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" },
-                            { label: "Active", value: stats.active, color: "text-emerald-500", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
-                            { label: "With Overdue", value: stats.withOverdue, color: "text-amber-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" },
-                            { label: "Inactive", value: stats.inactive, color: "text-slate-400", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" }
+                            { label: "Total Employees", value: stats.total, color: "text-blue-500", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", variant: "blue" },
+                            { label: "Active", value: stats.active, color: "text-emerald-500", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", variant: "emerald" },
+                            { label: "With Overdue", value: stats.withOverdue, color: "text-amber-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", variant: "amber" },
+                            { label: "Inactive", value: stats.inactive, color: "text-slate-400", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636", variant: "slate" }
                         ].map((stat, i) => (
-                            <Card key={i} className="flex items-center gap-4 hover:border-blue-200 transition-colors cursor-default">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.color.replace('text-', 'bg-').replace('500', '50').replace('400', '100')} ${stat.color}`}>
+                            <div key={i} className={`premium-stat-card ${stat.variant} flex flex-row items-center gap-4 !p-5 cursor-default`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${stat.color.replace('text-', 'bg-').replace('500', '100').replace('400', '200')} ${stat.color}`}>
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}/></svg>
                                 </div>
                                 <div>
                                     <h4 className="text-2xl font-bold tracking-tight text-slate-800">{stat.value}</h4>
-                                    <p className="text-xs font-semibold text-slate-500">{stat.label}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{stat.label}</p>
                                 </div>
-                            </Card>
+                            </div>
                         ))}
                     </div>
 
@@ -511,18 +511,18 @@ const EmployeesDashboard = () => {
                             </div>
 
                             {/* Small Stats */}
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="py-3 bg-blue-50/30 border border-blue-50 rounded-[12px] text-center">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div className="premium-stat-card blue !p-3 text-center">
                                     <p className="text-xl font-bold text-blue-600">{selectedEmployee.tasks.total}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Tasks</p>
                                 </div>
-                                <div className="py-3 bg-emerald-50/30 border border-emerald-50 rounded-[12px] text-center">
+                                <div className="premium-stat-card emerald !p-3 text-center">
                                     <p className="text-xl font-bold text-emerald-600">{selectedEmployee.tasks.done}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Done</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Completed</p>
                                 </div>
-                                <div className="py-3 bg-rose-50/30 border border-rose-50 rounded-[12px] text-center">
+                                <div className="premium-stat-card rose !p-3 text-center col-span-2">
                                     <p className="text-xl font-bold text-rose-600">{selectedEmployee.tasks.overdue}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Overdue</p>
+                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Overdue Tasks</p>
                                 </div>
                             </div>
 
