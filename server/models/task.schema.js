@@ -18,7 +18,6 @@ const taskSchema = new mongoose.Schema({
     assignedTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        required: true
     },
     assignedBy: {
         type: mongoose.Schema.Types.ObjectId,
@@ -36,11 +35,9 @@ const taskSchema = new mongoose.Schema({
     },
     startDate: {
         type: Date,
-        required: true
     },
     endDate: {
         type: Date,
-        required: true
     },
     developerNotes: {
         type: String,
