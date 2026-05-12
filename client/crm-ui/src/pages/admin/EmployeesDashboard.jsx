@@ -176,12 +176,12 @@ const EmployeesDashboard = () => {
                             { label: "With Overdue", value: stats.withOverdue, color: "text-amber-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", variant: "amber" },
                             { label: "Inactive", value: stats.inactive, color: "text-slate-400", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636", variant: "slate" }
                         ].map((stat, i) => (
-                            <div key={i} className={`premium-stat-card ${stat.variant} flex flex-row items-center gap-4 !p-5 cursor-default`}>
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${stat.color.replace('text-', 'bg-').replace('500', '100').replace('400', '200')} ${stat.color}`}>
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}/></svg>
+                            <div key={i} className={`premium-stat-card ${stat.variant} flex flex-row items-center gap-4 p-4 cursor-default h-[90px]`}>
+                                <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${stat.color.replace('text-', 'bg-').replace('500', '100').replace('400', '200')} ${stat.color}`}>
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}/></svg>
                                 </div>
-                                <div>
-                                    <h4 className="text-2xl font-bold tracking-tight text-slate-800">{stat.value}</h4>
+                                <div className="flex flex-col justify-center">
+                                    <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{stat.value}</h4>
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{stat.label}</p>
                                 </div>
                             </div>
