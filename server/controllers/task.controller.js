@@ -5,10 +5,10 @@ export const createTask = async (req, res) => {
     try {
         const { taskName, description, project, assignedTo, assignedBy, status, priority, startDate, endDate, developerNotes, qaNotes, attachments, isDeleted } = req.body;
 
-        if (!taskName || !project || !assignedTo || !startDate || !endDate) {
+        if (!taskName || !project) {
             return res.status(400).json({
                 success: false,
-                message: "Please fill all the required fields",
+                message: "Task name and project are required",
             });
         }
 
