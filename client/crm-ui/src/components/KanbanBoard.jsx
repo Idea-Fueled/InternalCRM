@@ -130,19 +130,32 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
     };
 
     // ─── Helpers ───────────────────────────────────────────────────────────────
-    const getTaskName  = t => t.taskName || t.title || '';
-    const getTaskId    = t => t._id || t.id || '';
-    const getProject   = t => t.project?.name || t.project?.projectName || t.project || 'Unassigned';
-    const getAssignee  = t => t.assignedTo?.name || t.assignee || 'Unassigned';
+    // Always return a STRING — never let an object fall through into JSX
+    const getTaskName  = t => String(t.taskName || t.title || '');
+    const getTaskId    = t => String(t._id || t.id || '');
+    const getProject   = t => {
+        // project may be a populated object {_id, name, projectName, status}
+        // or a plain string ID, or undefined
+        if (!t.project) return 'Unassigned';
+        if (typeof t.project === 'string') return t.project;
+        return String(t.project.projectName || t.project.name || 'Unassigned');
+    };
+    const getAssignee  = t => {
+        if (!t.assignedTo) return String(t.assignee || 'Unassigned');
+        if (typeof t.assignedTo === 'string') return t.assignedTo;
+        return String(t.assignedTo.name || 'Unassigned');
+    };
     const getAssigneeInitial = t => {
         const name = getAssignee(t);
         return name.substring(0, 2).toUpperCase();
     };
-    const getEndDate   = t => t.endDate ? (typeof t.endDate === 'string' && t.endDate.includes('-') && t.endDate.length > 10
-        ? new Date(t.endDate).toLocaleDateString()
-        : t.endDate) : 'N/A';
+    const getEndDate = t => {
+        if (!t.endDate) return 'N/A';
+        try { return new Date(t.endDate).toLocaleDateString(); }
+        catch { return 'N/A'; }
+    };
     const isOverdue    = t => t.endDate && new Date(t.endDate) < new Date() && !['Completed', 'Done'].includes(t.status);
-    const getHistory   = t => t.statusHistory || [];
+    const getHistory   = t => Array.isArray(t.statusHistory) ? t.statusHistory : [];
 
     const filteredTasks = (tasks || []).filter(t => {
         if (!searchQuery) return true;
