@@ -16,6 +16,7 @@ const STATUS_COLORS = {
     'In Progress': 'bg-blue-100 text-blue-700 border-blue-200',
     'QA Review': 'bg-indigo-100 text-indigo-700 border-indigo-200',
     'Completed': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    'Done': 'bg-emerald-500 text-white border-emerald-600',
 };
 
 const DeveloperDashboard = () => {
@@ -45,10 +46,32 @@ const DeveloperDashboard = () => {
                 priority: t.priority || "Medium",
                 description: t.description || "",
                 qaNotes: t.qaNotes || null,
-                updates: [] // Backend doesn't support updates yet
+                updates: (t.statusHistory || []).map(h => ({
+                    id: h._id,
+                    type: h.status === 'QA Review' ? 'qa' : 'status',
+                    text: `${h.status}: ${h.notes || 'No notes'}`,
+                    time: new Date(h.changedAt).toLocaleString()
+                })).reverse()
             }));
             
             setTasks(formattedTasks);
+            
+            // Extract recent activity from all tasks
+            const activities = [];
+            (tasksRes.data.tasks || []).forEach(t => {
+                (t.statusHistory || []).forEach(h => {
+                    activities.push({
+                        id: h._id,
+                        text: `${t.taskName} marked as ${h.status}`,
+                        time: new Date(h.changedAt).toLocaleString(),
+                        icon: h.status === 'QA Review' ? <ShieldCheck className="w-4 h-4 text-indigo-500" /> : <Activity className="w-4 h-4 text-blue-500" />,
+                        timestamp: new Date(h.changedAt).getTime()
+                    });
+                });
+            });
+            
+            setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5));
+            
             if (formattedTasks.length > 0) setSelectedTask(formattedTasks[0]);
             
         } catch (err) {
