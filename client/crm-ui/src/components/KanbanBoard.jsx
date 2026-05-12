@@ -245,9 +245,12 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
 
                                                     <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                                                         <div className="flex items-center gap-1.5">
-                                                            <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm" title={getAssignee(task)}>
+                                                            <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm shrink-0" title={getAssignee(task)}>
                                                                 {getAssigneeInitial(task)}
                                                             </div>
+                                                            <span className="text-xs font-semibold text-slate-600 truncate max-w-[90px]">
+                                                                {getAssignee(task)}
+                                                            </span>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-slate-400">
                                                             {hist.filter(h => h.notes || h.attachment).length > 0 && (
