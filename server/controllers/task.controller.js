@@ -29,7 +29,7 @@ export const createTask = async (req, res) => {
         });
 
         const populatedTask = await Task.findById(task._id)
-            .populate("project", "name status")
+            .populate("project", "projectName name status")
             .populate("assignedTo", "name email")
             .populate("assignedBy", "name email");
 
@@ -51,7 +51,7 @@ export const createTask = async (req, res) => {
 export const getAllTasks = async (req, res) => {
     try {
         const tasks = await Task.find({ isDeleted: false })
-            .populate("project", "name status")
+            .populate("project", "projectName name status")
             .populate("assignedTo", "name email role")
             .populate("assignedBy", "name email role")
             .sort({ createdAt: -1 });
@@ -73,7 +73,7 @@ export const getSingleTask = async (req, res) => {
     try {
         const { id } = req.params;
         const task = await Task.findOne({ _id: id, isDeleted: false })
-            .populate("project", "name description status")
+            .populate("project", "projectName name description status")
             .populate("assignedTo", "name email role")
             .populate("assignedBy", "name email role");
 
@@ -110,7 +110,7 @@ export const updateTask = async (req, res) => {
             updates,
             { new: true, runValidators: true }
         )
-        .populate("project", "name status")
+        .populate("project", "projectName name status")
         .populate("assignedTo", "name email role")
         .populate("assignedBy", "name email role");
 
@@ -171,7 +171,7 @@ export const updateTaskStatus = async (req, res) => {
             },
             { new: true }
         )
-        .populate("project", "name status projectName")
+        .populate("project", "projectName name status")
         .populate("assignedTo", "name email");
 
         if (!task) {
@@ -258,7 +258,7 @@ export const restoreTask = async (req, res) => {
 export const getDeletedTasks = async (req, res) => {
     try {
         const tasks = await Task.find({ isDeleted: true })
-            .populate("project", "name")
+            .populate("project", "projectName name")
             .populate("assignedTo", "name email")
             .sort({ updatedAt: -1 });
 
@@ -300,7 +300,7 @@ export const getTasksByUser = async (req, res) => {
     try {
         const { userId } = req.params;
         const tasks = await Task.find({ assignedTo: userId, isDeleted: false })
-            .populate("project", "name status")
+            .populate("project", "projectName name status")
             .populate("assignedBy", "name email")
             .sort({ createdAt: -1 });
 
