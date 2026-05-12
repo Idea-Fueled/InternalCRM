@@ -157,14 +157,63 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading }) => {
     const isOverdue    = t => t.endDate && new Date(t.endDate) < new Date() && !['Completed', 'Done'].includes(t.status);
     const getHistory   = t => Array.isArray(t.statusHistory) ? t.statusHistory : [];
 
+    // Derive unique project list from current task data
+    const projectOptions = React.useMemo(() => {
+        const seen = new Set();
+        const opts = [];
+        (tasks || []).forEach(t => {
+            const name = getProject(t);
+            if (name && name !== 'Unassigned' && !seen.has(name)) {
+                seen.add(name);
+                opts.push(name);
+            }
+        });
+        return opts.sort();
+    }, [tasks]);
+
+    const [projectFilter, setProjectFilter] = useState('All');
+
     const filteredTasks = (tasks || []).filter(t => {
-        if (!searchQuery) return true;
-        const q = searchQuery.toLowerCase();
-        return getTaskName(t).toLowerCase().includes(q) || getProject(t).toLowerCase().includes(q);
+        const matchesSearch = !searchQuery || (
+            getTaskName(t).toLowerCase().includes(searchQuery.toLowerCase()) ||
+            getProject(t).toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        const matchesProject = projectFilter === 'All' || getProject(t) === projectFilter;
+        return matchesSearch && matchesProject;
     });
 
     return (
         <>
+            {/* ─── Project Filter Bar ───────────────────────────────────────── */}
+            {!loading && projectOptions.length > 0 && (
+                <div className="flex items-center gap-2 mb-4 flex-wrap shrink-0">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Project:</span>
+                    <button
+                        onClick={() => setProjectFilter('All')}
+                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                            projectFilter === 'All'
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600'
+                        }`}
+                    >
+                        All Projects
+                    </button>
+                    {projectOptions.map(proj => (
+                        <button
+                            key={proj}
+                            onClick={() => setProjectFilter(proj === projectFilter ? 'All' : proj)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                                projectFilter === proj
+                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
+                            }`}
+                        >
+                            {proj}
+                        </button>
+                    ))}
+                </div>
+            )}
+
             {/* ─── Kanban Board ─────────────────────────────────────────────── */}
             {loading ? (
                 <div className="flex-1 flex items-center justify-center">
