@@ -16,6 +16,7 @@ const STATUS_COLORS = {
   'In Progress': 'bg-blue-100 text-blue-700 border-blue-200',
   'QA Review': 'bg-indigo-100 text-indigo-700 border-indigo-200',
   'Completed': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  'Done': 'bg-emerald-500 text-white border-emerald-600',
 };
 
 const PRIORITY_COLORS = {
@@ -259,16 +260,17 @@ const DeveloperTasks = () => {
                                     </div>
                                     <h3 className="text-2xl font-bold text-slate-900 leading-tight mb-4">{selectedTask.taskName}</h3>
                                     
-                                    <div className="flex items-center gap-4 text-sm font-medium bg-slate-50 p-3 rounded-lg border border-slate-100">
-                                        <div className="flex items-center text-slate-500">
-                                            <Calendar className="w-4 h-4 mr-2" />
-                                            <span>{selectedTask.startDate}</span>
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-center justify-between">
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Due Date</span>
+                                            <div className={`flex items-center ${isOverdue(selectedTask.endDate) ? 'text-rose-600 font-bold' : 'text-slate-700'} text-base`}>
+                                                <Calendar className="w-4 h-4 mr-2" />
+                                                <span>{selectedTask.endDate}</span>
+                                            </div>
                                         </div>
-                                        <ArrowRightCircle className="w-4 h-4 text-slate-300" />
-                                        <div className={`flex items-center ${isOverdue(selectedTask.endDate) ? 'text-rose-600 font-bold' : 'text-slate-700'}`}>
-                                            <Clock className="w-4 h-4 mr-2" />
-                                            <span>{selectedTask.endDate}</span>
-                                        </div>
+                                        {isOverdue(selectedTask.endDate) && (
+                                            <span className="px-2 py-1 bg-rose-100 text-rose-700 text-[10px] font-bold rounded uppercase">Overdue</span>
+                                        )}
                                     </div>
                                 </div>
 
