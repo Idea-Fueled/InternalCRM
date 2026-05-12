@@ -31,6 +31,12 @@ const PRIORITY_COLORS = {
 const QADashboard = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
+    const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0 });
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedTask, setSelectedTask] = useState(null);
+    const [recentActivity, setRecentActivity] = useState([]);
+    const [loading, setLoading] = useState(true);
+    
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
     const [actionType, setActionType] = useState(null); // 'Approve' or 'Reject'
     const [actionTaskId, setActionTaskId] = useState(null);
