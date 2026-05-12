@@ -28,7 +28,7 @@ const PRIORITY_COLORS = {
 const QADashboard = () => {
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
-    const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0 });
+    const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0, overdueTasks: 0 });
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTask, setSelectedTask] = useState(null);
     const [recentActivity, setRecentActivity] = useState([]);
@@ -65,10 +65,12 @@ const QADashboard = () => {
             ]);
             
             if (statsRes.data.success) {
-                setStats(statsRes.data.data);
+                setStats(prev => ({ ...prev, ...statsRes.data.data }));
             }
             if (tasksRes.data.success) {
                 const allTasks = tasksRes.data.tasks || [];
+                const overdueCount = allTasks.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date()).length;
+                setStats(prev => ({ ...prev, overdueTasks: overdueCount }));
                 setTasks(allTasks.filter(t => t.status === "QA Review"));
                 
                 const activities = [];
@@ -144,19 +146,20 @@ const QADashboard = () => {
                     <div className="max-w-7xl mx-auto">
                         
                         {/* KPI Section */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                             {[
-                                { label: 'Pending Reviews', value: stats.pendingReviewTasks, icon: <Clock className="w-5 h-5 text-amber-500" />, color: 'border-amber-500', bg: 'bg-amber-50/50' },
-                                { label: 'Completed Today', value: stats.completedTasks, icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />, color: 'border-emerald-500', bg: 'bg-emerald-50/50' },
-                                { label: 'Rejections Sent', value: stats.doneTasks, icon: <XCircle className="w-5 h-5 text-rose-500" />, color: 'border-rose-500', bg: 'bg-rose-50/50' },
+                                { label: 'PENDING', value: stats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
+                                { label: 'COMPLETED', value: stats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400' },
+                                { label: 'OVERDUE', value: stats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
+                                { label: 'REJECTED', value: stats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400' },
                             ].map((stat, i) => (
-                                <div key={i} className={`bg-white h-[90px] p-5 rounded-2xl border-b-4 ${stat.color} ${stat.bg} shadow-sm flex items-center justify-between transition-transform hover:scale-[1.02]`}>
-                                    <div>
-                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">{stat.label}</p>
-                                        <p className="text-2xl font-black text-slate-800 tracking-tight">{stat.value}</p>
-                                    </div>
-                                    <div className="p-3 bg-white rounded-xl shadow-sm border border-slate-100">
+                                <div key={i} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-4 transition-transform hover:scale-[1.02]`}>
+                                    <div className={`w-12 h-12 ${stat.iconBg} rounded-full flex items-center justify-center ${stat.iconColor} shadow-sm border border-slate-100`}>
                                         {stat.icon}
+                                    </div>
+                                    <div>
+                                        <p className={`text-2xl font-black ${stat.color} leading-none mb-1.5`}>{stat.value}</p>
+                                        <p className={`text-[10px] font-black ${stat.labelColor} uppercase tracking-widest`}>{stat.label}</p>
                                     </div>
                                 </div>
                             ))}
