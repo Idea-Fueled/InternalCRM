@@ -9,14 +9,6 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
     else if (role === "developer") { displayName = "Developer"; initial = "D"; }
     else if (role === "qa") { displayName = "QA"; initial = "Q"; }
 
-    const handleRoleSwitch = (e) => {
-        const selectedRole = e.target.value;
-        if (selectedRole === "admin") navigate("/admin/dashboard");
-        else if (selectedRole === "teamLead") navigate("/teamLead/dashboard");
-        else if (selectedRole === "developer") navigate("/developer/dashboard");
-        else if (selectedRole === "qa") navigate("/qa/dashboard");
-    };
-
     const toggleMobileSidebar = () => {
         document.dispatchEvent(new CustomEvent('toggleMobileSidebar'));
     };
@@ -49,22 +41,6 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-                {/* Temporary Role Switcher */}
-                <div className="hidden lg:flex items-center border border-blue-500 bg-white rounded-lg px-2 py-1 relative group cursor-pointer hover:bg-blue-50 transition-colors">
-                    <select 
-                        className="bg-transparent text-sm font-semibold text-blue-700 outline-none cursor-pointer appearance-none pr-5 pl-2 py-0.5"
-                        value={role}
-                        onChange={handleRoleSwitch}
-                        title="Switch Role (Testing)"
-                    >
-                        <option value="admin">Admin</option>
-                        <option value="teamLead">Team Lead</option>
-                        <option value="developer">Developer</option>
-                        <option value="qa">QA</option>
-                    </select>
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-500 text-xs">▼</div>
-                </div>
-
                 <div className="relative cursor-pointer mr-1 sm:mr-0">
                     <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition">🔔</div>
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 rounded-full">3</span>
