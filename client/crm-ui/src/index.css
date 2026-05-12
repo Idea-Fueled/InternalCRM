@@ -48,3 +48,20 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Kanban specific light scrollbar */
+.kanban-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+.kanban-scrollbar::-webkit-scrollbar-track {
+  background: #f8fafc;
+  border-radius: 10px;
+}
+.kanban-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+  border: 1px solid #f8fafc;
+}
+.kanban-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
