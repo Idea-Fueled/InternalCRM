@@ -33,6 +33,7 @@ const EmployeesDashboard = () => {
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [teamLeads, setTeamLeads] = useState([]);
 
     const fetchData = async () => {
         try {
@@ -57,6 +58,7 @@ const EmployeesDashboard = () => {
                         role: u.role,
                         email: u.email,
                         dept: u.department || "Engineering",
+                        lead: u.teamLead?.name || "N/A",
                         tasks: { total: userTasks.length, done, overdue, list: userTasks },
                         status: u.isActive ? (overdue > 0 ? "Overdue" : "Active") : "Inactive",
                         joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A",
@@ -72,6 +74,8 @@ const EmployeesDashboard = () => {
                     withOverdue: formattedEmployees.filter(e => e.tasks.overdue > 0).length,
                     inactive: formattedEmployees.filter(e => e.status === "Inactive").length
                 });
+
+                setTeamLeads(allUsers.filter(u => u.role === 'TL' || u.role === 'admin').map(u => ({ id: u._id, name: u.name })));
             }
         } catch (err) {
             console.error("Failed to fetch employees data", err);
@@ -138,7 +142,6 @@ const EmployeesDashboard = () => {
         { name: "Quality Assurance", members: employees.filter(e => e.dept === "Quality Assurance").length },
     ];
 
-    const teamLeads = employees.filter(e => e.role === "TL" || e.role === "admin");
 
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
@@ -448,7 +451,8 @@ const EmployeesDashboard = () => {
                         </div>
                     </div>
                 </div>
-                        {/* Employee Detail Modal */}
+            )}
+            {/* Employee Detail Modal */}
             {selectedEmployee && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4" onClick={() => setSelectedEmployee(null)}>
                     <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[750px] max-h-[95vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200 border border-slate-200" onClick={e => e.stopPropagation()}>
