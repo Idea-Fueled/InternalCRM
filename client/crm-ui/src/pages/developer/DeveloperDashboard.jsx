@@ -101,26 +101,51 @@ const DeveloperDashboard = () => {
                     ) : (
                     <>
                     {/* KPI Section */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-                        <div className="premium-stat-card slate">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Tasks</p>
-                            <span className="text-3xl font-extrabold text-slate-800">{totalAssigned}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                        <div className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px]">
+                            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
+                                <ClipboardList className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{totalAssigned}</h4>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Tasks</p>
+                            </div>
                         </div>
-                        <div className="premium-stat-card slate">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center"><Clock className="w-3.5 h-3.5 mr-1" /> New</p>
-                            <span className="text-3xl font-extrabold text-slate-700">{tasksNew}</span>
+                        <div className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px]">
+                            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
+                                <Clock className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{tasksNew}</h4>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New</p>
+                            </div>
                         </div>
-                        <div className="premium-stat-card blue">
-                            <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-2 flex items-center"><PlayCircle className="w-3.5 h-3.5 mr-1" /> In Progress</p>
-                            <span className="text-3xl font-extrabold text-blue-700">{tasksInProgress}</span>
+                        <div className="premium-stat-card blue flex-row items-center gap-4 p-4 h-[90px]">
+                            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-blue-100 text-blue-600">
+                                <PlayCircle className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <h4 className="text-2xl font-bold tracking-tight text-blue-700 leading-none mb-1">{tasksInProgress}</h4>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">In Progress</p>
+                            </div>
                         </div>
-                        <div className="premium-stat-card indigo">
-                            <p className="text-xs font-bold text-indigo-500 uppercase tracking-wider mb-2 flex items-center"><ShieldCheck className="w-3.5 h-3.5 mr-1" /> QA Review</p>
-                            <span className="text-3xl font-extrabold text-indigo-700">{tasksQA}</span>
+                        <div className="premium-stat-card indigo flex-row items-center gap-4 p-4 h-[90px]">
+                            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-indigo-100 text-indigo-600">
+                                <ShieldCheck className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <h4 className="text-2xl font-bold tracking-tight text-indigo-700 leading-none mb-1">{tasksQA}</h4>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">QA Review</p>
+                            </div>
                         </div>
-                        <div className="premium-stat-card rose">
-                            <p className="text-xs font-bold text-rose-500 uppercase tracking-wider mb-2 flex items-center"><AlertCircle className="w-3.5 h-3.5 mr-1" /> Overdue</p>
-                            <span className="text-3xl font-extrabold text-rose-600">{overdueTasks.length}</span>
+                        <div className="premium-stat-card rose flex-row items-center gap-4 p-4 h-[90px]">
+                            <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-rose-100 text-rose-600">
+                                <AlertCircle className="w-5 h-5" />
+                            </div>
+                            <div className="flex flex-col justify-center">
+                                <h4 className="text-2xl font-bold tracking-tight text-rose-600 leading-none mb-1">{overdueTasks.length}</h4>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Overdue</p>
+                            </div>
                         </div>
                     </div>
 
