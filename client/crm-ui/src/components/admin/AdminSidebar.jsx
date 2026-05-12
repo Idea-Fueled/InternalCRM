@@ -95,7 +95,7 @@ const AdminSidebar = ({ role = "admin" }) => {
                     onClick={() => setIsMobileOpen(false)}
                 />
             )}
-            <div className={`fixed lg:static h-screen z-50 bg-[#0B1121] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0B1121] to-[#040814] text-slate-300 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/60 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isMinimized ? 'lg:w-20' : 'w-72'}`}>
+            <div className={`fixed lg:static h-screen z-50 bg-[#0B1121] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0B1121] to-[#040814] text-slate-300 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/60 no-scrollbar ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isMinimized ? 'lg:w-20' : 'w-72'}`}>
 
             <button
                 onClick={toggleSidebar}
@@ -107,7 +107,7 @@ const AdminSidebar = ({ role = "admin" }) => {
                 </svg>
             </button>
 
-            <div className="p-4 flex-1 flex flex-col overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="p-4 flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
                 <div className={`flex items-center gap-3.5 mb-8 pb-6 border-b border-slate-800/80 transition-all duration-300 ${isMinimized ? 'justify-center' : 'px-2'}`}>
                     <div className="relative flex-shrink-0">
                         <img src={logoImg} alt="Idea Fueled" className={`h-auto object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] transition-all duration-300 ${isMinimized ? 'w-10' : 'w-12'}`} />
