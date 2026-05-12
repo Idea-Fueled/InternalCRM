@@ -113,41 +113,52 @@ const QADashboard = () => {
                     </div>
 
                     {/* KPI Stats */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-slate-500 mb-1">Total Tasks</p>
-                                <p className="text-3xl font-bold text-slate-800">{stats.pendingReviewTasks + stats.completedTasks + stats.doneTasks}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-                                <ClipboardCheck className="w-6 h-6" />
-                            </div>
-                        </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-slate-500 mb-1">Pending Reviews</p>
-                                <p className="text-3xl font-bold text-amber-600">{stats.pendingReviewTasks}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                                <Clock className="w-6 h-6" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div className="bg-white px-5 py-4 rounded-xl shadow-sm border-b-4 border-blue-500 flex items-center justify-between h-[90px] hover:translate-y-[-2px] transition-all duration-300">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                                    <ClipboardCheck className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Tasks</p>
+                                    <p className="text-xl font-bold text-slate-800">{stats.pendingReviewTasks + stats.completedTasks + stats.doneTasks}</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-slate-500 mb-1">Approved Tasks</p>
-                                <p className="text-3xl font-bold text-emerald-600">{stats.completedTasks}</p>
-                            </div>
-                            <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                                <CheckCircle2 className="w-6 h-6" />
+
+                        <div className="bg-white px-5 py-4 rounded-xl shadow-sm border-b-4 border-amber-500 flex items-center justify-between h-[90px] hover:translate-y-[-2px] transition-all duration-300">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                                    <Clock className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pending Reviews</p>
+                                    <p className="text-xl font-bold text-slate-800">{stats.pendingReviewTasks}</p>
+                                </div>
                             </div>
                         </div>
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-slate-500 mb-1">Done Tasks</p>
-                                <p className="text-3xl font-bold text-rose-600">{stats.doneTasks}</p>
+
+                        <div className="bg-white px-5 py-4 rounded-xl shadow-sm border-b-4 border-emerald-500 flex items-center justify-between h-[90px] hover:translate-y-[-2px] transition-all duration-300">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                    <CheckCircle2 className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Approved Tasks</p>
+                                    <p className="text-xl font-bold text-slate-800">{stats.completedTasks}</p>
+                                </div>
                             </div>
-                            <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
-                                <XCircle className="w-6 h-6" />
+                        </div>
+
+                        <div className="bg-white px-5 py-4 rounded-xl shadow-sm border-b-4 border-rose-500 flex items-center justify-between h-[90px] hover:translate-y-[-2px] transition-all duration-300">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                                    <XCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Done Tasks</p>
+                                    <p className="text-xl font-bold text-slate-800">{stats.doneTasks}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -320,16 +331,16 @@ const QADashboard = () => {
 
                             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                                 <div className="flex gap-2 mb-3">
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${PRIORITY_COLORS[selectedTask.priority]}`}>
-                                        {selectedTask.priority} Priority
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${PRIORITY_COLORS[selectedTask.priority] || PRIORITY_COLORS['Medium']}`}>
+                                        {selectedTask.priority || 'Medium'} Priority
                                     </span>
                                     <span className="text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-                                        {selectedTask.project}
+                                        {selectedTask.project?.projectName || selectedTask.project?.name || "No Project"}
                                     </span>
                                 </div>
 
                                 <h2 className="text-2xl font-bold text-slate-900 mb-6 leading-tight">
-                                    {selectedTask.title}
+                                    {selectedTask.taskName}
                                 </h2>
 
                                 <div className="grid grid-cols-2 gap-4 mb-8">
