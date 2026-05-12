@@ -4,7 +4,7 @@ import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Clock, AlertTriangle, 
   ChevronRight, X, PlayCircle, ShieldCheck, FileText,
-  MessageSquare, Star, ArrowRightCircle
+  MessageSquare, Star, ArrowRightCircle, Activity
 } from 'lucide-react';
 
 import { taskService } from '../../api/services';
