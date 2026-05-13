@@ -69,7 +69,18 @@ export const createProject = async (req, res, next) => {
 // Get all active projects
 export const getAllProjects = async (req, res, next) => {
     try {
-        const projects = await Project.find({ isDeleted: false })
+        const { role, _id } = req.user;
+        let query = { isDeleted: false };
+
+        // Role-based filtering
+        if (role === "TL") {
+            query.teamLead = _id;
+        } else if (role === "developer" || role === "qa") {
+            query.teamMembers = _id;
+        }
+        // Admins see all projects (no additional filter)
+
+        const projects = await Project.find(query)
             .populate("teamLead", "name email")
             .populate("teamMembers", "name email")
             .sort({ createdAt: -1 });

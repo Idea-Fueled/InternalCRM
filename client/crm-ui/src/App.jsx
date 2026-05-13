@@ -17,9 +17,11 @@ import TeamLeadTeam from "./pages/teamLead/TeamLeadTeam";
 import DeveloperDashboard from "./pages/developer/DeveloperDashboard";
 import DeveloperTasks from "./pages/developer/DeveloperTasks";
 import DeveloperKanban from "./pages/developer/DeveloperKanban";
+import DeveloperProjects from "./pages/developer/DeveloperProjects";
 import QADashboard from "./pages/qa/QADashboard";
 import QAReviews from "./pages/qa/QAReviews";
 import QAKanban from "./pages/qa/QAKanban";
+import QAProjects from "./pages/qa/QAProjects";
 
 import { Toaster } from "sonner";
 
@@ -88,6 +90,10 @@ const App = () => {
         path: "/developer/kanban",
         element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperKanban /></ProtectedRoute>
       },
+      {
+        path: "/developer/projects",
+        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperProjects /></ProtectedRoute>
+      },
       // QA Routes
       {
         path: "/qa/dashboard",
@@ -100,6 +106,10 @@ const App = () => {
       {
         path: "/qa/kanban",
         element: <ProtectedRoute allowedRoles={["qa", "admin"]}><QAKanban /></ProtectedRoute>
+      },
+      {
+        path: "/qa/projects",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><QAProjects /></ProtectedRoute>
       },
       {
         path: "*",
