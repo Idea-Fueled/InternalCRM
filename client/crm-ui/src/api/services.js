@@ -38,6 +38,15 @@ export const userService = {
     restoreUser: (id) => axiosInstance.put(`/users/restore/${id}`),
 };
 
+// Notification Services
+export const notificationService = {
+    getMyNotifications: () => axiosInstance.get('/notifications/my'),
+    markAsRead: (id) => axiosInstance.put(`/notifications/read/${id}`),
+    markAllAsRead: () => axiosInstance.put('/notifications/read-all'),
+    deleteNotification: (id) => axiosInstance.delete(`/notifications/delete/${id}`),
+    clearAllNotifications: () => axiosInstance.delete('/notifications/clear-all'),
+};
+
 // Auth Services
 export const authService = {
     login: (data) => axiosInstance.post('/users/login', data),

@@ -1,4 +1,6 @@
 import Project from "../models/project.schema.js";
+import { createNotification } from "./notification.controller.js";
+import { User } from "../models/user.schema.js";
 
 // Create a new project
 export const createProject = async (req, res, next) => {
@@ -23,6 +25,33 @@ export const createProject = async (req, res, next) => {
         });
 
         const savedProject = await newProject.save();
+
+        // Notify Team Lead
+        await createNotification({
+            recipient: teamLead,
+            sender: req.user._id,
+            title: "New Project Assigned",
+            message: `You have been assigned as the Team Lead for ${projectName}`,
+            type: "project",
+            category: "assignment",
+            link: `/projects/${savedProject._id}`
+        });
+
+        // Notify Admins
+        const admins = await User.find({ role: "admin" });
+        for (const admin of admins) {
+            if (admin._id.toString() !== req.user._id.toString()) {
+                await createNotification({
+                    recipient: admin._id,
+                    sender: req.user._id,
+                    title: "New Project Created",
+                    message: `${projectName} has been created by ${req.user.name}`,
+                    type: "project",
+                    category: "creation",
+                    link: `/projects/${savedProject._id}`
+                });
+            }
+        }
 
         return res.status(201).json({
             success: true,

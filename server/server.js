@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.route.js";
 import projectRoutes from "./routes/project.route.js";
 import taskRoutes from "./routes/task.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/users", userRoutes)
 app.use("/projects", projectRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/notifications", notificationRoutes);
 
 const PORT = 8000
 
