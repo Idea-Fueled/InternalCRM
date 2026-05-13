@@ -8,6 +8,16 @@ import {
 } from 'lucide-react';
 
 const TeamLeadProjects = () => {
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch (e) {
+            return dateString;
+        }
+    };
+
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -88,9 +98,9 @@ const TeamLeadProjects = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10">
-                                {/* Left Column: Task List */}
-                                <div className="lg:col-span-3 flex flex-col gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+                                {/* Left Column: Task List (8 cols) */}
+                                <div className="lg:col-span-8 flex flex-col gap-6">
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                                         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                             <h3 className="text-lg font-bold text-slate-800 flex items-center">
@@ -148,8 +158,17 @@ const TeamLeadProjects = () => {
                                                     ))}
                                                     {selectedProject.tasks.length === 0 && (
                                                         <tr>
-                                                            <td colSpan="4" className="px-6 py-10 text-center text-slate-500 text-sm bg-slate-50/30">
-                                                                No tasks found for this project yet.
+                                                            <td colSpan="4" className="px-6 py-20 text-center bg-slate-50/20">
+                                                                <div className="flex flex-col items-center justify-center">
+                                                                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 text-slate-300">
+                                                                        <LayoutList className="w-8 h-8" />
+                                                                    </div>
+                                                                    <h4 className="text-base font-bold text-slate-800">No tasks yet</h4>
+                                                                    <p className="text-sm text-slate-400 mt-1 max-w-[240px] mx-auto">Get started by adding your first task to this project.</p>
+                                                                    <button className="mt-5 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors">
+                                                                        Create First Task
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     )}
@@ -159,19 +178,19 @@ const TeamLeadProjects = () => {
                                     </div>
                                 </div>
 
-                                {/* Right Column: Overview */}
-                                <div className="space-y-6">
+                                {/* Right Column: Overview (4 cols) */}
+                                <div className="lg:col-span-4 space-y-6">
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
                                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">Project Overview</h3>
                                         
                                         <div className="space-y-8">
                                             {/* Progress */}
-                                            <div>
-                                                <div className="flex justify-between items-center mb-2.5">
-                                                    <span className="text-sm font-semibold text-slate-700">Overall Progress</span>
-                                                    <span className="text-sm font-bold text-blue-600">{selectedProject.progress}%</span>
+                                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100/50">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Completion Progress</span>
+                                                    <span className="text-sm font-black text-blue-600">{selectedProject.progress}%</span>
                                                 </div>
-                                                <div className="bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                                <div className="bg-slate-200/50 rounded-full h-1.5 overflow-hidden">
                                                     <div 
                                                         className={`h-full rounded-full transition-all duration-1000 ${
                                                             selectedProject.progress === 100 ? 'bg-emerald-500' : 'bg-blue-500'
@@ -181,36 +200,34 @@ const TeamLeadProjects = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="border-t border-slate-100 pt-6 space-y-6">
+                                            <div className="pt-2 space-y-6">
                                                 {/* Timeline */}
-                                                <div className="flex items-start gap-4">
-                                                    <div className="mt-0.5 p-2.5 bg-blue-50 rounded-xl text-blue-500">
+                                                <div className="flex items-center gap-4 p-4 bg-white border border-slate-100 rounded-xl shadow-sm">
+                                                    <div className="shrink-0 p-2.5 bg-blue-50 rounded-xl text-blue-500">
                                                         <Calendar className="w-5 h-5" />
                                                     </div>
-                                                    <div>
-                                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Timeline</p>
-                                                        <p className="text-sm font-bold text-slate-800">{selectedProject.startDate}</p>
-                                                        <p className="text-sm font-medium text-slate-500 mt-0.5">to {selectedProject.endDate}</p>
+                                                    <div className="min-w-0">
+                                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Timeline</p>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm font-bold text-slate-800">{formatDate(selectedProject.startDate)}</span>
+                                                            <span className="text-slate-300">—</span>
+                                                            <span className="text-sm font-bold text-slate-800">{formatDate(selectedProject.endDate)}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Team */}
-                                                <div className="flex items-start gap-4">
-                                                    <div className="mt-0.5 p-2.5 bg-indigo-50 rounded-xl text-indigo-500">
-                                                        <Users className="w-5 h-5" />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Team Members ({selectedProject.members.length})</p>
-                                                        <div className="flex flex-col gap-2.5 mt-1">
-                                                            {selectedProject.members.map((member, i) => (
-                                                                <div key={i} className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold shadow-sm">
-                                                                        {member.initial}
-                                                                    </div>
-                                                                    <span className="text-sm font-medium text-slate-700">{member.name}</span>
+                                                <div className="p-5 bg-white border border-slate-100 rounded-xl shadow-sm">
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Team Members ({selectedProject.members.length})</p>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {selectedProject.members.map((member, i) => (
+                                                            <div key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-100/50">
+                                                                <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
+                                                                    {member.initial}
                                                                 </div>
-                                                            ))}
-                                                        </div>
+                                                                <span className="text-xs font-bold text-slate-700 truncate">{member.name}</span>
+                                                            </div>
+                                                        ))}
                                                     </div>
                                                 </div>
                                             </div>
