@@ -142,7 +142,7 @@ export const getCurrentUser = (req, res) => {
 export const getAllUsers = async (req, res) => {
     try {
         const { teamLead, role } = req.query;
-        let query = { isDeleted: false };
+        let query = { isActive: true };
         
         if (teamLead && teamLead !== 'undefined' && teamLead !== 'null') {
             query.teamLead = teamLead;

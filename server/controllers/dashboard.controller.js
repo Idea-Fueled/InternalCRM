@@ -14,7 +14,7 @@ export const getAdminDashboard = async (req, res) => {
             qaReviewTasks,
             overdueTasks
         ] = await Promise.all([
-            User.countDocuments(),
+            User.countDocuments({ isActive: true }),
             Project.countDocuments({ isDeleted: false }),
             Task.countDocuments({ isDeleted: false }),
             Task.countDocuments({ status: "QA Review", isDeleted: false }),
