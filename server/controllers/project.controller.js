@@ -81,8 +81,8 @@ export const getAllProjects = async (req, res, next) => {
         // Admins see all projects (no additional filter)
 
         const projects = await Project.find(query)
-            .populate("teamLead", "name email")
-            .populate("teamMembers", "name email")
+            .populate("teamLead", "name email role")
+            .populate("teamMembers", "name email role")
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
