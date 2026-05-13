@@ -510,19 +510,19 @@ const EmployeesDashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Small Stats */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="premium-stat-card blue !p-3 text-center">
-                                    <p className="text-xl font-bold text-blue-600">{selectedEmployee.tasks.total}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Tasks</p>
+                            {/* Quick Stats Grid - Improved Spacing */}
+                            <div className="grid grid-cols-3 gap-3">
+                                <div className="premium-stat-card blue !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                    <span className="text-xl font-black text-blue-600 leading-none">{selectedEmployee.tasks.total}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Total Tasks</span>
                                 </div>
-                                <div className="premium-stat-card emerald !p-3 text-center">
-                                    <p className="text-xl font-bold text-emerald-600">{selectedEmployee.tasks.done}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Completed</p>
+                                <div className="premium-stat-card emerald !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                    <span className="text-xl font-black text-emerald-600 leading-none">{selectedEmployee.tasks.done}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Completed</span>
                                 </div>
-                                <div className="premium-stat-card rose !p-3 text-center col-span-2">
-                                    <p className="text-xl font-bold text-rose-600">{selectedEmployee.tasks.overdue}</p>
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Overdue Tasks</p>
+                                <div className="premium-stat-card rose !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                    <span className="text-xl font-black text-rose-600 leading-none">{selectedEmployee.tasks.overdue}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Overdue</span>
                                 </div>
                             </div>
 
