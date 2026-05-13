@@ -9,7 +9,7 @@ import {
     restoreUser,
     updateUser
 } from "../controllers/user.controller.js";
-import { protectRoute, isAdmin } from "../middlewares/auth.middleware.js";
+import { protectRoute, isAdmin, isAdminOrTL } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
 
