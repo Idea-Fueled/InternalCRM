@@ -25,13 +25,20 @@ export const createTask = async (req, res) => {
             developerNotes,
             qaNotes,
             attachments,
-            isDeleted
+            isDeleted,
+            statusHistory: [{
+                status: status || "New",
+                changedBy: req.user?._id || assignedBy,
+                changedAt: new Date(),
+                notes: "Initial assignment"
+            }]
         });
 
         const populatedTask = await Task.findById(task._id)
             .populate("project", "projectName name status")
             .populate("assignedTo", "name email")
-            .populate("assignedBy", "name email");
+            .populate("assignedBy", "name email")
+            .populate("statusHistory.changedBy", "name role");
 
         return res.status(201).json({
             success: true,

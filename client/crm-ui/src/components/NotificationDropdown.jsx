@@ -145,7 +145,8 @@ const NotificationDropdown = ({ role }) => {
                         ) : (
                             <div className="divide-y divide-slate-50">
                                 {notifications.map((n) => {
-                                    const userName = n.changedBy?.name === user?.name ? 'You' : (n.changedBy?.name || 'System');
+                                    const changerName = n.changedBy?.name;
+                                    const userName = changerName ? (changerName === user?.name ? 'You' : changerName) : 'Someone';
                                     
                                     return (
                                         <div key={n.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group border-b last:border-0 border-slate-50">
