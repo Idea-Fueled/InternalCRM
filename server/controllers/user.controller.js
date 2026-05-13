@@ -152,7 +152,9 @@ export const getAllUsers = async (req, res) => {
             query.role = role;
         }
 
-        const users = await User.find(query).sort({ name: 1 });
+        const users = await User.find(query)
+            .populate("teamLead", "name")
+            .sort({ name: 1 });
         
         return res.status(200).json({
             success: true,
