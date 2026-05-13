@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { taskService } from '../../api/services';
-import { useAuth } from '../../context/AuthContext';
+import { taskService } from '../api/services';
+import { useAuth } from '../context/AuthContext';
 import { 
     Bell, 
     CheckCircle2, 
