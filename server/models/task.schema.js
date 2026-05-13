@@ -61,6 +61,7 @@ const taskSchema = new mongoose.Schema({
             status: { type: String },
             notes: { type: String, default: "" },
             attachment: { type: String, default: "" },
+            changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
             changedAt: { type: Date, default: Date.now }
         }
     ]

@@ -56,6 +56,7 @@ const NotificationDropdown = ({ role }) => {
                                 status: h.status,
                                 notes: h.notes,
                                 timestamp: h.changedAt,
+                                changedBy: h.changedBy,
                                 type: h.status === 'Completed' ? 'approve' : 
                                       h.status === 'In Progress' ? 'reject' : 'update'
                             });
@@ -130,44 +131,53 @@ const NotificationDropdown = ({ role }) => {
                             </div>
                         ) : (
                             <div className="divide-y divide-slate-50">
-                                {notifications.map((n) => (
-                                    <div key={n.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group">
-                                        <div className="flex gap-4">
-                                            <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm ${
-                                                n.type === 'approve' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                                                n.type === 'reject' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                                'bg-blue-50 border-blue-100 text-blue-600'
-                                            }`}>
-                                                {n.type === 'approve' ? <CheckCircle2 className="w-5 h-5" /> :
-                                                 n.type === 'reject' ? <XCircle className="w-5 h-5" /> :
-                                                 <Clock className="w-5 h-5" />}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between mb-0.5">
-                                                    <span className={`text-[10px] font-black uppercase tracking-wider ${
-                                                        n.type === 'approve' ? 'text-emerald-600' :
-                                                        n.type === 'reject' ? 'text-rose-600' :
-                                                        'text-blue-600'
-                                                    }`}>
-                                                        {n.status}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold text-slate-400">{getTimeAgo(n.timestamp)}</span>
+                                {notifications.map((n) => {
+                                    const userName = n.changedBy?.name === user?.name ? 'You' : (n.changedBy?.name || 'System');
+                                    
+                                    return (
+                                        <div key={n.id} className="p-4 hover:bg-slate-50 transition-colors cursor-pointer group border-b last:border-0 border-slate-50">
+                                            <div className="flex gap-4">
+                                                <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center border shadow-sm ${
+                                                    n.type === 'approve' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                                    n.type === 'reject' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                                    'bg-blue-50 border-blue-100 text-blue-600'
+                                                }`}>
+                                                    {n.type === 'approve' ? <CheckCircle2 className="w-5 h-5" /> :
+                                                     n.type === 'reject' ? <XCircle className="w-5 h-5" /> :
+                                                     <Clock className="w-5 h-5" />}
                                                 </div>
-                                                <p className="text-sm font-bold text-slate-800 truncate mb-1">
-                                                    {n.taskName}
-                                                </p>
-                                                {n.notes && (
-                                                    <p className="text-[11px] text-slate-500 line-clamp-2 italic bg-slate-100/50 p-2 rounded-lg border border-slate-100">
-                                                        "{n.notes}"
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className={`text-[10px] font-black uppercase tracking-wider ${
+                                                            n.type === 'approve' ? 'text-emerald-600' :
+                                                            n.type === 'reject' ? 'text-rose-600' :
+                                                            'text-blue-600'
+                                                        }`}>
+                                                            {n.status}
+                                                        </span>
+                                                        <span className="text-[10px] font-bold text-slate-400">{getTimeAgo(n.timestamp)}</span>
+                                                    </div>
+                                                    
+                                                    <p className="text-[13px] leading-snug text-slate-700">
+                                                        <span className="font-bold text-slate-900">{n.taskName}</span> has been moved by <span className="font-bold text-slate-900">{userName}</span> to status <span className="font-bold text-blue-600 underline decoration-blue-200 underline-offset-2">{n.status}</span>
                                                     </p>
-                                                )}
-                                                <div className="mt-2 flex items-center text-[10px] font-black text-blue-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    View Task <ChevronRight className="w-3 h-3 ml-0.5" />
+                                                    
+                                                    {n.notes && (
+                                                        <div className="mt-2 p-2 bg-slate-50 border border-slate-100 rounded-lg">
+                                                            <p className="text-[11px] text-slate-500 italic line-clamp-2">
+                                                                "{n.notes}"
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    <div className="mt-2 flex items-center text-[10px] font-black text-blue-600 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        View Details <ChevronRight className="w-3 h-3 ml-0.5" />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
