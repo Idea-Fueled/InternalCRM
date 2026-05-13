@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import NotificationDropdown from "./NotificationDropdown";
 
 const Topbar = ({ DashboardTile, role = "admin" }) => {
     const navigate = useNavigate();
@@ -41,10 +42,7 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-                <div className="relative cursor-pointer mr-1 sm:mr-0">
-                    <div className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition">🔔</div>
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 rounded-full">3</span>
-                </div>
+                <NotificationDropdown role={role} />
 
                 <div className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-1 sm:px-2 py-1 rounded-lg transition">
                     <div className={`w-8 h-8 sm:w-9 sm:h-9 text-white rounded-full flex items-center justify-center font-semibold text-sm ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>{initial}</div>
