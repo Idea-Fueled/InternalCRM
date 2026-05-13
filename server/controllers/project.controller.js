@@ -88,7 +88,9 @@ export const getAllProjects = async (req, res, next) => {
 
         // Fetch tasks for these projects to include counts/progress
         const projectIds = projects.map(p => p._id);
-        const allTasks = await Task.find({ project: { $in: projectIds }, isDeleted: false });
+        const allTasks = await Task.find({ project: { $in: projectIds }, isDeleted: false })
+            .populate("assignedTo", "name email role")
+            .populate("assignedQA", "name email role");
 
         const projectsWithTasks = projects.map(p => {
             const projectTasks = allTasks.filter(t => t.project.toString() === p._id.toString());
@@ -125,7 +127,9 @@ export const getProjectById = async (req, res, next) => {
             });
         }
 
-        const tasks = await Task.find({ project: id, isDeleted: false });
+        const tasks = await Task.find({ project: id, isDeleted: false })
+            .populate("assignedTo", "name email role")
+            .populate("assignedQA", "name email role");
 
         return res.status(200).json({
             success: true,
