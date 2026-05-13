@@ -13,7 +13,6 @@ const ProjectsDashboard = () => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status: All");
-    const [users, setUsers] = useState([]);
     const [newProject, setNewProject] = useState({
         projectName: "",
         description: "",
@@ -118,8 +117,6 @@ const ProjectsDashboard = () => {
         const matchesStatus = statusFilter === "Status: All" || proj.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
-
-    const teamLeads = users.filter(u => u.role === "TL" || u.role === "admin");
 
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
