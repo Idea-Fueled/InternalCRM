@@ -176,6 +176,7 @@ const KanbanDashboard = () => {
                                             {projectMembers.filter(m => m.role === 'qa').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
                                         </select>
                                     </div>
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block font-bold text-slate-700 mb-1.5">Priority</label>
