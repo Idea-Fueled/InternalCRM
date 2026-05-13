@@ -32,7 +32,7 @@ router.post("/logout", (req, res) => {
 router.get("/me", protectRoute, getCurrentUser);
 
 // --- Protected routes ---
-router.get("/all", protectRoute, isAdmin, getAllUsers);
+router.get("/all", protectRoute, isAdminOrTL, getAllUsers);
 router.get("/:_id", protectRoute, getUserById);
 router.put("/update/:_id", protectRoute, isAdmin, updateUser);
 router.delete("/delete/:_id", protectRoute, isAdmin, deleteUser);
