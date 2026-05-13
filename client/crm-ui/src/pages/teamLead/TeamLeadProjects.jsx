@@ -48,10 +48,20 @@ const TeamLeadProjects = () => {
                     totalTasks,
                     overdueTasks,
                     members: p.teamMembers?.map(m => ({
+                        id: m._id,
                         initial: m.name?.charAt(0).toUpperCase() || "U",
-                        name: m.name || "Unknown"
+                        name: m.name || "Unknown",
+                        role: m.role
                     })) || [],
-                    tasks: p.tasks || []
+                    tasks: (p.tasks || []).map(t => ({
+                        ...t,
+                        id: t._id,
+                        name: t.taskName,
+                        start: t.startDate ? new Date(t.startDate).toLocaleDateString() : 'N/A',
+                        end: t.endDate ? new Date(t.endDate).toLocaleDateString() : 'N/A',
+                        assignee: t.assignedTo?.name || "Unassigned",
+                        assigneeInitial: t.assignedTo?.name?.charAt(0).toUpperCase() || "?"
+                    }))
                 };
             });
             setProjects(formatted);

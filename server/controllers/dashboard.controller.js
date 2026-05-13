@@ -42,8 +42,12 @@ export const getTeamLeadDashboard = async (req, res) => {
         const teamLeadId = req.user._id;
         const currentDate = new Date();
 
-        // Active projects under this team lead
-        const activeProjectsCount = await Project.countDocuments({ teamLead: teamLeadId, status: "Active", isDeleted: false });
+        // Active projects under this team lead (case-insensitive status check)
+        const activeProjectsCount = await Project.countDocuments({ 
+            teamLead: teamLeadId, 
+            status: { $regex: /^active$/i }, 
+            isDeleted: false 
+        });
 
         // Find all projects led by this team lead to get tasks belonging to them
         const tlProjects = await Project.find({ teamLead: teamLeadId, isDeleted: false }).select('_id');

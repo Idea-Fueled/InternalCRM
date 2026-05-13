@@ -146,7 +146,17 @@ export const getAllUsers = async (req, res) => {
         
         // Automatic filtering for Team Leads
         if (req.user.role === "TL") {
-            query.teamLead = req.user._id;
+            // Find users who have this TL as their teamLead OR who are in the TL's teamMembers array
+            const currentUser = await User.findById(req.user._id);
+            const teamMemberIds = currentUser?.teamMembers || [];
+            
+            query = {
+                ...query,
+                $or: [
+                    { teamLead: req.user._id },
+                    { _id: { $in: teamMemberIds } }
+                ]
+            };
         } else if (teamLead && teamLead !== 'undefined' && teamLead !== 'null') {
             query.teamLead = teamLead;
         }
