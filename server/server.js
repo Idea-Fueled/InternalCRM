@@ -8,6 +8,7 @@ import projectRoutes from "./routes/project.route.js";
 import taskRoutes from "./routes/task.route.js";
 import dashboardRoutes from "./routes/dashboard.route.js";
 import notificationRoutes from "./routes/notification.route.js";
+import departmentRoutes from "./routes/department.route.js";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/projects", projectRoutes);
 app.use("/tasks", taskRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/notifications", notificationRoutes);
+app.use("/departments", departmentRoutes);
 
 const PORT = 8000
 

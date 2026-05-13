@@ -47,6 +47,13 @@ export const notificationService = {
     clearAllNotifications: () => axiosInstance.delete('/notifications/clear-all'),
 };
 
+// Department Services
+export const departmentService = {
+    getAllDepartments: () => axiosInstance.get('/departments/all'),
+    createDepartment: (data) => axiosInstance.post('/departments/create', data),
+    deleteDepartment: (id) => axiosInstance.delete(`/departments/delete/${id}`),
+};
+
 // Auth Services
 export const authService = {
     login: (data) => axiosInstance.post('/users/login', data),

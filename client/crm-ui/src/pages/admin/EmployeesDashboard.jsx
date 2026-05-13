@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
-import { userService, taskService, authService } from "../../api/services";
+import { userService, taskService, authService, departmentService } from "../../api/services";
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
@@ -34,6 +34,45 @@ const EmployeesDashboard = () => {
     const [submitted, setSubmitted] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [teamLeads, setTeamLeads] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [newDeptName, setNewDeptName] = useState("");
+    const [isDeptLoading, setIsDeptLoading] = useState(false);
+
+    const fetchDepartments = async () => {
+        try {
+            const res = await departmentService.getAllDepartments();
+            if (res.data?.success) setDepartments(res.data.departments);
+        } catch (error) {
+            console.error("Failed to fetch departments", error);
+        }
+    };
+
+    const handleAddDepartment = async () => {
+        if (!newDeptName.trim()) return;
+        try {
+            setIsDeptLoading(true);
+            const res = await departmentService.createDepartment({ name: newDeptName.trim() });
+            if (res.data?.success) {
+                toast.success("Department added");
+                setNewDeptName("");
+                fetchDepartments();
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to add department");
+        } finally {
+            setIsDeptLoading(false);
+        }
+    };
+
+    const handleDeleteDepartment = async (id) => {
+        try {
+            await departmentService.deleteDepartment(id);
+            toast.success("Department deleted");
+            fetchDepartments();
+        } catch (error) {
+            toast.error("Failed to delete department");
+        }
+    };
 
     const fetchData = async () => {
         try {
@@ -86,6 +125,7 @@ const EmployeesDashboard = () => {
 
     useEffect(() => {
         fetchData();
+        fetchDepartments();
     }, []);
 
     const handleAddEmployee = async (e) => {
@@ -134,13 +174,11 @@ const EmployeesDashboard = () => {
         e.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const departmentsList = [
-        { name: "Design", members: employees.filter(e => e.dept === "Design").length },
-        { name: "Engineering", members: employees.filter(e => e.dept === "Engineering").length },
-        { name: "Management", members: employees.filter(e => e.dept === "Management").length },
-        { name: "Marketing", members: employees.filter(e => e.dept === "Marketing").length },
-        { name: "Quality Assurance", members: employees.filter(e => e.dept === "Quality Assurance").length },
-    ];
+    const departmentsList = departments.map(d => ({
+        id: d._id,
+        name: d.name,
+        members: employees.filter(e => e.dept === d.name).length
+    }));
 
 
     return (
@@ -310,28 +348,44 @@ const EmployeesDashboard = () => {
                         </div>
                         <div className="p-5">
                             <div className="flex gap-2">
-                                <input type="text" placeholder="New department" className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm placeholder-slate-400" />
-                                <button className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5 text-sm">
+                                <input 
+                                    type="text" 
+                                    placeholder="New department" 
+                                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm placeholder-slate-400" 
+                                    value={newDeptName}
+                                    onChange={(e) => setNewDeptName(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleAddDepartment()}
+                                />
+                                <button 
+                                    onClick={handleAddDepartment}
+                                    disabled={isDeptLoading || !newDeptName.trim()}
+                                    className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition flex items-center gap-1.5 text-sm disabled:opacity-50"
+                                >
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
                                     Add
                                 </button>
                             </div>
-                            <div className="space-y-2.5 mt-5 max-h-[300px] overflow-y-auto">
-                                {departmentsList.map((dept, idx) => (
+                            <div className="space-y-2.5 mt-5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                                {departmentsList.length > 0 ? departmentsList.map((dept, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg">
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-slate-800 text-sm">{dept.name}</span>
                                             <span className="text-[13px] text-slate-400 font-medium">{dept.members} member{dept.members !== 1 && 's'}</span>
                                         </div>
                                         {dept.members === 0 ? (
-                                            <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors border border-red-100">
+                                            <button 
+                                                onClick={() => handleDeleteDepartment(dept.id)}
+                                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition-colors border border-red-100"
+                                            >
                                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         ) : (
                                             <span className="px-3 py-1 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-100 rounded-lg">In use</span>
                                         )}
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="text-center py-10 text-slate-400 text-sm font-medium">No departments yet.</div>
+                                )}
                             </div>
                         </div>
                         <div className="p-4 border-t border-slate-100 flex justify-end bg-slate-50/50">
@@ -414,11 +468,10 @@ const EmployeesDashboard = () => {
                                         onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
                                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
                                     >
-                                        <option value="Engineering">Engineering</option>
-                                        <option value="Design">Design</option>
-                                        <option value="Marketing">Marketing</option>
-                                        <option value="QA">QA</option>
-                                        <option value="Management">Management</option>
+                                        <option value="">Select Department</option>
+                                        {departments.map(dept => (
+                                            <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
