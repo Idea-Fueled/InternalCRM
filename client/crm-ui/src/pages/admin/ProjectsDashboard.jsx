@@ -43,7 +43,8 @@ const ProjectsDashboard = () => {
             }
             try {
                 const res = await userService.getAllUsers({ teamLead: newProject.teamLead });
-                setTeamMembersList(res.data.data || []);
+                const members = (res.data.data || []).filter(u => u.role === 'developer' || u.role === 'qa');
+                setTeamMembersList(members);
             } catch (err) {
                 console.error("Failed to fetch team members", err);
             }

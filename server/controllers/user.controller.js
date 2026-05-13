@@ -131,25 +131,30 @@ export const getCurrentUser = (req, res) => {
 export const getAllUsers = async (req, res) => {
     try {
         const { teamLead, role } = req.query;
-        let query = {};
-        if (teamLead) query.teamLead = teamLead;
-        if (role) query.role = role;
-
-        const users = await User.find(query);
-        if (!users) {
-            return res.status(404).json({
-                message: "No users found!"
-            })
+        let query = { isDeleted: false };
+        
+        if (teamLead && teamLead !== 'undefined' && teamLead !== 'null') {
+            query.teamLead = teamLead;
         }
+        
+        if (role) {
+            query.role = role;
+        }
+
+        const users = await User.find(query).sort({ name: 1 });
+        
         return res.status(200).json({
+            success: true,
             data: users
-        })
+        });
     } catch (error) {
+        console.error("getAllUsers error:", error);
         return res.status(500).json({
+            success: false,
             message: error.message
-        })
+        });
     }
-}
+};
 
 export const getUserById = async (req, res) => {
     try {
