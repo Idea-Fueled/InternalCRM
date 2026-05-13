@@ -41,12 +41,17 @@ const TeamLeadDashboard = () => {
                 }
 
                 if (projRes.data?.success) {
-                    setProjects(projRes.data.data.slice(0, 3)); // Top 3 projects
+                    const mappedProjects = (projRes.data.projects || []).map(p => ({
+                        ...p,
+                        id: p._id,
+                        name: p.projectName
+                    }));
+                    setProjects(mappedProjects.slice(0, 3)); // Top 3 projects
                 }
 
-                if (usersRes.data?.data && tasksRes.data?.success) {
-                    const allUsers = usersRes.data.data;
-                    const allTasks = tasksRes.data.tasks;
+                if (usersRes.data?.success && tasksRes.data?.success) {
+                    const allUsers = usersRes.data.data || [];
+                    const allTasks = tasksRes.data.tasks || [];
 
                     const computedMembers = allUsers.map((u, i) => {
                         const userTasks = allTasks.filter(t => t.assignedTo?._id === u._id);
@@ -72,6 +77,21 @@ const TeamLeadDashboard = () => {
                         };
                     });
                     setTeamMembers(computedMembers.slice(0, 4)); // Top 4 members
+
+                    // Compute Recent Activity
+                    const activities = [];
+                    allTasks.forEach(t => {
+                        (t.statusHistory || []).forEach(h => {
+                            activities.push({
+                                id: h._id,
+                                type: h.status,
+                                task: t.taskName,
+                                user: h.changedBy?.name || "Someone",
+                                timestamp: new Date(h.changedAt).getTime()
+                            });
+                        });
+                    });
+                    setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5));
                 }
             } catch (error) {
                 console.error("Failed to fetch team lead dashboard data", error);
@@ -170,12 +190,23 @@ const TeamLeadDashboard = () => {
                                                 </div>
                                                 <div className="flex items-center gap-4">
                                                     <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-                                                        <div 
-                                                            className={`h-full rounded-full transition-all duration-1000 ${progress > 50 ? 'bg-indigo-500' : 'bg-blue-500'}`}
-                                                            style={{ width: `${progress}%` }}
-                                                        />
+                                                        {(() => {
+                                                            const totalTasks = project.tasks?.length || 0;
+                                                            const completedTasks = project.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
+                                                            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                                                            return (
+                                                                <div 
+                                                                    className={`h-full rounded-full transition-all duration-1000 ${progress > 50 ? 'bg-indigo-500' : 'bg-blue-500'}`}
+                                                                    style={{ width: `${progress}%` }}
+                                                                />
+                                                            );
+                                                        })()}
                                                     </div>
-                                                    <span className="text-sm font-semibold text-slate-600 w-10">{progress}%</span>
+                                                    <span className="text-sm font-semibold text-slate-600 w-10">
+                                                        {project.tasks?.length > 0 
+                                                            ? Math.round((project.tasks.filter(t => t.status === "Completed" || t.status === "Done").length / project.tasks.length) * 100) 
+                                                            : 0}%
+                                                    </span>
                                                 </div>
                                             </div>
                                         )
@@ -192,9 +223,32 @@ const TeamLeadDashboard = () => {
                                     Recent Activity
                                 </h3>
                             </div>
-                            <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
-                                <Activity className="w-10 h-10 text-slate-200 mb-3" />
-                                <p className="text-sm text-slate-500 font-medium">Activity feed pending backend</p>
+                            <div className="p-6 flex-1 flex flex-col">
+                                {recentActivity.length === 0 ? (
+                                    <div className="flex-1 flex flex-col items-center justify-center text-center">
+                                        <Activity className="w-10 h-10 text-slate-200 mb-3" />
+                                        <p className="text-sm text-slate-500 font-medium">No recent activity</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-6">
+                                        {recentActivity.map((activity, idx) => (
+                                            <div key={idx} className="flex gap-4">
+                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                                    activity.type === 'Completed' ? 'bg-emerald-100 text-emerald-600' : 
+                                                    activity.type === 'QA Review' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                                }`}>
+                                                    <Activity className="w-4 h-4" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm text-slate-800">
+                                                        <span className="font-bold">{activity.user}</span> moved <span className="font-semibold text-blue-600">{activity.task}</span> to <span className="font-bold">{activity.type}</span>
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">{getTimeAgo(activity.timestamp)}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

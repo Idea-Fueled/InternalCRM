@@ -144,7 +144,10 @@ export const getAllUsers = async (req, res) => {
         const { teamLead, role } = req.query;
         let query = { isActive: true };
         
-        if (teamLead && teamLead !== 'undefined' && teamLead !== 'null') {
+        // Automatic filtering for Team Leads
+        if (req.user.role === "TL") {
+            query.teamLead = req.user._id;
+        } else if (teamLead && teamLead !== 'undefined' && teamLead !== 'null') {
             query.teamLead = teamLead;
         }
         
