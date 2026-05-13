@@ -1,6 +1,7 @@
 import Project from "../models/project.schema.js";
 import { createNotification } from "./notification.controller.js";
 import User from "../models/user.schema.js";
+import { Task } from "../models/task.schema.js";
 
 // Create a new project
 export const createProject = async (req, res, next) => {
@@ -85,9 +86,21 @@ export const getAllProjects = async (req, res, next) => {
             .populate("teamMembers", "name email role")
             .sort({ createdAt: -1 });
 
+        // Fetch tasks for these projects to include counts/progress
+        const projectIds = projects.map(p => p._id);
+        const allTasks = await Task.find({ project: { $in: projectIds }, isDeleted: false });
+
+        const projectsWithTasks = projects.map(p => {
+            const projectTasks = allTasks.filter(t => t.project.toString() === p._id.toString());
+            return {
+                ...p.toObject(),
+                tasks: projectTasks
+            };
+        });
+
         return res.status(200).json({
             success: true,
-            projects
+            projects: projectsWithTasks
         });
     } catch (error) {
         return res.status(500).json({
@@ -102,8 +115,8 @@ export const getProjectById = async (req, res, next) => {
     try {
         const { id } = req.params;
         const project = await Project.findOne({ _id: id, isDeleted: false })
-            .populate("teamLead", "name email")
-            .populate("teamMembers", "name email");
+            .populate("teamLead", "name email role")
+            .populate("teamMembers", "name email role");
 
         if (!project) {
             return res.status(404).json({
@@ -112,9 +125,14 @@ export const getProjectById = async (req, res, next) => {
             });
         }
 
+        const tasks = await Task.find({ project: id, isDeleted: false });
+
         return res.status(200).json({
             success: true,
-            project
+            project: {
+                ...project.toObject(),
+                tasks
+            }
         });
     } catch (error) {
         return res.status(500).json({
