@@ -32,7 +32,7 @@ export const taskService = {
 
 // User Services
 export const userService = {
-    getAllUsers: () => axiosInstance.get('/users/all'),
+    getAllUsers: (params = {}) => axiosInstance.get('/users/all', { params }),
     updateUser: (id, data) => axiosInstance.put(`/users/update/${id}`, data),
     deleteUser: (id) => axiosInstance.delete(`/users/delete/${id}`),
     restoreUser: (id) => axiosInstance.put(`/users/restore/${id}`),

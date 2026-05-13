@@ -24,15 +24,33 @@ const ProjectsDashboard = () => {
     });
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [teamLeads, setTeamLeads] = useState([]);
+    const [teamMembersList, setTeamMembersList] = useState([]);
 
     const fetchInitialData = async () => {
         try {
-            const res = await userService.getAllUsers();
-            setUsers(res.data.data || []);
+            const res = await userService.getAllUsers({ role: 'TL' });
+            setTeamLeads(res.data.data || []);
         } catch (err) {
-            console.error("Failed to load users", err);
+            console.error("Failed to load team leads", err);
         }
     };
+
+    useEffect(() => {
+        const fetchTeamMembers = async () => {
+            if (!newProject.teamLead) {
+                setTeamMembersList([]);
+                return;
+            }
+            try {
+                const res = await userService.getAllUsers({ teamLead: newProject.teamLead });
+                setTeamMembersList(res.data.data || []);
+            } catch (err) {
+                console.error("Failed to fetch team members", err);
+            }
+        };
+        fetchTeamMembers();
+    }, [newProject.teamLead]);
 
     const fetchProjects = async () => {
         try {
@@ -49,6 +67,8 @@ const ProjectsDashboard = () => {
     useEffect(() => {
         fetchProjects();
         fetchInitialData();
+        const interval = setInterval(fetchProjects, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleCreateProject = async (e) => {
@@ -377,7 +397,11 @@ const ProjectsDashboard = () => {
                                 <div>
                                     <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
                                     <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
-                                        {users.map((user) => (
+                                        {teamMembersList.length === 0 ? (
+                                            <div className="p-4 text-center text-slate-400 text-xs italic">
+                                                {newProject.teamLead ? "No members assigned to this TL" : "Select a Team Lead first"}
+                                            </div>
+                                        ) : teamMembersList.map((user) => (
                                             <label key={user._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
                                                 <input 
                                                     type="checkbox" 

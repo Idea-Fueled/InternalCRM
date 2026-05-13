@@ -121,6 +121,21 @@ export const getSingleTask = async (req, res) => {
             });
         }
 
+        // Visibility Scoping for Sensitive Notes/Attachments
+        const isAuthorized = 
+            req.user.role === 'admin' || 
+            (task.project && task.project.teamLead && task.project.teamLead.toString() === req.user._id.toString()) ||
+            (task.assignedTo && task.assignedTo._id.toString() === req.user._id.toString()) ||
+            (task.assignedQA && task.assignedQA.toString() === req.user._id.toString());
+
+        if (!isAuthorized && task.statusHistory) {
+            task.statusHistory = task.statusHistory.map(h => ({
+                ...h.toObject(),
+                notes: "[Restricted Visibility]",
+                attachment: "[Restricted Visibility]"
+            }));
+        }
+
         return res.status(200).json({
             success: true,
             task
@@ -192,6 +207,29 @@ export const updateTaskStatus = async (req, res) => {
             });
         }
 
+        const taskToUpdate = await Task.findById(id).populate("project");
+        if (!taskToUpdate) {
+            return res.status(404).json({ success: false, message: "Task not found" });
+        }
+
+        // Enforce Workflow Rules
+        const role = req.user.role;
+        if (role === "developer") {
+            if (!["In Progress", "QA Review"].includes(status)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Developers can only move tasks to 'In Progress' or 'QA Review'"
+                });
+            }
+        } else if (role === "qa") {
+            if (!["Completed", "In Progress"].includes(status)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "QA can only move tasks to 'Completed' or back to 'In Progress' (Reject)"
+                });
+            }
+        }
+
         // Build history entry
         const historyEntry = {
             status,
@@ -253,18 +291,32 @@ export const updateTaskStatus = async (req, res) => {
 
         // Notify QAs if moved to QA Review
         if (status === "QA Review") {
-            const qas = await User.find({ role: "qa" });
-            for (const qa of qas) {
-                if (qa._id.toString() !== req.user._id.toString()) {
-                    await createNotification({
-                        recipient: qa._id,
-                        sender: req.user._id,
-                        title: "New QA Review",
-                        message: `${taskName} is ready for review in ${projectName}`,
-                        type: "task",
-                        category: "approval",
-                        link: `/qa/dashboard?taskId=${task._id}`
-                    });
+            // Notify Assigned QA specifically if exists
+            if (task.assignedQA && task.assignedQA.toString() !== req.user._id.toString()) {
+                await createNotification({
+                    recipient: task.assignedQA,
+                    sender: req.user._id,
+                    title: "Task Ready for Review",
+                    message: `${taskName} in ${projectName} is ready for your review`,
+                    type: "task",
+                    category: "qa_review",
+                    link: `/qa/tasks?taskId=${task._id}`
+                });
+            } else {
+                // Fallback: Notify all QAs if no specific QA assigned
+                const qas = await User.find({ role: "qa" });
+                for (const qa of qas) {
+                    if (qa._id.toString() !== req.user._id.toString()) {
+                        await createNotification({
+                            recipient: qa._id,
+                            sender: req.user._id,
+                            title: "New QA Review Request",
+                            message: `${taskName} in ${projectName} is ready for review`,
+                            type: "task",
+                            category: "approval",
+                            link: `/qa/dashboard?taskId=${task._id}`
+                        });
+                    }
                 }
             }
         }

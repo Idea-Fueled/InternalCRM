@@ -13,9 +13,10 @@ const KanbanDashboard = () => {
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [newTask, setNewTask] = useState({ taskName: '', description: '', project: '', assignedTo: '', priority: 'Medium', endDate: '' });
+    const [newTask, setNewTask] = useState({ taskName: '', description: '', project: '', assignedTo: '', assignedQA: '', priority: 'Medium', endDate: '' });
     const [projects, setProjects] = useState([]);
     const [users, setUsers] = useState([]);
+    const [projectMembers, setProjectMembers] = useState([]);
 
     const fetchInitialData = async () => {
         try {
@@ -45,7 +46,22 @@ const KanbanDashboard = () => {
     useEffect(() => {
         fetchTasks();
         fetchInitialData();
+        const interval = setInterval(fetchTasks, 30000);
+        return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (!newTask.project) {
+            setProjectMembers([]);
+            return;
+        }
+        const selectedProj = projects.find(p => p._id === newTask.project);
+        if (selectedProj && selectedProj.teamMembers) {
+            setProjectMembers(selectedProj.teamMembers);
+        } else {
+            setProjectMembers([]);
+        }
+    }, [newTask.project, projects]);
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
@@ -61,7 +77,7 @@ const KanbanDashboard = () => {
             toast.success('Task created successfully');
             setIsTaskModalOpen(false);
             setSubmitted(false);
-            setNewTask({ taskName: '', description: '', project: '', assignedTo: '', priority: 'Medium', endDate: '' });
+            setNewTask({ taskName: '', description: '', project: '', assignedTo: '', assignedQA: '', priority: 'Medium', endDate: '' });
             fetchTasks();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to create task');
@@ -147,10 +163,19 @@ const KanbanDashboard = () => {
                                         <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
                                             <option value="">Unassigned</option>
-                                            {users.map(u => <option key={u._id} value={u._id}>{u.name} ({u.role})</option>)}
+                                            {projectMembers.filter(m => m.role === 'developer').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-700 mb-1.5">Assigned QA</label>
+                                        <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
+                                            <option value="">Unassigned</option>
+                                            {projectMembers.filter(m => m.role === 'qa').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                        </select>
+                                    </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block font-bold text-slate-700 mb-1.5">Priority</label>

@@ -4,7 +4,7 @@ import { hashPassword, comparePassword } from "../utils/hashPassword.js";
 
 export const registerUser = async (req, res, next) => {
     try {
-        const { name, email, password, role, department } = req.body;
+        const { name, email, password, role, department, teamLead } = req.body;
 
         if (!name || !email || !password || !role) {
             return res.status(400).json({
@@ -22,7 +22,7 @@ export const registerUser = async (req, res, next) => {
         const hashedPassword = await hashPassword(password);
 
         const user = new User({
-            name, email, password: hashedPassword, role, department
+            name, email, password: hashedPassword, role, department, teamLead
         });
 
         await user.save();
@@ -130,7 +130,12 @@ export const getCurrentUser = (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const users = await User.find({});
+        const { teamLead, role } = req.query;
+        let query = {};
+        if (teamLead) query.teamLead = teamLead;
+        if (role) query.role = role;
+
+        const users = await User.find(query);
         if (!users) {
             return res.status(404).json({
                 message: "No users found!"

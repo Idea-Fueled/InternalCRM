@@ -89,6 +89,8 @@ const DeveloperDashboard = () => {
 
     useEffect(() => {
         fetchDashboardData();
+        const interval = setInterval(fetchDashboardData, 30000); // 30s polling
+        return () => clearInterval(interval);
     }, []);
 
     // Calculate KPIs

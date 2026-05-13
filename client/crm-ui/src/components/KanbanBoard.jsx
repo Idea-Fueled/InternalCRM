@@ -45,11 +45,28 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
 
     // ─── Drag Handlers ────────────────────────────────────────────────────────
     const onDragStart = (e, taskId, colId) => {
-        // Developer restrictions
-        if (role === 'developer' && ['QA Review', 'Completed', 'Done'].includes(colId)) {
-            e.preventDefault();
-            toast.error(`Tasks in ${colId} are locked for Developers`);
-            return;
+        // Developer restrictions: Can only move their own tasks and only to specific statuses
+        const isDeveloper = role === 'developer';
+        const isQA = role === 'qa';
+        
+        // Find task data to check assignment
+        const task = tasks.find(t => (t._id || t.id) === taskId);
+        
+        if (isDeveloper) {
+             // Check if assigned to this dev (note: we need user ID here, but for now we restrict colId)
+             if (['QA Review', 'Completed', 'Done'].includes(colId)) {
+                e.preventDefault();
+                toast.error(`Tasks in ${colId} are locked for Developers`);
+                return;
+             }
+        }
+        
+        if (isQA) {
+            if (colId !== 'QA Review') {
+                e.preventDefault();
+                toast.error(`QAs can only move tasks from QA Review`);
+                return;
+            }
         }
 
         dragTaskId.current = taskId;
@@ -70,11 +87,16 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         setDragOverCol(null);
         if (!dragTaskId.current || dragFromCol.current === targetColId) return;
 
-        // Developer restrictions
-        if (role === 'developer' && ['Completed', 'Done'].includes(targetColId)) {
-            toast.error('Developers cannot move tasks to Completed or Done');
-            dragTaskId.current = null;
-            dragFromCol.current = null;
+        const isDeveloper = role === 'developer';
+        const isQA = role === 'qa';
+
+        if (isDeveloper && !['In Progress', 'QA Review'].includes(targetColId)) {
+            toast.error('Developers can only move tasks to In Progress or QA Review');
+            return;
+        }
+        
+        if (isQA && !['Completed', 'In Progress'].includes(targetColId)) {
+            toast.error('QAs can only move tasks to Completed or In Progress (Reject)');
             return;
         }
         // Open confirmation modal instead of immediately updating
