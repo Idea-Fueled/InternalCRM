@@ -22,7 +22,12 @@ export const registerUser = async (req, res, next) => {
         const hashedPassword = await hashPassword(password);
 
         const user = new User({
-            name, email, password: hashedPassword, role, department, teamLead
+            name, 
+            email, 
+            password: hashedPassword, 
+            role, 
+            department, 
+            teamLead: (teamLead && teamLead !== "") ? teamLead : null
         });
 
         await user.save();
@@ -38,9 +43,15 @@ export const registerUser = async (req, res, next) => {
             }
         })
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        })
+        console.error("User controller error:", error);
+        if (error.name === "ValidationError") {
+            const message = Object.values(error.errors).map(val => val.message).join(", ");
+            return res.status(400).json({ message });
+        }
+        if (error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid selection" });
+        }
+        return res.status(500).json({ message: error.message || "Internal server error" });
     }
 }
 
@@ -173,19 +184,31 @@ export const getUserById = async (req, res) => {
         })
 
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        })
+        console.error("User controller error:", error);
+        if (error.name === "ValidationError") {
+            const message = Object.values(error.errors).map(val => val.message).join(", ");
+            return res.status(400).json({ message });
+        }
+        if (error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid selection" });
+        }
+        return res.status(500).json({ message: error.message || "Internal server error" });
     }
 }
 
 export const updateUser = async (req, res) => {
     try {
         const { _id } = req.params;
+        const { teamLead, ...otherData } = req.body;
+        
+        const updateData = {
+            ...otherData,
+            teamLead: (teamLead && teamLead !== "") ? teamLead : null
+        };
 
         const updatedUser = await User.findByIdAndUpdate(
             _id,
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         ).select("-password")
 
@@ -200,9 +223,15 @@ export const updateUser = async (req, res) => {
             data: updatedUser
         })
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        })
+        console.error("User controller error:", error);
+        if (error.name === "ValidationError") {
+            const message = Object.values(error.errors).map(val => val.message).join(", ");
+            return res.status(400).json({ message });
+        }
+        if (error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid selection" });
+        }
+        return res.status(500).json({ message: error.message || "Internal server error" });
     }
 }
 
@@ -223,9 +252,15 @@ export const deleteUser = async (req, res) => {
             data: user
         })
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        })
+        console.error("User controller error:", error);
+        if (error.name === "ValidationError") {
+            const message = Object.values(error.errors).map(val => val.message).join(", ");
+            return res.status(400).json({ message });
+        }
+        if (error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid selection" });
+        }
+        return res.status(500).json({ message: error.message || "Internal server error" });
     }
 }
 
@@ -245,8 +280,14 @@ export const restoreUser = async (req, res) => {
             data: user
         })
     } catch (error) {
-        return res.status(500).json({
-            message: error.message
-        })
+        console.error("User controller error:", error);
+        if (error.name === "ValidationError") {
+            const message = Object.values(error.errors).map(val => val.message).join(", ");
+            return res.status(400).json({ message });
+        }
+        if (error.name === "CastError") {
+            return res.status(400).json({ message: "Invalid selection" });
+        }
+        return res.status(500).json({ message: error.message || "Internal server error" });
     }
 }
