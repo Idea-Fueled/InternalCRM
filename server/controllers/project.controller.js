@@ -1,6 +1,6 @@
 import Project from "../models/project.schema.js";
 import { createNotification } from "./notification.controller.js";
-import { User } from "../models/user.schema.js";
+import User from "../models/user.schema.js";
 
 // Create a new project
 export const createProject = async (req, res, next) => {

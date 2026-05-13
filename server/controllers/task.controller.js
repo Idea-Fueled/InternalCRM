@@ -1,6 +1,6 @@
 import { Task } from "../models/task.schema.js";
 import { createNotification } from "./notification.controller.js";
-import { User } from "../models/user.schema.js";
+import User from "../models/user.schema.js";
 
 // Create Task
 export const createTask = async (req, res) => {
