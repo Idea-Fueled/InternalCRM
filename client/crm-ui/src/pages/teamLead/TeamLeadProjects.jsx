@@ -61,7 +61,7 @@ const TeamLeadProjects = () => {
                 <main className="flex-1 p-6 md:p-8 flex flex-col overflow-y-auto">
                     {selectedProject ? (
                         /* ---- DETAILED PROJECT VIEW ---- */
-                        <div className="w-full max-w-6xl mx-auto pb-10 animate-in fade-in duration-300">
+                        <div className="w-full max-w-7xl mx-auto pb-10 animate-in fade-in duration-300">
                             {/* Back Button */}
                             <button 
                                 onClick={() => setSelectedProject(null)} 
@@ -88,9 +88,9 @@ const TeamLeadProjects = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-20 xl:gap-28">
+                            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10">
                                 {/* Left Column: Task List */}
-                                <div className="lg:col-span-2 flex flex-col gap-6">
+                                <div className="lg:col-span-3 flex flex-col gap-6">
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                                         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                             <h3 className="text-lg font-bold text-slate-800 flex items-center">
