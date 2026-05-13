@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Logo from "../components/Logo";
+import logoImgNew from "../assets/logo-idea-fueled-new.png";
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom";
 import { useLottie } from "lottie-react";
@@ -86,11 +86,12 @@ export default function WelcomePage() {
                 <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-200/20 rounded-full blur-[100px] pointer-events-none"></div>
                 <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/20 rounded-full blur-[100px] pointer-events-none"></div>
 
-                <div className="flex items-center justify-center gap-3 mb-10 animate-in fade-in slide-in-from-top-8 duration-700 delay-150 fill-mode-both">
-                    <Logo className="h-16 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-sm" />
-                    <div className="text-3xl font-bold tracking-tight">
-                        <span className="text-black">Idea</span> <span className="text-blue-600">Fueled</span>
-                    </div>
+                <div className="flex items-center justify-center mb-10 animate-in fade-in slide-in-from-top-8 duration-700 delay-150 fill-mode-both">
+                    <img 
+                        src={logoImgNew} 
+                        alt="Idea Fueled" 
+                        className="h-16 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-sm cursor-pointer" 
+                    />
                 </div>
 
                 <div className="w-full max-w-md space-y-8 relative z-10 bg-white/70 backdrop-blur-2xl p-10 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white animate-in fade-in zoom-in-95 duration-700 delay-300 fill-mode-both">

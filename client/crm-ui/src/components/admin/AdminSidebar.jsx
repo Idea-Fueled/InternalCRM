@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import logoImg from "../../assets/logo-idea-fueled.png";
+import logoImg from "../../assets/logo-idea-fueled-new.png";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 
@@ -111,11 +111,14 @@ const AdminSidebar = ({ role = "admin" }) => {
             <div className="p-4 flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
                 <div className={`flex items-center gap-3.5 mb-8 pb-6 border-b border-slate-800/80 transition-all duration-300 ${isMinimized ? 'justify-center' : 'px-2'}`}>
                     <div className="relative flex-shrink-0">
-                        <img src={logoImg} alt="Idea Fueled" className={`h-auto object-contain drop-shadow-[0_0_12px_rgba(59,130,246,0.4)] transition-all duration-300 ${isMinimized ? 'w-10' : 'w-12'}`} />
+                        <img 
+                            src={logoImg} 
+                            alt="Idea Fueled" 
+                            className={`h-auto object-contain transition-all duration-300 ${isMinimized ? 'w-10' : 'w-36'}`} 
+                        />
                     </div>
                     {!isMinimized && (
                         <div className="flex flex-col opacity-100 transition-opacity duration-300 overflow-hidden">
-                            <span className="font-bold text-xl tracking-tight text-white truncate">Idea Fueled</span>
                             <span className="bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase mt-1 w-max shadow-sm">
                                 {currentConfig.portalName}
                             </span>
