@@ -1,14 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import NotificationDropdown from "./NotificationDropdown";
 
 const Topbar = ({ DashboardTile, role = "admin" }) => {
     const navigate = useNavigate();
-    let displayName = "Admin";
-    let initial = "A";
-    if (role === "teamLead") { displayName = "Team Lead"; initial = "T"; }
-    else if (role === "developer") { displayName = "Developer"; initial = "D"; }
-    else if (role === "qa") { displayName = "QA"; initial = "Q"; }
+    const { user } = useAuth();
+    
+    // Fallback display values if user context isn't ready
+    const displayName = user?.name || (role === "teamLead" ? "Team Lead" : role === "developer" ? "Developer" : role === "qa" ? "QA" : "Admin");
+    const displayRole = user?.role === 'TL' ? 'Team Lead' : (user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)) || "Role";
+    const initial = displayName.charAt(0).toUpperCase();
 
     const toggleMobileSidebar = () => {
         document.dispatchEvent(new CustomEvent('toggleMobileSidebar'));
@@ -48,7 +50,7 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
                     <div className={`w-8 h-8 sm:w-9 sm:h-9 text-white rounded-full flex items-center justify-center font-semibold text-sm ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>{initial}</div>
                     <div className="hidden sm:flex flex-col">
                         <span className="text-sm font-medium text-gray-700">{displayName}</span>
-                        <span className="text-xs text-gray-400">Role</span>
+                        <span className="text-xs text-gray-400">{displayRole}</span>
                     </div>
                 </div>
 
