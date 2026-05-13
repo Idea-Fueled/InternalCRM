@@ -89,7 +89,10 @@ const TeamLeadProjects = () => {
     const handleCreateTask = async (e) => {
         e.preventDefault();
         setSubmittedTask(true);
-        if (!newTask.taskName || !newTask.endDate) return;
+        if (!newTask.taskName || !newTask.endDate || !newTask.assignedTo || !newTask.assignedQA) {
+            toast.error("Please fill in all required fields");
+            return;
+        }
 
         try {
             setIsCreatingTask(true);
@@ -531,17 +534,17 @@ const TeamLeadProjects = () => {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block font-bold text-slate-700 mb-1.5">Developer</label>
+                                        <label className="block font-bold text-slate-700 mb-1.5">Developer <span className="text-red-500">*</span></label>
                                         <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
+                                            className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedTo ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
                                             <option value="">Select Developer</option>
                                             {team.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block font-bold text-slate-700 mb-1.5">QA</label>
+                                        <label className="block font-bold text-slate-700 mb-1.5">QA <span className="text-red-500">*</span></label>
                                         <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
+                                            className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedQA ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
                                             <option value="">Select QA</option>
                                             {team.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                                         </select>

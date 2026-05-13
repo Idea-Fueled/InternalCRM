@@ -5,7 +5,7 @@ import User from "../models/user.schema.js";
 // Create Task
 export const createTask = async (req, res) => {
     try {
-        const { taskName, description, project, assignedTo, assignedBy, status, priority, startDate, endDate, developerNotes, qaNotes, attachments, isDeleted } = req.body;
+        const { taskName, description, project, assignedTo, assignedQA, assignedBy, status, priority, startDate, endDate, developerNotes, qaNotes, attachments, isDeleted } = req.body;
 
         if (!taskName || !project) {
             return res.status(400).json({
@@ -19,7 +19,8 @@ export const createTask = async (req, res) => {
             description,
             project,
             assignedTo,
-            assignedBy,
+            assignedQA,
+            assignedBy: req.user._id || assignedBy,
             status,
             priority,
             startDate,
@@ -37,8 +38,9 @@ export const createTask = async (req, res) => {
         });
 
         const populatedTask = await Task.findById(task._id)
-            .populate("project", "projectName name status")
+            .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email")
+            .populate("assignedQA", "name email")
             .populate("assignedBy", "name email")
             .populate("statusHistory.changedBy", "name role");
 
@@ -58,13 +60,25 @@ export const createTask = async (req, res) => {
         // Notify Developer if assigned
         if (populatedTask.assignedTo) {
             await createNotification({
-                recipient: populatedTask.assignedTo,
+                recipient: populatedTask.assignedTo._id,
                 sender: req.user._id,
                 title: "New Task Assigned",
-                message: `You have been assigned a new task: ${populatedTask.taskName}`,
+                message: `You have been assigned to ${populatedTask.taskName}`,
                 type: "task",
                 category: "assignment",
                 link: `/developer/tasks?taskId=${populatedTask._id}`
+            });
+        }
+        // Notify QA if assigned
+        if (populatedTask.assignedQA) {
+            await createNotification({
+                recipient: populatedTask.assignedQA._id,
+                sender: req.user._id,
+                title: "New Task for QA Review",
+                message: `You have been assigned as QA for ${populatedTask.taskName}`,
+                type: "task",
+                category: "assignment",
+                link: `/qa/tasks?taskId=${populatedTask._id}`
             });
         }
 
@@ -75,9 +89,18 @@ export const createTask = async (req, res) => {
         });
 
     } catch (error) {
-        return res.status(500).json({
+        console.error("Task creation error:", error);
+        let message = error.message;
+        
+        if (error.name === "ValidationError") {
+            message = Object.values(error.errors).map(val => val.message).join(", ");
+        } else if (error.name === "CastError") {
+            message = `Invalid ${error.path}: ${error.value}`;
+        }
+
+        return res.status(error.name === "ValidationError" || error.name === "CastError" ? 400 : 500).json({
             success: false,
-            message: error.message || "Internal server error"
+            message: message || "Internal server error"
         });
     }
 };
