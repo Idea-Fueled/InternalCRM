@@ -157,7 +157,7 @@ const TeamLeadProjects = () => {
                                         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                             <h3 className="text-lg font-bold text-slate-800 flex items-center">
                                                 <LayoutList className="w-5 h-5 mr-2 text-indigo-500" />
-                                                Tasks ({selectedProject.tasks.length})
+                                                Tasks ({selectedProject?.tasks?.length || 0})
                                             </h3>
                                             <button 
                                                 onClick={() => setIsTaskModalOpen(true)}
@@ -178,7 +178,7 @@ const TeamLeadProjects = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 bg-white">
-                                                    {selectedProject.tasks.map(task => (
+                                                    {(selectedProject?.tasks || []).map(task => (
                                                         <tr key={task.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer">
                                                             <td className="px-6 py-4">
                                                                 <p className="text-sm font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{task.name}</p>
@@ -211,7 +211,7 @@ const TeamLeadProjects = () => {
                                                             </td>
                                                         </tr>
                                                     ))}
-                                                    {selectedProject.tasks.length === 0 && (
+                                                    {(selectedProject?.tasks?.length || 0) === 0 && (
                                                         <tr>
                                                             <td colSpan="4" className="px-6 py-20 text-center bg-slate-50/20">
                                                                 <div className="flex flex-col items-center justify-center">
@@ -273,9 +273,9 @@ const TeamLeadProjects = () => {
 
                                                 {/* Team */}
                                                 <div className="p-5 bg-white border border-slate-100 rounded-xl shadow-sm">
-                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Team Members ({selectedProject.members.length})</p>
+                                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Team Members ({selectedProject?.members?.length || 0})</p>
                                                     <div className="grid grid-cols-2 gap-3">
-                                                        {selectedProject.members.map((member, i) => (
+                                                        {(selectedProject?.members || []).map((member, i) => (
                                                             <div key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-100/50">
                                                                 <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
                                                                     {member.initial}
