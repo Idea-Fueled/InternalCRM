@@ -43,10 +43,23 @@ const NotificationDropdown = ({ role }) => {
                     history.forEach(h => {
                         // Logic to decide if this notification is relevant to the current user
                         let relevant = false;
-                        if (role === 'admin') relevant = true;
-                        else if (role === 'teamLead' && task.project?.teamLead === user?._id) relevant = true;
-                        else if (role === 'developer' && task.assignedTo?._id === user?._id) relevant = true;
-                        else if (role === 'qa') relevant = true; // QA sees everything relevant to review
+                        const myId = user?._id?.toString();
+                        const taskAssignedToId = task.assignedTo?._id?.toString() || task.assignedTo?.toString();
+                        const projectTLId = task.project?.teamLead?._id?.toString() || task.project?.teamLead?.toString();
+                        const changedById = h.changedBy?._id?.toString() || h.changedBy?.toString();
+
+                        if (role === 'admin') {
+                            relevant = true;
+                        } else if (role === 'teamLead') {
+                            // TL sees their own actions + everything in their projects (team members)
+                            relevant = (changedById === myId) || (projectTLId === myId);
+                        } else if (role === 'developer') {
+                            // Developer sees their own tasks updates (assigned to them)
+                            relevant = (taskAssignedToId === myId);
+                        } else if (role === 'qa') {
+                            // QA sees their own actions + anything moved to QA Review
+                            relevant = (changedById === myId) || (h.status === 'QA Review');
+                        }
 
                         if (relevant) {
                             updates.push({
