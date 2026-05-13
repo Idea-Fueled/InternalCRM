@@ -153,7 +153,7 @@ const QADashboard = () => {
                                 { label: 'OVERDUE', value: stats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
                                 { label: 'REJECTED', value: stats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400' },
                             ].map((stat, i) => (
-                                <div key={i} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-4 transition-transform hover:scale-[1.02]`}>
+                                <div key={i} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-6 transition-transform hover:scale-[1.02]`}>
                                     <div className={`w-12 h-12 ${stat.iconBg} rounded-full flex items-center justify-center ${stat.iconColor} shadow-sm border border-slate-100`}>
                                         {stat.icon}
                                     </div>
@@ -272,7 +272,7 @@ const QADashboard = () => {
                                     </h2>
                                     <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
                                         {recentActivity.map((activity) => (
-                                            <div key={activity.id} className="relative pl-8">
+                                            <div key={activity.id} className="relative pl-12">
                                                 <div className={`absolute left-0 top-0.5 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 ${
                                                     activity.type === 'Approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
                                                 }`}>
