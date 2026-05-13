@@ -77,10 +77,19 @@ const QADashboard = () => {
                 const activities = [];
                 allTasks.forEach(t => {
                     (t.statusHistory || []).forEach(h => {
-                        if (h.status === 'Completed' || h.status === 'In Progress') {
+                        // Only show QA-relevant actions: Completed (Approve) or moved to In Progress by QA (Reject)
+                        if (h.status === 'Completed') {
                             activities.push({
                                 id: h._id,
-                                type: h.status === 'Completed' ? 'Approve' : 'Reject',
+                                type: 'Approve',
+                                task: t.taskName,
+                                note: h.notes,
+                                timestamp: new Date(h.changedAt).getTime()
+                            });
+                        } else if (h.status === 'In Progress' && h.changedBy?.role === 'qa') {
+                            activities.push({
+                                id: h._id,
+                                type: 'Reject',
                                 task: t.taskName,
                                 note: h.notes,
                                 timestamp: new Date(h.changedAt).getTime()
