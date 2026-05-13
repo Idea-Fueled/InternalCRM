@@ -3,6 +3,7 @@ import { dashboardService, taskService } from '../../api/services';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
     CheckCircle2, Clock, AlertCircle, PlayCircle, ShieldCheck,
     Calendar, FileText, MessageSquare, AlertTriangle, ArrowRight,
@@ -20,6 +21,7 @@ const STATUS_COLORS = {
 };
 
 const DeveloperDashboard = () => {
+    const { user } = useAuth();
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
     const [recentActivity, setRecentActivity] = useState([]);
@@ -28,11 +30,12 @@ const DeveloperDashboard = () => {
     const [error, setError] = useState(null);
 
     const fetchDashboardData = async () => {
+        if (!user?._id) return;
         try {
             setLoading(true);
             const [dashRes, tasksRes] = await Promise.all([
                 dashboardService.getDeveloperDashboard(),
-                taskService.getAllTasks()
+                taskService.getTasksByUser(user._id)
             ]);
             
             // Format tasks
@@ -91,7 +94,7 @@ const DeveloperDashboard = () => {
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 30000); // 30s polling
         return () => clearInterval(interval);
-    }, []);
+    }, [user]);
 
     // Calculate KPIs
     const totalAssigned = tasks.length;

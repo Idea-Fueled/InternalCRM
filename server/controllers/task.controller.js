@@ -108,10 +108,25 @@ export const createTask = async (req, res) => {
 // Get All Tasks (excluding deleted)
 export const getAllTasks = async (req, res) => {
     try {
-        const tasks = await Task.find({ isDeleted: false })
+        const { role, _id } = req.user;
+        let query = { isDeleted: false };
+
+        // If not admin or TL, only show tasks assigned to them
+        if (role !== "admin" && role !== "TL") {
+            query = { 
+                ...query, 
+                $or: [
+                    { assignedTo: _id },
+                    { assignedQA: _id }
+                ]
+            };
+        }
+
+        const tasks = await Task.find(query)
             .populate("project", "projectName name status")
             .populate("assignedTo", "name email role")
             .populate("assignedBy", "name email role")
+            .populate("assignedQA", "name email role")
             .populate("statusHistory.changedBy", "name role")
             .sort({ createdAt: -1 });
 
@@ -482,6 +497,7 @@ export const getTasksByUser = async (req, res) => {
         const tasks = await Task.find({ assignedTo: userId, isDeleted: false })
             .populate("project", "projectName name status")
             .populate("assignedBy", "name email")
+            .populate("assignedQA", "name email role")
             .populate("statusHistory.changedBy", "name role")
             .sort({ createdAt: -1 });
 

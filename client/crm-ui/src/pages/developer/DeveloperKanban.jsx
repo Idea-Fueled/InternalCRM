@@ -3,18 +3,21 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import KanbanBoard from '../../components/KanbanBoard';
 import { taskService } from '../../api/services';
+import { useAuth } from '../../context/AuthContext';
 import { Search, Filter } from 'lucide-react';
 
 const DeveloperKanban = () => {
+    const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
     useEffect(() => {
         const fetchTasks = async () => {
+            if (!user?._id) return;
             try {
                 setLoading(true);
-                const res = await taskService.getAllTasks();
+                const res = await taskService.getTasksByUser(user._id);
                 setTasks(res.data.tasks || []);
             } catch (err) {
                 console.error('Failed to load tasks', err);
@@ -23,7 +26,7 @@ const DeveloperKanban = () => {
             }
         };
         fetchTasks();
-    }, []);
+    }, [user]);
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
