@@ -4,7 +4,7 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Users, 
-  CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft
+  CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList
 } from 'lucide-react';
 
 const UserProjects = ({ role = "developer" }) => {
