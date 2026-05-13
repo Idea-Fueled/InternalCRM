@@ -20,6 +20,7 @@ const TeamLeadProjects = () => {
     };
 
     const [projects, setProjects] = useState([]);
+    const [team, setTeam] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("All");
@@ -33,8 +34,16 @@ const TeamLeadProjects = () => {
     const fetchProjects = async () => {
         try {
             setLoading(true);
-            const res = await projectService.getAllProjects();
-            const formatted = (res.data.projects || []).map(p => {
+            const [projRes, usersRes] = await Promise.all([
+                projectService.getAllProjects(),
+                userService.getAllUsers()
+            ]);
+
+            if (usersRes.data?.data) {
+                setTeam(usersRes.data.data);
+            }
+
+            const formatted = (projRes.data.projects || []).map(p => {
                 const totalTasks = p.tasks?.length || 0;
                 const completedTasks = p.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
                 const overdueTasks = p.tasks?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length || 0;
@@ -526,7 +535,7 @@ const TeamLeadProjects = () => {
                                         <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
                                             <option value="">Select Developer</option>
-                                            {selectedProject.members.filter(m => m.role === 'developer').map(m => <option key={m.id || m._id} value={m.id || m._id}>{m.name}</option>)}
+                                            {team.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
@@ -534,7 +543,7 @@ const TeamLeadProjects = () => {
                                         <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
                                             <option value="">Select QA</option>
-                                            {selectedProject.members.filter(m => m.role === 'qa').map(m => <option key={m.id || m._id} value={m.id || m._id}>{m.name}</option>)}
+                                            {team.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
