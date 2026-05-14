@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { taskService } from '../../api/services';
@@ -20,6 +20,7 @@ const QAReviews = () => {
     const [selectedTask, setSelectedTask] = useState(null);
     const [rejectionError, setRejectionError] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [projectFilter, setProjectFilter] = useState('All');
 
     const fetchTasks = async () => {
         try {
@@ -39,11 +40,29 @@ const QAReviews = () => {
         fetchTasks();
     }, []);
 
-    const filteredTasks = tasks.filter(task => 
-        task.taskName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        task.project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const projectOptions = useMemo(() => {
+        const seen = new Set();
+        const opts = [];
+        tasks.forEach(t => {
+            const name = t.project?.projectName || t.project?.name || 'Unassigned';
+            if (name !== 'Unassigned' && !seen.has(name)) {
+                seen.add(name);
+                opts.push(name);
+            }
+        });
+        return opts.sort();
+    }, [tasks]);
+
+    const filteredTasks = tasks.filter(task => {
+        const matchesSearch = task.taskName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                             task.project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const projectName = task.project?.projectName || task.project?.name || 'Unassigned';
+        const matchesProject = projectFilter === 'All' || projectName === projectFilter;
+        
+        return matchesSearch && matchesProject;
+    });
 
     const isOverdue = (endDate) => endDate ? new Date(endDate) < new Date() : false;
 
@@ -114,6 +133,36 @@ const QAReviews = () => {
                         </div>
                     </div>
 
+                    {/* Project Filter Bar */}
+                    {!loading && projectOptions.length > 0 && (
+                        <div className="flex items-center gap-2 mb-8 flex-wrap shrink-0">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Project:</span>
+                            <button
+                                onClick={() => setProjectFilter('All')}
+                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${
+                                    projectFilter === 'All'
+                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
+                                }`}
+                            >
+                                All Projects
+                            </button>
+                            {projectOptions.map(proj => (
+                                <button
+                                    key={proj}
+                                    onClick={() => setProjectFilter(proj === projectFilter ? 'All' : proj)}
+                                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${
+                                        projectFilter === proj
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                            : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
+                                    }`}
+                                >
+                                    {proj}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
                     {/* Tasks List */}
                     <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -173,23 +222,6 @@ const QAReviews = () => {
                                                 <span className="text-[11px] font-bold px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 flex items-center border border-amber-100">
                                                     <Clock className="w-3.5 h-3.5 mr-1.5" /> QA Review
                                                 </span>
-                                                
-                                                <div className="flex items-center gap-2">
-                                                    <button 
-                                                        onClick={(e) => handleRejectClick(task, e)}
-                                                        className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition-colors border border-rose-100"
-                                                        title="Reject Task"
-                                                    >
-                                                        <XCircle className="w-4 h-4" />
-                                                    </button>
-                                                    <button 
-                                                        onClick={(e) => handleApprove(task._id, e)}
-                                                        className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center hover:bg-emerald-100 transition-colors border border-emerald-100"
-                                                        title="Approve Task"
-                                                    >
-                                                        <CheckCircle2 className="w-4 h-4" />
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
                                     );

@@ -36,6 +36,7 @@ const QADashboard = () => {
     const [selectedTask, setSelectedTask] = useState(null);
     const [recentActivity, setRecentActivity] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [projectFilter, setProjectFilter] = useState('All');
     
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
     const [actionType, setActionType] = useState(null); // 'Approve' or 'Reject'
@@ -115,11 +116,29 @@ const QADashboard = () => {
         fetchDashboardData();
     }, []);
 
-    const filteredTasks = tasks.filter(task => 
-        task.taskName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        task.project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const projectOptions = React.useMemo(() => {
+        const seen = new Set();
+        const opts = [];
+        tasks.forEach(t => {
+            const name = t.project?.projectName || t.project?.name || 'Unassigned';
+            if (name !== 'Unassigned' && !seen.has(name)) {
+                seen.add(name);
+                opts.push(name);
+            }
+        });
+        return opts.sort();
+    }, [tasks]);
+
+    const filteredTasks = tasks.filter(task => {
+        const matchesSearch = task.taskName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                             task.project?.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             task.project?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const projectName = task.project?.projectName || task.project?.name || 'Unassigned';
+        const matchesProject = projectFilter === 'All' || projectName === projectFilter;
+        
+        return matchesSearch && matchesProject;
+    });
 
     const openActionModal = (taskId, type, e) => {
         if (e) e.stopPropagation();
@@ -222,11 +241,38 @@ const QADashboard = () => {
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
                                         </div>
-                                        <button className="flex items-center justify-center p-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm">
-                                            <Filter className="w-4 h-4" />
-                                        </button>
                                     </div>
                                 </div>
+
+                                {/* Project Filter Bar */}
+                                {!loading && projectOptions.length > 0 && (
+                                    <div className="flex items-center gap-2 mb-4 flex-wrap">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Project:</span>
+                                        <button
+                                            onClick={() => setProjectFilter('All')}
+                                            className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                                                projectFilter === 'All'
+                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
+                                            }`}
+                                        >
+                                            All Projects
+                                        </button>
+                                        {projectOptions.map(proj => (
+                                            <button
+                                                key={proj}
+                                                onClick={() => setProjectFilter(proj === projectFilter ? 'All' : proj)}
+                                                className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
+                                                    projectFilter === proj
+                                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
+                                                }`}
+                                            >
+                                                {proj}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
 
                                 <div className="space-y-4">
                                     {loading ? (
