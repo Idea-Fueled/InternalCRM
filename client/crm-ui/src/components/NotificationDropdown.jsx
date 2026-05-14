@@ -210,7 +210,6 @@ const NotificationDropdown = ({ role }) => {
                                                         {n.message}
                                                     </p>
                                                     
-
                                                 </div>
                                                 
                                                 <button 
@@ -231,7 +230,13 @@ const NotificationDropdown = ({ role }) => {
                     </div>
 
                     <div className="p-3 border-t border-slate-50 text-center bg-slate-50/30">
-                        <button className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition">
+                        <button 
+                            onClick={() => {
+                                setIsOpen(false);
+                                navigate(`/${role === 'teamLead' ? 'teamLead' : role}/audit-logs`);
+                            }}
+                            className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition"
+                        >
                             Activity Center
                         </button>
                     </div>

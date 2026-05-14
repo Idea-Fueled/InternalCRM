@@ -22,6 +22,7 @@ import QADashboard from "./pages/qa/QADashboard";
 import QAReviews from "./pages/qa/QAReviews";
 import QAKanban from "./pages/qa/QAKanban";
 import QAProjects from "./pages/qa/QAProjects";
+import AuditLogs from "./pages/common/AuditLogs";
 
 import { Toaster } from "sonner";
 
@@ -60,6 +61,10 @@ const App = () => {
         path: "/admin/trash",
         element: <ProtectedRoute allowedRoles={["admin"]}><TrashDashboard /></ProtectedRoute>
       },
+      {
+        path: "/admin/audit-logs",
+        element: <ProtectedRoute allowedRoles={["admin"]}><AuditLogs /></ProtectedRoute>
+      },
       // Team Lead Routes
       {
         path: "/teamlead/dashboard",
@@ -76,6 +81,10 @@ const App = () => {
       {
         path: "/teamLead/team",
         element: <ProtectedRoute allowedRoles={["TL", "admin"]}><TeamLeadTeam /></ProtectedRoute>
+      },
+      {
+        path: "/teamLead/audit-logs",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><AuditLogs /></ProtectedRoute>
       },
       // Developer Routes
       {
@@ -94,6 +103,10 @@ const App = () => {
         path: "/developer/projects",
         element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperProjects /></ProtectedRoute>
       },
+      {
+        path: "/developer/audit-logs",
+        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><AuditLogs /></ProtectedRoute>
+      },
       // QA Routes
       {
         path: "/qa/dashboard",
@@ -110,6 +123,10 @@ const App = () => {
       {
         path: "/qa/projects",
         element: <ProtectedRoute allowedRoles={["qa", "admin"]}><QAProjects /></ProtectedRoute>
+      },
+      {
+        path: "/qa/audit-logs",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><AuditLogs /></ProtectedRoute>
       },
       {
         path: "*",
