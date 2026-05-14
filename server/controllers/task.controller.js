@@ -213,24 +213,30 @@ export const updateTask = async (req, res) => {
         }
 
         // Send Notifications to relevant parties
-        const recipients = new Set();
-        if (updatedTask.project?.teamLead) recipients.add(updatedTask.project.teamLead.toString());
-        if (updatedTask.assignedTo) recipients.add(updatedTask.assignedTo._id.toString());
-        if (updatedTask.assignedQA) recipients.add(updatedTask.assignedQA._id.toString());
-        
-        // Remove the person who made the change from recipients
-        recipients.delete(req.user._id.toString());
+        try {
+            const recipients = new Set();
+            if (updatedTask.project?.teamLead) recipients.add(updatedTask.project.teamLead.toString());
+            if (updatedTask.assignedTo?._id) recipients.add(updatedTask.assignedTo._id.toString());
+            if (updatedTask.assignedQA?._id) recipients.add(updatedTask.assignedQA._id.toString());
+            
+            // Remove the person who made the change from recipients
+            if (req.user?._id) {
+                recipients.delete(req.user._id.toString());
+            }
 
-        for (const recipientId of recipients) {
-            await createNotification({
-                recipient: recipientId,
-                sender: req.user._id,
-                title: "Task Updated",
-                message: `${updatedTask.taskName} has been updated by ${req.user.name}`,
-                type: "task",
-                category: "update",
-                link: `/kanban/${updatedTask.project?._id}?taskId=${updatedTask._id}`
-            });
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: req.user._id,
+                    title: "Task Updated",
+                    message: `${updatedTask.taskName} has been updated by ${req.user.name}`,
+                    type: "task",
+                    category: "update",
+                    link: `/kanban/${updatedTask.project?._id}?taskId=${updatedTask._id}`
+                });
+            }
+        } catch (notifErr) {
+            console.error("Notification error in updateTask:", notifErr);
         }
 
         return res.status(200).json({
@@ -318,75 +324,16 @@ export const updateTaskStatus = async (req, res) => {
         }
 
         // Send Notifications
-        const senderName = req.user.name;
-        const taskName = task.taskName;
-        const projectName = task.project?.projectName || "Project";
-        const projectId = task.project?._id;
+        try {
+            const senderName = req.user.name;
+            const taskName = task.taskName;
+            const projectName = task.project?.projectName || "Project";
+            const projectId = task.project?._id;
 
-        // Notify Project TL
-        if (task.project?.teamLead && task.project.teamLead.toString() !== req.user._id.toString()) {
-            await createNotification({
-                recipient: task.project.teamLead,
-                sender: req.user._id,
-                title: "Task Status Updated",
-                message: `${taskName} in ${projectName} moved to ${status} by ${senderName}`,
-                type: "task",
-                category: "status_change",
-                link: `/kanban/${projectId}?taskId=${task._id}`
-            });
-        }
-
-        // Notify Developer (if they didn't do it)
-        if (task.assignedTo && task.assignedTo._id.toString() !== req.user._id.toString()) {
-            await createNotification({
-                recipient: task.assignedTo._id,
-                sender: req.user._id,
-                title: "Task Status Updated",
-                message: `Your task ${taskName} was moved to ${status} by ${senderName}`,
-                type: "task",
-                category: "status_change",
-                link: `/developer/tasks?taskId=${task._id}`
-            });
-        }
-
-        // Notify QAs if moved to QA Review
-        if (status === "QA Review") {
-            // Notify Assigned QA specifically if exists
-            if (task.assignedQA && task.assignedQA.toString() !== req.user._id.toString()) {
+            // Notify Project TL
+            if (task.project?.teamLead && task.project.teamLead.toString() !== req.user._id.toString()) {
                 await createNotification({
-                    recipient: task.assignedQA,
-                    sender: req.user._id,
-                    title: "Task Ready for Review",
-                    message: `${taskName} in ${projectName} is ready for your review`,
-                    type: "task",
-                    category: "qa_review",
-                    link: `/qa/tasks?taskId=${task._id}`
-                });
-            } else {
-                // Fallback: Notify all QAs if no specific QA assigned
-                const qas = await User.find({ role: "qa" });
-                for (const qa of qas) {
-                    if (qa._id.toString() !== req.user._id.toString()) {
-                        await createNotification({
-                            recipient: qa._id,
-                            sender: req.user._id,
-                            title: "New QA Review Request",
-                            message: `${taskName} in ${projectName} is ready for review`,
-                            type: "task",
-                            category: "approval",
-                            link: `/qa/dashboard?taskId=${task._id}`
-                        });
-                    }
-                }
-            }
-        }
-
-        // Notify Admins
-        const admins = await User.find({ role: "admin" });
-        for (const admin of admins) {
-            if (admin._id.toString() !== req.user._id.toString()) {
-                await createNotification({
-                    recipient: admin._id,
+                    recipient: task.project.teamLead,
                     sender: req.user._id,
                     title: "Task Status Updated",
                     message: `${taskName} in ${projectName} moved to ${status} by ${senderName}`,
@@ -395,6 +342,69 @@ export const updateTaskStatus = async (req, res) => {
                     link: `/kanban/${projectId}?taskId=${task._id}`
                 });
             }
+
+            // Notify Developer (if they didn't do it)
+            if (task.assignedTo?._id && task.assignedTo._id.toString() !== req.user._id.toString()) {
+                await createNotification({
+                    recipient: task.assignedTo._id,
+                    sender: req.user._id,
+                    title: "Task Status Updated",
+                    message: `Your task ${taskName} was moved to ${status} by ${senderName}`,
+                    type: "task",
+                    category: "status_change",
+                    link: `/developer/tasks?taskId=${task._id}`
+                });
+            }
+
+            // Notify QAs if moved to QA Review
+            if (status === "QA Review") {
+                // Notify Assigned QA specifically if exists
+                if (task.assignedQA && task.assignedQA.toString() !== req.user._id.toString()) {
+                    await createNotification({
+                        recipient: task.assignedQA,
+                        sender: req.user._id,
+                        title: "Task Ready for Review",
+                        message: `${taskName} in ${projectName} is ready for your review`,
+                        type: "task",
+                        category: "qa_review",
+                        link: `/qa/tasks?taskId=${task._id}`
+                    });
+                } else {
+                    // Fallback: Notify all QAs if no specific QA assigned
+                    const qas = await User.find({ role: "qa" });
+                    for (const qa of qas) {
+                        if (qa._id.toString() !== req.user._id.toString()) {
+                            await createNotification({
+                                recipient: qa._id,
+                                sender: req.user._id,
+                                title: "New QA Review Request",
+                                message: `${taskName} in ${projectName} is ready for review`,
+                                type: "task",
+                                category: "approval",
+                                link: `/qa/dashboard?taskId=${task._id}`
+                            });
+                        }
+                    }
+                }
+            }
+
+            // Notify Admins
+            const admins = await User.find({ role: "admin" });
+            for (const admin of admins) {
+                if (admin._id.toString() !== req.user._id.toString()) {
+                    await createNotification({
+                        recipient: admin._id,
+                        sender: req.user._id,
+                        title: "Task Status Updated",
+                        message: `${taskName} in ${projectName} moved to ${status} by ${senderName}`,
+                        type: "task",
+                        category: "status_change",
+                        link: `/kanban/${projectId}?taskId=${task._id}`
+                    });
+                }
+            }
+        } catch (notifErr) {
+            console.error("Notification error in updateTaskStatus:", notifErr);
         }
 
         return res.status(200).json({

@@ -169,12 +169,16 @@ export const updateProject = async (req, res, next) => {
         // Notify Team Lead and Team Members
         try {
             const recipients = new Set();
-            if (updatedProject.teamLead) recipients.add(updatedProject.teamLead._id.toString());
+            if (updatedProject.teamLead?._id) recipients.add(updatedProject.teamLead._id.toString());
             if (updatedProject.teamMembers) {
-                updatedProject.teamMembers.forEach(m => recipients.add(m._id.toString()));
+                updatedProject.teamMembers.forEach(m => {
+                    if (m?._id) recipients.add(m._id.toString());
+                });
             }
             
-            recipients.delete(req.user._id.toString());
+            if (req.user?._id) {
+                recipients.delete(req.user._id.toString());
+            }
 
             for (const recipientId of recipients) {
                 await createNotification({
