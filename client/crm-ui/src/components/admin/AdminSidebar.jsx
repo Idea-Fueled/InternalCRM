@@ -3,15 +3,22 @@ import { NavLink, useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo-idea-fueled-new.png";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
+import ProfileModal from "../ProfileModal";
 
 const AdminSidebar = ({ role = "admin" }) => {
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     const [loggingOut, setLoggingOut] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(() => {
         return localStorage.getItem("sidebarMinimized") === "true";
     });
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+    // Profile Modal data
+    const displayName = user?.name || (role === "teamLead" ? "Team Lead" : role === "developer" ? "Developer" : role === "qa" ? "QA" : "Admin");
+    const displayRole = user?.role === 'TL' ? 'Team Lead' : (user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1)) || "Role";
+    const initial = displayName.charAt(0).toUpperCase();
 
     useEffect(() => {
         const handleToggle = () => setIsMobileOpen(prev => !prev);
@@ -85,12 +92,6 @@ const AdminSidebar = ({ role = "admin" }) => {
     };
 
     const currentConfig = roleConfigs[role] || roleConfigs.admin;
-    
-    let displayName = "Admin";
-    let initial = "A";
-    if (role === "teamLead") { displayName = "Team Lead"; initial = "T"; }
-    else if (role === "developer") { displayName = "Developer"; initial = "D"; }
-    else if (role === "qa") { displayName = "QA Engineer"; initial = "Q"; }
 
     return (
         <>
@@ -149,14 +150,17 @@ const AdminSidebar = ({ role = "admin" }) => {
             <div className={`p-4 mt-auto transition-all duration-300 ${isMinimized ? 'flex flex-col items-center px-2' : 'px-5'}`}>
                 {!isMinimized && <div className="border-t border-slate-800/80 my-4"></div>}
                 
-                <div className={`flex items-center gap-3 mb-4 ${isMinimized ? 'justify-center' : 'px-1'}`}>
-                    <div className={`w-9 h-9 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 shadow-sm ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>
+                <div 
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className={`flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-800/40 p-1.5 rounded-xl transition-all group ${isMinimized ? 'justify-center' : 'px-1'}`}
+                >
+                    <div className={`w-9 h-9 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>
                         {initial}
                     </div>
                     {!isMinimized && (
                         <div className="flex flex-col overflow-hidden">
-                            <span className="text-sm font-semibold text-slate-200 truncate">{displayName}</span>
-                            <span className="text-xs text-slate-500 truncate capitalize">{role.replace(/([A-Z])/g, ' $1').trim()} Account</span>
+                            <span className="text-sm font-semibold text-slate-200 truncate group-hover:text-blue-400 transition-colors">{displayName}</span>
+                            <span className="text-[10px] text-slate-500 truncate uppercase font-black tracking-widest">{role.replace(/([A-Z])/g, ' $1').trim()} Account</span>
                         </div>
                     )}
                 </div>
@@ -177,6 +181,16 @@ const AdminSidebar = ({ role = "admin" }) => {
                     {!isMinimized && <span className="text-sm">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
                 </button>
             </div>
+
+            <ProfileModal 
+                isOpen={isProfileModalOpen} 
+                onClose={() => setIsProfileModalOpen(false)}
+                user={user}
+                role={role}
+                displayName={displayName}
+                displayRole={displayRole}
+                initial={initial}
+            />
         </div>
         </>
     )
