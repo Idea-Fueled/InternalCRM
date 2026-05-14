@@ -303,7 +303,7 @@ const EmployeesDashboard = () => {
                                     <div className="overflow-hidden">
                                         <h4 className="text-base font-bold text-slate-800 truncate">{emp.name}</h4>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate">{emp.role}</span>
+                                            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate capitalize">{emp.role === 'TL' ? 'Team Lead' : emp.role}</span>
                                         </div>
                                     </div>
                                 </div>
