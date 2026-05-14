@@ -35,7 +35,6 @@ const ProjectsDashboard = () => {
     const [teamMembersList, setTeamMembersList] = useState([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchInitialData = async () => {
         try {
