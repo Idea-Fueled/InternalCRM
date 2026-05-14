@@ -235,7 +235,12 @@ const AdminDashboard = () => {
                                         <h3 className="text-lg font-bold text-slate-800 tracking-tight">Team Workload</h3>
                                         <p className="text-xs text-slate-500 mt-1 font-medium">Current availability and assignments</p>
                                     </div>
-                                    <button className="text-sm font-semibold text-blue-600 hover:text-blue-700">Manage Team</button>
+                                    <button 
+                                        onClick={() => navigate("/admin/employees")}
+                                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                                    >
+                                        Manage Team
+                                    </button>
                                 </div>
                                 <div className="divide-y divide-slate-100 flex-1">
                                     {users.slice(0, 5).map((member, i) => {
