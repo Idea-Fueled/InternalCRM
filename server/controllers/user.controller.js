@@ -142,8 +142,16 @@ export const getCurrentUser = (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const { teamLead, role } = req.query;
-        let query = { isActive: true };
+        const { teamLead, role, status } = req.query;
+        let query = {};
+        
+        if (status === 'inactive') {
+            query.isActive = false;
+        } else if (status === 'all') {
+            // No isActive filter
+        } else {
+            query.isActive = true;
+        }
         
         if (req.user.role === "TL") {
             const currentUser = await User.findById(req.user._id);

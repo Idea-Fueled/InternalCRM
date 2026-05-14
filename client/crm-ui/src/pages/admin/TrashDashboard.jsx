@@ -14,7 +14,7 @@ const TrashDashboard = () => {
             setLoading(true);
             const [taskRes, userRes, projectRes] = await Promise.all([
                 taskService.getDeletedTasks(),
-                userService.getAllUsers(),
+                userService.getAllUsers({ status: 'inactive' }),
                 projectService.getTrashProjects()
             ]);
 
