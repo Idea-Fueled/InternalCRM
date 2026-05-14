@@ -31,6 +31,7 @@ const EmployeesDashboard = () => {
         department: "Engineering",
         teamLead: ""
     });
+    const [roleFilter, setRoleFilter] = useState("All Roles");
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -170,10 +171,12 @@ const EmployeesDashboard = () => {
         }
     };
 
-    const filteredEmployees = employees.filter(e => 
-        e.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        e.email?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredEmployees = employees.filter(e => {
+        const matchesSearch = e.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                             e.email?.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesRole = roleFilter === "All Roles" || e.role === roleFilter;
+        return matchesSearch && matchesRole;
+    });
 
     const handleExport = () => {
         const columns = ["Name", "Role", "Department", "Lead", "Tasks (Done/Total)", "Status"];
@@ -260,10 +263,17 @@ const EmployeesDashboard = () => {
                             </div>
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto mr-1">
-                            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
-                                Filter
-                            </button>
+                            <select 
+                                className="px-4 py-2 bg-slate-50 border-none text-slate-600 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none"
+                                value={roleFilter}
+                                onChange={(e) => setRoleFilter(e.target.value)}
+                            >
+                                <option value="All Roles">Filter: All Roles</option>
+                                <option value="admin">Admin</option>
+                                <option value="developer">Developer</option>
+                                <option value="qa">QA</option>
+                                <option value="TL">Team Lead</option>
+                            </select>
                              <button 
                                 onClick={handleExport}
                                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm"

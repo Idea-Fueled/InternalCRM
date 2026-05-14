@@ -112,11 +112,7 @@ const AuditLogs = () => {
                                 <option value="approval">Approvals</option>
                                 <option value="creation">Creations</option>
                             </select>
-                            <div className="h-8 w-px bg-slate-200 mx-2 hidden sm:block"></div>
-                            <button className="flex items-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm">
-                                <Calendar className="w-4 h-4" />
-                                Custom Range
-                            </button>
+
                         </div>
                     </div>
 
