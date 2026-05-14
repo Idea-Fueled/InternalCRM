@@ -65,35 +65,35 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
                     >
                         <button 
                             onClick={() => setIsProfileModalOpen(false)}
-                            className="absolute top-5 right-5 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors z-10"
+                            className="absolute top-5 right-5 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors z-10"
                         >
                             <X className="w-5 h-5" />
                         </button>
 
                         <div className="pt-10 pb-8 px-6 text-center">
-                            {/* Simple Profile Icon */}
+                            {/* Simple Profile Icon - Blue Theme */}
                             <div className="flex justify-center mb-5">
-                                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-md ${role === 'teamLead' ? 'bg-indigo-500' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-500' : 'bg-blue-500'}`}>
+                                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-100 bg-gradient-to-br from-blue-500 to-blue-600">
                                     {initial}
                                 </div>
                             </div>
 
-                            {/* Name & Role - Less Bold */}
+                            {/* Name & Role - Blue Theme */}
                             <div className="mb-8">
                                 <h3 className="text-xl font-bold text-slate-800 mb-1">{displayName}</h3>
                                 <div className="flex items-center justify-center gap-2">
-                                    <span className={`text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md ${role === 'teamLead' ? 'text-indigo-600 bg-indigo-50' : role === 'qa' ? 'text-amber-600 bg-amber-50' : role === 'developer' ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50'}`}>
+                                    <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md text-blue-600 bg-blue-50">
                                         {displayRole}
                                     </span>
-                                    <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100/50">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active
+                                    <span className="flex items-center gap-1 text-[11px] font-medium text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100/50">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500" /> Active
                                     </span>
                                 </div>
                             </div>
 
                             {/* Info Fields - Stacked for full visibility */}
                             <div className="space-y-3 text-left">
-                                <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 transition-all hover:bg-white hover:shadow-sm">
+                                <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 transition-all hover:bg-blue-50/30 hover:border-blue-100">
                                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</p>
                                     <p className="text-sm font-medium text-slate-700 break-all">{user?.email || "N/A"}</p>
                                 </div>
@@ -119,7 +119,7 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
 
                             <button 
                                 onClick={() => setIsProfileModalOpen(false)}
-                                className={`w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.98] ${role === 'teamLead' ? 'bg-indigo-600 hover:bg-indigo-700' : role === 'qa' ? 'bg-amber-500 hover:bg-amber-600' : role === 'developer' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                                className="w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.98] bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
                             >
                                 Close Profile
                             </button>
