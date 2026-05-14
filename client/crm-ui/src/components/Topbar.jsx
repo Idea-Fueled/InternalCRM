@@ -58,84 +58,67 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
 
             {/* User Profile Modal */}
             {isProfileModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={() => setIsProfileModalOpen(false)}>
                     <div 
-                        className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+                        className="bg-white w-full max-w-sm rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header/Cover */}
-                        <div className={`h-24 relative ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>
-                            <button 
-                                onClick={() => setIsProfileModalOpen(false)}
-                                className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors backdrop-blur-md"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
-                            <div className="absolute -bottom-10 left-8">
-                                <div className="w-20 h-20 bg-white rounded-2xl p-1 shadow-lg">
-                                    <div className={`w-full h-full rounded-xl flex items-center justify-center text-white text-2xl font-black ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>
-                                        {initial}
-                                    </div>
+                        <button 
+                            onClick={() => setIsProfileModalOpen(false)}
+                            className="absolute top-6 right-6 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="pt-12 pb-10 px-8 text-center">
+                            {/* Top Middle Icon */}
+                            <div className="flex justify-center mb-6">
+                                <div className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-xl rotate-3 hover:rotate-0 transition-transform duration-500 ${role === 'teamLead' ? 'bg-indigo-600 shadow-indigo-200' : role === 'qa' ? 'bg-amber-500 shadow-amber-100' : role === 'developer' ? 'bg-emerald-600 shadow-emerald-100' : 'bg-blue-600 shadow-blue-100'}`}>
+                                    {initial}
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Content */}
-                        <div className="pt-14 pb-8 px-8">
-                            <div className="mb-6">
-                                <h3 className="text-xl font-black text-slate-800 tracking-tight">{displayName}</h3>
-                                <p className="text-sm font-bold text-blue-600 uppercase tracking-widest">{displayRole}</p>
+                            {/* Name & Role */}
+                            <div className="mb-10">
+                                <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-1">{displayName}</h3>
+                                <div className="flex items-center justify-center gap-2">
+                                    <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full border ${role === 'teamLead' ? 'text-indigo-600 border-indigo-100 bg-indigo-50' : role === 'qa' ? 'text-amber-600 border-amber-100 bg-amber-50' : role === 'developer' ? 'text-emerald-600 border-emerald-100 bg-emerald-50' : 'text-blue-600 border-blue-100 bg-blue-50'}`}>
+                                        {displayRole}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active
+                                    </span>
+                                </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-4 group">
-                                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                        <Mail className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Email Address</p>
-                                        <p className="text-sm font-bold text-slate-700">{user?.email || "No email provided"}</p>
-                                    </div>
+                            {/* Fields Grid */}
+                            <div className="grid grid-cols-2 gap-3 text-left">
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-colors hover:bg-slate-100/50">
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Email</p>
+                                    <p className="text-[11px] font-bold text-slate-700 truncate">{user?.email || "N/A"}</p>
                                 </div>
 
-                                <div className="flex items-center gap-4 group">
-                                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                        <Shield className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Account Role</p>
-                                        <p className="text-sm font-bold text-slate-700">{displayRole}</p>
-                                    </div>
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-colors hover:bg-slate-100/50">
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Role</p>
+                                    <p className="text-[11px] font-bold text-slate-700 truncate">{displayRole}</p>
                                 </div>
 
-                                {user?.department && (
-                                    <div className="flex items-center gap-4 group">
-                                        <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                            <Briefcase className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Department</p>
-                                            <p className="text-sm font-bold text-slate-700">{user.department}</p>
-                                        </div>
-                                    </div>
-                                )}
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-colors hover:bg-slate-100/50">
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Department</p>
+                                    <p className="text-[11px] font-bold text-slate-700 truncate">{user?.department || "Engineering"}</p>
+                                </div>
 
-                                <div className="flex items-center gap-4 group">
-                                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
-                                        <Calendar className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Member Since</p>
-                                        <p className="text-sm font-bold text-slate-700">
-                                            {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "N/A"}
-                                        </p>
-                                    </div>
+                                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 transition-colors hover:bg-slate-100/50">
+                                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">Joined</p>
+                                    <p className="text-[11px] font-bold text-slate-700 truncate">
+                                        {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
+                                    </p>
                                 </div>
                             </div>
 
                             <button 
                                 onClick={() => setIsProfileModalOpen(false)}
-                                className="w-full mt-8 py-3 bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-slate-200"
+                                className={`w-full mt-8 py-3.5 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-[0.98] shadow-lg ${role === 'teamLead' ? 'bg-indigo-600 shadow-indigo-100 hover:bg-indigo-700' : role === 'qa' ? 'bg-amber-500 shadow-amber-50 hover:bg-amber-600' : role === 'developer' ? 'bg-emerald-600 shadow-emerald-50 hover:bg-emerald-700' : 'bg-blue-600 shadow-blue-50 hover:bg-blue-700'}`}
                             >
                                 Close Profile
                             </button>
