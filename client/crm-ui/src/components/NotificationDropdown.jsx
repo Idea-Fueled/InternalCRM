@@ -181,8 +181,7 @@ const NotificationDropdown = ({ role }) => {
                                     return (
                                         <div 
                                             key={n._id} 
-                                            onClick={() => handleNotificationClick(n)}
-                                            className={`p-4 hover:bg-slate-50 transition-all cursor-pointer group relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
+                                            className={`p-4 hover:bg-slate-50 transition-all relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
                                         >
                                             <div className="flex gap-4">
                                                 <div className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-105 ${
@@ -211,9 +210,7 @@ const NotificationDropdown = ({ role }) => {
                                                         {n.message}
                                                     </p>
                                                     
-                                                    <div className="mt-2.5 flex items-center text-[10px] font-black text-blue-600 uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-                                                        View Details <ChevronRight className="w-3 h-3 ml-0.5" />
-                                                    </div>
+
                                                 </div>
                                                 
                                                 <button 
