@@ -723,10 +723,12 @@ const EmployeesDashboard = () => {
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
                                     <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.email}</p>
                                 </div>
-                                <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
-                                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Team Lead</p>
-                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.lead}</p>
-                                </div>
+                                {selectedEmployee.role !== 'admin' && (
+                                    <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Team Lead</p>
+                                        <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.lead}</p>
+                                    </div>
+                                )}
                                 <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Department</p>
                                     <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.dept}</p>
@@ -737,62 +739,66 @@ const EmployeesDashboard = () => {
                                 </div>
                             </div>
 
-                            {/* Quick Stats Grid - Improved Spacing */}
-                            <div className="grid grid-cols-3 gap-3">
-                                <div className="premium-stat-card blue !p-4 flex flex-col items-center justify-center min-h-[85px]">
-                                    <span className="text-xl font-black text-blue-600 leading-none">{selectedEmployee.tasks.total}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Total Tasks</span>
-                                </div>
-                                <div className="premium-stat-card emerald !p-4 flex flex-col items-center justify-center min-h-[85px]">
-                                    <span className="text-xl font-black text-emerald-600 leading-none">{selectedEmployee.tasks.done}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Completed</span>
-                                </div>
-                                <div className="premium-stat-card rose !p-4 flex flex-col items-center justify-center min-h-[85px]">
-                                    <span className="text-xl font-black text-rose-600 leading-none">{selectedEmployee.tasks.overdue}</span>
-                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Overdue</span>
-                                </div>
-                            </div>
-
-                            {/* Tasks Section */}
-                            <div className="space-y-3">
-                                <h3 className="text-[12px] font-bold text-slate-700 flex items-center gap-2">
-                                    <ClipboardList className="w-3.5 h-3.5 text-slate-400" /> Recent Tasks
-                                </h3>
-                                <div className="space-y-2">
-                                    {selectedEmployee.tasks.list?.length > 0 ? selectedEmployee.tasks.list.slice(0, 5).map((task, idx) => (
-                                        <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-[12px] hover:border-blue-100 transition-colors shadow-sm">
-                                            <div className="min-w-0 flex-1">
-                                                <p className="text-[13px] font-bold text-slate-700 truncate">{task.taskName}</p>
-                                                <p className="text-[10px] text-slate-400 font-medium truncate">{task.project?.projectName || 'Internal'}</p>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-1">
-                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                                                    task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600' :
-                                                    task.status === 'In Progress' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
-                                                }`}>
-                                                    {task.status}
-                                                </span>
-                                                <span className="text-[9px] font-bold text-slate-300">
-                                                    {task.endDate ? new Date(task.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : ''}
-                                                </span>
-                                            </div>
+                            {selectedEmployee.role !== 'admin' && (
+                                <>
+                                    {/* Quick Stats Grid - Improved Spacing */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="premium-stat-card blue !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                            <span className="text-xl font-black text-blue-600 leading-none">{selectedEmployee.tasks.total}</span>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Total Tasks</span>
                                         </div>
-                                    )) : (
-                                        <div className="p-6 text-center bg-slate-50/50 rounded-[12px] border border-dashed border-slate-200">
-                                            <p className="text-[12px] text-slate-400 font-medium">No tasks assigned</p>
+                                        <div className="premium-stat-card emerald !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                            <span className="text-xl font-black text-emerald-600 leading-none">{selectedEmployee.tasks.done}</span>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Completed</span>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
+                                        <div className="premium-stat-card rose !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                            <span className="text-xl font-black text-rose-600 leading-none">{selectedEmployee.tasks.overdue}</span>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Overdue</span>
+                                        </div>
+                                    </div>
 
-                            {/* History Placeholder */}
-                            <div className="pt-2">
-                                <div className="p-4 bg-slate-50/30 border border-dashed border-slate-200 rounded-[12px] text-center">
-                                    <p className="text-[11px] font-bold text-slate-400 flex items-center justify-center gap-2">
-                                        <History className="w-3 h-3" /> No recent activity
-                                    </p>
-                                </div>
-                            </div>
+                                    {/* Tasks Section */}
+                                    <div className="space-y-3">
+                                        <h3 className="text-[12px] font-bold text-slate-700 flex items-center gap-2">
+                                            <ClipboardList className="w-3.5 h-3.5 text-slate-400" /> Recent Tasks
+                                        </h3>
+                                        <div className="space-y-2">
+                                            {selectedEmployee.tasks.list?.length > 0 ? selectedEmployee.tasks.list.slice(0, 5).map((task, idx) => (
+                                                <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-[12px] hover:border-blue-100 transition-colors shadow-sm">
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="text-[13px] font-bold text-slate-700 truncate">{task.taskName}</p>
+                                                        <p className="text-[10px] text-slate-400 font-medium truncate">{task.project?.projectName || 'Internal'}</p>
+                                                    </div>
+                                                    <div className="flex flex-col items-end gap-1">
+                                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                                            task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600' :
+                                                            task.status === 'In Progress' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
+                                                        }`}>
+                                                            {task.status}
+                                                        </span>
+                                                        <span className="text-[9px] font-bold text-slate-300">
+                                                            {task.endDate ? new Date(task.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : ''}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )) : (
+                                                <div className="p-6 text-center bg-slate-50/50 rounded-[12px] border border-dashed border-slate-200">
+                                                    <p className="text-[12px] text-slate-400 font-medium">No tasks assigned</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* History Placeholder */}
+                                    <div className="pt-2">
+                                        <div className="p-4 bg-slate-50/30 border border-dashed border-slate-200 rounded-[12px] text-center">
+                                            <p className="text-[11px] font-bold text-slate-400 flex items-center justify-center gap-2">
+                                                <History className="w-3 h-3" /> No recent activity
+                                            </p>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Minimal Footer */}
