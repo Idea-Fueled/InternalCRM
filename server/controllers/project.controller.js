@@ -299,8 +299,8 @@ export const restoreProject = async (req, res, next) => {
 export const getTrashProjects = async (req, res, next) => {
     try {
         const trashProjects = await Project.find({ isDeleted: true })
-            .populate("teamLead", "firstName lastName email")
-            .populate("teamMembers", "firstName lastName email")
+            .populate("teamLead", "name email profilePic")
+            .populate("teamMembers", "name email profilePic")
             .sort({ updatedAt: -1 });
 
         return res.status(200).json({

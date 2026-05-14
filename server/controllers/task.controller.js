@@ -114,12 +114,19 @@ export const getAllTasks = async (req, res) => {
 
         // If not admin or TL, only show tasks assigned to them
         if (role !== "admin" && role !== "TL") {
+            const orConditions = [
+                { assignedTo: _id },
+                { assignedQA: _id }
+            ];
+
+            // If QA, also show all tasks in QA Review status so they can see the queue
+            if (role === "qa") {
+                orConditions.push({ status: "QA Review" });
+            }
+
             query = { 
                 ...query, 
-                $or: [
-                    { assignedTo: _id },
-                    { assignedQA: _id }
-                ]
+                $or: orConditions
             };
         }
 
