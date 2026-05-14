@@ -243,7 +243,7 @@ const AdminDashboard = () => {
                                     </button>
                                 </div>
                                 <div className="divide-y divide-slate-100 flex-1">
-                                    {users.slice(0, 5).map((member, i) => {
+                                    {users.filter(u => u.role !== "admin").slice(0, 5).map((member, i) => {
                                         const isBusy = member.status === "busy"; 
                                         const status = isBusy ? "Busy" : "Available";
                                         const statusColor = isBusy ? "bg-red-500" : "bg-emerald-500";
