@@ -1,3 +1,4 @@
+import React from "react";
 import { X, Mail, Shield, Briefcase, Calendar, Camera, Loader2 } from "lucide-react";
 import { authService } from "../api/services";
 import { toast } from "sonner";

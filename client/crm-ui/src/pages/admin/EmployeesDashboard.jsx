@@ -5,7 +5,7 @@ import { userService, taskService, authService, departmentService } from "../../
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
-    AlertCircle, ClipboardList, History, X, Download 
+    AlertCircle, ClipboardList, History, X, Download, Camera 
 } from "lucide-react";
 import { exportPDF } from "../../utils/pdfExport";
 
