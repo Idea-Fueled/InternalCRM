@@ -52,7 +52,7 @@ const AuditLogs = () => {
             new Date(log.createdAt).toLocaleString(),
             log.title,
             log.message,
-            log.category || "System"
+            (log.category || "System").replace(/_/g, ' ')
         ]);
 
         exportPDF({
@@ -179,7 +179,7 @@ const AuditLogs = () => {
                                                         isReject ? 'bg-rose-50 text-rose-600' :
                                                         'bg-slate-100 text-slate-500'
                                                     }`}>
-                                                        {log.category || "System"}
+                                                        {(log.category || "System").replace(/_/g, ' ')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
