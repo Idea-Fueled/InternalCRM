@@ -67,7 +67,7 @@ const TeamLeadProjects = () => {
                         ...t,
                         id: t._id,
                         name: t.taskName,
-                        start: t.startDate ? new Date(t.startDate).toLocaleDateString() : 'N/A',
+                        start: (t.startDate || t.createdAt) ? new Date(t.startDate || t.createdAt).toLocaleDateString() : 'N/A',
                         end: t.endDate ? new Date(t.endDate).toLocaleDateString() : 'N/A',
                         assignee: t.assignedTo?.name || "Unassigned",
                         assigneeInitial: t.assignedTo?.name?.charAt(0).toUpperCase() || "?"

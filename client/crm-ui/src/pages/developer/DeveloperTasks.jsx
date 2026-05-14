@@ -46,7 +46,7 @@ const DeveloperTasks = () => {
                 taskName: t.taskName,
                 project: t.project?.projectName || "Unassigned",
                 status: t.status || "New",
-                startDate: t.startDate ? new Date(t.startDate).toLocaleDateString() : "N/A",
+                startDate: (t.startDate || t.createdAt) ? new Date(t.startDate || t.createdAt).toLocaleDateString() : "N/A",
                 endDate: t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A",
                 priority: t.priority || "Medium",
                 description: t.description || "",

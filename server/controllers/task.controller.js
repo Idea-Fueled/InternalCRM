@@ -23,7 +23,7 @@ export const createTask = async (req, res) => {
             assignedBy: req.user._id || assignedBy,
             status,
             priority,
-            startDate,
+            startDate: startDate || new Date(),
             endDate,
             developerNotes,
             qaNotes,
