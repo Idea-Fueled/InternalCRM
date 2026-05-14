@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import logo from '../assets/logo-idea-fueled-new.png';
 
 export const exportPDF = ({
     title,
@@ -19,25 +20,35 @@ export const exportPDF = ({
     const timestamp = new Date().toLocaleString();
 
     // -- Header Section --
-    // Add a stylish header bar
-    doc.setFillColor(11, 17, 33); // Dark slate from sidebar
-    doc.rect(0, 0, pageWidth, 40, 'F');
+    // Header is now white (simple), so we don't need a filled rect
+    // But we can add a subtle bottom border or just leave it clean
+    doc.setDrawColor(226, 232, 240); // Slate-200
+    doc.line(15, 42, pageWidth - 15, 42);
 
-    // Add Logo Text (Simulated)
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(22);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Idea Fueled', 15, 25);
+    // Add Logo Image
+    try {
+        // Position: x=15, y=10, width=40, height=auto (scaled)
+        doc.addImage(logo, 'PNG', 15, 10, 45, 12);
+    } catch (e) {
+        // Fallback to text if image fails
+        doc.setTextColor(30, 41, 59);
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Idea Fueled', 15, 22);
+    }
 
     // Add Report Title
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(51, 65, 85); // Slate-700
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
     doc.text((title || 'REPORT').toUpperCase(), 15, 33);
 
-    // Add Date/Time info on the right
+    // Add Date/Time info on the right (Dark text now)
+    doc.setTextColor(100, 116, 139); // Slate-500
     doc.setFontSize(9);
-    doc.text(`Generated: ${timestamp}`, pageWidth - 15, 25, { align: 'right' });
-    doc.text(headerText, pageWidth - 15, 33, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Generated: ${timestamp}`, pageWidth - 15, 22, { align: 'right' });
+    doc.text(headerText, pageWidth - 15, 30, { align: 'right' });
 
     // -- Content Section --
     doc.setTextColor(51, 65, 85); // Slate-700
