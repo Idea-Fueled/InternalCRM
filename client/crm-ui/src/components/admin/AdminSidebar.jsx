@@ -154,7 +154,7 @@ const AdminSidebar = ({ role = "admin" }) => {
                     onClick={() => setIsProfileModalOpen(true)}
                     className={`flex items-center gap-3 mb-4 cursor-pointer hover:bg-slate-800/40 p-1.5 rounded-xl transition-all group ${isMinimized ? 'justify-center' : 'px-1'}`}
                 >
-                    <div className={`w-9 h-9 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform ${role === 'teamLead' ? 'bg-indigo-600' : role === 'qa' ? 'bg-amber-500' : role === 'developer' ? 'bg-emerald-600' : 'bg-blue-600'}`}>
+                    <div className="w-9 h-9 text-white rounded-full flex items-center justify-center font-bold flex-shrink-0 shadow-sm group-hover:scale-105 transition-transform bg-blue-600">
                         {initial}
                     </div>
                     {!isMinimized && (
