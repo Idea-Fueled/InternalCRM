@@ -4,8 +4,9 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Users, 
-  CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList
+  CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList, Download
 } from 'lucide-react';
+import { exportPDF } from '../../utils/pdfExport';
 
 const UserProjects = ({ role = "developer" }) => {
     const formatDate = (dateString) => {
@@ -59,6 +60,24 @@ const UserProjects = ({ role = "developer" }) => {
     useEffect(() => {
         fetchProjects();
     }, []);
+
+    const handleExportProjects = () => {
+        const columns = ["Project Name", "Status", "Progress", "Total Tasks", "Due Date"];
+        const data = filteredProjects.map(p => [
+            p.name,
+            p.status,
+            `${p.progress}%`,
+            p.totalTasks,
+            formatDate(p.endDate)
+        ]);
+
+        exportPDF({
+            title: `${role.charAt(0).toUpperCase() + role.slice(1)} - Projects Report`,
+            filename: `${role}_projects_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
 
     const filteredProjects = projects.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -223,10 +242,19 @@ const UserProjects = ({ role = "developer" }) => {
                             <p className="text-sm font-medium text-slate-500 mt-1">Overview of projects you are currently a part of.</p>
                         </div>
                         
-                        <div className="flex items-center gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-200/60">
-                            <button onClick={() => setSelectedStatus("All")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>All</button>
-                            <button onClick={() => setSelectedStatus("Active")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Active' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>Active</button>
-                            <button onClick={() => setSelectedStatus("Completed")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Completed' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>Completed</button>
+                        <div className="flex items-center gap-3">
+                            <button 
+                                onClick={handleExportProjects}
+                                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition shadow-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Download Report
+                            </button>
+                            <div className="flex items-center gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-200/60">
+                                <button onClick={() => setSelectedStatus("All")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>All</button>
+                                <button onClick={() => setSelectedStatus("Active")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Active' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>Active</button>
+                                <button onClick={() => setSelectedStatus("Completed")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Completed' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>Completed</button>
+                            </div>
                         </div>
                     </div>
 

@@ -5,6 +5,7 @@ import Topbar from "../../components/Topbar";
 import { dashboardService, projectService, userService, taskService } from "../../api/services";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { exportPDF } from "../../utils/pdfExport";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -64,6 +65,29 @@ const AdminDashboard = () => {
         fetchData();
     }, []);
 
+    const handleExportDashboard = () => {
+        if (!dashboardData) {
+            toast.error("No data available to export");
+            return;
+        }
+        
+        const columns = ["Metric", "Count/Value"];
+        const data = [
+            ["Total Employees", dashboardData.totalEmployees],
+            ["Total Projects", dashboardData.totalProjects],
+            ["Total Tasks", dashboardData.totalTasks],
+            ["Tasks in QA Review", dashboardData.qaReviewTasks],
+            ["Overdue Tasks", dashboardData.overdueTasks]
+        ];
+
+        exportPDF({
+            title: "System Overview Summary",
+            filename: `system_overview_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     const handleCreateProject = async (e) => {
         e.preventDefault();
         try {
@@ -121,7 +145,10 @@ const AdminDashboard = () => {
                             <p className="text-sm text-slate-500 mt-1">Here's what's happening across your CRM today.</p>
                         </div>
                         <div className="flex gap-3">
-                            <button className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-sm flex items-center gap-2">
+                            <button 
+                                onClick={handleExportDashboard}
+                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-sm flex items-center gap-2"
+                            >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                 Export Report
                             </button>
