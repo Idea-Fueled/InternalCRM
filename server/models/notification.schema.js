@@ -26,7 +26,7 @@ const notificationSchema = new mongoose.Schema({
     },
     category: {
         type: String,
-        enum: ["assignment", "status_change", "approval", "rejection", "creation"],
+        enum: ["assignment", "status_change", "approval", "rejection", "creation", "update", "deletion", "qa_review"],
         required: true
     },
     link: {

@@ -200,8 +200,9 @@ export const updateTask = async (req, res) => {
             updates,
             { new: true, runValidators: true }
         )
-        .populate("project", "projectName name status")
+        .populate("project", "projectName name status teamLead")
         .populate("assignedTo", "name email role")
+        .populate("assignedQA", "name email role")
         .populate("assignedBy", "name email role");
 
         if (!updatedTask) {
@@ -306,7 +307,7 @@ export const updateTaskStatus = async (req, res) => {
             },
             { new: true }
         )
-        .populate("project", "projectName name status")
+        .populate("project", "projectName name status teamLead")
         .populate("assignedTo", "name email");
 
         if (!task) {
@@ -428,7 +429,7 @@ export const deleteTask = async (req, res) => {
 
         // Send Notifications
         try {
-            const populatedTask = await Task.findById(id).populate("project");
+            const populatedTask = await Task.findById(id).populate("project", "projectName teamLead");
             const recipients = new Set();
             if (populatedTask.project?.teamLead) recipients.add(populatedTask.project.teamLead.toString());
             if (populatedTask.assignedTo) recipients.add(populatedTask.assignedTo.toString());
