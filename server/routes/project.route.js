@@ -12,7 +12,7 @@ import { isAdmin, isAdminOrTL, protectRoute } from "../middlewares/auth.middlewa
 
 const router = express.Router();
 
-router.post("/create", protectRoute, isAdminOrTL, createProject);
+router.post("/create", protectRoute, isAdmin, createProject);
 router.get("/", protectRoute, getAllProjects);
 router.get("/trash", protectRoute, isAdmin, getTrashProjects);
 router.get("/:id", protectRoute, getProjectById);
