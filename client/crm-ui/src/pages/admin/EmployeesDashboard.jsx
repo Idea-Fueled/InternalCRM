@@ -168,7 +168,8 @@ const EmployeesDashboard = () => {
             });
             fetchData();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to add employee");
+            const errorMsg = err.response?.data?.message || "Failed to add employee";
+            toast.error(errorMsg);
         } finally {
             setIsCreating(false);
         }
@@ -227,7 +228,8 @@ const EmployeesDashboard = () => {
             });
             fetchData();
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to update employee");
+            const errorMsg = err.response?.data?.message || "Failed to update employee";
+            toast.error(errorMsg);
         } finally {
             setIsCreating(false);
         }

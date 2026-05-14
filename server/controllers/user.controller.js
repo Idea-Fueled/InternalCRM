@@ -55,8 +55,10 @@ export const registerUser = async (req, res, next) => {
             }
         })
     } catch (error) {
-        console.error("User controller error:", error);
-        return res.status(500).json({ message: error.message || "Internal server error" });
+        console.error("User registration error:", error);
+        return res.status(500).json({ 
+            message: error.message || "Internal server error during registration"
+        });
     }
 }
 
@@ -106,7 +108,9 @@ export const loginController = async (req, res) => {
 
     } catch (error) {
         console.error("Login controller error:", error);
-        return res.status(500).json({ message: "Internal server error" })
+        return res.status(500).json({ 
+            message: error.message || "Internal server error during login"
+        })
     }
 }
 
@@ -220,7 +224,10 @@ export const updateUser = async (req, res) => {
             data: updatedUser
         })
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        console.error("updateUser error:", error);
+        return res.status(500).json({ 
+            message: error.message || "Failed to update user" 
+        });
     }
 }
 
@@ -248,7 +255,10 @@ export const updateProfilePic = async (req, res) => {
         });
     } catch (error) {
         console.error("updateProfilePic error:", error);
-        return res.status(500).json({ message: "Failed to update profile picture" });
+        return res.status(500).json({ 
+            message: "Failed to update profile picture",
+            error: error.message 
+        });
     }
 };
 

@@ -32,7 +32,8 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
             }
         } catch (error) {
             console.error("Upload error:", error);
-            toast.error("Failed to upload image");
+            const errorMsg = error.response?.data?.message || "Failed to upload image";
+            toast.error(errorMsg);
         } finally {
             setIsUploading(false);
         }
