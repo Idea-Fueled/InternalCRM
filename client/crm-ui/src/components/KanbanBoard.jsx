@@ -43,6 +43,17 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     // Task detail sidebar
     const [selectedTask, setSelectedTask] = useState(null);
 
+    // Edit Task State
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState(null);
+    const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [editTaskData, setEditTaskData] = useState({
+        taskName: "",
+        description: "",
+        priority: "Medium",
+        endDate: ""
+    });
+
     // ─── Drag Handlers ────────────────────────────────────────────────────────
     const onDragStart = (e, taskId, colId) => {
         // Developer restrictions: Can only move their own tasks and only to specific statuses
@@ -162,6 +173,47 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         } finally {
             setIsSaving(false);
             setPendingChange(null);
+        }
+    };
+
+    const handleEditTask = (task, e) => {
+        if (e) e.stopPropagation();
+        setEditingTask(task);
+        setEditTaskData({
+            taskName: getTaskName(task),
+            description: task.description || "",
+            priority: task.priority || "Medium",
+            endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : ""
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdateTask = async (e) => {
+        e.preventDefault();
+        if (!editingTask) return;
+        setIsSavingEdit(true);
+        try {
+            const res = await taskService.updateTask(getTaskId(editingTask), editTaskData);
+            setTasks(prev => prev.map(t => (t._id || t.id) === (editingTask._id || editingTask.id) ? res.data.task : t));
+            toast.success("Task updated successfully");
+            setIsEditModalOpen(false);
+            setEditingTask(null);
+        } catch (err) {
+            toast.error("Failed to update task");
+        } finally {
+            setIsSavingEdit(false);
+        }
+    };
+
+    const handleDeleteTask = async (taskId, e) => {
+        if (e) e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this task?")) return;
+        try {
+            await taskService.deleteTask(taskId);
+            setTasks(prev => prev.filter(t => (t._id || t.id) !== taskId));
+            toast.success("Task moved to trash");
+        } catch (err) {
+            toast.error("Failed to delete task");
         }
     };
 
@@ -352,6 +404,24 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                             <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
                                                                 {task.priority || 'Medium'}
                                                             </span>
+                                                            {(role === 'admin' || role === 'TL') && (
+                                                                <button 
+                                                                    onClick={(e) => handleEditTask(task, e)}
+                                                                    className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                                                                    title="Edit Task"
+                                                                >
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                                </button>
+                                                            )}
+                                                            {role === 'admin' && (
+                                                                <button 
+                                                                    onClick={(e) => handleDeleteTask(getTaskId(task), e)}
+                                                                    className="p-1 text-slate-400 hover:text-red-600 transition-colors"
+                                                                    title="Delete Task"
+                                                                >
+                                                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -596,6 +666,89 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                 Close
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* ─── Edit Task Modal ─────────────────────────────────────────── */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-[fadeIn_0.15s_ease-out]">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                                <div className="text-blue-600">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </div>
+                                Edit Task
+                            </h2>
+                            <button onClick={() => setIsEditModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateTask}>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Task Name</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={editTaskData.taskName}
+                                        onChange={e => setEditTaskData({...editTaskData, taskName: e.target.value})}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5">Description</label>
+                                    <textarea
+                                        rows={3}
+                                        value={editTaskData.description}
+                                        onChange={e => setEditTaskData({...editTaskData, description: e.target.value})}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none resize-none"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Priority</label>
+                                        <select
+                                            value={editTaskData.priority}
+                                            onChange={e => setEditTaskData({...editTaskData, priority: e.target.value})}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer"
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Due Date</label>
+                                        <input
+                                            type="date"
+                                            value={editTaskData.endDate}
+                                            onChange={e => setEditTaskData({...editTaskData, endDate: e.target.value})}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditModalOpen(false)}
+                                    className="flex-1 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={isSavingEdit}
+                                    className="flex-1 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isSavingEdit ? (
+                                        <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                                    ) : 'Save Changes'}
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

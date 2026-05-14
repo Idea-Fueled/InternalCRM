@@ -28,6 +28,8 @@ const TeamLeadProjects = () => {
     const [selectedProject, setSelectedProject] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState(null);
     const [newTask, setNewTask] = useState({ taskName: "", description: "", priority: "Medium", assignedTo: "", assignedQA: "", endDate: "" });
     const [isCreatingTask, setIsCreatingTask] = useState(false);
     const [submittedTask, setSubmittedTask] = useState(false);
@@ -110,6 +112,47 @@ const TeamLeadProjects = () => {
             setSelectedProject(res.data.project);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to create task");
+        } finally {
+            setIsCreatingTask(false);
+        }
+    };
+
+    const handleEditTask = (task, e) => {
+        if (e) e.stopPropagation();
+        setEditingTask(task);
+        setNewTask({
+            taskName: task.taskName || task.name,
+            description: task.description || "",
+            priority: task.priority || "Medium",
+            assignedTo: task.assignedTo?._id || task.assignedTo || "",
+            assignedQA: task.assignedQA?._id || task.assignedQA || "",
+            endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : ""
+        });
+        setIsEditTaskModalOpen(true);
+    };
+
+    const handleUpdateTask = async (e) => {
+        e.preventDefault();
+        setSubmittedTask(true);
+        if (!newTask.taskName || !newTask.endDate || !newTask.assignedTo || !newTask.assignedQA) {
+            toast.error("Please fill in all required fields");
+            return;
+        }
+
+        try {
+            setIsCreatingTask(true);
+            await taskService.updateTask(editingTask._id || editingTask.id, newTask);
+            toast.success("Task updated successfully");
+            setIsEditTaskModalOpen(false);
+            setEditingTask(null);
+            setSubmittedTask(false);
+            setNewTask({ taskName: "", description: "", priority: "Medium", assignedTo: "", assignedQA: "", endDate: "" });
+            // Refresh project data
+            const res = await projectService.getProjectById(selectedProject._id || selectedProject.id);
+            setSelectedProject(res.data.project);
+            fetchProjects();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to update task");
         } finally {
             setIsCreatingTask(false);
         }
@@ -202,7 +245,8 @@ const TeamLeadProjects = () => {
                                                         <th className="px-6 py-4">Task Name</th>
                                                         <th className="px-6 py-4">Timeline</th>
                                                         <th className="px-6 py-4">Assignee</th>
-                                                        <th className="px-6 py-4 text-right">Status</th>
+                                                        <th className="px-6 py-4">Status</th>
+                                                        <th className="px-6 py-4 text-right">Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -236,6 +280,15 @@ const TeamLeadProjects = () => {
                                                                     {task.status === 'In Progress' && <Clock className="w-3 h-3 mr-1" />}
                                                                     {task.status}
                                                                 </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 text-right">
+                                                                <button 
+                                                                    onClick={(e) => handleEditTask(task, e)}
+                                                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                                    title="Edit Task"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -516,6 +569,71 @@ const TeamLeadProjects = () => {
                                 <button type="submit" disabled={isCreatingTask}
                                     className="flex-1 justify-center px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm disabled:opacity-50">
                                     {isCreatingTask ? 'Creating...' : 'Create Task'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Edit Task Modal */}
+            {isEditTaskModalOpen && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                        <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><div className="p-1 bg-blue-100 rounded-lg"><svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></div>Edit Task</h2>
+                            <button onClick={() => { setIsEditTaskModalOpen(false); setSubmittedTask(false); }} className="text-slate-400 hover:text-slate-600 transition"><X className="w-5 h-5" /></button>
+                        </div>
+                        <form onSubmit={handleUpdateTask} noValidate className="flex flex-col flex-1 overflow-hidden">
+                            <div className="p-6 space-y-5 text-sm overflow-y-auto flex-1 custom-scrollbar">
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1.5">Task Title <span className="text-red-500">*</span></label>
+                                    <input type="text" required value={newTask.taskName} onChange={e => setNewTask({ ...newTask, taskName: e.target.value })} placeholder="e.g. Design UI Mockups"
+                                        className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.taskName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300`} />
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-700 mb-1.5">Description</label>
+                                    <textarea value={newTask.description} onChange={e => setNewTask({ ...newTask, description: e.target.value })} placeholder="Detailed task description..." rows="3"
+                                        className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none" />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-700 mb-1.5">Developer <span className="text-red-500">*</span></label>
+                                        <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
+                                            className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedTo ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
+                                            <option value="">Select Developer</option>
+                                            {team.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-700 mb-1.5">QA <span className="text-red-500">*</span></label>
+                                        <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
+                                            className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedQA ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
+                                            <option value="">Select QA</option>
+                                            {team.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-700 mb-1.5">Priority</label>
+                                        <select value={newTask.priority} onChange={e => setNewTask({ ...newTask, priority: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
+                                            {['Low', 'Medium', 'High'].map(p => <option key={p} value={p}>{p}</option>)}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-700 mb-1.5">Due Date <span className="text-red-500">*</span></label>
+                                        <input type="date" required value={newTask.endDate} onChange={e => setNewTask({ ...newTask, endDate: e.target.value })}
+                                            className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700`} />
+                                </div>
+                                </div>
+                            </div>
+                            <div className="p-6 border-t border-slate-100 flex items-center gap-3 bg-slate-50 shrink-0">
+                                <button type="button" onClick={() => { setIsEditTaskModalOpen(false); setSubmittedTask(false); }}
+                                    className="flex-1 justify-center px-5 py-2.5 text-slate-700 font-bold bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition shadow-sm">Cancel</button>
+                                <button type="submit" disabled={isCreatingTask}
+                                    className="flex-1 justify-center px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm disabled:opacity-50">
+                                    {isCreatingTask ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
                         </form>

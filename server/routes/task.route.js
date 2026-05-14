@@ -25,7 +25,7 @@ router.get("/:id", protectRoute, getSingleTask);
 // Update status — any authenticated user can update status (developer, QA, TL, admin)
 router.put("/:id/status", protectRoute, updateTaskStatus);
 // Update task — any authenticated user can update a task
-router.put("/:id", protectRoute, updateTask);
+router.put("/:id", protectRoute, isAdminOrTL, updateTask);
 router.put("/:id/restore", protectRoute, isAdmin, restoreTask);
 router.delete("/:id", protectRoute, isAdmin, deleteTask);
 

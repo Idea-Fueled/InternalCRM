@@ -38,7 +38,9 @@ const EmployeesDashboard = () => {
     const [teamLeads, setTeamLeads] = useState([]);
     const [departments, setDepartments] = useState([]);
     const [newDeptName, setNewDeptName] = useState("");
-    const [isDeptLoading, setIsDeptLoading] = useState(false);
+    const [isEditEmployeeModalOpen, setIsEditEmployeeModalOpen] = useState(false);
+    const [editingEmployee, setEditingEmployee] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchDepartments = async () => {
         try {
@@ -160,7 +162,73 @@ const EmployeesDashboard = () => {
         }
     };
 
-    const handleStatusToggle = async (emp) => {
+    const handleEditEmployee = (emp, e) => {
+        if (e) e.stopPropagation();
+        setEditingEmployee(emp.raw);
+        setNewEmployee({
+            name: emp.name,
+            email: emp.email,
+            password: "", // Don't pre-fill password for security
+            role: emp.role,
+            department: emp.dept,
+            teamLead: emp.raw.teamLead?._id || emp.raw.teamLead || ""
+        });
+        setIsEditEmployeeModalOpen(true);
+    };
+
+    const handleUpdateEmployee = async (e) => {
+        e.preventDefault();
+        if (!editingEmployee) return;
+        setSubmitted(true);
+
+        if (!newEmployee.name || !newEmployee.email) {
+            return;
+        }
+
+        try {
+            setIsCreating(true);
+            const updateData = { ...newEmployee };
+            if (!updateData.password) delete updateData.password;
+            
+            await userService.updateUser(editingEmployee._id, updateData);
+            toast.success("Employee updated successfully");
+            setIsEditEmployeeModalOpen(false);
+            setEditingEmployee(null);
+            setSubmitted(false);
+            setNewEmployee({
+                name: "",
+                email: "",
+                password: "",
+                role: "developer",
+                department: "Engineering",
+                teamLead: ""
+            });
+            fetchData();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to update employee");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleDeleteEmployee = async (empId, e) => {
+        if (e) e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this employee? This action cannot be undone.")) return;
+        
+        try {
+            setIsDeleting(true);
+            await userService.deleteUser(empId);
+            toast.success("Employee deleted successfully");
+            fetchData();
+        } catch (err) {
+            toast.error("Failed to delete employee");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleStatusToggle = async (emp, e) => {
+        if (e) e.stopPropagation();
         try {
             const newStatus = !emp.raw.isActive;
             await userService.updateUser(emp.id, { isActive: newStatus });
@@ -351,9 +419,22 @@ const EmployeesDashboard = () => {
                                         >
                                             {emp.status}
                                         </button>
-                                        <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-100">
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/></svg>
-                                        </button>
+                                        <div className="flex items-center gap-1.5">
+                                            <button 
+                                                onClick={(e) => handleEditEmployee(emp, e)}
+                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Edit Employee"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            </button>
+                                            <button 
+                                                onClick={(e) => handleDeleteEmployee(emp.id, e)}
+                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Delete Employee"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -657,6 +738,110 @@ const EmployeesDashboard = () => {
                         <div className="px-6 py-4 border-t border-slate-50 flex justify-end bg-white">
                             <button onClick={() => setSelectedEmployee(null)} className="px-6 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 transition-all text-[12px] active:scale-95 shadow-lg shadow-slate-200">
                                 Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Edit Employee Modal */}
+            {isEditEmployeeModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                            <h2 className="text-lg font-bold text-slate-800 tracking-tight">Edit Employee</h2>
+                            <button onClick={() => { setIsEditEmployeeModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <div className="p-6">
+                            <form id="editEmployeeForm" onSubmit={handleUpdateEmployee} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Full Name *</label>
+                                    <input 
+                                        type="text" 
+                                        required
+                                        value={newEmployee.name}
+                                        onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                                        className={`w-full px-3 py-2 bg-white border ${submitted && !newEmployee.name ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
+                                    />
+                                    {submitted && !newEmployee.name && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Name is required!</p>
+                                    )}
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Email *</label>
+                                    <input 
+                                        type="email" 
+                                        required
+                                        value={newEmployee.email}
+                                        onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                                        className={`w-full px-3 py-2 bg-white border ${submitted && !newEmployee.email ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
+                                    />
+                                    {submitted && !newEmployee.email && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Email is required!</p>
+                                    )}
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Role</label>
+                                    <select 
+                                        value={newEmployee.role}
+                                        onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                    >
+                                        <option value="developer">Developer</option>
+                                        <option value="TL">Team Lead</option>
+                                        <option value="qa">QA</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Password <span className="text-slate-400 font-normal text-[10px]">(Leave blank to keep current)</span></label>
+                                    <input 
+                                        type="password" 
+                                        value={newEmployee.password}
+                                        onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Department</label>
+                                    <select 
+                                        value={newEmployee.department}
+                                        onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                    >
+                                        <option value="">Select Department</option>
+                                        {departments.map(dept => (
+                                            <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="text-sm font-bold text-slate-700">Team Lead</label>
+                                    <select 
+                                        value={newEmployee.teamLead}
+                                        onChange={(e) => setNewEmployee({...newEmployee, teamLead: e.target.value})}
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                    >
+                                        <option value="">—</option>
+                                        {teamLeads.map(tl => (
+                                            <option key={tl.id} value={tl.id}>{tl.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                        <div className="p-5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+                            <button onClick={() => { setIsEditEmployeeModalOpen(false); setSubmitted(false); }} className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition text-sm">
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit"
+                                form="editEmployeeForm"
+                                disabled={isCreating}
+                                className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
+                            >
+                                {isCreating ? "Saving..." : "Save Changes"}
                             </button>
                         </div>
                     </div>

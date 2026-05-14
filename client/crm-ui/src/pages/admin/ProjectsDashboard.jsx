@@ -27,6 +27,9 @@ const ProjectsDashboard = () => {
     const [submitted, setSubmitted] = useState(false);
     const [teamLeads, setTeamLeads] = useState([]);
     const [teamMembersList, setTeamMembersList] = useState([]);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [editingProject, setEditingProject] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchInitialData = async () => {
         try {
@@ -100,6 +103,68 @@ const ProjectsDashboard = () => {
             toast.error(err.response?.data?.message || "Failed to create project");
         } finally {
             setIsCreating(false);
+        }
+    };
+
+    const handleEditProject = (proj, e) => {
+        if (e) e.stopPropagation();
+        setEditingProject(proj);
+        setNewProject({
+            projectName: proj.projectName,
+            description: proj.description || "",
+            teamLead: proj.teamLead?._id || proj.teamLead || "",
+            startDate: proj.startDate ? new Date(proj.startDate).toISOString().split('T')[0] : "",
+            endDate: proj.endDate ? new Date(proj.endDate).toISOString().split('T')[0] : "",
+            teamMembers: proj.teamMembers?.map(m => m._id || m) || []
+        });
+        setIsEditModalOpen(true);
+    };
+
+    const handleUpdateProject = async (e) => {
+        e.preventDefault();
+        if (!editingProject) return;
+        setSubmitted(true);
+
+        if (!newProject.projectName || !newProject.teamLead || !newProject.startDate || !newProject.endDate) {
+            return;
+        }
+
+        try {
+            setIsCreating(true);
+            await projectService.updateProject(editingProject._id, newProject);
+            toast.success("Project updated successfully");
+            setIsEditModalOpen(false);
+            setEditingProject(null);
+            setSubmitted(false);
+            setNewProject({
+                projectName: "",
+                description: "",
+                teamLead: "",
+                startDate: "",
+                endDate: "",
+                teamMembers: []
+            });
+            fetchProjects();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to update project");
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
+    const handleDeleteProject = async (projId, e) => {
+        if (e) e.stopPropagation();
+        if (!window.confirm("Are you sure you want to delete this project?")) return;
+
+        try {
+            setIsDeleting(true);
+            await projectService.deleteProject(projId);
+            toast.success("Project moved to trash");
+            fetchProjects();
+        } catch (err) {
+            toast.error("Failed to delete project");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -298,16 +363,31 @@ const ProjectsDashboard = () => {
 
                                     {/* Right: Action */}
                                     <div className="w-full xl:w-[20%] flex items-center justify-end border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                        <button 
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`);
-                                            }}
-                                            className="w-full sm:w-auto px-5 py-2.5 bg-slate-50 text-blue-600 font-bold text-sm rounded-xl border border-slate-200 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all flex items-center justify-center gap-2 shadow-sm"
-                                        >
-                                            Open Kanban
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button 
+                                                onClick={(e) => handleEditProject(project, e)}
+                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Edit Project"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                            </button>
+                                            <button 
+                                                onClick={(e) => handleDeleteProject(project._id, e)}
+                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Delete Project"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                                }}
+                                                className="px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5"
+                                            >
+                                                Board <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
+                                            </button>
+                                        </div>
                                     </div>
 
                                 </div>
@@ -449,6 +529,134 @@ const ProjectsDashboard = () => {
                                     className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-[#1d4ed8] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-sm disabled:opacity-50"
                                 >
                                     {isCreating ? "Creating..." : "Create Project"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Edit Project Modal */}
+            {isEditModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-[500px] flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100/50 shrink-0">
+                            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2.5">
+                                <div className="text-blue-600 relative flex items-center justify-center">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                </div>
+                                Edit Project
+                            </h2>
+                            <button onClick={() => { setIsEditModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateProject} noValidate className="flex flex-col flex-1 overflow-hidden">
+                            <div className="px-6 py-5 space-y-4 text-sm overflow-y-auto flex-1 scrollbar-thin">
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        required
+                                        value={newProject.projectName}
+                                        onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
+                                        placeholder="e.g. E-Commerce Platform" 
+                                        className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.projectName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700`} 
+                                    />
+                                    {submitted && !newProject.projectName && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Project Name is required!</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Description</label>
+                                    <textarea 
+                                        value={newProject.description}
+                                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                                        placeholder="Brief project description" 
+                                        rows="3" 
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700"
+                                    ></textarea>
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
+                                    <div className="relative">
+                                        <select 
+                                            required
+                                            value={newProject.teamLead}
+                                            onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.teamLead ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold`}
+                                        >
+                                            <option value="">Select Team Lead</option>
+                                            {teamLeads.map(tl => (
+                                                <option key={tl._id} value={tl._id}>{tl.name}</option>
+                                            ))}
+                                        </select>
+                                        {submitted && !newProject.teamLead && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Team Lead is required!</p>
+                                        )}
+                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Start Date <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="date" 
+                                            required
+                                            value={newProject.startDate}
+                                            onChange={(e) => setNewProject({...newProject, startDate: e.target.value})}
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.startDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
+                                        />
+                                        {submitted && !newProject.startDate && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Start Date is required!</p>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">End Date <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="date" 
+                                            required
+                                            value={newProject.endDate}
+                                            onChange={(e) => setNewProject({...newProject, endDate: e.target.value})}
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
+                                        />
+                                        {submitted && !newProject.endDate && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">End Date is required!</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
+                                    <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
+                                        {teamMembersList.length === 0 ? (
+                                            <div className="p-4 text-center text-slate-400 text-xs italic">
+                                                {newProject.teamLead ? "No members assigned to this TL" : "Select a Team Lead first"}
+                                            </div>
+                                        ) : teamMembersList.map((user) => (
+                                            <label key={user._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={newProject.teamMembers.includes(user._id)}
+                                                    onChange={() => toggleMember(user._id)}
+                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer" 
+                                                />
+                                                <span className="text-slate-700 font-bold text-sm">{user.name} <span className="text-slate-400 font-medium ml-1">({user.role})</span></span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
+                                <button type="button" onClick={() => { setIsEditModalOpen(false); setSubmitted(false); }} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    disabled={isCreating}
+                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
+                                >
+                                    {isCreating ? "Saving..." : "Save Changes"}
                                 </button>
                             </div>
                         </form>

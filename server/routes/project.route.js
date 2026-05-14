@@ -16,7 +16,7 @@ router.post("/create", protectRoute, isAdmin, createProject);
 router.get("/", protectRoute, getAllProjects);
 router.get("/trash", protectRoute, isAdmin, getTrashProjects);
 router.get("/:id", protectRoute, getProjectById);
-router.put("/:id", protectRoute, isAdminOrTL, updateProject);
+router.put("/:id", protectRoute, isAdmin, updateProject);
 router.delete("/:id", protectRoute, isAdmin, deleteProject);
 router.put("/restore/:id", protectRoute, isAdmin, restoreProject);
 
