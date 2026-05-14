@@ -62,6 +62,7 @@ const taskSchema = new mongoose.Schema({
     },
     statusHistory: [
         {
+            fromStatus: { type: String },
             status: { type: String },
             notes: { type: String, default: "" },
             attachment: { type: String, default: "" },

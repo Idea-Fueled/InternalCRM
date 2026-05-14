@@ -30,6 +30,7 @@ export const createTask = async (req, res) => {
             attachments,
             isDeleted,
             statusHistory: [{
+                fromStatus: "Created",
                 status: status || "New",
                 changedBy: req.user?._id || assignedBy,
                 changedAt: new Date(),
@@ -298,6 +299,7 @@ export const updateTaskStatus = async (req, res) => {
 
         // Build history entry
         const historyEntry = {
+            fromStatus: taskToUpdate.status,
             status,
             notes: notes || "",
             attachment: attachment || "",
@@ -314,7 +316,8 @@ export const updateTaskStatus = async (req, res) => {
             { new: true }
         )
         .populate("project", "projectName name status teamLead")
-        .populate("assignedTo", "name email");
+        .populate("assignedTo", "name email")
+        .populate("statusHistory.changedBy", "name");
 
         if (!task) {
             return res.status(404).json({

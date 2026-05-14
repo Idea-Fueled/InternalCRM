@@ -404,7 +404,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                             <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
                                                                 {task.priority || 'Medium'}
                                                             </span>
-                                                            {(role === 'admin' || role === 'TL') && (
+                                                            {(role === 'admin' || role === 'TL' || role === 'teamLead') && (
                                                                 <button 
                                                                     onClick={(e) => handleEditTask(task, e)}
                                                                     className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
@@ -611,35 +611,56 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                         <div className="space-y-3">
                                             {hist.slice().reverse().map((entry, idx) => (
                                                 <div key={idx} className="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4">
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className="text-xs font-bold text-indigo-700 px-2 py-0.5 bg-indigo-100 rounded-full">
-                                                            → {entry.status}
-                                                        </span>
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <div className="flex items-center gap-2">
+                                                            {entry.fromStatus && (
+                                                                <span className="text-[10px] font-bold text-slate-400">
+                                                                    {entry.fromStatus} →
+                                                                </span>
+                                                            )}
+                                                            <span className="text-xs font-bold text-indigo-700 px-2 py-0.5 bg-indigo-100 rounded-full">
+                                                                {entry.status}
+                                                            </span>
+                                                        </div>
                                                         {entry.changedAt && (
-                                                            <span className="text-xs text-slate-400">
+                                                            <span className="text-[10px] font-medium text-slate-400">
                                                                 {new Date(entry.changedAt).toLocaleDateString()} {new Date(entry.changedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                             </span>
                                                         )}
                                                     </div>
+                                                    
                                                     {entry.notes && (
-                                                        <p className="text-sm text-slate-700 leading-relaxed mb-2">
-                                                            <span className="font-semibold text-slate-500 text-xs uppercase tracking-wide block mb-1">Notes</span>
-                                                            {entry.notes}
-                                                        </p>
-                                                    )}
-                                                    {entry.attachment && (
-                                                        <div className="flex items-center gap-2 text-sm mt-1">
-                                                            <Paperclip className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                                                            <a
-                                                                href={entry.attachment.startsWith('http') ? entry.attachment : '#'}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-indigo-600 hover:underline truncate font-medium"
-                                                            >
-                                                                {entry.attachment}
-                                                            </a>
+                                                        <div className="mb-2">
+                                                            <p className="text-sm text-slate-700 leading-relaxed">
+                                                                {entry.notes}
+                                                            </p>
                                                         </div>
                                                     )}
+
+                                                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-indigo-100/50">
+                                                        <div className="flex items-center gap-1.5">
+                                                            <div className="w-5 h-5 rounded-full bg-indigo-200 text-indigo-700 flex items-center justify-center text-[8px] font-black">
+                                                                {entry.changedBy?.name ? entry.changedBy.name.substring(0, 2).toUpperCase() : '??'}
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                                                                {entry.changedBy?.name || 'Unknown User'}
+                                                            </span>
+                                                        </div>
+
+                                                        {entry.attachment && (
+                                                            <div className="flex items-center gap-2 text-xs">
+                                                                <a
+                                                                    href={entry.attachment.startsWith('http') ? entry.attachment : '#'}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 font-bold"
+                                                                >
+                                                                    <Paperclip className="w-3 h-3" />
+                                                                    View
+                                                                </a>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
