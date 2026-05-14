@@ -211,6 +211,27 @@ export const updateTask = async (req, res) => {
             });
         }
 
+        // Send Notifications to relevant parties
+        const recipients = new Set();
+        if (updatedTask.project?.teamLead) recipients.add(updatedTask.project.teamLead.toString());
+        if (updatedTask.assignedTo) recipients.add(updatedTask.assignedTo._id.toString());
+        if (updatedTask.assignedQA) recipients.add(updatedTask.assignedQA._id.toString());
+        
+        // Remove the person who made the change from recipients
+        recipients.delete(req.user._id.toString());
+
+        for (const recipientId of recipients) {
+            await createNotification({
+                recipient: recipientId,
+                sender: req.user._id,
+                title: "Task Updated",
+                message: `${updatedTask.taskName} has been updated by ${req.user.name}`,
+                type: "task",
+                category: "update",
+                link: `/kanban/${updatedTask.project?._id}?taskId=${updatedTask._id}`
+            });
+        }
+
         return res.status(200).json({
             success: true,
             message: "Task updated successfully",
@@ -403,6 +424,30 @@ export const deleteTask = async (req, res) => {
                 success: false,
                 message: "Task not found or already deleted"
             });
+        }
+
+        // Send Notifications
+        try {
+            const populatedTask = await Task.findById(id).populate("project");
+            const recipients = new Set();
+            if (populatedTask.project?.teamLead) recipients.add(populatedTask.project.teamLead.toString());
+            if (populatedTask.assignedTo) recipients.add(populatedTask.assignedTo.toString());
+            
+            recipients.delete(req.user._id.toString());
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: req.user._id,
+                    title: "Task Deleted",
+                    message: `${populatedTask.taskName} has been moved to trash by ${req.user.name}`,
+                    type: "task",
+                    category: "deletion",
+                    link: `/trash`
+                });
+            }
+        } catch (notifErr) {
+            console.error("Notification error on task delete:", notifErr);
         }
 
         return res.status(200).json({

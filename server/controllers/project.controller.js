@@ -166,6 +166,31 @@ export const updateProject = async (req, res, next) => {
             });
         }
 
+        // Notify Team Lead and Team Members
+        try {
+            const recipients = new Set();
+            if (updatedProject.teamLead) recipients.add(updatedProject.teamLead._id.toString());
+            if (updatedProject.teamMembers) {
+                updatedProject.teamMembers.forEach(m => recipients.add(m._id.toString()));
+            }
+            
+            recipients.delete(req.user._id.toString());
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: req.user._id,
+                    title: "Project Updated",
+                    message: `${updatedProject.projectName} details have been updated by ${req.user.name}`,
+                    type: "project",
+                    category: "update",
+                    link: `/projects/${updatedProject._id}`
+                });
+            }
+        } catch (notifErr) {
+            console.error("Notification error on project update:", notifErr);
+        }
+
         return res.status(200).json({
             success: true,
             message: "Project updated successfully",
@@ -197,9 +222,35 @@ export const deleteProject = async (req, res, next) => {
             });
         }
 
+        // Notify Team Lead and Members
+        try {
+            const recipients = new Set();
+            if (deletedProject.teamLead) recipients.add(deletedProject.teamLead.toString());
+            if (deletedProject.teamMembers) {
+                deletedProject.teamMembers.forEach(m => recipients.add(m.toString()));
+            }
+            
+            recipients.delete(req.user._id.toString());
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: req.user._id,
+                    title: "Project Deleted",
+                    message: `${deletedProject.projectName} has been moved to trash by ${req.user.name}`,
+                    type: "project",
+                    category: "deletion",
+                    link: `/trash`
+                });
+            }
+        } catch (notifErr) {
+            console.error("Notification error on project delete:", notifErr);
+        }
+
         return res.status(200).json({
             success: true,
-            message: "Project moved to trash successfully"
+            message: "Project moved to trash successfully",
+            project: deletedProject
         });
     } catch (error) {
         return res.status(500).json({
