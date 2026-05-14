@@ -4,8 +4,9 @@ import Topbar from '../../components/Topbar';
 import { userService, taskService } from '../../api/services';
 import { 
   Search, Filter, Users, CheckCircle2, Clock, AlertCircle, 
-  MoreVertical, X, Calendar, Activity, Briefcase
+  MoreVertical, X, Calendar, Activity, Briefcase, Download
 } from 'lucide-react';
+import { exportPDF } from '../../utils/pdfExport';
 
 const AVAILABILITY_COLORS = {
   'Free': 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -89,6 +90,24 @@ const TeamLeadTeam = () => {
 
     const uniqueRoles = ["All", ...new Set(team.map(m => m.role).filter(Boolean))];
 
+    const handleExportTeam = () => {
+        const columns = ["Name", "Role", "Availability", "Tasks (Done/Total)", "Overdue", "Performance %"];
+        const data = filteredTeam.map(m => [
+            m.name,
+            m.role,
+            m.availability,
+            `${m.stats.completed}/${m.stats.total}`,
+            m.stats.overdue,
+            `${m.stats.total > 0 ? Math.round((m.stats.completed / m.stats.total) * 100) : 0}%`
+        ]);
+        exportPDF({
+            title: "Team Performance & Availability Report",
+            filename: `team_report_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
             <AdminSidebar role="teamLead" />
@@ -105,6 +124,13 @@ const TeamLeadTeam = () => {
                             <p className="text-sm text-slate-500 mt-1">Manage workload, track performance, and view member availability.</p>
                         </div>
                         <div className="flex items-center gap-3">
+                            <button 
+                                onClick={handleExportTeam}
+                                className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition shadow-sm"
+                            >
+                                <Download className="w-4 h-4 mr-2" />
+                                Export PDF
+                            </button>
                             <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200">
                                 <Users className="w-4 h-4 mr-2" />
                                 Invite Member

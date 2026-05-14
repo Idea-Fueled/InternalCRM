@@ -7,8 +7,9 @@ import { useAuth } from '../../context/AuthContext';
 import {
     CheckCircle2, Clock, AlertCircle, PlayCircle, ShieldCheck,
     Calendar, FileText, MessageSquare, AlertTriangle, ArrowRight,
-    Activity, Star, ClipboardList
+    Activity, Star, ClipboardList, Download
 } from 'lucide-react';
+import { exportPDF } from '../../utils/pdfExport';
 
 // RECENT_ACTIVITY will be handled by state
 
@@ -90,6 +91,23 @@ const DeveloperDashboard = () => {
         }
     };
 
+    const handleExportTasks = () => {
+        const columns = ["Task Name", "Project", "Status", "Priority", "Due Date"];
+        const data = tasks.map(t => [
+            t.taskName,
+            t.project,
+            t.status,
+            t.priority,
+            t.endDate
+        ]);
+        exportPDF({
+            title: `My Assigned Tasks - ${user?.name || 'Developer'}`,
+            filename: `my_tasks_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     useEffect(() => {
         fetchDashboardData();
         const interval = setInterval(fetchDashboardData, 30000); // 30s polling
@@ -115,9 +133,20 @@ const DeveloperDashboard = () => {
                 <main className="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar">
 
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, Developer!</h1>
-                        <p className="text-sm text-slate-500 mt-1">Here is a summary of your assigned tasks and current workload.</p>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name || 'Developer'}!</h1>
+                            <p className="text-sm text-slate-500 mt-1">Here is a summary of your assigned tasks and current workload.</p>
+                        </div>
+                        {tasks.length > 0 && (
+                            <button 
+                                onClick={handleExportTasks}
+                                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Download Tasks
+                            </button>
+                        )}
                     </div>
 
                     {loading ? (

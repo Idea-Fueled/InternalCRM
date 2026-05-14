@@ -16,8 +16,10 @@ import {
   ShieldCheck, 
   FileText,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  Download
 } from 'lucide-react';
+import { exportPDF } from '../../utils/pdfExport';
 
 const PRIORITY_COLORS = {
     'Low': 'bg-slate-100 text-slate-600 border-slate-200',
@@ -142,6 +144,23 @@ const QADashboard = () => {
         }
     };
 
+    const handleExportQueue = () => {
+        const columns = ["Task Name", "Project", "Priority", "Developer", "Due Date"];
+        const data = filteredTasks.map(t => [
+            t.taskName,
+            t.project?.projectName || t.project?.name || "N/A",
+            t.priority || "Medium",
+            t.assignedTo?.name || "Unassigned",
+            t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A"
+        ]);
+        exportPDF({
+            title: "QA Pending Reviews Queue",
+            filename: `qa_queue_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     const handleApprove = (taskId, e) => openActionModal(taskId, 'Approve', e);
     const handleReject = (taskId, e) => openActionModal(taskId, 'Reject', e);
 
@@ -185,7 +204,14 @@ const QADashboard = () => {
                                             {tasks.length}
                                         </span>
                                     </h2>
-                                    <div className="flex items-center gap-2">
+                                     <div className="flex items-center gap-2">
+                                        <button 
+                                            onClick={handleExportQueue}
+                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Download Queue
+                                        </button>
                                         <div className="relative">
                                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                             <input 

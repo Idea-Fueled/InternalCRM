@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, projectService } from "../../api/services";
+import { exportPDF } from "../../utils/pdfExport";
+import { Download } from "lucide-react";
 
 const ReportsDashboard = () => {
     const [loading, setLoading] = useState(true);
@@ -88,6 +90,58 @@ const ReportsDashboard = () => {
         time: t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "N/A"
     }));
 
+    // PDF Handlers
+    const handleExportTasks = () => {
+        const columns = ["Task Name", "Project", "Status", "Priority", "Assignee", "Due Date"];
+        const data = filteredTasks.map(t => [
+            t.taskName,
+            t.project?.projectName || "N/A",
+            t.status,
+            t.priority,
+            t.assignedTo?.name || "Unassigned",
+            t.endDate ? new Date(t.endDate).toLocaleDateString() : "N/A"
+        ]);
+        exportPDF({
+            title: `Task Report - ${selectedProjectId === "All" ? "All Projects" : activeProject?.projectName}`,
+            filename: `tasks_report_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
+    const handleExportPerformance = () => {
+        const columns = ["Developer Name", "Total Tasks", "Completed", "Overdue", "Performance %"];
+        const data = developers.map(d => [
+            d.name,
+            d.total,
+            d.completed,
+            d.overdue,
+            `${d.performance}%`
+        ]);
+        exportPDF({
+            title: "Developer Performance Report",
+            filename: `dev_performance_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
+    const handleExportActivity = () => {
+        const columns = ["User", "Task", "Action", "Time"];
+        const data = activities.map(a => [
+            a.user.name,
+            a.task,
+            a.action,
+            a.time
+        ]);
+        exportPDF({
+            title: "Recent Activity Log",
+            filename: `activity_log_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
             <AdminSidebar />
@@ -141,10 +195,18 @@ const ReportsDashboard = () => {
 
                     {/* Top Insights */}
                     <div>
-                        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-                            <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-                            Task Overview
-                        </h2>
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                Task Overview
+                            </h2>
+                            <button 
+                                onClick={handleExportTasks}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition shadow-sm"
+                            >
+                                <Download className="w-3.5 h-3.5" /> Export PDF
+                            </button>
+                        </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                             {insights.map((stat, i) => (
                                 <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 hover:shadow-md transition-shadow">
@@ -163,10 +225,18 @@ const ReportsDashboard = () => {
                         
                         {/* Developer Performance */}
                         <div className="xl:col-span-2 space-y-4">
-                            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                                <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                Developer Performance
-                            </h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                    Developer Performance
+                                </h2>
+                                <button 
+                                    onClick={handleExportPerformance}
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition shadow-sm"
+                                >
+                                    <Download className="w-3.5 h-3.5" /> Export PDF
+                                </button>
+                            </div>
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left border-collapse">
@@ -291,10 +361,18 @@ const ReportsDashboard = () => {
 
                     {/* Recent Activity Log */}
                     <div className="space-y-4">
-                        <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                            <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            Recent Activity Log
-                        </h2>
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Recent Activity Log
+                            </h2>
+                            <button 
+                                onClick={handleExportActivity}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition shadow-sm"
+                            >
+                                <Download className="w-3.5 h-3.5" /> Export PDF
+                            </button>
+                        </div>
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">

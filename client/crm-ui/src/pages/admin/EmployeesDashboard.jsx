@@ -5,8 +5,9 @@ import { userService, taskService, authService, departmentService } from "../../
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
-    AlertCircle, ClipboardList, History, X 
+    AlertCircle, ClipboardList, History, X, Download 
 } from "lucide-react";
+import { exportPDF } from "../../utils/pdfExport";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -174,6 +175,24 @@ const EmployeesDashboard = () => {
         e.email?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    const handleExport = () => {
+        const columns = ["Name", "Role", "Department", "Lead", "Tasks (Done/Total)", "Status"];
+        const data = filteredEmployees.map(e => [
+            e.name,
+            e.role,
+            e.dept,
+            e.lead,
+            `${e.tasks.done}/${e.tasks.total}`,
+            e.status
+        ]);
+        exportPDF({
+            title: "Employee Directory & Performance",
+            filename: `employees_report_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     const departmentsList = departments.map(d => ({
         id: d._id,
         name: d.name,
@@ -245,8 +264,11 @@ const EmployeesDashboard = () => {
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
                                 Filter
                             </button>
-                            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                             <button 
+                                onClick={handleExport}
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm"
+                            >
+                                <Download className="w-4 h-4" />
                                 Export
                             </button>
                         </div>

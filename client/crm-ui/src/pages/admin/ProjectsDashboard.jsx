@@ -4,6 +4,8 @@ import { projectService, userService } from "../../api/services";
 import { toast } from "sonner";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
+import { exportPDF } from "../../utils/pdfExport";
+import { Download } from "lucide-react";
 
 const ProjectsDashboard = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,6 +114,24 @@ const ProjectsDashboard = () => {
         });
     };
 
+    const handleExport = () => {
+        const columns = ["Project Name", "Team Lead", "Status", "Progress", "Start Date", "End Date"];
+        const data = filteredProjects.map(p => [
+            p.projectName,
+            p.teamLead?.name || "Unassigned",
+            p.status,
+            `${p.status === "Completed" ? 100 : 50}%`,
+            p.startDate ? new Date(p.startDate).toLocaleDateString() : "N/A",
+            p.endDate ? new Date(p.endDate).toLocaleDateString() : "N/A"
+        ]);
+        exportPDF({
+            title: "Project Master List",
+            filename: `projects_report_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
+
     const filteredProjects = projects.filter(proj => {
         const matchesSearch = proj.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                proj.description?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -133,10 +153,19 @@ const ProjectsDashboard = () => {
                             <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Projects</h1>
                             <p className="text-sm font-medium text-slate-500 mt-1">Manage and track all ongoing project lifecycles across teams.</p>
                         </div>
-                        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
-                            New Project
-                        </button>
+                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <button 
+                                onClick={handleExport} 
+                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Export
+                            </button>
+                            <button onClick={() => setIsModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                                New Project
+                            </button>
+                        </div>
                     </div>
 
                     {/* Toolbar (Search & Filters) */}

@@ -5,8 +5,9 @@ import Topbar from '../../components/Topbar';
 import { toast } from 'sonner';
 import { 
   Search, Filter, Plus, Calendar, Users, 
-  CheckCircle2, Clock, MoreVertical, AlertCircle, LayoutList, ArrowLeft, X
+  CheckCircle2, Clock, MoreVertical, AlertCircle, LayoutList, ArrowLeft, X, Download
 } from 'lucide-react';
+import { exportPDF } from '../../utils/pdfExport';
 
 const TeamLeadProjects = () => {
     const formatDate = (dateString) => {
@@ -113,6 +114,24 @@ const TeamLeadProjects = () => {
             setIsCreatingTask(false);
         }
     };
+
+    const handleExportProjectTasks = () => {
+        if (!selectedProject) return;
+        const columns = ["Task Name", "Start Date", "End Date", "Assignee", "Status"];
+        const data = (selectedProject.tasks || []).map(t => [
+            t.name,
+            t.start,
+            t.end,
+            t.assignee,
+            t.status
+        ]);
+        exportPDF({
+            title: `Project Tasks: ${selectedProject.name}`,
+            filename: `project_tasks_${new Date().getTime()}.pdf`,
+            columns,
+            data
+        });
+    };
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
             <AdminSidebar role="teamLead" />
@@ -159,13 +178,22 @@ const TeamLeadProjects = () => {
                                                 <LayoutList className="w-5 h-5 mr-2 text-indigo-500" />
                                                 Tasks ({selectedProject?.tasks?.length || 0})
                                             </h3>
-                                            <button 
-                                                onClick={() => setIsTaskModalOpen(true)}
-                                                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition-colors shadow-sm shadow-blue-200"
-                                            >
-                                                <Plus className="w-4 h-4 mr-1.5" />
-                                                Add Task
-                                            </button>
+                                            <div className="flex items-center gap-3">
+                                                <button 
+                                                    onClick={handleExportProjectTasks}
+                                                    className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
+                                                >
+                                                    <Download className="w-4 h-4 mr-1.5" />
+                                                    Export PDF
+                                                </button>
+                                                <button 
+                                                    onClick={() => setIsTaskModalOpen(true)}
+                                                    className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg transition-colors shadow-sm shadow-blue-200"
+                                                >
+                                                    <Plus className="w-4 h-4 mr-1.5" />
+                                                    Add Task
+                                                </button>
+                                            </div>
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
