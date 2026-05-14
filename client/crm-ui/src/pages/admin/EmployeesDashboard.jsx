@@ -678,8 +678,8 @@ const EmployeesDashboard = () => {
             )}
             {/* Employee Detail Modal */}
             {selectedEmployee && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/30 backdrop-blur-[2px] p-4" onClick={() => setSelectedEmployee(null)}>
-                    <div className="bg-white rounded-[20px] shadow-xl w-full max-w-[480px] max-h-[90vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-[2px] p-4 sm:p-8" onClick={() => setSelectedEmployee(null)}>
+                    <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[440px] max-h-[82vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
                         
                         {/* Compact Header */}
                         <div className="px-6 py-5 flex items-start justify-between border-b border-slate-50">

@@ -161,7 +161,7 @@ const NotificationDropdown = ({ role }) => {
                         </div>
                     </div>
 
-                    <div className="max-h-[450px] overflow-y-auto custom-scrollbar">
+                    <div className="max-h-[360px] overflow-y-auto custom-scrollbar">
                         {loading && notifications.length === 0 ? (
                             <div className="p-10 text-center text-slate-400 italic">Loading notifications...</div>
                         ) : notifications.length === 0 ? (
