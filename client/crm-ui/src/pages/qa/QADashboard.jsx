@@ -37,6 +37,7 @@ const QADashboard = () => {
     const [recentActivity, setRecentActivity] = useState([]);
     const [loading, setLoading] = useState(true);
     const [projectFilter, setProjectFilter] = useState('All');
+    const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
     
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
     const [actionType, setActionType] = useState(null); // 'Approve' or 'Reject'
@@ -261,38 +262,55 @@ const QADashboard = () => {
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
                                         </div>
+
+                                        {/* Project Filter Dropdown */}
+                                        <div className="relative">
+                                            <button 
+                                                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                                className={`flex items-center justify-center p-2 bg-white border ${projectFilter !== 'All' ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/10' : 'border-slate-200 text-slate-600'} rounded-lg text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm group`}
+                                                title="Filter by Project"
+                                            >
+                                                <Filter className={`w-4 h-4 ${projectFilter !== 'All' ? 'text-indigo-500' : 'text-slate-400 group-hover:text-indigo-500'}`} />
+                                            </button>
+
+                                            {isFilterDropdownOpen && (
+                                                <>
+                                                    <div className="fixed inset-0 z-40" onClick={() => setIsFilterDropdownOpen(false)} />
+                                                    <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
+                                                        <div className="px-4 py-2 border-b border-slate-50">
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter by Project</p>
+                                                        </div>
+                                                        <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setProjectFilter('All');
+                                                                    setIsFilterDropdownOpen(false);
+                                                                }}
+                                                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === 'All' ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
+                                                            >
+                                                                All Projects
+                                                                {projectFilter === 'All' && <ShieldCheck className="w-4 h-4" />}
+                                                            </button>
+                                                            {projectOptions.map(proj => (
+                                                                <button
+                                                                    key={proj}
+                                                                    onClick={() => {
+                                                                        setProjectFilter(proj);
+                                                                        setIsFilterDropdownOpen(false);
+                                                                    }}
+                                                                    className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === proj ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
+                                                                >
+                                                                    {proj}
+                                                                    {projectFilter === proj && <ShieldCheck className="w-4 h-4" />}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* Project Filter Bar */}
-                                {!loading && projectOptions.length > 0 && (
-                                    <div className="flex items-center gap-2 mb-4 flex-wrap">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1">Project:</span>
-                                        <button
-                                            onClick={() => setProjectFilter('All')}
-                                            className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
-                                                projectFilter === 'All'
-                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
-                                            }`}
-                                        >
-                                            All Projects
-                                        </button>
-                                        {projectOptions.map(proj => (
-                                            <button
-                                                key={proj}
-                                                onClick={() => setProjectFilter(proj === projectFilter ? 'All' : proj)}
-                                                className={`px-3 py-1 rounded-full text-[10px] font-bold border transition-all ${
-                                                    projectFilter === proj
-                                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                                        : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
-                                                }`}
-                                            >
-                                                {proj}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
 
                                 <div className="space-y-4">
                                     {loading ? (
