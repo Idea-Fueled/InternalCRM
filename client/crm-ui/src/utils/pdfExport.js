@@ -1,5 +1,5 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export const exportPDF = ({
     title,
@@ -9,7 +9,7 @@ export const exportPDF = ({
     orientation = 'portrait',
     headerText = 'Idea Fueled CRM - Official Report'
 }) => {
-    const doc = jsPDF({
+    const doc = new jsPDF({
         orientation: orientation,
         unit: 'mm',
         format: 'a4'
@@ -32,7 +32,7 @@ export const exportPDF = ({
     // Add Report Title
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
-    doc.text(title.toUpperCase(), 15, 33);
+    doc.text((title || 'REPORT').toUpperCase(), 15, 33);
 
     // Add Date/Time info on the right
     doc.setFontSize(9);
@@ -42,7 +42,7 @@ export const exportPDF = ({
     // -- Content Section --
     doc.setTextColor(51, 65, 85); // Slate-700
 
-    doc.autoTable({
+    autoTable(doc, {
         startY: 50,
         head: [columns],
         body: data,
