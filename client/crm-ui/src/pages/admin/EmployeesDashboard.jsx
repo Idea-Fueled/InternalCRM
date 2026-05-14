@@ -43,6 +43,7 @@ const EmployeesDashboard = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeptLoading, setIsDeptLoading] = useState(false);
 
     const fetchDepartments = async () => {
         try {
