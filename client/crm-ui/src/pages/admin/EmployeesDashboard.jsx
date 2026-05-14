@@ -142,7 +142,18 @@ const EmployeesDashboard = () => {
 
         try {
             setIsCreating(true);
-            await authService.register(newEmployee);
+            const formData = new FormData();
+            formData.append('name', newEmployee.name);
+            formData.append('email', newEmployee.email);
+            formData.append('password', newEmployee.password);
+            formData.append('role', newEmployee.role);
+            formData.append('department', newEmployee.department);
+            formData.append('teamLead', newEmployee.teamLead);
+            if (newEmployee.profilePic) {
+                formData.append('profilePic', newEmployee.profilePic);
+            }
+
+            await authService.register(formData);
             toast.success("Employee added successfully");
             setIsAddEmployeeModalOpen(false);
             setSubmitted(false);
@@ -152,7 +163,8 @@ const EmployeesDashboard = () => {
                 password: "",
                 role: "developer",
                 department: "Engineering",
-                teamLead: ""
+                teamLead: "",
+                profilePic: null
             });
             fetchData();
         } catch (err) {
@@ -168,10 +180,11 @@ const EmployeesDashboard = () => {
         setNewEmployee({
             name: emp.name,
             email: emp.email,
-            password: "", // Don't pre-fill password for security
+            password: "",
             role: emp.role,
             department: emp.dept,
-            teamLead: emp.raw.teamLead?._id || emp.raw.teamLead || ""
+            teamLead: emp.raw.teamLead?._id || emp.raw.teamLead || "",
+            profilePic: null
         });
         setIsEditEmployeeModalOpen(true);
     };
@@ -187,10 +200,18 @@ const EmployeesDashboard = () => {
 
         try {
             setIsCreating(true);
-            const updateData = { ...newEmployee };
-            if (!updateData.password) delete updateData.password;
+            const formData = new FormData();
+            formData.append('name', newEmployee.name);
+            formData.append('email', newEmployee.email);
+            if (newEmployee.password) formData.append('password', newEmployee.password);
+            formData.append('role', newEmployee.role);
+            formData.append('department', newEmployee.department);
+            formData.append('teamLead', newEmployee.teamLead);
+            if (newEmployee.profilePic) {
+                formData.append('profilePic', newEmployee.profilePic);
+            }
             
-            await userService.updateUser(editingEmployee._id, updateData);
+            await userService.updateUser(editingEmployee._id, formData);
             toast.success("Employee updated successfully");
             setIsEditEmployeeModalOpen(false);
             setEditingEmployee(null);
@@ -201,7 +222,8 @@ const EmployeesDashboard = () => {
                 password: "",
                 role: "developer",
                 department: "Engineering",
-                teamLead: ""
+                teamLead: "",
+                profilePic: null
             });
             fetchData();
         } catch (err) {
@@ -363,10 +385,14 @@ const EmployeesDashboard = () => {
                             <div key={i} onClick={() => setSelectedEmployee(emp)} className="group bg-white rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 cursor-pointer">
                                 {/* Left: Avatar, Name, Role */}
                                 <div className="flex items-center gap-4 w-full lg:w-1/3">
-                                    <div className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm
+                                    <div className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden
                                         ${emp.status === 'Inactive' ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'}
                                     `}>
-                                        {emp.name.charAt(0)}
+                                        {emp.raw.profilePic ? (
+                                            <img src={emp.raw.profilePic} alt={emp.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            emp.name.charAt(0)
+                                        )}
                                     </div>
                                     <div className="overflow-hidden">
                                         <h4 className="text-base font-bold text-slate-800 truncate">{emp.name}</h4>
@@ -600,6 +626,27 @@ const EmployeesDashboard = () => {
                                         ))}
                                     </select>
                                 </div>
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-sm font-bold text-slate-700">Profile Picture</label>
+                                    <div className="flex items-center gap-4 p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                                        <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden shadow-sm">
+                                            {newEmployee.profilePic ? (
+                                                <img src={URL.createObjectURL(newEmployee.profilePic)} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Camera className="w-6 h-6" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={(e) => setNewEmployee({...newEmployee, profilePic: e.target.files[0]})}
+                                                className="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
+                                            />
+                                            <p className="text-[10px] text-slate-400 mt-1 font-medium italic">Recommended: Square image, max 5MB</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                         <div className="p-5 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
@@ -626,9 +673,13 @@ const EmployeesDashboard = () => {
                         {/* Compact Header */}
                         <div className="px-6 py-5 flex items-start justify-between border-b border-slate-50">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-[14px] bg-white border border-blue-200 p-0.5 shadow-sm flex items-center justify-center">
-                                    <div className="w-full h-full rounded-[10px] bg-blue-50 flex items-center justify-center text-xl font-bold text-blue-600 uppercase">
-                                        {selectedEmployee.name.charAt(0)}
+                                <div className="w-12 h-12 rounded-[14px] bg-white border border-blue-200 p-0.5 shadow-sm flex items-center justify-center overflow-hidden">
+                                    <div className="w-full h-full rounded-[10px] bg-blue-50 flex items-center justify-center text-xl font-bold text-blue-600 uppercase overflow-hidden">
+                                        {selectedEmployee.raw.profilePic ? (
+                                            <img src={selectedEmployee.raw.profilePic} alt={selectedEmployee.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            selectedEmployee.name.charAt(0)
+                                        )}
                                     </div>
                                 </div>
                                 <div>
@@ -828,6 +879,29 @@ const EmployeesDashboard = () => {
                                             <option key={tl.id} value={tl.id}>{tl.name}</option>
                                         ))}
                                     </select>
+                                </div>
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-sm font-bold text-slate-700">Update Profile Picture</label>
+                                    <div className="flex items-center gap-4 p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                                        <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden shadow-sm">
+                                            {newEmployee.profilePic ? (
+                                                <img src={URL.createObjectURL(newEmployee.profilePic)} alt="Preview" className="w-full h-full object-cover" />
+                                            ) : editingEmployee?.profilePic ? (
+                                                <img src={editingEmployee.profilePic} alt="Current" className="w-full h-full object-cover" />
+                                            ) : (
+                                                <Camera className="w-6 h-6" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={(e) => setNewEmployee({...newEmployee, profilePic: e.target.files[0]})}
+                                                className="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
+                                            />
+                                            <p className="text-[10px] text-slate-400 mt-1 font-medium italic">Recommended: Square image, max 5MB</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </form>
                         </div>

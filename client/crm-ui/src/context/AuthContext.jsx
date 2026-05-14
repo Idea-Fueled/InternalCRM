@@ -53,12 +53,17 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const updateUserProfile = (updatedData) => {
+        setUser(prev => prev ? { ...prev, ...updatedData } : null);
+    };
+
     const value = React.useMemo(() => ({
         user, 
         loading, 
         login, 
         logout, 
         checkAuth,
+        updateUserProfile,
         isAuthenticated: !!user
     }), [user, loading, checkAuth]);
 

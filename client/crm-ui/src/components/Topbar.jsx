@@ -45,8 +45,12 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
                         onClick={() => setIsProfileModalOpen(true)}
                         className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 px-1 sm:px-2 py-1 rounded-lg transition group"
                     >
-                        <div className="w-8 h-8 sm:w-9 sm:h-9 text-white rounded-full flex items-center justify-center font-semibold text-sm shadow-sm group-hover:scale-105 transition-transform bg-blue-600">
-                            {initial}
+                        <div className="w-8 h-8 sm:w-9 sm:h-9 text-white rounded-full flex items-center justify-center font-semibold text-sm shadow-sm group-hover:scale-105 transition-transform bg-blue-600 overflow-hidden">
+                            {user?.profilePic ? (
+                                <img src={user.profilePic} alt={displayName} className="w-full h-full object-cover" />
+                            ) : (
+                                initial
+                            )}
                         </div>
                         <div className="hidden sm:flex flex-col">
                             <span className="text-sm font-bold text-gray-700 group-hover:text-blue-600 transition-colors">{displayName}</span>

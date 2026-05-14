@@ -63,7 +63,8 @@ const TeamLeadProjects = () => {
                         id: m._id,
                         initial: m.name?.charAt(0).toUpperCase() || "U",
                         name: m.name || "Unknown",
-                        role: m.role
+                        role: m.role,
+                        profilePic: m.profilePic
                     })) || [],
                     tasks: (p.tasks || []).map(t => ({
                         ...t,
@@ -72,7 +73,8 @@ const TeamLeadProjects = () => {
                         start: (t.startDate || t.createdAt) ? new Date(t.startDate || t.createdAt).toLocaleDateString() : 'N/A',
                         end: t.endDate ? new Date(t.endDate).toLocaleDateString() : 'N/A',
                         assignee: t.assignedTo?.name || "Unassigned",
-                        assigneeInitial: t.assignedTo?.name?.charAt(0).toUpperCase() || "?"
+                        assigneeInitial: t.assignedTo?.name?.charAt(0).toUpperCase() || "?",
+                        assigneePic: t.assignedTo?.profilePic
                     }))
                 };
             });
@@ -262,9 +264,13 @@ const TeamLeadProjects = () => {
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                <div className="flex items-center gap-2.5">
-                                                                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200">
-                                                                        {task.assigneeInitial}
+                                                                 <div className="flex items-center gap-2.5">
+                                                                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 overflow-hidden">
+                                                                        {task.assigneePic ? (
+                                                                            <img src={task.assigneePic} alt={task.assignee} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            task.assigneeInitial
+                                                                        )}
                                                                     </div>
                                                                     <span className="text-sm font-medium text-slate-600">{task.assignee}</span>
                                                                 </div>

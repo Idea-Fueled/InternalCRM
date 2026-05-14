@@ -7,14 +7,16 @@ import {
     loginController,
     registerUser,
     restoreUser,
-    updateUser
+    updateUser,
+    updateProfilePic
 } from "../controllers/user.controller.js";
 import { protectRoute, isAdmin, isAdminOrTL } from "../middlewares/auth.middleware.js";
+import { upload } from "../config/cloudinary.js";
 
 const router = express.Router();
 
 // --- Public routes ---
-router.post("/register", registerUser);
+router.post("/register", upload.single('profilePic'), registerUser);
 router.post("/login", loginController);
 
 // --- Auth routes (must come BEFORE /:_id to prevent Express treating "me" as an _id) ---
@@ -28,13 +30,13 @@ router.post("/logout", (req, res) => {
 });
 
 // CRITICAL: /me must be declared before /:_id
-// Otherwise Express captures "me" as the _id param, causing findById("me") to fail with 500
 router.get("/me", protectRoute, getCurrentUser);
+router.put("/me/profile-pic", protectRoute, upload.single('profilePic'), updateProfilePic);
 
 // --- Protected routes ---
 router.get("/all", protectRoute, isAdminOrTL, getAllUsers);
 router.get("/:_id", protectRoute, getUserById);
-router.put("/update/:_id", protectRoute, isAdmin, updateUser);
+router.put("/update/:_id", protectRoute, isAdmin, upload.single('profilePic'), updateUser);
 router.delete("/delete/:_id", protectRoute, isAdmin, deleteUser);
 router.put("/restore/:_id", protectRoute, isAdmin, restoreUser);
 

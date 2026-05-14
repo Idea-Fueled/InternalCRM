@@ -1,6 +1,7 @@
 import User from "../models/user.schema.js";
 import { generateToken } from "../utils/authToken.js";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";
+import { cloudinary } from "../config/cloudinary.js";
 
 export const registerUser = async (req, res, next) => {
     try {
@@ -21,13 +22,23 @@ export const registerUser = async (req, res, next) => {
 
         const hashedPassword = await hashPassword(password);
 
+        let profilePic = "";
+        let profilePicPublicId = "";
+
+        if (req.file) {
+            profilePic = req.file.path;
+            profilePicPublicId = req.file.filename;
+        }
+
         const user = new User({
             name, 
             email, 
             password: hashedPassword, 
             role, 
             department, 
-            teamLead: (teamLead && teamLead !== "") ? teamLead : null
+            teamLead: (teamLead && teamLead !== "") ? teamLead : null,
+            profilePic,
+            profilePicPublicId
         });
 
         await user.save();
@@ -39,18 +50,12 @@ export const registerUser = async (req, res, next) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                department: user.department
+                department: user.department,
+                profilePic: user.profilePic
             }
         })
     } catch (error) {
         console.error("User controller error:", error);
-        if (error.name === "ValidationError") {
-            const message = Object.values(error.errors).map(val => val.message).join(", ");
-            return res.status(400).json({ message });
-        }
-        if (error.name === "CastError") {
-            return res.status(400).json({ message: "Invalid selection" });
-        }
         return res.status(500).json({ message: error.message || "Internal server error" });
     }
 }
@@ -65,25 +70,20 @@ export const loginController = async (req, res) => {
             })
         }
 
-        console.log(`Login attempt for: ${email}`);
-
         const user = await User.findOne({ email });
         if (!user) {
-            console.log(`User not found: ${email}`);
             return res.status(401).json({
-                message: "Invalid email or password. Please check your credentials."
+                message: "Invalid email or password."
             })
         }
 
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
-            console.log(`Invalid password for: ${email}`);
             return res.status(401).json({
-                message: "Invalid email or password. Please check your credentials."
+                message: "Invalid email or password."
             })
         }
 
-        // Token payload uses { id, role } — must match auth middleware
         const token = await generateToken(user._id, user.role);
 
         res.cookie("token", token, {
@@ -93,28 +93,23 @@ export const loginController = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         })
 
-        console.log(`Login successful for: ${email} (role: ${user.role})`);
-
         return res.status(200).json({
             message: "Login successful!",
             user: {
                 id: user._id,
                 email: user.email,
                 name: user.name,
-                role: user.role
+                role: user.role,
+                profilePic: user.profilePic
             }
         })
 
     } catch (error) {
         console.error("Login controller error:", error);
-        return res.status(500).json({
-            message: "Internal server error during login"
-        })
+        return res.status(500).json({ message: "Internal server error" })
     }
 }
 
-// Returns the currently authenticated user from req.user (set by protectRoute)
-// No DB query needed — avoids any route ordering collision with /:_id
 export const getCurrentUser = (req, res) => {
     try {
         if (!req.user) {
@@ -130,7 +125,8 @@ export const getCurrentUser = (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                department: user.department || null
+                department: user.department || null,
+                profilePic: user.profilePic || ""
             }
         });
     } catch (error) {
@@ -144,9 +140,7 @@ export const getAllUsers = async (req, res) => {
         const { teamLead, role } = req.query;
         let query = { isActive: true };
         
-        // Automatic filtering for Team Leads
         if (req.user.role === "TL") {
-            // Find users who have this TL as their teamLead OR who are in the TL's teamMembers array
             const currentUser = await User.findById(req.user._id);
             const teamMemberIds = currentUser?.teamMembers || [];
             
@@ -174,40 +168,22 @@ export const getAllUsers = async (req, res) => {
             data: users
         });
     } catch (error) {
-        console.error("getAllUsers error:", error);
-        return res.status(500).json({
-            success: false,
-            message: error.message
-        });
+        return res.status(500).json({ success: false, message: error.message });
     }
 };
 
 export const getUserById = async (req, res) => {
     try {
         const { _id } = req.params;
-
         const user = await User.findById(_id);
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found!"
-            })
-        }
+        if (!user) return res.status(404).json({ message: "User not found!" });
 
         return res.status(200).json({
             message: "User fetched successfully!",
-            data: { email: user.email, name: user.name, role: user.role, department: user.department }
+            data: { email: user.email, name: user.name, role: user.role, department: user.department, profilePic: user.profilePic }
         })
-
     } catch (error) {
-        console.error("User controller error:", error);
-        if (error.name === "ValidationError") {
-            const message = Object.values(error.errors).map(val => val.message).join(", ");
-            return res.status(400).json({ message });
-        }
-        if (error.name === "CastError") {
-            return res.status(400).json({ message: "Invalid selection" });
-        }
-        return res.status(500).json({ message: error.message || "Internal server error" });
+        return res.status(500).json({ message: error.message });
     }
 }
 
@@ -216,10 +192,22 @@ export const updateUser = async (req, res) => {
         const { _id } = req.params;
         const { teamLead, ...otherData } = req.body;
         
+        const user = await User.findById(_id);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
         const updateData = {
             ...otherData,
             teamLead: (teamLead && teamLead !== "") ? teamLead : null
         };
+
+        if (req.file) {
+            // Delete old pic if exists
+            if (user.profilePicPublicId) {
+                await cloudinary.uploader.destroy(user.profilePicPublicId);
+            }
+            updateData.profilePic = req.file.path;
+            updateData.profilePicPublicId = req.file.filename;
+        }
 
         const updatedUser = await User.findByIdAndUpdate(
             _id,
@@ -227,55 +215,54 @@ export const updateUser = async (req, res) => {
             { new: true, runValidators: true }
         ).select("-password")
 
-        if (!updatedUser) {
-            return res.status(404).json({
-                message: "User not found!"
-            })
-        }
-
         return res.status(200).json({
             message: "User updated successfully!",
             data: updatedUser
         })
     } catch (error) {
-        console.error("User controller error:", error);
-        if (error.name === "ValidationError") {
-            const message = Object.values(error.errors).map(val => val.message).join(", ");
-            return res.status(400).json({ message });
-        }
-        if (error.name === "CastError") {
-            return res.status(400).json({ message: "Invalid selection" });
-        }
-        return res.status(500).json({ message: error.message || "Internal server error" });
+        return res.status(500).json({ message: error.message });
     }
 }
 
-// Soft delete
+export const updateProfilePic = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No image file provided" });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Delete old pic if exists
+        if (user.profilePicPublicId) {
+            await cloudinary.uploader.destroy(user.profilePicPublicId);
+        }
+
+        user.profilePic = req.file.path;
+        user.profilePicPublicId = req.file.filename;
+        await user.save();
+
+        return res.status(200).json({
+            message: "Profile picture updated successfully",
+            profilePic: user.profilePic
+        });
+    } catch (error) {
+        console.error("updateProfilePic error:", error);
+        return res.status(500).json({ message: "Failed to update profile picture" });
+    }
+};
+
 export const deleteUser = async (req, res) => {
     try {
         const { _id } = req.params;
         const user = await User.findById(_id);
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found!"
-            })
-        }
+        if (!user) return res.status(404).json({ message: "User not found!" });
+        
         user.isActive = false;
         await user.save();
-        return res.status(200).json({
-            message: "User deleted successfully!",
-            data: user
-        })
+        return res.status(200).json({ message: "User deleted successfully!", data: user })
     } catch (error) {
-        console.error("User controller error:", error);
-        if (error.name === "ValidationError") {
-            const message = Object.values(error.errors).map(val => val.message).join(", ");
-            return res.status(400).json({ message });
-        }
-        if (error.name === "CastError") {
-            return res.status(400).json({ message: "Invalid selection" });
-        }
-        return res.status(500).json({ message: error.message || "Internal server error" });
+        return res.status(500).json({ message: error.message });
     }
 }
 
@@ -283,26 +270,12 @@ export const restoreUser = async (req, res) => {
     try {
         const { _id } = req.params;
         const user = await User.findById(_id);
-        if (!user) {
-            return res.status(404).json({
-                message: "User not found!"
-            })
-        }
+        if (!user) return res.status(404).json({ message: "User not found!" });
+        
         user.isActive = true;
         await user.save();
-        return res.status(200).json({
-            message: "User restored successfully!",
-            data: user
-        })
+        return res.status(200).json({ message: "User restored successfully!", data: user })
     } catch (error) {
-        console.error("User controller error:", error);
-        if (error.name === "ValidationError") {
-            const message = Object.values(error.errors).map(val => val.message).join(", ");
-            return res.status(400).json({ message });
-        }
-        if (error.name === "CastError") {
-            return res.status(400).json({ message: "Invalid selection" });
-        }
-        return res.status(500).json({ message: error.message || "Internal server error" });
+        return res.status(500).json({ message: error.message });
     }
 }

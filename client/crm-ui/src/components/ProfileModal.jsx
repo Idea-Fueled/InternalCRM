@@ -1,8 +1,41 @@
-import React from "react";
-import { X, Mail, Shield, Briefcase, Calendar } from "lucide-react";
+import { X, Mail, Shield, Briefcase, Calendar, Camera, Loader2 } from "lucide-react";
+import { authService } from "../api/services";
+import { toast } from "sonner";
+import { useAuth } from "../context/AuthContext";
 
 const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, initial }) => {
+    const { updateUserProfile } = useAuth();
+    const [isUploading, setIsUploading] = React.useState(false);
+    const fileInputRef = React.useRef(null);
+
     if (!isOpen) return null;
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            toast.error("Please select an image file");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('profilePic', file);
+
+        try {
+            setIsUploading(true);
+            const res = await authService.updateProfilePic(formData);
+            if (res.data?.profilePic) {
+                updateUserProfile({ profilePic: res.data.profilePic });
+                toast.success("Profile picture updated!");
+            }
+        } catch (error) {
+            console.error("Upload error:", error);
+            toast.error("Failed to upload image");
+        } finally {
+            setIsUploading(false);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
@@ -18,10 +51,38 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                 </button>
 
                 <div className="pt-10 pb-8 px-6 text-center">
-                    {/* Simple Profile Icon - Blue Theme */}
+                    {/* Profile Icon with Upload Overlay */}
                     <div className="flex justify-center mb-5">
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-3xl font-bold shadow-lg shadow-blue-100 bg-gradient-to-br from-blue-500 to-blue-600">
-                            {initial}
+                        <div className="relative group">
+                            <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-blue-100 bg-gradient-to-br from-blue-500 to-blue-600 overflow-hidden">
+                                {user?.profilePic ? (
+                                    <img src={user.profilePic} alt={displayName} className="w-full h-full object-cover" />
+                                ) : (
+                                    initial
+                                )}
+                                
+                                {isUploading && (
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                                        <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                disabled={isUploading}
+                                className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-lg border border-slate-100 text-blue-600 hover:bg-blue-50 transition-all hover:scale-110 active:scale-95"
+                                title="Change Profile Picture"
+                            >
+                                <Camera className="w-4 h-4" />
+                            </button>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
+                                accept="image/*" 
+                                onChange={handleImageUpload}
+                            />
                         </div>
                     </div>
 

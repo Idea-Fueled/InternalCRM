@@ -60,4 +60,5 @@ export const authService = {
     register: (data) => axiosInstance.post('/users/register', data),
     logout: () => axiosInstance.post('/users/logout'),
     checkAuth: () => axiosInstance.get('/users/me'),
+    updateProfilePic: (formData) => axiosInstance.put('/users/me/profile-pic', formData),
 };

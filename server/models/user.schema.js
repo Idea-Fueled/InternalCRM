@@ -22,6 +22,14 @@ const userSchema = new mongoose.Schema({
     department: {
         type: String
     },
+    profilePic: {
+        type: String,
+        default: ""
+    },
+    profilePicPublicId: {
+        type: String,
+        default: ""
+    },
 
     // TL
     teamLead: {

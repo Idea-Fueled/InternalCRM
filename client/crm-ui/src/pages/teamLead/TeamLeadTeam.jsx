@@ -236,10 +236,14 @@ const TeamLeadTeam = () => {
                                     <div className="p-5 flex-1">
                                         <div className="flex justify-between items-start mb-4">
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-full ${member.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-sm relative`}>
-                                                    {member.initial}
+                                                <div className={`w-12 h-12 rounded-full ${member.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-sm relative overflow-hidden`}>
+                                                    {member.profilePic ? (
+                                                        <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        member.initial
+                                                    )}
                                                     {member.status === 'Active' && (
-                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full z-10"></div>
                                                     )}
                                                 </div>
                                                 <div>
@@ -325,10 +329,14 @@ const TeamLeadTeam = () => {
                                 </button>
                                 
                                 <div className="flex flex-col items-center mt-2">
-                                    <div className={`w-20 h-20 rounded-full ${selectedMember.avatarColor} text-white flex items-center justify-center font-bold text-3xl shadow-md mb-4 relative`}>
-                                        {selectedMember.initial}
+                                    <div className={`w-20 h-20 rounded-full ${selectedMember.avatarColor} text-white flex items-center justify-center font-bold text-3xl shadow-md mb-4 relative overflow-hidden`}>
+                                        {selectedMember.profilePic ? (
+                                            <img src={selectedMember.profilePic} alt={selectedMember.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            selectedMember.initial
+                                        )}
                                         {selectedMember.status === 'Active' && (
-                                            <div className="absolute bottom-0 right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></div>
+                                            <div className="absolute bottom-0 right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full z-10"></div>
                                         )}
                                     </div>
                                     <h2 className="text-2xl font-bold text-slate-900">{selectedMember.name}</h2>
