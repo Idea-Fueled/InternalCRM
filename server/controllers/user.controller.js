@@ -26,6 +26,7 @@ export const registerUser = async (req, res, next) => {
         let profilePicPublicId = "";
 
         if (req.file) {
+            console.log("File received in registerUser:", req.file);
             profilePic = req.file.path;
             profilePicPublicId = req.file.filename;
         }
@@ -205,9 +206,14 @@ export const updateUser = async (req, res) => {
         };
 
         if (req.file) {
+            console.log("File received in updateUser:", req.file);
             // Delete old pic if exists
             if (user.profilePicPublicId) {
-                await cloudinary.uploader.destroy(user.profilePicPublicId);
+                try {
+                    await cloudinary.uploader.destroy(user.profilePicPublicId);
+                } catch (delErr) {
+                    console.error("Cloudinary delete error (updateUser):", delErr);
+                }
             }
             updateData.profilePic = req.file.path;
             updateData.profilePicPublicId = req.file.filename;
@@ -240,9 +246,16 @@ export const updateProfilePic = async (req, res) => {
         const user = await User.findById(req.user._id);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        console.log("File received in updateProfilePic:", req.file);
+
         // Delete old pic if exists
         if (user.profilePicPublicId) {
-            await cloudinary.uploader.destroy(user.profilePicPublicId);
+            try {
+                await cloudinary.uploader.destroy(user.profilePicPublicId);
+            } catch (delErr) {
+                console.error("Cloudinary delete error (updateProfilePic):", delErr);
+                // Continue anyway
+            }
         }
 
         user.profilePic = req.file.path;
