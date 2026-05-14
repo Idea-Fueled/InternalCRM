@@ -60,6 +60,8 @@ const QADashboard = () => {
         return "Just now";
     };
 
+    const [allTasksForStats, setAllTasksForStats] = useState([]);
+
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
@@ -73,14 +75,12 @@ const QADashboard = () => {
             }
             if (tasksRes.data.success) {
                 const allTasks = tasksRes.data.tasks || [];
-                const overdueCount = allTasks.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date()).length;
-                setStats(prev => ({ ...prev, overdueTasks: overdueCount }));
+                setAllTasksForStats(allTasks);
                 setTasks(allTasks.filter(t => t.status === "QA Review"));
                 
                 const activities = [];
                 allTasks.forEach(t => {
                     (t.statusHistory || []).forEach(h => {
-                        // Only show QA-relevant actions: Completed (Approve) or moved to In Progress by QA (Reject)
                         if (h.status === 'Completed') {
                             activities.push({
                                 id: h._id,
@@ -111,6 +111,26 @@ const QADashboard = () => {
             setLoading(false);
         }
     };
+
+    // Derived stats based on project filter
+    const displayStats = useMemo(() => {
+        if (projectFilter === 'All') {
+            const overdueCount = allTasksForStats.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date()).length;
+            return { ...stats, overdueTasks: overdueCount };
+        }
+
+        const filtered = allTasksForStats.filter(t => {
+            const projectName = t.project?.projectName || t.project?.name || 'Unassigned';
+            return projectName === projectFilter;
+        });
+
+        return {
+            pendingReviewTasks: filtered.filter(t => t.status === "QA Review").length,
+            completedTasks: filtered.filter(t => t.status === "Completed").length,
+            doneTasks: filtered.filter(t => t.status === "Done").length,
+            overdueTasks: filtered.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date()).length
+        };
+    }, [stats, allTasksForStats, projectFilter]);
 
     useEffect(() => {
         fetchDashboardData();
@@ -195,10 +215,10 @@ const QADashboard = () => {
                         {/* KPI Section */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                             {[
-                                { label: 'PENDING', value: stats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
-                                { label: 'COMPLETED', value: stats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400' },
-                                { label: 'OVERDUE', value: stats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
-                                { label: 'REJECTED', value: stats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400' },
+                                { label: 'PENDING', value: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
+                                { label: 'COMPLETED', value: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400' },
+                                { label: 'OVERDUE', value: displayStats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
+                                { label: 'REJECTED', value: displayStats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400' },
                             ].map((stat, i) => (
                                 <div key={i} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-6 transition-transform hover:scale-[1.02]`}>
                                     <div className={`w-12 h-12 ${stat.iconBg} rounded-full flex items-center justify-center ${stat.iconColor} shadow-sm border border-slate-100`}>

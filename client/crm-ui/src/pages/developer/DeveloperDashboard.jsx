@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { dashboardService, taskService } from '../../api/services';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
@@ -29,6 +29,7 @@ const DeveloperDashboard = () => {
     const [selectedTask, setSelectedTask] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [projectFilter, setProjectFilter] = useState('All');
 
     const fetchDashboardData = async () => {
         if (!user?._id) return;
@@ -91,9 +92,34 @@ const DeveloperDashboard = () => {
         }
     };
 
+    const projectOptions = useMemo(() => {
+        const seen = new Set();
+        const opts = [];
+        tasks.forEach(t => {
+            if (t.project && t.project !== 'Unassigned' && !seen.has(t.project)) {
+                seen.add(t.project);
+                opts.push(t.project);
+            }
+        });
+        return opts.sort();
+    }, [tasks]);
+
+    const filteredTasks = useMemo(() => {
+        return tasks.filter(t => projectFilter === 'All' || t.project === projectFilter);
+    }, [tasks, projectFilter]);
+
+    // Update selected task when filtered tasks change
+    useEffect(() => {
+        if (filteredTasks.length > 0 && (!selectedTask || !filteredTasks.find(t => t.id === selectedTask.id))) {
+            setSelectedTask(filteredTasks[0]);
+        } else if (filteredTasks.length === 0) {
+            setSelectedTask(null);
+        }
+    }, [filteredTasks]);
+
     const handleExportTasks = () => {
         const columns = ["Task Name", "Project", "Status", "Priority", "Due Date"];
-        const data = tasks.map(t => [
+        const data = filteredTasks.map(t => [
             t.taskName,
             t.project,
             t.status,
@@ -101,7 +127,7 @@ const DeveloperDashboard = () => {
             t.endDate
         ]);
         exportPDF({
-            title: `My Assigned Tasks - ${user?.name || 'Developer'}`,
+            title: `My Assigned Tasks - ${user?.name || 'Developer'} ${projectFilter !== 'All' ? `(${projectFilter})` : ''}`,
             filename: `my_tasks_${new Date().getTime()}.pdf`,
             columns,
             data
@@ -115,13 +141,16 @@ const DeveloperDashboard = () => {
     }, [user]);
 
     // Calculate KPIs
-    const totalAssigned = tasks.length;
-    const tasksNew = tasks.filter(t => t.status === 'New').length;
-    const tasksInProgress = tasks.filter(t => t.status === 'In Progress').length;
-    const tasksQA = tasks.filter(t => t.status === 'QA Review').length;
-
-    // Simulate an overdue task
-    const overdueTasks = tasks.filter(t => new Date(t.endDate) < new Date());
+    const displayStats = useMemo(() => {
+        const baseTasks = filteredTasks;
+        return {
+            totalAssigned: baseTasks.length,
+            tasksNew: baseTasks.filter(t => t.status === 'New').length,
+            tasksInProgress: baseTasks.filter(t => t.status === 'In Progress').length,
+            tasksQA: baseTasks.filter(t => t.status === 'QA Review').length,
+            overdueTasks: baseTasks.filter(t => new Date(t.endDate) < new Date() && !['Completed', 'Done'].includes(t.status))
+        };
+    }, [filteredTasks]);
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
@@ -138,15 +167,36 @@ const DeveloperDashboard = () => {
                             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name || 'Developer'}!</h1>
                             <p className="text-sm text-slate-500 mt-1">Here is a summary of your assigned tasks and current workload.</p>
                         </div>
-                        {tasks.length > 0 && (
-                            <button 
-                                onClick={handleExportTasks}
-                                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
-                            >
-                                <Download className="w-4 h-4" />
-                                Download Tasks
-                            </button>
-                        )}
+                        <div className="flex items-center gap-3">
+                            {projectOptions.length > 0 && (
+                                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                                    <button 
+                                        onClick={() => setProjectFilter('All')}
+                                        className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${projectFilter === 'All' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                    >
+                                        All
+                                    </button>
+                                    {projectOptions.map(proj => (
+                                        <button 
+                                            key={proj}
+                                            onClick={() => setProjectFilter(proj)}
+                                            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${projectFilter === proj ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        >
+                                            {proj}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            {filteredTasks.length > 0 && (
+                                <button 
+                                    onClick={handleExportTasks}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Download Tasks
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {loading ? (
@@ -166,7 +216,7 @@ const DeveloperDashboard = () => {
                                 <ClipboardList className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{totalAssigned}</h4>
+                                <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{displayStats.totalAssigned}</h4>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Tasks</p>
                             </div>
                         </div>
@@ -175,7 +225,7 @@ const DeveloperDashboard = () => {
                                 <Clock className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{tasksNew}</h4>
+                                <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{displayStats.tasksNew}</h4>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New</p>
                             </div>
                         </div>
@@ -184,7 +234,7 @@ const DeveloperDashboard = () => {
                                 <PlayCircle className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h4 className="text-2xl font-bold tracking-tight text-blue-700 leading-none mb-1">{tasksInProgress}</h4>
+                                <h4 className="text-2xl font-bold tracking-tight text-blue-700 leading-none mb-1">{displayStats.tasksInProgress}</h4>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">In Progress</p>
                             </div>
                         </div>
@@ -193,7 +243,7 @@ const DeveloperDashboard = () => {
                                 <ShieldCheck className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h4 className="text-2xl font-bold tracking-tight text-indigo-700 leading-none mb-1">{tasksQA}</h4>
+                                <h4 className="text-2xl font-bold tracking-tight text-indigo-700 leading-none mb-1">{displayStats.tasksQA}</h4>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">QA Review</p>
                             </div>
                         </div>
@@ -202,7 +252,7 @@ const DeveloperDashboard = () => {
                                 <AlertCircle className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
-                                <h4 className="text-2xl font-bold tracking-tight text-rose-600 leading-none mb-1">{overdueTasks.length}</h4>
+                                <h4 className="text-2xl font-bold tracking-tight text-rose-600 leading-none mb-1">{displayStats.overdueTasks.length}</h4>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Overdue</p>
                             </div>
                         </div>
@@ -213,14 +263,14 @@ const DeveloperDashboard = () => {
                         <div className="lg:col-span-2 space-y-8">
 
                             {/* Upcoming / Overdue Deadlines Highlight */}
-                            {overdueTasks.length > 0 && (
+                            {displayStats.overdueTasks.length > 0 && (
                                 <div className="bg-rose-50/50 border border-rose-200 rounded-2xl p-5">
                                     <h3 className="text-sm font-bold text-rose-800 mb-3 flex items-center">
                                         <AlertTriangle className="w-4 h-4 mr-2 text-rose-600" />
                                         Requires Immediate Attention
                                     </h3>
                                     <div className="space-y-3">
-                                        {overdueTasks.map(task => (
+                                        {displayStats.overdueTasks.map(task => (
                                             <div key={task.id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-rose-100 shadow-sm">
                                                 <div className="flex flex-col">
                                                     <span className="font-semibold text-slate-800 text-sm">{task.taskName}</span>
@@ -256,7 +306,7 @@ const DeveloperDashboard = () => {
                                             <p className="text-sm font-medium text-slate-500 mt-1">Enjoy your free time or contact your Admin!</p>
                                         </div>
                                     ) : (
-                                        tasks.map(task => (
+                                        filteredTasks.map(task => (
                                             <div
                                                 key={task.id}
                                                 onClick={() => setSelectedTask(task)}
