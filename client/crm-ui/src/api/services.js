@@ -15,6 +15,8 @@ export const projectService = {
     createProject: (data) => axiosInstance.post('/projects/create', data),
     updateProject: (id, data) => axiosInstance.put(`/projects/${id}`, data),
     deleteProject: (id) => axiosInstance.delete(`/projects/${id}`),
+    getTrashProjects: () => axiosInstance.get('/projects/trash'),
+    restoreProject: (id) => axiosInstance.put(`/projects/restore/${id}`),
 };
 
 // Task Services

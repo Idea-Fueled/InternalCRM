@@ -5,7 +5,7 @@ import { userService, taskService, authService, departmentService } from "../../
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
-    AlertCircle, ClipboardList, History, X, Download, Camera 
+    AlertCircle, ClipboardList, History, X, Download, Camera, Trash2
 } from "lucide-react";
 import { exportPDF } from "../../utils/pdfExport";
 
@@ -40,6 +40,8 @@ const EmployeesDashboard = () => {
     const [newDeptName, setNewDeptName] = useState("");
     const [isEditEmployeeModalOpen, setIsEditEmployeeModalOpen] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
     const fetchDepartments = async () => {
@@ -235,14 +237,20 @@ const EmployeesDashboard = () => {
         }
     };
 
-    const handleDeleteEmployee = async (empId, e) => {
+    const handleDeleteEmployee = (empId, e) => {
         if (e) e.stopPropagation();
-        if (!window.confirm("Are you sure you want to delete this employee? This action cannot be undone.")) return;
-        
+        setEmployeeToDelete(empId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteEmployee = async () => {
+        if (!employeeToDelete) return;
         try {
             setIsDeleting(true);
-            await userService.deleteUser(empId);
-            toast.success("Employee deleted successfully");
+            await userService.deleteUser(employeeToDelete);
+            toast.success("Employee moved to trash");
+            setIsDeleteModalOpen(false);
+            setEmployeeToDelete(null);
             fetchData();
         } catch (err) {
             toast.error("Failed to delete employee");
@@ -918,6 +926,40 @@ const EmployeesDashboard = () => {
                                 className="px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
                             >
                                 {isCreating ? "Saving..." : "Save Changes"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* ─── Delete Confirmation Modal ───────────────────────────────── */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)} />
+                    <div className="bg-white w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="pt-8 pb-6 px-6 text-center">
+                            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-100">
+                                <Trash2 className="w-8 h-8 text-rose-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Move to Trash?</h3>
+                            <p className="text-sm text-slate-500 leading-relaxed px-2">
+                                This employee will be moved to the <span className="font-bold text-slate-700">Trash</span>. You can restore them within <span className="text-blue-600 font-bold">30 days</span> before they are permanently deleted.
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="flex-1 px-4 py-3 bg-slate-50 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-100 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteEmployee}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-3 bg-rose-600 text-white font-bold text-sm rounded-xl hover:bg-rose-700 transition-colors shadow-lg shadow-rose-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isDeleting ? (
+                                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Moving...</>
+                                ) : 'Move to Trash'}
                             </button>
                         </div>
                     </div>

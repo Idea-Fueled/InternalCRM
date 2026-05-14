@@ -61,9 +61,9 @@ const ReportsDashboard = () => {
             completed,
             overdue,
             performance,
-            firstTask: dev.createdAt ? new Date(dev.createdAt).toLocaleDateString() : "N/A",
             lastActivity: "Active",
-            color: "bg-indigo-100 text-indigo-700"
+            color: "bg-indigo-100 text-indigo-700",
+            profilePic: dev.profilePic
         };
     });
 
@@ -82,7 +82,12 @@ const ReportsDashboard = () => {
 
     const activities = tasks.slice(0, 10).map(t => ({
         id: t._id,
-        user: { name: t.assignedTo?.name || "System", initials: t.assignedTo?.name?.charAt(0) || "S", color: "bg-indigo-100 text-indigo-700" },
+        user: { 
+            name: t.assignedTo?.name || "System", 
+            initials: t.assignedTo?.name?.charAt(0) || "S", 
+            color: "bg-indigo-100 text-indigo-700",
+            profilePic: t.assignedTo?.profilePic
+        },
         task: t.taskName,
         action: t.status,
         note: t.description?.substring(0, 50) + "...",
@@ -254,8 +259,12 @@ const ReportsDashboard = () => {
                                                 <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
                                                     <td className="p-4 pl-6">
                                                         <div className="flex items-center gap-3">
-                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm border border-white ${dev.color}`}>
-                                                                {dev.initials}
+                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm border border-white overflow-hidden ${dev.color}`}>
+                                                                {dev.profilePic ? (
+                                                                    <img src={dev.profilePic} alt={dev.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    dev.initials
+                                                                )}
                                                             </div>
                                                             <div>
                                                                 <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{dev.name}</div>
@@ -391,8 +400,12 @@ const ReportsDashboard = () => {
                                             <tr key={act.id} className="hover:bg-slate-50/50 transition-colors group">
                                                 <td className="p-4 pl-6">
                                                     <div className="flex items-center gap-2.5">
-                                                        <div className={`w-8 h-8 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-xs shadow-sm ${act.user.color}`}>
-                                                            {act.user.initials}
+                                                        <div className={`w-8 h-8 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-xs shadow-sm overflow-hidden ${act.user.color}`}>
+                                                            {act.user.profilePic ? (
+                                                                <img src={act.user.profilePic} alt={act.user.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                act.user.initials
+                                                            )}
                                                         </div>
                                                         <span className="font-bold text-slate-700 text-sm group-hover:text-blue-600 transition-colors whitespace-nowrap">{act.user.name}</span>
                                                     </div>

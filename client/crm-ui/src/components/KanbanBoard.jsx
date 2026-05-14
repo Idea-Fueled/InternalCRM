@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import {
     Calendar, MoreVertical, Paperclip, Clock, X,
     CheckCircle2, PlayCircle, ShieldCheck, FileText,
-    AlertTriangle, MessageSquare, ArrowRight, History, Lock
+    AlertTriangle, MessageSquare, ArrowRight, History, Lock, Trash2
 } from 'lucide-react';
 import { taskService } from '../api/services';
 
@@ -53,6 +53,11 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         priority: "Medium",
         endDate: ""
     });
+    
+    // Delete Confirmation State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // ─── Drag Handlers ────────────────────────────────────────────────────────
     const onDragStart = (e, taskId, colId) => {
@@ -205,15 +210,25 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         }
     };
 
-    const handleDeleteTask = async (taskId, e) => {
+    const handleDeleteTask = (taskId, e) => {
         if (e) e.stopPropagation();
-        if (!window.confirm("Are you sure you want to delete this task?")) return;
+        setTaskToDelete(taskId);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteTask = async () => {
+        if (!taskToDelete) return;
+        setIsDeleting(true);
         try {
-            await taskService.deleteTask(taskId);
-            setTasks(prev => prev.filter(t => (t._id || t.id) !== taskId));
+            await taskService.deleteTask(taskToDelete);
+            setTasks(prev => prev.filter(t => (t._id || t.id) !== taskToDelete));
             toast.success("Task moved to trash");
+            setIsDeleteModalOpen(false);
+            setTaskToDelete(null);
         } catch (err) {
             toast.error("Failed to delete task");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -242,6 +257,10 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     const getAssigneeInitial = t => {
         const name = getAssignee(t);
         return name.substring(0, 2).toUpperCase();
+    };
+    const getAssigneePic = t => {
+        if (!t.assignedTo || typeof t.assignedTo === 'string') return null;
+        return t.assignedTo.profilePic;
     };
     const getEndDate = t => {
         if (!t.endDate) return 'N/A';
@@ -436,8 +455,12 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
 
                                                     <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                                                         <div className="flex items-center gap-1.5">
-                                                            <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm shrink-0" title={getAssignee(task)}>
-                                                                {getAssigneeInitial(task)}
+                                                            <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm shrink-0 overflow-hidden" title={getAssignee(task)}>
+                                                                {getAssigneePic(task) ? (
+                                                                    <img src={getAssigneePic(task)} alt={getAssignee(task)} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    getAssigneeInitial(task)
+                                                                )}
                                                             </div>
                                                             <span className="text-xs font-semibold text-slate-600 truncate max-w-[90px]">
                                                                 {getAssignee(task)}
@@ -770,6 +793,40 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                 </button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+            {/* ─── Delete Confirmation Modal ───────────────────────────────── */}
+            {isDeleteModalOpen && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsDeleteModalOpen(false)} />
+                    <div className="bg-white w-full max-w-sm rounded-[24px] shadow-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="pt-8 pb-6 px-6 text-center">
+                            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-100">
+                                <Trash2 className="w-8 h-8 text-rose-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Move to Trash?</h3>
+                            <p className="text-sm text-slate-500 leading-relaxed px-2">
+                                This task will be moved to the <span className="font-bold text-slate-700">Trash</span>. You can restore it within <span className="text-blue-600 font-bold">30 days</span> before it is permanently deleted.
+                            </p>
+                        </div>
+                        <div className="px-6 pb-6 flex gap-3">
+                            <button
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                className="flex-1 px-4 py-3 bg-slate-50 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-100 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDeleteTask}
+                                disabled={isDeleting}
+                                className="flex-1 px-4 py-3 bg-rose-600 text-white font-bold text-sm rounded-xl hover:bg-rose-700 transition-colors shadow-lg shadow-rose-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isDeleting ? (
+                                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Moving...</>
+                                ) : 'Move to Trash'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

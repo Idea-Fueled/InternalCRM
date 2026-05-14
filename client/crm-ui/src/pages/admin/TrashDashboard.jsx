@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
-import { taskService, userService } from "../../api/services";
+import { taskService, userService, projectService } from "../../api/services";
 
 const TrashDashboard = () => {
     const [items, setItems] = useState([]);
@@ -12,9 +12,10 @@ const TrashDashboard = () => {
     const fetchTrash = async () => {
         try {
             setLoading(true);
-            const [taskRes, userRes] = await Promise.all([
+            const [taskRes, userRes, projectRes] = await Promise.all([
                 taskService.getDeletedTasks(),
-                userService.getAllUsers()
+                userService.getAllUsers(),
+                projectService.getTrashProjects()
             ]);
 
             const deletedTasks = (taskRes.data.tasks || []).map(t => ({
@@ -35,7 +36,16 @@ const TrashDashboard = () => {
                 status: "Deleted"
             }));
 
-            setItems([...deletedTasks, ...inactiveUsers]);
+            const deletedProjects = (projectRes.data.projects || []).map(p => ({
+                id: p._id,
+                type: "Project",
+                name: p.projectName,
+                deletedAt: p.updatedAt ? new Date(p.updatedAt).toLocaleString() : "N/A",
+                info: `TL: ${p.teamLead?.name || "Unassigned"}`,
+                status: "Deleted"
+            }));
+
+            setItems([...deletedTasks, ...inactiveUsers, ...deletedProjects]);
         } catch (err) {
             console.error("Failed to fetch trash data", err);
         } finally {
@@ -50,12 +60,15 @@ const TrashDashboard = () => {
     const filteredItems = items.filter(item => activeTab === "All" || item.type === activeTab);
     const taskCount = items.filter(item => item.type === "Task").length;
     const employeeCount = items.filter(item => item.type === "Employee").length;
+    const projectCount = items.filter(item => item.type === "Project").length;
     
     // Handlers
     const handleRestore = async (id, type) => {
         try {
             if (type === "Task") {
                 await taskService.restoreTask(id);
+            } else if (type === "Project") {
+                await projectService.restoreProject(id);
             } else {
                 await userService.restoreUser(id);
             }
@@ -165,6 +178,12 @@ const TrashDashboard = () => {
                             >
                                 Employees <span className="ml-1 opacity-60 text-xs">{employeeCount}</span>
                             </button>
+                            <button 
+                                onClick={() => setActiveTab("Project")}
+                                className={`px-4 py-1.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'Project' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Projects <span className="ml-1 opacity-60 text-xs">{projectCount}</span>
+                            </button>
                         </div>
 
                         {/* Bulk Actions */}
@@ -240,7 +259,9 @@ const TrashDashboard = () => {
                                                 </td>
                                                 <td className="p-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-lg border ${
-                                                        item.type === 'Task' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                        item.type === 'Task' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 
+                                                        item.type === 'Project' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                        'bg-emerald-50 text-emerald-600 border-emerald-100'
                                                     }`}>
                                                         {item.type === 'Task' ? (
                                                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
