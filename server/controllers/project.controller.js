@@ -54,6 +54,23 @@ export const createProject = async (req, res, next) => {
             }
         }
 
+        // Notify Team Members (Developers and QAs)
+        if (teamMembers && teamMembers.length > 0) {
+            for (const memberId of teamMembers) {
+                if (memberId.toString() !== req.user._id.toString() && memberId.toString() !== teamLead.toString()) {
+                    await createNotification({
+                        recipient: memberId,
+                        sender: req.user._id,
+                        title: "New Project Assignment",
+                        message: `You have been added to the project ${projectName}`,
+                        type: "project",
+                        category: "assignment",
+                        link: `/projects/${savedProject._id}`
+                    });
+                }
+            }
+        }
+
         return res.status(201).json({
             success: true,
             message: "Project created successfully",
