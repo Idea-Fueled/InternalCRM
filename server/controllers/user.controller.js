@@ -5,7 +5,8 @@ import { cloudinary } from "../config/cloudinary.js";
 
 export const registerUser = async (req, res, next) => {
     try {
-        const { name, email, password, role, department, teamLeads } = req.body;
+        const { name, email, password, role, department, status } = req.body;
+        const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
 
         if (!name || !email || !password || !role) {
             return res.status(400).json({
@@ -37,7 +38,7 @@ export const registerUser = async (req, res, next) => {
             password: hashedPassword, 
             role, 
             department, 
-            teamLeads: Array.isArray(teamLeads) ? teamLeads : (teamLeads ? [teamLeads] : []),
+            teamLeads: Array.isArray(incomingTeamLeads) ? incomingTeamLeads : (incomingTeamLeads ? [incomingTeamLeads] : []),
             profilePic,
             profilePicPublicId
         });
@@ -204,14 +205,15 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { _id } = req.params;
-        const { teamLeads, ...otherData } = req.body;
+        const { ...otherData } = req.body;
+        const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
         
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
         const updateData = {
             ...otherData,
-            teamLeads: Array.isArray(teamLeads) ? teamLeads : (teamLeads ? [teamLeads] : [])
+            teamLeads: Array.isArray(incomingTeamLeads) ? incomingTeamLeads : (incomingTeamLeads ? [incomingTeamLeads] : [])
         };
 
         if (req.file) {
