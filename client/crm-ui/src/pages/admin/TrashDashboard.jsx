@@ -8,6 +8,14 @@ const TrashDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState("All");
     const [selectedIds, setSelectedIds] = useState([]);
+    const [confirmModal, setConfirmModal] = useState({ 
+        isOpen: false, 
+        title: "", 
+        message: "", 
+        onConfirm: null, 
+        confirmText: "Confirm",
+        type: "danger" // danger, success, warning
+    });
 
     const fetchTrash = async () => {
         try {
@@ -62,36 +70,50 @@ const TrashDashboard = () => {
     const employeeCount = items.filter(item => item.type === "Employee").length;
     const projectCount = items.filter(item => item.type === "Project").length;
     
-    // Handlers
-    const handleRestore = async (id, type) => {
-        try {
-            if (type === "Task") {
-                await taskService.restoreTask(id);
-            } else if (type === "Project") {
-                await projectService.restoreProject(id);
-            } else {
-                await userService.restoreUser(id);
+    const handleRestore = (id, type) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Restore Item",
+            message: "Are you sure you want to restore this item? It will be moved back to its original location.",
+            confirmText: "Restore Now",
+            type: "success",
+            onConfirm: async () => {
+                try {
+                    if (type === "Task") {
+                        await taskService.restoreTask(id);
+                    } else if (type === "Project") {
+                        await projectService.restoreProject(id);
+                    } else {
+                        await userService.restoreUser(id);
+                    }
+                    setItems(prev => prev.filter(item => item.id !== id));
+                    setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                } catch (err) {
+                    console.error("Failed to restore item", err);
+                }
             }
-            setItems(items.filter(item => item.id !== id));
-            setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
-        } catch (err) {
-            console.error("Failed to restore item", err);
-        }
+        });
     };
 
-    const handleDelete = async (id, type) => {
-        if (!window.confirm("Are you sure you want to permanently delete this item?")) return;
-        try {
-            // Backend doesn't have permanent delete yet for users, but for tasks it might.
-            // For now, we just remove it from the list locally if backend doesn't support it,
-            // or we could add permanent delete endpoints.
-            // Let's assume deleteTask is used for soft delete and we don't have hard delete yet.
-            // But we can still remove it from state to "simulate" it.
-            setItems(items.filter(item => item.id !== id));
-            setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
-        } catch (err) {
-            console.error("Failed to delete item", err);
-        }
+    const handleDelete = (id, type) => {
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Permanently",
+            message: "Are you sure you want to permanently delete this item? This action cannot be undone.",
+            confirmText: "Delete Permanently",
+            type: "danger",
+            onConfirm: async () => {
+                try {
+                    // For now, simulate permanent delete by removing from list
+                    setItems(prev => prev.filter(item => item.id !== id));
+                    setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+                    setConfirmModal(prev => ({ ...prev, isOpen: false }));
+                } catch (err) {
+                    console.error("Failed to delete item", err);
+                }
+            }
+        });
     };
 
     const handleSelect = (id) => {
@@ -111,20 +133,58 @@ const TrashDashboard = () => {
     };
 
     const handleBulkRestore = () => {
-        setItems(items.filter(item => !selectedIds.includes(item.id)));
-        setSelectedIds([]);
+        setConfirmModal({
+            isOpen: true,
+            title: "Restore Selected Items",
+            message: `Are you sure you want to restore ${selectedIds.length} items?`,
+            confirmText: "Restore All",
+            type: "success",
+            onConfirm: async () => {
+                const selectedItems = items.filter(i => selectedIds.includes(i.id));
+                for (const item of selectedItems) {
+                    try {
+                        if (item.type === "Task") await taskService.restoreTask(item.id);
+                        else if (item.type === "Project") await projectService.restoreProject(item.id);
+                        else await userService.restoreUser(item.id);
+                    } catch (err) {
+                        console.error(`Failed to restore ${item.type} ${item.id}`, err);
+                    }
+                }
+                setItems(prev => prev.filter(item => !selectedIds.includes(item.id)));
+                setSelectedIds([]);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleBulkDelete = () => {
-        setItems(items.filter(item => !selectedIds.includes(item.id)));
-        setSelectedIds([]);
+        setConfirmModal({
+            isOpen: true,
+            title: "Delete Selected Permanently",
+            message: `Are you sure you want to permanently delete ${selectedIds.length} items? This action cannot be undone.`,
+            confirmText: "Delete All Permanently",
+            type: "danger",
+            onConfirm: async () => {
+                setItems(prev => prev.filter(item => !selectedIds.includes(item.id)));
+                setSelectedIds([]);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     const handleEmptyTrash = () => {
-        if (window.confirm("Are you sure you want to permanently empty the trash? This action cannot be undone.")) {
-            setItems([]);
-            setSelectedIds([]);
-        }
+        setConfirmModal({
+            isOpen: true,
+            title: "Empty Trash",
+            message: "Are you sure you want to permanently empty the entire trash? This will remove all tasks, projects, and employees listed here. This action cannot be undone.",
+            confirmText: "Empty Now",
+            type: "danger",
+            onConfirm: async () => {
+                setItems([]);
+                setSelectedIds([]);
+                setConfirmModal(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     return (
@@ -283,14 +343,14 @@ const TrashDashboard = () => {
                                                 <td className="p-4 pr-6 text-right">
                                                     <div className="flex items-center justify-end gap-2 transition-opacity">
                                                         <button 
-                                                            onClick={() => handleRestore(item.id)}
+                                                            onClick={() => handleRestore(item.id, item.type)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white font-bold text-xs rounded-lg transition shadow-sm border border-blue-100 hover:border-blue-600"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
                                                             Restore
                                                         </button>
                                                         <button 
-                                                            onClick={() => handleDelete(item.id)}
+                                                            onClick={() => handleDelete(item.id, item.type)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-red-500 hover:bg-red-50 hover:text-red-600 font-bold text-xs rounded-lg transition shadow-sm border border-slate-200 hover:border-red-100"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -307,6 +367,49 @@ const TrashDashboard = () => {
                     </div>
                 </main>
             </div>
+
+            {/* Confirmation Modal */}
+            {confirmModal.isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-[fadeIn_0.2s_ease-out]">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+                        <div className="p-6">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+                                confirmModal.type === 'danger' ? 'bg-red-50 text-red-600' : 
+                                confirmModal.type === 'warning' ? 'bg-amber-50 text-amber-600' : 
+                                'bg-emerald-50 text-emerald-600'
+                            }`}>
+                                {confirmModal.type === 'danger' ? (
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                ) : confirmModal.type === 'warning' ? (
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                ) : (
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                )}
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">{confirmModal.title}</h3>
+                            <p className="text-slate-500 text-sm font-medium leading-relaxed">{confirmModal.message}</p>
+                        </div>
+                        <div className="px-6 py-4 bg-slate-50 flex items-center gap-3">
+                            <button 
+                                onClick={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+                                className="flex-1 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-50 transition"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                onClick={confirmModal.onConfirm}
+                                className={`flex-1 px-4 py-2.5 text-white font-bold text-sm rounded-xl transition shadow-sm ${
+                                    confirmModal.type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 
+                                    confirmModal.type === 'warning' ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-200' : 
+                                    'bg-blue-600 hover:bg-blue-700 shadow-blue-200'
+                                }`}
+                            >
+                                {confirmModal.confirmText}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
