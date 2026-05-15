@@ -314,8 +314,8 @@ const EmployeesDashboard = () => {
                     {/* Header Section */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Employees</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Manage {stats.total} total team members across all departments</p>
+                            <h1 className="dashboard-heading">Employees</h1>
+                            <p className="dashboard-subheading">Manage {stats.total} total team members across all departments</p>
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                             <button onClick={() => setIsDepartmentsModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 hover:text-blue-600 transition shadow-sm text-sm">

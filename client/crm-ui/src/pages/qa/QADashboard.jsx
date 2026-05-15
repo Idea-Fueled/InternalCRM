@@ -237,7 +237,7 @@ const QADashboard = () => {
                             {/* Main List Section */}
                             <div className="xl:col-span-2 space-y-6">
                                 <div className="flex items-center justify-between bg-white/50 p-4 rounded-2xl mb-2">
-                                    <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                                    <h2 className="section-title flex items-center">
                                         <ShieldCheck className="w-5 h-5 mr-2 text-indigo-500" />
                                         Pending Reviews
                                         <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full ml-3">

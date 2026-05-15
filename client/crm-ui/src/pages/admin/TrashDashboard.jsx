@@ -138,11 +138,11 @@ const TrashDashboard = () => {
                     {/* Header Section */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 flex-shrink-0">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                            <h1 className="dashboard-heading flex items-center gap-2">
                                 <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                 Trash
                             </h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Deleted items will remain here until permanently removed. Total items: <span className="font-bold text-slate-700">{items.length}</span></p>
+                            <p className="dashboard-subheading">Deleted items will remain here until permanently removed. Total items: <span className="font-bold text-slate-700">{items.length}</span></p>
                         </div>
                         
                         {items.length > 0 && (

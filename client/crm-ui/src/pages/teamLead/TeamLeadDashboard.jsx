@@ -140,8 +140,8 @@ const TeamLeadDashboard = () => {
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Overview</h1>
-                            <p className="text-sm text-slate-500 mt-1">Here's what's happening with your team today.</p>
+                            <h1 className="dashboard-heading">Overview</h1>
+                            <p className="dashboard-subheading">Here's what's happening with your team today.</p>
                         </div>
                     </div>
 
@@ -176,7 +176,7 @@ const TeamLeadDashboard = () => {
                         {/* Projects Overview */}
                         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm lg:col-span-2 flex flex-col">
                             <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                                <h3 className="text-lg font-semibold text-slate-800 flex items-center">
+                                <h3 className="section-title flex items-center">
                                     <FolderKanban className="w-5 h-5 mr-2 text-indigo-500" />
                                     Active Projects
                                 </h3>
@@ -235,7 +235,7 @@ const TeamLeadDashboard = () => {
                         {/* Recent Activity */}
                         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col">
                             <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                                <h3 className="text-lg font-semibold text-slate-800 flex items-center">
+                                <h3 className="section-title flex items-center">
                                     <Activity className="w-5 h-5 mr-2 text-blue-500" />
                                     Recent Activity
                                 </h3>
@@ -273,7 +273,7 @@ const TeamLeadDashboard = () => {
                     {/* Team Members */}
                     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
                         <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                            <h3 className="text-lg font-semibold text-slate-800 flex items-center">
+                            <h3 className="section-title flex items-center">
                                 <Users className="w-5 h-5 mr-2 text-blue-600" />
                                 Team Performance
                             </h3>

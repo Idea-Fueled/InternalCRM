@@ -141,8 +141,8 @@ const AdminDashboard = () => {
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">System Overview</h1>
-                            <p className="text-sm text-slate-500 mt-1">Here's what's happening across your CRM today.</p>
+                            <h1 className="dashboard-heading">System Overview</h1>
+                            <p className="dashboard-subheading">Here's what's happening across your CRM today.</p>
                         </div>
                         <div className="flex gap-3">
                             <button 
@@ -200,7 +200,7 @@ const AdminDashboard = () => {
                             <Card className="!p-0 overflow-hidden flex flex-col">
                                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-800 tracking-tight">Active Projects</h3>
+                                        <h3 className="section-title">Active Projects</h3>
                                         <p className="text-xs text-slate-500 mt-1 font-medium">Milestone progress across top initiatives</p>
                                     </div>
                                     <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 text-slate-500 transition">
@@ -232,7 +232,7 @@ const AdminDashboard = () => {
                             <Card className="!p-0 overflow-hidden flex flex-col">
                                 <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-800 tracking-tight">Team Workload</h3>
+                                        <h3 className="section-title">Team Workload</h3>
                                         <p className="text-xs text-slate-500 mt-1 font-medium">Current availability and assignments</p>
                                     </div>
                                     <button 

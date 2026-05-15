@@ -1,4 +1,27 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Global Typography System */
+body {
+  font-family: 'Outfit', sans-serif;
+  @apply text-slate-600 antialiased;
+}
+
+.dashboard-heading {
+  @apply text-2xl font-bold text-slate-900 tracking-tight;
+}
+
+.dashboard-subheading {
+  @apply text-sm font-medium text-slate-500 mt-1;
+}
+
+.section-title {
+  @apply text-lg font-bold text-slate-800 tracking-tight;
+}
+
+.section-subtitle {
+  @apply text-xs font-medium text-slate-400 mt-0.5 uppercase tracking-wider;
+}
 
 /* Global Scrollbar Styling */
 ::-webkit-scrollbar {

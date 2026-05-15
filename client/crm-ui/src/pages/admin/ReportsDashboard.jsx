@@ -158,8 +158,8 @@ const ReportsDashboard = () => {
                     {/* Header Section */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Reports & Analytics</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Data snapshot for {new Date().toLocaleDateString()}</p>
+                            <h1 className="dashboard-heading">Reports & Analytics</h1>
+                            <p className="dashboard-subheading">Data snapshot for {new Date().toLocaleDateString()}</p>
                         </div>
                     </div>
 

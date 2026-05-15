@@ -113,8 +113,8 @@ const QAReviews = () => {
                     {/* Header Controls */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4 shrink-0">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">QA Reviews</h1>
-                            <p className="text-sm text-slate-500 mt-1">Pending tasks awaiting quality assurance review and approval.</p>
+                            <h1 className="dashboard-heading">QA Reviews</h1>
+                            <p className="dashboard-subheading">Pending tasks awaiting quality assurance review and approval.</p>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="relative">

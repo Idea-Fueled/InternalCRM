@@ -164,8 +164,8 @@ const DeveloperDashboard = () => {
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back, {user?.name || 'Developer'}!</h1>
-                            <p className="text-sm text-slate-500 mt-1">Here is a summary of your assigned tasks and current workload.</p>
+                            <h1 className="dashboard-heading">Welcome back, {user?.name || 'Developer'}!</h1>
+                            <p className="dashboard-subheading">Here is a summary of your assigned tasks and current workload.</p>
                         </div>
                         <div className="flex items-center gap-3">
                             {projectOptions.length > 0 && (

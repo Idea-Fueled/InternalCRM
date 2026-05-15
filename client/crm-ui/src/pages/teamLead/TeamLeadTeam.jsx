@@ -120,8 +120,8 @@ const TeamLeadTeam = () => {
                     {/* Header Section */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Team Overview</h1>
-                            <p className="text-sm text-slate-500 mt-1">Manage workload, track performance, and view member availability.</p>
+                            <h1 className="dashboard-heading">Team Overview</h1>
+                            <p className="dashboard-subheading">Manage workload, track performance, and view member availability.</p>
                         </div>
                         <div className="flex items-center gap-3">
                             <button 
@@ -372,7 +372,7 @@ const TeamLeadTeam = () => {
 
                                 {/* Active Tasks List */}
                                 <div className="mb-6">
-                                    <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center">
+                                    <h3 className="section-title mb-4 flex items-center">
                                         <Briefcase className="w-4 h-4 mr-2 text-indigo-500" />
                                         Assigned Tasks
                                     </h3>

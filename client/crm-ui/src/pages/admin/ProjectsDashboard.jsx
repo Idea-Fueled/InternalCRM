@@ -226,8 +226,8 @@ const ProjectsDashboard = () => {
                     {/* Header Section */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Projects</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Manage and track all ongoing project lifecycles across teams.</p>
+                            <h1 className="dashboard-heading">Projects</h1>
+                            <p className="dashboard-subheading">Manage and track all ongoing project lifecycles across teams.</p>
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
                             <button 

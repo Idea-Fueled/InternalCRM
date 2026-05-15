@@ -109,7 +109,7 @@ const UserProjects = ({ role = "developer" }) => {
                                     <div className="relative z-10">
                                         <div className="flex items-start justify-between mb-6">
                                             <div>
-                                                <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{selectedProject.name}</h1>
+                                                <h1 className="dashboard-heading">{selectedProject.name}</h1>
                                                 <div className="flex items-center gap-3 mt-3">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
                                                         selectedProject.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
@@ -238,8 +238,8 @@ const UserProjects = ({ role = "developer" }) => {
                 <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-thin">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Assigned Projects</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Overview of projects you are currently a part of.</p>
+                            <h1 className="dashboard-heading">Assigned Projects</h1>
+                            <p className="dashboard-subheading">Overview of projects you are currently a part of.</p>
                         </div>
                         
                         <div className="flex items-center gap-3">

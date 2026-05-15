@@ -97,8 +97,8 @@ const KanbanDashboard = () => {
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 shrink-0">
                         <div>
-                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Workflow Management</h1>
-                            <p className="text-[12px] text-slate-500 mt-0.5">Drag tasks between columns to update status.</p>
+                            <h1 className="dashboard-heading">Workflow Management</h1>
+                            <p className="dashboard-subheading">Drag tasks between columns to update status.</p>
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="relative">

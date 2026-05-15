@@ -200,9 +200,10 @@ const TeamLeadProjects = () => {
                             {/* Project Header */}
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{selectedProject.name}</h1>
-                                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                                    <div className="mb-4">
+                                        <h1 className="dashboard-heading">{selectedProject.name}</h1>
+                                    </div>
+                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                                             selectedProject.status === 'Active' ? 'bg-blue-100 text-blue-700' :
                                             selectedProject.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
                                             'bg-rose-100 text-rose-700'
@@ -219,7 +220,7 @@ const TeamLeadProjects = () => {
                                 <div className="lg:col-span-8 flex flex-col gap-6">
                                     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
                                         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                            <h3 className="text-lg font-bold text-slate-800 flex items-center">
+                                            <h3 className="section-title flex items-center">
                                                 <LayoutList className="w-5 h-5 mr-2 text-indigo-500" />
                                                 Tasks ({selectedProject?.tasks?.length || 0})
                                             </h3>
@@ -384,8 +385,8 @@ const TeamLeadProjects = () => {
                             {/* Header */}
                             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Projects</h1>
-                                    <p className="text-sm text-slate-500 mt-1">Manage all projects and drill down into tasks.</p>
+                                    <h1 className="dashboard-heading">Projects</h1>
+                                    <p className="dashboard-subheading">Manage all projects and drill down into tasks.</p>
                                 </div>
 
                             </div>

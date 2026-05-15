@@ -73,8 +73,8 @@ const AuditLogs = () => {
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">System Audit Logs</h1>
-                            <p className="text-sm font-medium text-slate-500 mt-1">Track all your activities and system interactions in one place.</p>
+                            <h1 className="dashboard-heading">System Audit Logs</h1>
+                            <p className="dashboard-subheading">Track all your activities and system interactions in one place.</p>
                         </div>
                         <button 
                             onClick={handleExport}
