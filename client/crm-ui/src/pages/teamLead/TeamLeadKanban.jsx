@@ -43,9 +43,7 @@ const TeamLeadKanban = () => {
                                 <input type="text" placeholder="Search tasks..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                                     className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-64 shadow-sm" />
                             </div>
-                            <button className="flex items-center justify-center px-3 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm">
-                                <Filter className="w-4 h-4 mr-2 text-slate-400" /> Filters
-                            </button>
+
                         </div>
                     </div>
 
