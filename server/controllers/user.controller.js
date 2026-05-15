@@ -32,13 +32,27 @@ export const registerUser = async (req, res, next) => {
             profilePicPublicId = req.file.filename;
         }
 
+        // Robustly normalize teamLeads
+        let finalTeamLeads = [];
+        if (incomingTeamLeads) {
+            if (Array.isArray(incomingTeamLeads)) {
+                finalTeamLeads = incomingTeamLeads;
+            } else if (typeof incomingTeamLeads === 'string') {
+                finalTeamLeads = incomingTeamLeads.split(',').map(id => id.trim()).filter(id => id);
+            } else {
+                finalTeamLeads = [incomingTeamLeads];
+            }
+        }
+        // Filter out duplicates and invalid IDs
+        finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+
         const user = new User({
             name, 
             email, 
             password: hashedPassword, 
             role, 
             department, 
-            teamLeads: Array.isArray(incomingTeamLeads) ? incomingTeamLeads : (incomingTeamLeads ? [incomingTeamLeads] : []),
+            teamLeads: finalTeamLeads,
             profilePic,
             profilePicPublicId
         });
@@ -145,6 +159,7 @@ export const getAllUsers = async (req, res) => {
     try {
         const { teamLeadId, teamLead, role, status } = req.query;
         const targetTeamLead = teamLeadId || teamLead;
+        const { role: userRole, _id } = req.user;
         let query = {};
         
         if (status === 'inactive') {
@@ -155,15 +170,13 @@ export const getAllUsers = async (req, res) => {
             query.isActive = true;
         }
         
-        if (req.user.role === "TL") {
-            const currentUser = await User.findById(req.user._id);
-            const teamMemberIds = currentUser?.teamMembers || [];
-            
+        if (userRole === 'TL') {
+            // Find users assigned to this TL, or the TL themselves
             query = {
                 ...query,
                 $or: [
-                    { teamLeads: req.user._id },
-                    { _id: { $in: teamMemberIds } }
+                    { teamLeads: _id },
+                    { _id: _id }
                 ]
             };
         } else if (targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
@@ -208,12 +221,26 @@ export const updateUser = async (req, res) => {
         const { ...otherData } = req.body;
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
         
+        // Robustly normalize teamLeads
+        let finalTeamLeads = [];
+        if (incomingTeamLeads) {
+            if (Array.isArray(incomingTeamLeads)) {
+                finalTeamLeads = incomingTeamLeads;
+            } else if (typeof incomingTeamLeads === 'string') {
+                finalTeamLeads = incomingTeamLeads.split(',').map(id => id.trim()).filter(id => id);
+            } else {
+                finalTeamLeads = [incomingTeamLeads];
+            }
+        }
+        // Filter out duplicates and invalid IDs
+        finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
         const updateData = {
             ...otherData,
-            teamLeads: Array.isArray(incomingTeamLeads) ? incomingTeamLeads : (incomingTeamLeads ? [incomingTeamLeads] : [])
+            teamLeads: finalTeamLeads
         };
 
         if (req.file) {
