@@ -32,7 +32,7 @@ export const createProject = async (req, res, next) => {
             recipient: teamLead,
             sender: req.user._id,
             title: "New Project Assigned",
-            message: `You have been assigned as the Team Lead for ${projectName}`,
+            message: `New project "${projectName}" has been created and you have been assigned as a Team Lead.`,
             type: "project",
             category: "assignment",
             link: `/projects/${savedProject._id}`
@@ -56,13 +56,15 @@ export const createProject = async (req, res, next) => {
 
         // Notify Team Members (Developers and QAs)
         if (teamMembers && teamMembers.length > 0) {
-            for (const memberId of teamMembers) {
-                if (memberId.toString() !== req.user._id.toString() && memberId.toString() !== teamLead.toString()) {
+            const members = await User.find({ _id: { $in: teamMembers } });
+            for (const member of members) {
+                if (member._id.toString() !== req.user._id.toString() && member._id.toString() !== teamLead.toString()) {
+                    const roleLabel = member.role === 'qa' ? 'QA' : 'Developer';
                     await createNotification({
-                        recipient: memberId,
+                        recipient: member._id,
                         sender: req.user._id,
                         title: "New Project Assignment",
-                        message: `You have been added to the project ${projectName}`,
+                        message: `New project "${projectName}" has been created and you have been assigned as a ${roleLabel}.`,
                         type: "project",
                         category: "assignment",
                         link: `/projects/${savedProject._id}`
