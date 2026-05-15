@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, authService, departmentService } from "../../api/services";
+import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
@@ -17,6 +18,7 @@ const Card = ({ children, className = "" }) => (
 );
 
 const EmployeesDashboard = () => {
+    const { user } = useAuth();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ total: 0, active: 0, withOverdue: 0, inactive: 0 });
@@ -876,8 +878,12 @@ const EmployeesDashboard = () => {
                                     <select 
                                         value={newEmployee.role}
                                         onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
-                                        disabled
-                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none text-sm transition-all cursor-not-allowed text-slate-500"
+                                        disabled={user?._id === editingEmployee?._id}
+                                        className={`w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none text-sm transition-all ${
+                                            user?._id === editingEmployee?._id 
+                                            ? 'bg-slate-50 cursor-not-allowed text-slate-500' 
+                                            : 'bg-white cursor-pointer focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'
+                                        }`}
                                     >
                                         <option value="developer">Developer</option>
                                         <option value="TL">Team Lead</option>
