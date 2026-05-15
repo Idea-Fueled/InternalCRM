@@ -14,6 +14,22 @@ const Card = ({ children, className = "" }) => (
     </div>
 );
 
+const formatTimeAgo = (date) => {
+    if (!date) return "N/A";
+    const now = new Date();
+    const then = new Date(date);
+    const seconds = Math.floor((now - then) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return then.toLocaleDateString();
+};
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -303,14 +319,18 @@ const AdminDashboard = () => {
                                         recentTasks.map((task, i) => (
                                             <div key={task._id || i} className="flex gap-4 text-sm relative">
                                                 {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100"></div>}
-                                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-100 text-blue-700 uppercase`}>
-                                                    {task.taskName.charAt(0)}
+                                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase`}>
+                                                    {task.assignedBy?.name?.charAt(0) || task.taskName.charAt(0)}
                                                 </div>
-                                                <div className="pt-1.5">
+                                                <div className="pt-0.5">
                                                     <p className="text-slate-600 leading-snug">
-                                                        Task <span className="font-semibold text-slate-800">{task.taskName}</span> was created
+                                                        Task <span className="font-bold text-slate-800">{task.taskName}</span> was created by <span className="font-bold text-blue-600">{task.assignedBy?.name || "System"}</span>
                                                     </p>
-                                                    <span className="text-xs font-medium text-slate-400 mt-1 block">Status: {task.status}</span>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(task.createdAt)}</span>
+                                                        <span className="text-slate-200 text-xs">•</span>
+                                                        <span className="text-[10px] font-bold text-slate-500">Status: {task.status}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))
