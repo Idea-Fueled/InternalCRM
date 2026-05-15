@@ -309,9 +309,6 @@ const TeamLeadProjects = () => {
                                                                     </div>
                                                                     <h4 className="text-base font-bold text-slate-800">No tasks yet</h4>
                                                                     <p className="text-sm text-slate-400 mt-1 max-w-[240px] mx-auto">Get started by adding your first task to this project.</p>
-                                                                    <button className="mt-5 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-colors">
-                                                                        Create First Task
-                                                                    </button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -544,7 +541,7 @@ const TeamLeadProjects = () => {
                                         <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
                                             className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedTo ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
                                             <option value="">Select Developer</option>
-                                            {team.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                            {selectedProject.members.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
@@ -552,7 +549,7 @@ const TeamLeadProjects = () => {
                                         <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
                                             className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedQA ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
                                             <option value="">Select QA</option>
-                                            {team.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                            {selectedProject.members.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -609,7 +606,7 @@ const TeamLeadProjects = () => {
                                         <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
                                             className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedTo ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
                                             <option value="">Select Developer</option>
-                                            {team.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                            {selectedProject.members.filter(m => m.role?.toLowerCase() === 'developer').map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                     <div>
@@ -617,7 +614,7 @@ const TeamLeadProjects = () => {
                                         <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
                                             className={`w-full px-4 py-2.5 bg-white border ${submittedTask && !newTask.assignedQA ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
                                             <option value="">Select QA</option>
-                                            {team.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m._id} value={m._id}>{m.name}</option>)}
+                                            {selectedProject.members.filter(m => m.role?.toLowerCase() === 'qa').map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
