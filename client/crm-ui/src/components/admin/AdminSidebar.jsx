@@ -115,17 +115,17 @@ const AdminSidebar = ({ role = "admin" }) => {
             </button>
 
             <div className="p-4 flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
-                <div className={`flex items-center gap-3.5 mb-8 pb-6 border-b border-slate-800/80 transition-all duration-300 ${isMinimized ? 'justify-center' : 'px-2'}`}>
+                <div className={`flex flex-col mb-8 pb-6 border-b border-slate-800/80 transition-all duration-300 ${isMinimized ? 'items-center justify-center' : 'items-start px-4'}`}>
                     <div className="relative flex-shrink-0">
                         <img 
                             src={logoImg} 
                             alt="Idea Fueled" 
-                            className={`h-auto object-contain transition-all duration-300 ${isMinimized ? 'w-10' : 'w-36'}`} 
+                            className={`h-auto object-contain transition-all duration-300 ${isMinimized ? 'w-10' : 'w-40'}`} 
                         />
                     </div>
                     {!isMinimized && (
-                        <div className="flex flex-col opacity-100 transition-opacity duration-300 overflow-hidden">
-                            <span className="bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase mt-1 w-max shadow-sm">
+                        <div className="flex flex-col opacity-100 transition-opacity duration-300 overflow-hidden mt-3 ml-1">
+                            <span className="bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase shadow-sm w-max">
                                 {currentConfig.portalName}
                             </span>
                         </div>
