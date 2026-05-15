@@ -83,7 +83,7 @@ const UserProjects = ({ role = "developer" }) => {
         if (!selectedProject) return;
         const columns = ["Task Name", "Timeline", "Assignee", "Status"];
         const data = (selectedProject.tasks || []).map(t => [
-            t.name,
+            t.taskName,
             `${formatDate(t.startDate)} - ${formatDate(t.endDate)}`,
             t.assignedTo?.name || "Unassigned",
             t.status
@@ -222,7 +222,7 @@ const UserProjects = ({ role = "developer" }) => {
                                                 {(selectedProject.tasks || []).map(task => (
                                                     <tr key={task._id} className="hover:bg-slate-50/50 transition-colors group cursor-default">
                                                         <td className="px-6 py-4">
-                                                            <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{task.name}</p>
+                                                            <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{task.taskName}</p>
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center text-xs text-slate-500 font-bold">
