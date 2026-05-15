@@ -454,22 +454,43 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                     </div>
 
                                                     <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[9px] font-bold shadow-sm shrink-0 overflow-hidden" title={getAssignee(task)}>
-                                                                {getAssigneePic(task) ? (
-                                                                    <img src={getAssigneePic(task)} alt={getAssignee(task)} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    getAssigneeInitial(task)
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex -space-x-2">
+                                                                {/* Developer Avatar */}
+                                                                <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white overflow-hidden" title={`Developer: ${getAssignee(task)}`}>
+                                                                    {getAssigneePic(task) ? (
+                                                                        <img src={getAssigneePic(task)} alt={getAssignee(task)} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        getAssigneeInitial(task)
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                {/* QA Avatar (if assigned) */}
+                                                                {task.assignedQA && (
+                                                                    <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm ring-2 ring-white overflow-hidden" title={`QA: ${task.assignedQA.name || 'Unassigned'}`}>
+                                                                        {task.assignedQA.profilePic ? (
+                                                                            <img src={task.assignedQA.profilePic} alt={task.assignedQA.name} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            (task.assignedQA.name || 'QA').substring(0, 2).toUpperCase()
+                                                                        )}
+                                                                    </div>
                                                                 )}
                                                             </div>
-                                                            <span className="text-xs font-semibold text-slate-600 truncate max-w-[90px]">
-                                                                {getAssignee(task)}
-                                                            </span>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-[100px]">
+                                                                    {getAssignee(task)}
+                                                                </span>
+                                                                {task.assignedQA && (
+                                                                    <span className="text-[9px] font-medium text-slate-400 truncate">
+                                                                        QA: {task.assignedQA.name || 'Assigned'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center gap-2 text-slate-400">
                                                             {hist.filter(h => h.notes || h.attachment).length > 0 && (
-                                                                <div className="flex items-center text-xs font-medium gap-1 text-indigo-500" title="Has status notes">
-                                                                    <MessageSquare className="w-3.5 h-3.5" />
+                                                                <div className="flex items-center text-[10px] font-bold gap-1 text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-md" title="Has status notes">
+                                                                    <MessageSquare className="w-3 h-3" />
                                                                     <span>{hist.filter(h => h.notes || h.attachment).length}</span>
                                                                 </div>
                                                             )}
