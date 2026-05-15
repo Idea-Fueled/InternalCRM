@@ -40,9 +40,9 @@ export const createTask = async (req, res) => {
 
         const populatedTask = await Task.findById(task._id)
             .populate("project", "projectName name status teamLead")
-            .populate("assignedTo", "name email")
-            .populate("assignedQA", "name email")
-            .populate("assignedBy", "name email")
+            .populate("assignedTo", "name email profilePic")
+            .populate("assignedQA", "name email profilePic")
+            .populate("assignedBy", "name email profilePic")
             .populate("statusHistory.changedBy", "name role");
 
         // Send notifications
@@ -140,9 +140,9 @@ export const getAllTasks = async (req, res) => {
 
         const tasks = await Task.find(query)
             .populate("project", "projectName name status")
-            .populate("assignedTo", "name email role")
-            .populate("assignedBy", "name email role")
-            .populate("assignedQA", "name email role")
+            .populate("assignedTo", "name email role profilePic")
+            .populate("assignedBy", "name email role profilePic")
+            .populate("assignedQA", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role")
             .sort({ createdAt: -1 });
 
@@ -164,8 +164,8 @@ export const getSingleTask = async (req, res) => {
         const { id } = req.params;
         const task = await Task.findOne({ _id: id, isDeleted: false })
             .populate("project", "projectName name description status")
-            .populate("assignedTo", "name email role")
-            .populate("assignedBy", "name email role")
+            .populate("assignedTo", "name email role profilePic")
+            .populate("assignedBy", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role");
 
         if (!task) {
@@ -217,9 +217,9 @@ export const updateTask = async (req, res) => {
             { new: true, runValidators: true }
         )
         .populate("project", "projectName name status teamLead")
-        .populate("assignedTo", "name email role")
-        .populate("assignedQA", "name email role")
-        .populate("assignedBy", "name email role");
+        .populate("assignedTo", "name email role profilePic")
+        .populate("assignedQA", "name email role profilePic")
+        .populate("assignedBy", "name email role profilePic");
 
         if (!updatedTask) {
             return res.status(404).json({
@@ -331,8 +331,8 @@ export const updateTaskStatus = async (req, res) => {
             { new: true }
         )
         .populate("project", "projectName name status teamLead")
-        .populate("assignedTo", "name email")
-        .populate("statusHistory.changedBy", "name");
+        .populate("assignedTo", "name email profilePic")
+        .populate("statusHistory.changedBy", "name profilePic");
 
         if (!task) {
             return res.status(404).json({
@@ -527,7 +527,7 @@ export const getDeletedTasks = async (req, res) => {
     try {
         const tasks = await Task.find({ isDeleted: true })
             .populate("project", "projectName name")
-            .populate("assignedTo", "name email")
+            .populate("assignedTo", "name email profilePic")
             .sort({ updatedAt: -1 });
 
         return res.status(200).json({
@@ -547,8 +547,8 @@ export const getTasksByProject = async (req, res) => {
     try {
         const { projectId } = req.params;
         const tasks = await Task.find({ project: projectId, isDeleted: false })
-            .populate("assignedTo", "name email role")
-            .populate("assignedBy", "name email role")
+            .populate("assignedTo", "name email role profilePic")
+            .populate("assignedBy", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role")
             .sort({ createdAt: -1 });
 
@@ -570,9 +570,10 @@ export const getTasksByUser = async (req, res) => {
         const { userId } = req.params;
         const tasks = await Task.find({ assignedTo: userId, isDeleted: false })
             .populate("project", "projectName name status")
-            .populate("assignedBy", "name email")
-            .populate("assignedQA", "name email role")
-            .populate("statusHistory.changedBy", "name role")
+            .populate("assignedTo", "name email role profilePic")
+            .populate("assignedBy", "name email role profilePic")
+            .populate("assignedQA", "name email role profilePic")
+            .populate("statusHistory.changedBy", "name role profilePic")
             .sort({ createdAt: -1 });
 
         return res.status(200).json({
