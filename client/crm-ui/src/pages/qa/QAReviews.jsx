@@ -319,7 +319,7 @@ const QAReviews = () => {
                                 </div>
 
                                 <h2 className="text-2xl font-bold text-slate-900 mb-6 leading-tight">
-                                    {selectedTask.title}
+                                    {selectedTask.taskName}
                                 </h2>
 
                                 <div className="grid grid-cols-2 gap-4 mb-8">
@@ -349,12 +349,10 @@ const QAReviews = () => {
                                             <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
                                         </div>
                                     </div>
-                                </div>
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Due Date</p>
                                         <span className={`text-sm font-bold ${isOverdue(selectedTask.endDate) ? 'text-rose-600' : 'text-slate-700'}`}>{selectedTask.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : "N/A"}</span>
                                     </div>
-                                </div>
 
                                 <div className="mb-8">
                                     <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center">
