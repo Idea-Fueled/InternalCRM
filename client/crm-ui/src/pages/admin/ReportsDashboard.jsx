@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, projectService } from "../../api/services";
-import { exportPDF } from "../../utils/pdfExport";
+import { exportPDF, exportOverallReport } from "../../utils/pdfExport";
 import { Download } from "lucide-react";
 
 const ReportsDashboard = () => {
@@ -125,6 +125,45 @@ const ReportsDashboard = () => {
     }));
 
     // PDF Handlers
+    const handleExportOverallReport = () => {
+        const sections = [
+            {
+                title: "Task Overview Summary",
+                columns: ["Status", "Count"],
+                data: insights.map(s => [s.label, s.value])
+            },
+            {
+                title: "Developer Performance",
+                columns: ["Developer Name", "Total Tasks", "Completed", "Overdue", "Performance %"],
+                data: developers.map(d => [d.name, d.total, d.completed, d.overdue, `${d.performance}%`])
+            },
+            {
+                title: "Recent Activity Log",
+                columns: ["User", "Task", "Action", "Time"],
+                data: activities.map(a => [a.user.name, a.task, a.action, a.time])
+            }
+        ];
+
+        if (projectReport && selectedProjectId !== "All") {
+            sections.splice(1, 0, {
+                title: `Project Details: ${projectReport.name}`,
+                columns: ["Metric", "Value"],
+                data: [
+                    ["Lead", projectReport.lead],
+                    ["Timeline", `${projectReport.start} - ${projectReport.end}`],
+                    ["Tasks", `${projectReport.completedTasks} / ${projectReport.totalTasks}`],
+                    ["Completion", `${projectReport.progress}%`]
+                ]
+            });
+        }
+
+        exportOverallReport({
+            title: `Overall CRM Report - ${selectedProjectId === "All" ? "All Projects" : activeProject?.projectName}`,
+            filename: `overall_report_${new Date().getTime()}.pdf`,
+            sections
+        });
+    };
+
     const handleExportTasks = () => {
         const columns = ["Task Name", "Project", "Status", "Priority", "Assignee", "Due Date"];
         const data = filteredTasks.map(t => [
@@ -230,11 +269,6 @@ const ReportsDashboard = () => {
                                 onChange={(e) => setToDate(e.target.value)}
                             />
                         </div>
-                        <div className="flex-none pt-6 w-full lg:w-auto">
-                            <button className="w-full lg:w-auto px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
-                                Apply Filter
-                            </button>
-                        </div>
                     </div>
 
                     {/* Top Insights */}
@@ -245,10 +279,10 @@ const ReportsDashboard = () => {
                                 Task Overview
                             </h2>
                             <button 
-                                onClick={handleExportTasks}
+                                onClick={handleExportOverallReport}
                                 className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition shadow-sm"
                             >
-                                <Download className="w-3.5 h-3.5" /> Export PDF
+                                <Download className="w-3.5 h-3.5" /> Export Overall Report
                             </button>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
