@@ -333,3 +333,32 @@ export const getTrashProjects = async (req, res, next) => {
         });
     }
 };
+
+// Permanently delete a project
+export const hardDeleteProject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const deletedProject = await Project.findByIdAndDelete(id);
+
+        if (!deletedProject) {
+            return res.status(404).json({
+                success: false,
+                message: "Project not found"
+            });
+        }
+
+        // Also delete all tasks associated with this project
+        await Task.deleteMany({ project: id });
+
+        return res.status(200).json({
+            success: true,
+            message: "Project permanently deleted"
+        });
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};

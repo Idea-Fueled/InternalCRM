@@ -8,7 +8,8 @@ import {
     registerUser,
     restoreUser,
     updateUser,
-    updateProfilePic
+    updateProfilePic,
+    hardDeleteUser
 } from "../controllers/user.controller.js";
 import { protectRoute, isAdmin, isAdminOrTL } from "../middlewares/auth.middleware.js";
 import { upload } from "../config/cloudinary.js";
@@ -38,6 +39,7 @@ router.get("/all", protectRoute, isAdminOrTL, getAllUsers);
 router.get("/:_id", protectRoute, getUserById);
 router.put("/update/:_id", protectRoute, isAdmin, upload.single('profilePic'), updateUser);
 router.delete("/delete/:_id", protectRoute, isAdmin, deleteUser);
+router.delete("/hard/:_id", protectRoute, isAdmin, hardDeleteUser);
 router.put("/restore/:_id", protectRoute, isAdmin, restoreUser);
 
 export default router;

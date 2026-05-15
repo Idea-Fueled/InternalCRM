@@ -6,7 +6,8 @@ import {
     updateProject,
     deleteProject,
     restoreProject,
-    getTrashProjects
+    getTrashProjects,
+    hardDeleteProject
 } from "../controllers/project.controller.js";
 import { isAdmin, isAdminOrTL, protectRoute } from "../middlewares/auth.middleware.js";
 
@@ -18,6 +19,7 @@ router.get("/trash", protectRoute, isAdmin, getTrashProjects);
 router.get("/:id", protectRoute, getProjectById);
 router.put("/:id", protectRoute, isAdmin, updateProject);
 router.delete("/:id", protectRoute, isAdmin, deleteProject);
+router.delete("/hard/:id", protectRoute, isAdmin, hardDeleteProject);
 router.put("/restore/:id", protectRoute, isAdmin, restoreProject);
 
 export default router;

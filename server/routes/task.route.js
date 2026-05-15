@@ -9,7 +9,8 @@ import {
     restoreTask,
     getDeletedTasks,
     getTasksByProject,
-    getTasksByUser
+    getTasksByUser,
+    hardDeleteTask
 } from "../controllers/task.controller.js";
 import { isAdmin, isAdminOrTL, protectRoute } from "../middlewares/auth.middleware.js";
 
@@ -28,5 +29,6 @@ router.put("/:id/status", protectRoute, updateTaskStatus);
 router.put("/:id", protectRoute, isAdminOrTL, updateTask);
 router.put("/:id/restore", protectRoute, isAdmin, restoreTask);
 router.delete("/:id", protectRoute, isAdmin, deleteTask);
+router.delete("/hard/:id", protectRoute, isAdmin, hardDeleteTask);
 
 export default router;

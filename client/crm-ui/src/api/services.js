@@ -15,6 +15,7 @@ export const projectService = {
     createProject: (data) => axiosInstance.post('/projects/create', data),
     updateProject: (id, data) => axiosInstance.put(`/projects/${id}`, data),
     deleteProject: (id) => axiosInstance.delete(`/projects/${id}`),
+    hardDeleteProject: (id) => axiosInstance.delete(`/projects/hard/${id}`),
     getTrashProjects: () => axiosInstance.get('/projects/trash'),
     restoreProject: (id) => axiosInstance.put(`/projects/restore/${id}`),
 };
@@ -28,6 +29,7 @@ export const taskService = {
     updateTaskStatus: (id, status, notes = "", attachment = "") => axiosInstance.put(`/tasks/${id}/status`, { status, notes, attachment }),
     updateTask: (id, data) => axiosInstance.put(`/tasks/${id}`, data),
     deleteTask: (id) => axiosInstance.delete(`/tasks/${id}`),
+    hardDeleteTask: (id) => axiosInstance.delete(`/tasks/hard/${id}`),
     getDeletedTasks: () => axiosInstance.get('/tasks/trash'),
     restoreTask: (id) => axiosInstance.put(`/tasks/${id}/restore`),
 };
@@ -37,6 +39,7 @@ export const userService = {
     getAllUsers: (params = {}) => axiosInstance.get('/users/all', { params }),
     updateUser: (id, data) => axiosInstance.put(`/users/update/${id}`, data),
     deleteUser: (id) => axiosInstance.delete(`/users/delete/${id}`),
+    hardDeleteUser: (id) => axiosInstance.delete(`/users/hard/${id}`),
     restoreUser: (id) => axiosInstance.put(`/users/restore/${id}`),
 };
 

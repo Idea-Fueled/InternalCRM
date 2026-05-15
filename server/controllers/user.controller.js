@@ -310,3 +310,24 @@ export const restoreUser = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 }
+
+export const hardDeleteUser = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const user = await User.findByIdAndDelete(_id);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Clean up Cloudinary if profile pic exists
+        if (user.profilePicPublicId) {
+            try {
+                await cloudinary.uploader.destroy(user.profilePicPublicId);
+            } catch (delErr) {
+                console.error("Cloudinary delete error (hardDeleteUser):", delErr);
+            }
+        }
+
+        return res.status(200).json({ message: "User permanently deleted!" })
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}

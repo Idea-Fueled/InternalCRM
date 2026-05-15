@@ -105,7 +105,13 @@ const TrashDashboard = () => {
             type: "danger",
             onConfirm: async () => {
                 try {
-                    // For now, simulate permanent delete by removing from list
+                    if (type === "Task") {
+                        await taskService.hardDeleteTask(id);
+                    } else if (type === "Project") {
+                        await projectService.hardDeleteProject(id);
+                    } else if (type === "Employee") {
+                        await userService.hardDeleteUser(id);
+                    }
                     setItems(prev => prev.filter(item => item.id !== id));
                     setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
                     setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -165,6 +171,16 @@ const TrashDashboard = () => {
             confirmText: "Delete All Permanently",
             type: "danger",
             onConfirm: async () => {
+                const selectedItems = items.filter(i => selectedIds.includes(i.id));
+                for (const item of selectedItems) {
+                    try {
+                        if (item.type === "Task") await taskService.hardDeleteTask(item.id);
+                        else if (item.type === "Project") await projectService.hardDeleteProject(item.id);
+                        else if (item.type === "Employee") await userService.hardDeleteUser(item.id);
+                    } catch (err) {
+                        console.error(`Failed to delete ${item.type} ${item.id}`, err);
+                    }
+                }
                 setItems(prev => prev.filter(item => !selectedIds.includes(item.id)));
                 setSelectedIds([]);
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
@@ -180,6 +196,16 @@ const TrashDashboard = () => {
             confirmText: "Empty Now",
             type: "danger",
             onConfirm: async () => {
+                const allItems = [...items];
+                for (const item of allItems) {
+                    try {
+                        if (item.type === "Task") await taskService.hardDeleteTask(item.id);
+                        else if (item.type === "Project") await projectService.hardDeleteProject(item.id);
+                        else if (item.type === "Employee") await userService.hardDeleteUser(item.id);
+                    } catch (err) {
+                        console.error(`Failed to delete ${item.type} ${item.id}`, err);
+                    }
+                }
                 setItems([]);
                 setSelectedIds([]);
                 setConfirmModal(prev => ({ ...prev, isOpen: false }));
