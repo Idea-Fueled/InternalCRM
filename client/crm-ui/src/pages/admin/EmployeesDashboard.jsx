@@ -29,7 +29,7 @@ const EmployeesDashboard = () => {
         password: "",
         role: "developer",
         department: "Engineering",
-        teamLead: ""
+        teamLeads: []
     });
     const [roleFilter, setRoleFilter] = useState("All Roles");
     const [isCreating, setIsCreating] = useState(false);
@@ -104,7 +104,7 @@ const EmployeesDashboard = () => {
                         role: u.role,
                         email: u.email,
                         dept: u.department || "Engineering",
-                        lead: u.teamLead?.name || "N/A",
+                        lead: u.teamLeads?.map(tl => tl.name).join(", ") || "N/A",
                         tasks: { total: userTasks.length, done, overdue, list: userTasks },
                         status: u.isActive ? (overdue > 0 ? "Overdue" : "Active") : "Inactive",
                         joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A",
@@ -151,7 +151,10 @@ const EmployeesDashboard = () => {
             formData.append('password', newEmployee.password);
             formData.append('role', newEmployee.role);
             formData.append('department', newEmployee.department);
-            formData.append('teamLead', newEmployee.teamLead);
+            // Append each team lead ID
+            if (newEmployee.teamLeads && newEmployee.teamLeads.length > 0) {
+                newEmployee.teamLeads.forEach(id => formData.append('teamLeads[]', id));
+            }
             if (newEmployee.profilePic) {
                 formData.append('profilePic', newEmployee.profilePic);
             }
@@ -166,7 +169,7 @@ const EmployeesDashboard = () => {
                 password: "",
                 role: "developer",
                 department: "Engineering",
-                teamLead: "",
+                teamLeads: [],
                 profilePic: null
             });
             fetchData();
@@ -187,7 +190,7 @@ const EmployeesDashboard = () => {
             password: "",
             role: emp.role,
             department: emp.dept,
-            teamLead: emp.raw.teamLead?._id || emp.raw.teamLead || "",
+            teamLeads: emp.raw.teamLeads?.map(tl => tl._id || tl) || [],
             profilePic: null
         });
         setIsEditEmployeeModalOpen(true);
@@ -210,7 +213,12 @@ const EmployeesDashboard = () => {
             if (newEmployee.password) formData.append('password', newEmployee.password);
             formData.append('role', newEmployee.role);
             formData.append('department', newEmployee.department);
-            formData.append('teamLead', newEmployee.teamLead);
+            // Append each team lead ID
+            if (newEmployee.teamLeads && newEmployee.teamLeads.length > 0) {
+                newEmployee.teamLeads.forEach(id => formData.append('teamLeads[]', id));
+            } else {
+                formData.append('teamLeads', []); // Send empty array if none selected
+            }
             if (newEmployee.profilePic) {
                 formData.append('profilePic', newEmployee.profilePic);
             }
@@ -226,7 +234,7 @@ const EmployeesDashboard = () => {
                 password: "",
                 role: "developer",
                 department: "Engineering",
-                teamLead: "",
+                teamLeads: [],
                 profilePic: null
             });
             fetchData();
@@ -624,18 +632,32 @@ const EmployeesDashboard = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Team Lead</label>
-                                    <select 
-                                        value={newEmployee.teamLead}
-                                        onChange={(e) => setNewEmployee({...newEmployee, teamLead: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
-                                    >
-                                        <option value="">—</option>
-                                        {teamLeads.map(tl => (
-                                            <option key={tl.id} value={tl.id}>{tl.name}</option>
-                                        ))}
-                                    </select>
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-sm font-bold text-slate-700">Team Leads</label>
+                                    <div className="w-full border border-slate-200 rounded-lg p-2 max-h-[120px] overflow-y-auto bg-slate-50/30">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {teamLeads.map(tl => (
+                                                <label key={tl.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white rounded-md cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={newEmployee.teamLeads.includes(tl.id)}
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked;
+                                                            setNewEmployee(prev => ({
+                                                                ...prev,
+                                                                teamLeads: checked 
+                                                                    ? [...prev.teamLeads, tl.id]
+                                                                    : prev.teamLeads.filter(id => id !== tl.id)
+                                                            }));
+                                                        }}
+                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                                                    />
+                                                    <span className="text-sm font-medium text-slate-600 truncate">{tl.name}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        {teamLeads.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No team leads found</p>}
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
                                     <label className="text-sm font-bold text-slate-700">Profile Picture</label>
@@ -884,18 +906,32 @@ const EmployeesDashboard = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Team Lead</label>
-                                    <select 
-                                        value={newEmployee.teamLead}
-                                        onChange={(e) => setNewEmployee({...newEmployee, teamLead: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
-                                    >
-                                        <option value="">—</option>
-                                        {teamLeads.map(tl => (
-                                            <option key={tl.id} value={tl.id}>{tl.name}</option>
-                                        ))}
-                                    </select>
+                                <div className="space-y-1.5 md:col-span-2">
+                                    <label className="text-sm font-bold text-slate-700">Team Leads</label>
+                                    <div className="w-full border border-slate-200 rounded-lg p-2 max-h-[120px] overflow-y-auto bg-slate-50/30">
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {teamLeads.map(tl => (
+                                                <label key={tl.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white rounded-md cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={newEmployee.teamLeads.includes(tl.id)}
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked;
+                                                            setNewEmployee(prev => ({
+                                                                ...prev,
+                                                                teamLeads: checked 
+                                                                    ? [...prev.teamLeads, tl.id]
+                                                                    : prev.teamLeads.filter(id => id !== tl.id)
+                                                            }));
+                                                        }}
+                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                                                    />
+                                                    <span className="text-sm font-medium text-slate-600 truncate">{tl.name}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                        {teamLeads.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No team leads found</p>}
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
                                     <label className="text-sm font-bold text-slate-700">Update Profile Picture</label>

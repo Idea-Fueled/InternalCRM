@@ -5,7 +5,7 @@ import { cloudinary } from "../config/cloudinary.js";
 
 export const registerUser = async (req, res, next) => {
     try {
-        const { name, email, password, role, department, teamLead } = req.body;
+        const { name, email, password, role, department, teamLeads } = req.body;
 
         if (!name || !email || !password || !role) {
             return res.status(400).json({
@@ -37,7 +37,7 @@ export const registerUser = async (req, res, next) => {
             password: hashedPassword, 
             role, 
             department, 
-            teamLead: (teamLead && teamLead !== "") ? teamLead : null,
+            teamLeads: Array.isArray(teamLeads) ? teamLeads : (teamLeads ? [teamLeads] : []),
             profilePic,
             profilePicPublicId
         });
@@ -142,7 +142,7 @@ export const getCurrentUser = (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const { teamLead, role, status } = req.query;
+        const { teamLeadId, role, status } = req.query;
         let query = {};
         
         if (status === 'inactive') {
@@ -160,12 +160,12 @@ export const getAllUsers = async (req, res) => {
             query = {
                 ...query,
                 $or: [
-                    { teamLead: req.user._id },
+                    { teamLeads: req.user._id },
                     { _id: { $in: teamMemberIds } }
                 ]
             };
-        } else if (teamLead && teamLead !== 'undefined' && teamLead !== 'null') {
-            query.teamLead = teamLead;
+        } else if (teamLeadId && teamLeadId !== 'undefined' && teamLeadId !== 'null') {
+            query.teamLeads = teamLeadId;
         }
         
         if (role) {
@@ -173,7 +173,7 @@ export const getAllUsers = async (req, res) => {
         }
 
         const users = await User.find(query)
-            .populate("teamLead", "name")
+            .populate("teamLeads", "name")
             .sort({ name: 1 });
         
         return res.status(200).json({
@@ -203,14 +203,14 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
     try {
         const { _id } = req.params;
-        const { teamLead, ...otherData } = req.body;
+        const { teamLeads, ...otherData } = req.body;
         
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
         const updateData = {
             ...otherData,
-            teamLead: (teamLead && teamLead !== "") ? teamLead : null
+            teamLeads: Array.isArray(teamLeads) ? teamLeads : (teamLeads ? [teamLeads] : [])
         };
 
         if (req.file) {

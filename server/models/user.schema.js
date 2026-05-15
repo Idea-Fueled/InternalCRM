@@ -32,10 +32,10 @@ const userSchema = new mongoose.Schema({
     },
 
     // TL
-    teamLead: {
+    teamLeads: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
-    },
+    }],
     teamMembers: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
