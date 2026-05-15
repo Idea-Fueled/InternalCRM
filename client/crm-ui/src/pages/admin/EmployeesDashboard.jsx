@@ -876,7 +876,8 @@ const EmployeesDashboard = () => {
                                     <select 
                                         value={newEmployee.role}
                                         onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
+                                        disabled
+                                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none text-sm transition-all cursor-not-allowed text-slate-500"
                                     >
                                         <option value="developer">Developer</option>
                                         <option value="TL">Team Lead</option>
@@ -906,33 +907,35 @@ const EmployeesDashboard = () => {
                                         ))}
                                     </select>
                                 </div>
-                                <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Team Leads</label>
-                                    <div className="w-full border border-slate-200 rounded-lg p-2 max-h-[120px] overflow-y-auto bg-slate-50/30">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {teamLeads.map(tl => (
-                                                <label key={tl.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white rounded-md cursor-pointer transition-colors border border-transparent hover:border-slate-100">
-                                                    <input 
-                                                        type="checkbox"
-                                                        checked={newEmployee.teamLeads.includes(tl.id)}
-                                                        onChange={(e) => {
-                                                            const checked = e.target.checked;
-                                                            setNewEmployee(prev => ({
-                                                                ...prev,
-                                                                teamLeads: checked 
-                                                                    ? [...prev.teamLeads, tl.id]
-                                                                    : prev.teamLeads.filter(id => id !== tl.id)
-                                                            }));
-                                                        }}
-                                                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
-                                                    />
-                                                    <span className="text-sm font-medium text-slate-600 truncate">{tl.name}</span>
-                                                </label>
-                                            ))}
+                                {newEmployee.role !== 'admin' && (
+                                    <div className="space-y-1.5 md:col-span-2">
+                                        <label className="text-sm font-bold text-slate-700">Team Leads</label>
+                                        <div className="w-full border border-slate-200 rounded-lg p-2 max-h-[120px] overflow-y-auto bg-slate-50/30">
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {teamLeads.map(tl => (
+                                                    <label key={tl.id} className="flex items-center gap-2 px-2 py-1.5 hover:bg-white rounded-md cursor-pointer transition-colors border border-transparent hover:border-slate-100">
+                                                        <input 
+                                                            type="checkbox"
+                                                            checked={newEmployee.teamLeads.includes(tl.id)}
+                                                            onChange={(e) => {
+                                                                const checked = e.target.checked;
+                                                                setNewEmployee(prev => ({
+                                                                    ...prev,
+                                                                    teamLeads: checked 
+                                                                        ? [...prev.teamLeads, tl.id]
+                                                                        : prev.teamLeads.filter(id => id !== tl.id)
+                                                                }));
+                                                            }}
+                                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                                                        />
+                                                        <span className="text-sm font-medium text-slate-600 truncate">{tl.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            {teamLeads.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No team leads found</p>}
                                         </div>
-                                        {teamLeads.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No team leads found</p>}
                                     </div>
-                                </div>
+                                )}
                                 <div className="space-y-1.5 md:col-span-2">
                                     <label className="text-sm font-bold text-slate-700">Update Profile Picture</label>
                                     <div className="flex items-center gap-4 p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
