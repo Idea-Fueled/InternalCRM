@@ -142,7 +142,8 @@ export const getCurrentUser = (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const { teamLeadId, role, status } = req.query;
+        const { teamLeadId, teamLead, role, status } = req.query;
+        const targetTeamLead = teamLeadId || teamLead;
         let query = {};
         
         if (status === 'inactive') {
@@ -164,8 +165,8 @@ export const getAllUsers = async (req, res) => {
                     { _id: { $in: teamMemberIds } }
                 ]
             };
-        } else if (teamLeadId && teamLeadId !== 'undefined' && teamLeadId !== 'null') {
-            query.teamLeads = teamLeadId;
+        } else if (targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
+            query.teamLeads = targetTeamLead;
         }
         
         if (role) {

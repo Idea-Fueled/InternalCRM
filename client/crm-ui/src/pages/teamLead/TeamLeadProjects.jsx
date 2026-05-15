@@ -111,7 +111,32 @@ const TeamLeadProjects = () => {
             setNewTask({ taskName: "", description: "", priority: "Medium", assignedTo: "", assignedQA: "", endDate: "" });
             // Refresh project data
             const res = await projectService.getProjectById(selectedProject._id || selectedProject.id);
-            setSelectedProject(res.data.project);
+            const p = res.data.project;
+            const formatted = {
+                ...p,
+                id: p._id,
+                name: p.projectName,
+                status: p.status || "Active",
+                members: p.teamMembers?.map(m => ({
+                    id: m._id,
+                    initial: m.name?.charAt(0).toUpperCase() || "U",
+                    name: m.name || "Unknown",
+                    role: m.role,
+                    profilePic: m.profilePic
+                })) || [],
+                tasks: (p.tasks || []).map(t => ({
+                    ...t,
+                    id: t._id,
+                    name: t.taskName,
+                    start: (t.startDate || t.createdAt) ? new Date(t.startDate || t.createdAt).toLocaleDateString() : 'N/A',
+                    end: t.endDate ? new Date(t.endDate).toLocaleDateString() : 'N/A',
+                    assignee: t.assignedTo?.name || "Unassigned",
+                    assigneeInitial: t.assignedTo?.name?.charAt(0).toUpperCase() || "?",
+                    assigneePic: t.assignedTo?.profilePic
+                }))
+            };
+            setSelectedProject(formatted);
+            fetchProjects();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to create task");
         } finally {
@@ -151,7 +176,31 @@ const TeamLeadProjects = () => {
             setNewTask({ taskName: "", description: "", priority: "Medium", assignedTo: "", assignedQA: "", endDate: "" });
             // Refresh project data
             const res = await projectService.getProjectById(selectedProject._id || selectedProject.id);
-            setSelectedProject(res.data.project);
+            const p = res.data.project;
+            const formatted = {
+                ...p,
+                id: p._id,
+                name: p.projectName,
+                status: p.status || "Active",
+                members: p.teamMembers?.map(m => ({
+                    id: m._id,
+                    initial: m.name?.charAt(0).toUpperCase() || "U",
+                    name: m.name || "Unknown",
+                    role: m.role,
+                    profilePic: m.profilePic
+                })) || [],
+                tasks: (p.tasks || []).map(t => ({
+                    ...t,
+                    id: t._id,
+                    name: t.taskName,
+                    start: (t.startDate || t.createdAt) ? new Date(t.startDate || t.createdAt).toLocaleDateString() : 'N/A',
+                    end: t.endDate ? new Date(t.endDate).toLocaleDateString() : 'N/A',
+                    assignee: t.assignedTo?.name || "Unassigned",
+                    assigneeInitial: t.assignedTo?.name?.charAt(0).toUpperCase() || "?",
+                    assigneePic: t.assignedTo?.profilePic
+                }))
+            };
+            setSelectedProject(formatted);
             fetchProjects();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to update task");
