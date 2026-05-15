@@ -346,7 +346,7 @@ const EmployeesDashboard = () => {
                             { label: "Inactive", value: stats.inactive, color: "text-slate-400", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636", variant: "slate" }
                         ].map((stat, i) => (
                             <div key={i} className={`premium-stat-card ${stat.variant} flex flex-row items-center gap-4 p-4 cursor-default h-[90px]`}>
-                                <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${stat.color.replace('text-', 'bg-').replace('500', '100').replace('400', '200')} ${stat.color}`}>
+                                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${stat.color.replace('text-', 'bg-').replace('500', '100').replace('400', '200')} ${stat.color}`}>
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}/></svg>
                                 </div>
                                 <div className="flex flex-col justify-center">
@@ -404,7 +404,7 @@ const EmployeesDashboard = () => {
                             <div key={i} onClick={() => setSelectedEmployee(emp)} className="group bg-white rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-center gap-6 lg:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300 cursor-pointer">
                                 {/* Left: Avatar, Name, Role */}
                                 <div className="flex items-center gap-4 w-full lg:w-1/3">
-                                    <div className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden
+                                    <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden
                                         ${emp.status === 'Inactive' ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'}
                                     `}>
                                         {emp.raw.profilePic ? (

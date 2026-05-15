@@ -268,7 +268,7 @@ const AdminDashboard = () => {
                                         <div key={member._id || i} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition">
                                             <div className="flex items-center gap-4">
                                                 <div className="relative">
-                                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 border border-blue-200 uppercase overflow-hidden">
+                                                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center font-bold text-blue-700 border border-blue-200 uppercase overflow-hidden shadow-sm">
                                                         {member.profilePic ? (
                                                             <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
                                                         ) : (
