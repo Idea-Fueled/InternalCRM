@@ -532,12 +532,14 @@ const QADashboard = () => {
                                         <div className="space-y-4">
                                             {selectedTask.statusHistory.slice().reverse().map((h, i) => (
                                                 <div key={i} className="border-l-2 border-slate-100 pl-4 py-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{h.status}</span>
-                                                        <span className="text-[10px] text-slate-400 font-bold">{new Date(h.changedAt).toLocaleString()}</span>
-                                                    </div>
-                                                    {h.notes && <p className="text-xs text-slate-600 italic">"{h.notes}"</p>}
-                                                </div>
+                                                     <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                         <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{h.status}</span>
+                                                         <span className="text-[10px] text-slate-400 font-bold">{new Date(h.changedAt).toLocaleString()}</span>
+                                                         <span className="text-[10px] text-slate-300">•</span>
+                                                         <span className="text-[10px] text-indigo-500 font-bold">by {h.changedBy?.name || 'System'}</span>
+                                                     </div>
+                                                     {h.notes && <p className="text-xs text-slate-600 italic">"{h.notes}"</p>}
+                                                 </div>
                                             ))}
                                         </div>
                                     </div>

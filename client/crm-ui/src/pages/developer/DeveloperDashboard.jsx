@@ -58,7 +58,8 @@ const DeveloperDashboard = () => {
                     type: h.status === 'QA Review' ? 'qa' : 'status',
                     status: h.status,
                     notes: h.notes,
-                    time: new Date(h.changedAt).toLocaleString()
+                    time: new Date(h.changedAt).toLocaleString(),
+                    changedBy: h.changedBy
                 })).reverse()
             }));
             
@@ -446,7 +447,11 @@ const DeveloperDashboard = () => {
                                                                         {update.notes}
                                                                     </div>
                                                                 )}
-                                                                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{update.time}</p>
+                                                                <div className="flex items-center gap-2 flex-wrap">
+                                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{update.time}</p>
+                                                                    <span className="text-[10px] text-slate-300">•</span>
+                                                                    <p className="text-[10px] font-bold text-blue-500 uppercase tracking-tight">by {update.changedBy?.name || 'System'}</p>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     ))}

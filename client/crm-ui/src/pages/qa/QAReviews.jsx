@@ -4,7 +4,7 @@ import Topbar from '../../components/Topbar';
 import { taskService } from '../../api/services';
 import { 
   Search, Filter, Calendar, Paperclip, MessageSquare, 
-  X, ShieldCheck, FileText, CheckCircle2, XCircle, AlertTriangle, Clock
+  X, ShieldCheck, FileText, CheckCircle2, XCircle, AlertTriangle, Clock, Activity
 } from 'lucide-react';
 
 const PRIORITY_COLORS = {
@@ -410,6 +410,27 @@ const QAReviews = () => {
                                         }}
                                     />
                                 </div>
+
+                                {selectedTask.statusHistory && selectedTask.statusHistory.length > 0 && (
+                                    <div className="mt-8">
+                                        <h3 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                            <Activity className="w-4 h-4 text-indigo-500" /> Task Updates
+                                        </h3>
+                                        <div className="space-y-4">
+                                            {selectedTask.statusHistory.slice().reverse().map((h, i) => (
+                                                <div key={i} className="border-l-2 border-slate-100 pl-4 py-1">
+                                                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                        <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{h.status}</span>
+                                                        <span className="text-[10px] text-slate-400 font-bold">{new Date(h.changedAt).toLocaleString()}</span>
+                                                        <span className="text-[10px] text-slate-300">•</span>
+                                                        <span className="text-[10px] text-indigo-500 font-bold">by {h.changedBy?.name || 'System'}</span>
+                                                    </div>
+                                                    {h.notes && <p className="text-xs text-slate-600 italic">"{h.notes}"</p>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between gap-3">
