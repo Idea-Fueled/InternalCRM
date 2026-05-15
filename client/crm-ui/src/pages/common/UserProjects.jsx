@@ -231,11 +231,37 @@ const UserProjects = ({ role = "developer" }) => {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="flex items-center gap-2.5">
-                                                                <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 border border-blue-100">
-                                                                    {task.assignedTo?.name?.charAt(0) || "U"}
+                                                            <div className="flex flex-col gap-2">
+                                                                {/* Developer */}
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center text-[10px] font-bold text-blue-600 border border-blue-100 overflow-hidden shrink-0">
+                                                                        {task.assignedTo?.profilePic ? (
+                                                                            <img src={task.assignedTo.profilePic} alt={task.assignedTo.name} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            task.assignedTo?.name?.charAt(0) || "U"
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex flex-col">
+                                                                        <span className="text-xs font-bold text-slate-700 leading-tight">{task.assignedTo?.name || "Unassigned"}</span>
+                                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Developer</span>
+                                                                    </div>
                                                                 </div>
-                                                                <span className="text-sm font-bold text-slate-600">{task.assignedTo?.name || "Unassigned"}</span>
+                                                                {/* QA */}
+                                                                {task.assignedQA && (
+                                                                    <div className="flex items-center gap-2.5">
+                                                                        <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-600 border border-indigo-100 overflow-hidden shrink-0">
+                                                                            {task.assignedQA.profilePic ? (
+                                                                                <img src={task.assignedQA.profilePic} alt={task.assignedQA.name} className="w-full h-full object-cover" />
+                                                                            ) : (
+                                                                                task.assignedQA.name?.charAt(0) || "Q"
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex flex-col">
+                                                                            <span className="text-xs font-bold text-slate-700 leading-tight">{task.assignedQA.name}</span>
+                                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">QA Reviewer</span>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-right">

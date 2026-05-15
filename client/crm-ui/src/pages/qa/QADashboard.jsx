@@ -336,13 +336,35 @@ const QADashboard = () => {
                                                 <h3 className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">
                                                     {task.taskName}
                                                 </h3>
-                                                <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div className="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold uppercase">
-                                                            {task.assignedTo?.name?.substring(0, 2) || "U"}
+                                                <div className="flex flex-wrap gap-4 mt-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-lg bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold overflow-hidden shrink-0">
+                                                            {task.assignedTo?.profilePic ? (
+                                                                <img src={task.assignedTo.profilePic} alt={task.assignedTo.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                task.assignedTo?.name?.charAt(0) || "U"
+                                                            )}
                                                         </div>
-                                                        <span>{task.assignedTo?.name || "Unassigned"}</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-bold text-slate-700 leading-tight">{task.assignedTo?.name || "Unassigned"}</span>
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Developer</span>
+                                                        </div>
                                                     </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[8px] font-bold overflow-hidden shrink-0">
+                                                            {task.assignedQA?.profilePic ? (
+                                                                <img src={task.assignedQA.profilePic} alt={task.assignedQA.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                task.assignedQA?.name?.charAt(0) || "Q"
+                                                            )}
+                                                        </div>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] font-bold text-slate-700 leading-tight">{task.assignedQA?.name || "Not Assigned"}</span>
+                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">QA Reviewer</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-4 text-xs font-medium text-slate-500 mt-3">
                                                     <div className="flex items-center gap-1">
                                                         <Calendar className="w-3.5 h-3.5" />
                                                         <span>Due {task.endDate ? new Date(task.endDate).toLocaleDateString() : "N/A"}</span>
@@ -462,14 +484,32 @@ const QADashboard = () => {
 
                                 <div className="grid grid-cols-2 gap-4 mb-8">
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Assignee</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Developer</p>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-[9px] font-black">
-                                                {selectedTask.assignedTo?.name?.substring(0,2).toUpperCase() || "U"}
+                                            <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                                {selectedTask.assignedTo?.profilePic ? (
+                                                    <img src={selectedTask.assignedTo.profilePic} alt={selectedTask.assignedTo.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    selectedTask.assignedTo?.name?.charAt(0) || "U"
+                                                )}
                                             </div>
-                                            <span className="text-sm font-bold text-slate-700">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                            <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedTo?.name || "Unassigned"}</span>
                                         </div>
                                     </div>
+                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">QA Reviewer</p>
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                                {selectedTask.assignedQA?.profilePic ? (
+                                                    <img src={selectedTask.assignedQA.profilePic} alt={selectedTask.assignedQA.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    selectedTask.assignedQA?.name?.charAt(0) || "Q"
+                                                )}
+                                            </div>
+                                            <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
+                                        </div>
+                                    </div>
+                                </div>
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Due Date</p>
                                         <span className="text-sm font-bold text-slate-700">{selectedTask.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : "N/A"}</span>

@@ -315,15 +315,33 @@ const TeamLeadProjects = () => {
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                 <div className="flex items-center gap-2.5">
-                                                                    <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200 overflow-hidden">
-                                                                        {task.assigneePic ? (
-                                                                            <img src={task.assigneePic} alt={task.assignee} className="w-full h-full object-cover" />
-                                                                        ) : (
-                                                                            task.assigneeInitial
-                                                                        )}
+                                                                <div className="flex -space-x-3 hover:space-x-1 transition-all duration-300">
+                                                                    {/* Developer */}
+                                                                    <div className="group/avatar relative">
+                                                                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm overflow-hidden">
+                                                                            {task.assignedTo?.profilePic ? (
+                                                                                <img src={task.assignedTo.profilePic} alt={task.assignedTo.name} className="w-full h-full object-cover" />
+                                                                            ) : (
+                                                                                task.assignedTo?.name?.charAt(0) || "D"
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover/avatar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                                                                            Dev: {task.assignedTo?.name || "Unassigned"}
+                                                                        </div>
                                                                     </div>
-                                                                    <span className="text-sm font-medium text-slate-600">{task.assignee}</span>
+                                                                    {/* QA */}
+                                                                    <div className="group/avatar relative">
+                                                                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm overflow-hidden">
+                                                                            {task.assignedQA?.profilePic ? (
+                                                                                <img src={task.assignedQA.profilePic} alt={task.assignedQA.name} className="w-full h-full object-cover" />
+                                                                            ) : (
+                                                                                task.assignedQA?.name?.charAt(0) || "Q"
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-slate-800 text-white text-[10px] rounded opacity-0 group-hover/avatar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                                                                            QA: {task.assignedQA?.name || "Unassigned"}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 text-right">
@@ -412,8 +430,12 @@ const TeamLeadProjects = () => {
                                                     <div className="grid grid-cols-2 gap-3">
                                                         {(selectedProject?.members || []).map((member, i) => (
                                                             <div key={i} className="flex items-center gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-100/50">
-                                                                <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm">
-                                                                    {member.initial}
+                                                                <div className="shrink-0 w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold shadow-sm overflow-hidden">
+                                                                    {member.profilePic ? (
+                                                                        <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        member.initial
+                                                                    )}
                                                                 </div>
                                                                 <span className="text-xs font-bold text-slate-700 truncate">{member.name}</span>
                                                             </div>
@@ -529,8 +551,12 @@ const TeamLeadProjects = () => {
                                         <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
                                             <div className="flex items-center -space-x-2">
                                                 {project.members.map((member, i) => (
-                                                    <div key={i} title={member.name} className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm z-10 relative">
-                                                        {member.initial}
+                                                    <div key={i} title={`${member.name} (${member.role})`} className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm z-10 relative overflow-hidden">
+                                                        {member.profilePic ? (
+                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            member.initial
+                                                        )}
                                                     </div>
                                                 ))}
                                                 <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm z-0 relative ml-1 hover:bg-slate-300 transition-colors">

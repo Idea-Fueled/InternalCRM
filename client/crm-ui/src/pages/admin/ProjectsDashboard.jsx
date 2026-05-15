@@ -324,8 +324,12 @@ const ProjectsDashboard = () => {
 
                                     <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase">
-                                                {leadInitial}
+                                            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase overflow-hidden">
+                                                {project.teamLead?.profilePic ? (
+                                                    <img src={project.teamLead.profilePic} alt={project.teamLead.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    leadInitial
+                                                )}
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Team Lead</span>

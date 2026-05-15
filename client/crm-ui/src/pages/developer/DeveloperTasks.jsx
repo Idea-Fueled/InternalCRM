@@ -51,6 +51,8 @@ const DeveloperTasks = () => {
                 priority: t.priority || "Medium",
                 description: t.description || "",
                 qaNotes: t.qaNotes || "",
+                assignedTo: t.assignedTo,
+                assignedQA: t.assignedQA,
                 updates: (t.statusHistory || []).map(h => ({
                     id: h._id,
                     type: h.status === 'QA Review' ? 'qa' : 'status',
@@ -278,6 +280,35 @@ const DeveloperTasks = () => {
                                         {isOverdue(selectedTask.endDate) && (
                                             <span className="px-2 py-1 bg-rose-100 text-rose-700 text-[10px] font-bold rounded uppercase">Overdue</span>
                                         )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Developer</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                                    {selectedTask.assignedTo?.profilePic ? (
+                                                        <img src={selectedTask.assignedTo.profilePic} alt={selectedTask.assignedTo.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        selectedTask.assignedTo?.name?.charAt(0) || "U"
+                                                    )}
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">QA Reviewer</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
+                                                    {selectedTask.assignedQA?.profilePic ? (
+                                                        <img src={selectedTask.assignedQA.profilePic} alt={selectedTask.assignedQA.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        selectedTask.assignedQA?.name?.charAt(0) || "Q"
+                                                    )}
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

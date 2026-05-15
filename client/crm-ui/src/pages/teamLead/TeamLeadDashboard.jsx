@@ -90,7 +90,8 @@ const TeamLeadDashboard = () => {
                             overdue,
                             status,
                             workload,
-                            color: colors[i % colors.length]
+                            color: colors[i % colors.length],
+                            profilePic: u.profilePic
                         };
                     });
                     setTeamMembers(computedMembers.slice(0, 4)); // Top 4 members
@@ -301,8 +302,12 @@ const TeamLeadDashboard = () => {
                                         <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl ${member.color} text-white flex items-center justify-center font-bold shadow-sm`}>
-                                                        {member.initial}
+                                                    <div className={`w-10 h-10 rounded-xl ${member.color} text-white flex items-center justify-center font-bold shadow-sm overflow-hidden`}>
+                                                        {member.profilePic ? (
+                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            member.initial
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <p className="text-sm font-semibold text-slate-800">{member.name}</p>

@@ -51,6 +51,8 @@ const DeveloperDashboard = () => {
                 priority: t.priority || "Medium",
                 description: t.description || "",
                 qaNotes: t.qaNotes || null,
+                assignedTo: t.assignedTo,
+                assignedQA: t.assignedQA,
                 updates: (t.statusHistory || []).map(h => ({
                     id: h._id,
                     type: h.status === 'QA Review' ? 'qa' : 'status',
@@ -359,7 +361,43 @@ const DeveloperDashboard = () => {
                                                 {selectedTask.status}
                                             </span>
                                             <h3 className="text-xl font-bold text-slate-900 leading-tight mb-2">{selectedTask.taskName}</h3>
-                                            <p className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md inline-block">Project: {selectedTask.project}</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                <p className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-md inline-block">Project: {selectedTask.project}</p>
+                                                {selectedTask.priority && (
+                                                    <p className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-md inline-block border border-amber-100">
+                                                        {selectedTask.priority} Priority
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 mb-6">
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Developer</p>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
+                                                        {selectedTask.assignedTo?.profilePic ? (
+                                                            <img src={selectedTask.assignedTo.profilePic} alt={selectedTask.assignedTo.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            selectedTask.assignedTo?.name?.charAt(0) || "U"
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                                </div>
+                                            </div>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">QA Reviewer</p>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
+                                                        {selectedTask.assignedQA?.profilePic ? (
+                                                            <img src={selectedTask.assignedQA.profilePic} alt={selectedTask.assignedQA.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            selectedTask.assignedQA?.name?.charAt(0) || "Q"
+                                                        )}
+                                                    </div>
+                                                    <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div className="space-y-6">

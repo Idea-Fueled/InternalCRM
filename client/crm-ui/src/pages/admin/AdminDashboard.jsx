@@ -319,8 +319,12 @@ const AdminDashboard = () => {
                                         recentTasks.map((task, i) => (
                                             <div key={task._id || i} className="flex gap-4 text-sm relative">
                                                 {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100"></div>}
-                                                <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase`}>
-                                                    {task.assignedBy?.name?.charAt(0) || task.taskName.charAt(0)}
+                                                <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase overflow-hidden`}>
+                                                    {task.assignedBy?.profilePic ? (
+                                                        <img src={task.assignedBy.profilePic} alt={task.assignedBy.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        task.assignedBy?.name?.charAt(0) || task.taskName.charAt(0)
+                                                    )}
                                                 </div>
                                                 <div className="pt-0.5">
                                                     <p className="text-slate-600 leading-snug">
