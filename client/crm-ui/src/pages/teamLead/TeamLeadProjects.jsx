@@ -203,7 +203,8 @@ const TeamLeadProjects = () => {
                                     <div className="mb-4">
                                         <h1 className="dashboard-heading">{selectedProject.name}</h1>
                                     </div>
-                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                                    <div className="flex items-center gap-3">
+                                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                                             selectedProject.status === 'Active' ? 'bg-blue-100 text-blue-700' :
                                             selectedProject.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
                                             'bg-rose-100 text-rose-700'
@@ -211,7 +212,7 @@ const TeamLeadProjects = () => {
                                             {selectedProject.status}
                                         </span>
                                     </div>
-                                    <p className="text-slate-500 max-w-2xl text-sm md:text-base leading-relaxed">{selectedProject.description}</p>
+                                    <p className="text-slate-500 max-w-2xl text-sm md:text-base leading-relaxed mt-4">{selectedProject.description}</p>
                                 </div>
                             </div>
 
