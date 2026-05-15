@@ -11,6 +11,8 @@ const ReportsDashboard = () => {
     const [users, setUsers] = useState([]);
     const [projects, setProjects] = useState([]);
     const [selectedProjectId, setSelectedProjectId] = useState("All");
+    const [fromDate, setFromDate] = useState("2026-04-01");
+    const [toDate, setToDate] = useState("2026-05-31");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -33,9 +35,25 @@ const ReportsDashboard = () => {
         fetchData();
     }, []);
 
-    const filteredTasks = selectedProjectId === "All" 
-        ? tasks 
-        : tasks.filter(t => t.project?._id === selectedProjectId);
+    const filteredTasks = tasks.filter(t => {
+        const matchesProject = selectedProjectId === "All" || t.project?._id === selectedProjectId;
+        if (!matchesProject) return false;
+
+        const taskDate = t.updatedAt ? new Date(t.updatedAt) : new Date();
+        const from = fromDate ? new Date(fromDate) : null;
+        const to = toDate ? new Date(toDate) : null;
+
+        if (from) {
+            from.setHours(0, 0, 0, 0);
+            if (taskDate < from) return false;
+        }
+        if (to) {
+            to.setHours(23, 59, 59, 999);
+            if (taskDate > to) return false;
+        }
+
+        return true;
+    });
 
     const insights = [
         { label: "New", value: filteredTasks.filter(t => t.status === "New").length, color: "text-slate-500", bg: "bg-slate-100", dot: "bg-slate-400" },
@@ -46,28 +64,39 @@ const ReportsDashboard = () => {
         { label: "Overdue", value: filteredTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length, color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" }
     ];
 
-    const developers = users.filter(u => u.role === "developer").map(dev => {
-        const devTasks = tasks.filter(t => t.assignedTo?._id === dev._id);
-        const completed = devTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
-        const total = devTasks.length;
-        const performance = total > 0 ? Math.round((completed / total) * 100) : 0;
-        const overdue = devTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
-        
-        return {
-            name: dev.name,
-            initials: dev.name?.charAt(0) || "U",
-            role: "Developer",
-            total,
-            completed,
-            overdue,
-            performance,
-            lastActivity: "Active",
-            color: "bg-indigo-100 text-indigo-700",
-            profilePic: dev.profilePic
-        };
-    });
-
     const activeProject = selectedProjectId === "All" ? projects[0] : projects.find(p => p._id === selectedProjectId);
+
+    const developers = users
+        .filter(u => {
+            if (u.role !== "developer") return false;
+            if (selectedProjectId === "All") return true;
+            // Show if user is in project team or has tasks in this project
+            const isMember = activeProject?.teamMembers?.some(m => (m._id || m) === u._id);
+            const hasTasks = tasks.some(t => t.project?._id === selectedProjectId && t.assignedTo?._id === u._id);
+            return isMember || hasTasks;
+        })
+        .map(dev => {
+            const devTasks = filteredTasks.filter(t => t.assignedTo?._id === dev._id);
+            const completed = devTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
+            const total = devTasks.length;
+            const performance = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const overdue = devTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
+            
+            return {
+                name: dev.name,
+                initials: dev.name?.charAt(0) || "U",
+                role: "Developer",
+                total,
+                completed,
+                overdue,
+                performance,
+                firstTask: devTasks.length > 0 ? "Assigned" : "-",
+                lastActivity: devTasks.length > 0 ? "Active" : "Idle",
+                color: "bg-indigo-100 text-indigo-700",
+                profilePic: dev.profilePic
+            };
+        });
+
     const projectReport = activeProject ? {
         name: activeProject.projectName,
         lead: activeProject.teamLead?.name || "Unassigned",
@@ -80,7 +109,7 @@ const ReportsDashboard = () => {
             : 0
     } : null;
 
-    const activities = tasks.slice(0, 10).map(t => ({
+    const activities = filteredTasks.slice(0, 10).map(t => ({
         id: t._id,
         user: { 
             name: t.assignedTo?.name || "System", 
@@ -185,11 +214,21 @@ const ReportsDashboard = () => {
                         </div>
                         <div className="flex-1 min-w-[200px]">
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">From Date</label>
-                            <input type="date" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer" defaultValue="2026-04-01" />
+                            <input 
+                                type="date" 
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer" 
+                                value={fromDate}
+                                onChange={(e) => setFromDate(e.target.value)}
+                            />
                         </div>
                         <div className="flex-1 min-w-[200px]">
                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">To Date</label>
-                            <input type="date" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer" defaultValue="2026-05-01" />
+                            <input 
+                                type="date" 
+                                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer" 
+                                value={toDate}
+                                onChange={(e) => setToDate(e.target.value)}
+                            />
                         </div>
                         <div className="flex-none pt-6 w-full lg:w-auto">
                             <button className="w-full lg:w-auto px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
