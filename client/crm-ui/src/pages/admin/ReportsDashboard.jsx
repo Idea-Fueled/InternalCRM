@@ -90,7 +90,7 @@ const ReportsDashboard = () => {
         },
         task: t.taskName,
         action: t.status,
-        note: t.description?.substring(0, 50) + "...",
+        note: t.description || "-",
         file: t.attachments?.length > 0 ? `${t.attachments.length} files` : "-",
         time: t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "N/A"
     }));
@@ -407,10 +407,10 @@ const ReportsDashboard = () => {
                                                                 act.user.initials
                                                             )}
                                                         </div>
-                                                        <span className="font-bold text-slate-700 text-sm group-hover:text-blue-600 transition-colors whitespace-nowrap">{act.user.name}</span>
+                                                        <span className="font-bold text-slate-700 text-sm group-hover:text-blue-600 transition-colors">{act.user.name}</span>
                                                     </div>
                                                 </td>
-                                                <td className="p-4 font-bold text-sm text-slate-800 whitespace-nowrap">{act.task}</td>
+                                                <td className="p-4 font-bold text-sm text-slate-800">{act.task}</td>
                                                 <td className="p-4">
                                                     <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${
                                                         act.action.includes('QA') ? 'bg-amber-50 text-amber-600 border-amber-100' :
@@ -421,7 +421,7 @@ const ReportsDashboard = () => {
                                                         {act.action}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-sm text-slate-500 font-medium max-w-xs truncate" title={act.note}>{act.note}</td>
+                                                <td className="p-4 text-sm text-slate-500 font-medium min-w-[200px]" title={act.note}>{act.note}</td>
                                                 <td className="p-4">
                                                     {act.file !== "-" ? (
                                                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg cursor-pointer hover:bg-slate-200 transition-colors whitespace-nowrap">
