@@ -112,12 +112,20 @@ export const getAllTasks = async (req, res) => {
         const { role, _id } = req.user;
         let query = { isDeleted: false };
 
-        // If not admin or TL, only show tasks assigned to them
-        if (role !== "admin" && role !== "TL") {
+        // If not admin, only show tasks related to the user
+        if (role !== "admin") {
             const orConditions = [
                 { assignedTo: _id },
                 { assignedQA: _id }
             ];
+
+            // If TL, also show tasks for projects they lead
+            if (role === "TL") {
+                const Project = (await import("../models/project.schema.js")).default;
+                const ledProjects = await Project.find({ teamLead: _id, isDeleted: false });
+                const ledProjectIds = ledProjects.map(p => p._id);
+                orConditions.push({ project: { $in: ledProjectIds } });
+            }
 
             // If QA, also show all tasks in QA Review status so they can see the queue
             if (role === "qa") {
