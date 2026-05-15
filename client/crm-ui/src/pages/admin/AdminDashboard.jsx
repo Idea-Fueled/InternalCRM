@@ -62,7 +62,19 @@ const AdminDashboard = () => {
             
             setDashboardData(dashRes.data.data);
             setProjects(projRes.data.projects || []);
-            setUsers(userRes.data.data || []);
+            
+            const allUsers = userRes.data.data || [];
+            const allTasks = taskRes.data.tasks || [];
+            
+            const usersWithWorkload = allUsers.map(u => {
+                const activeTasks = allTasks.filter(t => 
+                    (t.assignedTo?._id === u._id || t.assignedTo === u._id) && 
+                    !["Completed", "Done"].includes(t.status)
+                );
+                return { ...u, activeTaskCount: activeTasks.length };
+            });
+            
+            setUsers(usersWithWorkload);
             
             // Sort tasks by most recently created
             const sortedTasks = (taskRes.data.tasks || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -260,8 +272,9 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="divide-y divide-slate-100 flex-1">
                                     {users.filter(u => u.role !== "admin").slice(0, 5).map((member, i) => {
-                                        const isBusy = member.status === "busy"; 
-                                        const status = isBusy ? "Busy" : "Available";
+                                        const taskCount = member.activeTaskCount || 0;
+                                        const isBusy = taskCount > 0;
+                                        const statusText = isBusy ? `Busy - ${taskCount} ${taskCount === 1 ? 'task' : 'tasks'}` : "Available - No tasks yet";
                                         const statusColor = isBusy ? "bg-red-500" : "bg-emerald-500";
                                         
                                         return (
@@ -279,7 +292,7 @@ const AdminDashboard = () => {
                                                 </div>
                                                 <div>
                                                     <h4 className="text-sm font-bold text-slate-800">{member.name}</h4>
-                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.role} <span className="mx-1">•</span> <span className="text-slate-400">{status}</span></p>
+                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.role} <span className="mx-1">•</span> <span className="text-slate-400">{statusText}</span></p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
