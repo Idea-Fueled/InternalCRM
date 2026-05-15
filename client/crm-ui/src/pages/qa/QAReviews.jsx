@@ -349,7 +349,8 @@ const QAReviews = () => {
                                             <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                </div>
+                                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 mb-8">
                                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Due Date</p>
                                         <span className={`text-sm font-bold ${isOverdue(selectedTask.endDate) ? 'text-rose-600' : 'text-slate-700'}`}>{selectedTask.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : "N/A"}</span>
                                     </div>
