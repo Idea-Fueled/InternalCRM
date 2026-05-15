@@ -514,7 +514,6 @@ const QADashboard = () => {
                                         <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Due Date</p>
                                         <span className="text-sm font-bold text-slate-700">{selectedTask.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : "N/A"}</span>
                                     </div>
-                                </div>
 
                                 <div className="mb-8">
                                     <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
