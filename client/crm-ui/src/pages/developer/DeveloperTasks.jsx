@@ -58,7 +58,8 @@ const DeveloperTasks = () => {
                     type: h.status === 'QA Review' ? 'qa' : 'status',
                     status: h.status,
                     notes: h.notes,
-                    time: new Date(h.changedAt).toLocaleString()
+                    time: new Date(h.changedAt).toLocaleString(),
+                    changedBy: h.changedBy
                 })).reverse()
             }));
             setTasks(formattedTasks);
@@ -345,9 +346,10 @@ const DeveloperTasks = () => {
                                                         )}
                                                     </div>
                                                     <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex items-center gap-2 flex-wrap">
                                                             <p className="text-sm font-bold text-slate-700">{update.status}</p>
                                                             {!update.notes && <p className="text-sm text-slate-400 font-medium">— No notes</p>}
+                                                            <span className="text-[10px] font-bold text-blue-500 ml-auto bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">by {update.changedBy?.name || 'System'}</span>
                                                         </div>
                                                         {update.notes && (
                                                             <div className={`mt-1.5 p-3 rounded-xl text-sm leading-relaxed ${

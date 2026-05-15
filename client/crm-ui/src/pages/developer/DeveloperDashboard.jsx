@@ -434,9 +434,10 @@ const DeveloperDashboard = () => {
                                                                 {update.type === 'assignment' && <Star className="w-4 h-4 text-amber-400" />}
                                                             </div>
                                                             <div>
-                                                                <div className="flex items-center gap-2">
+                                                                <div className="flex items-center gap-2 flex-wrap">
                                                                     <p className="text-sm font-bold text-slate-700">{update.status}</p>
                                                                     {!update.notes && <p className="text-sm text-slate-400 font-medium">— No notes</p>}
+                                                                    <span className="text-[10px] font-bold text-blue-500 ml-auto bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">by {update.changedBy?.name || 'System'}</span>
                                                                 </div>
                                                                 {update.notes && (
                                                                     <div className={`mt-1.5 p-3 rounded-xl text-sm leading-relaxed ${
@@ -447,11 +448,7 @@ const DeveloperDashboard = () => {
                                                                         {update.notes}
                                                                     </div>
                                                                 )}
-                                                                <div className="flex items-center gap-2 flex-wrap">
-                                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{update.time}</p>
-                                                                    <span className="text-[10px] text-slate-300">•</span>
-                                                                    <p className="text-[10px] font-bold text-blue-500 uppercase tracking-tight">by {update.changedBy?.name || 'System'}</p>
-                                                                </div>
+                                                                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{update.time}</p>
                                                             </div>
                                                         </div>
                                                     ))}
