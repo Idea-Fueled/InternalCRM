@@ -50,7 +50,8 @@ const AdminDashboard = () => {
         teamLead: "",
         startDate: "",
         endDate: "",
-        teamMembers: []
+        teamMembers: [],
+        attachment: null
     });
     const [isCreating, setIsCreating] = useState(false);
 
@@ -125,7 +126,18 @@ const AdminDashboard = () => {
         e.preventDefault();
         try {
             setIsCreating(true);
-            await projectService.createProject(newProject);
+            const formData = new FormData();
+            formData.append("projectName", newProject.projectName);
+            formData.append("description", newProject.description);
+            formData.append("teamLead", newProject.teamLead);
+            formData.append("startDate", newProject.startDate);
+            formData.append("endDate", newProject.endDate);
+            formData.append("teamMembers", JSON.stringify(newProject.teamMembers));
+            if (newProject.attachment) {
+                formData.append("attachment", newProject.attachment);
+            }
+
+            await projectService.createProject(formData);
             toast.success("Project created successfully");
             setIsProjectModalOpen(false);
             setNewProject({
@@ -134,7 +146,8 @@ const AdminDashboard = () => {
                 teamLead: "",
                 startDate: "",
                 endDate: "",
-                teamMembers: []
+                teamMembers: [],
+                attachment: null
             });
             fetchData();
         } catch (err) {
@@ -464,6 +477,14 @@ const AdminDashboard = () => {
                                             </label>
                                         ))}
                                     </div>
+                                </div>
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Attachment (Optional)</label>
+                                    <input 
+                                        type="file" 
+                                        onChange={(e) => setNewProject({...newProject, attachment: e.target.files[0]})}
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition font-medium text-slate-700 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
+                                    />
                                 </div>
                             </div>
                             <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
