@@ -407,60 +407,66 @@ const UserProjects = ({ role = "developer" }) => {
                         <div className="flex items-center gap-3">
                             <button 
                                 onClick={handleExportProjects}
-                                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition shadow-sm"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 transition shadow-sm"
                             >
                                 <Download className="w-4 h-4" />
                                 Download Report
                             </button>
-                            <div className="flex flex-wrap items-center gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-200/60">
-                                <button onClick={() => setSelectedStatus("All")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>All</button>
-                                <button onClick={() => setSelectedStatus("Upcoming")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Upcoming' ? 'bg-purple-600 text-white shadow-md shadow-purple-200' : 'text-slate-500 hover:bg-slate-50'}`}>Upcoming</button>
-                                <button onClick={() => setSelectedStatus("In Progress")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'In Progress' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>In Progress</button>
-                                <button onClick={() => setSelectedStatus("Completed")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Completed' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>Completed</button>
-                                <button onClick={() => setSelectedStatus("Overdue")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Overdue' ? 'bg-rose-600 text-white shadow-md shadow-rose-200' : 'text-slate-500 hover:bg-slate-50'}`}>Overdue</button>
-                            </div>
                         </div>
                     </div>
 
-                    <div className="flex flex-col lg:flex-row gap-4">
-                        <div className="relative flex-1">
-                            <input 
-                                type="text" 
-                                placeholder="Search your projects..."
-                                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/60 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition font-medium"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <div className="flex flex-col gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60">
+                        {/* Top Row: Search and Dates */}
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div className="relative flex-1 lg:max-w-md">
+                                <input 
+                                    type="text" 
+                                    placeholder="Search your projects..."
+                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition font-medium text-sm placeholder-slate-400"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                <Search className="absolute left-3 top-3 text-slate-400 w-5 h-5" />
+                            </div>
+                            
+                            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full lg:w-auto overflow-x-auto hide-scrollbar">
+                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 shrink-0">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</span>
+                                    <input 
+                                        type="date" 
+                                        className="bg-transparent border-none outline-none text-slate-700 text-xs font-semibold cursor-pointer w-[110px]"
+                                        value={fromDateFilter}
+                                        onChange={(e) => setFromDateFilter(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 shrink-0">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</span>
+                                    <input 
+                                        type="date" 
+                                        className="bg-transparent border-none outline-none text-slate-700 text-xs font-semibold cursor-pointer w-[110px]"
+                                        value={toDateFilter}
+                                        onChange={(e) => setToDateFilter(e.target.value)}
+                                    />
+                                </div>
+                                {(fromDateFilter || toDateFilter) && (
+                                    <button 
+                                        onClick={() => { setFromDateFilter(""); setToDateFilter(""); }}
+                                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors flex items-center justify-center shrink-0"
+                                        title="Clear dates"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-2 bg-white border border-slate-200/60 rounded-2xl px-4 py-3 shadow-sm h-full">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</span>
-                                <input 
-                                    type="date" 
-                                    className="bg-transparent border-none outline-none text-slate-700 text-xs font-semibold cursor-pointer w-[110px]"
-                                    value={fromDateFilter}
-                                    onChange={(e) => setFromDateFilter(e.target.value)}
-                                />
-                            </div>
-                            <div className="flex items-center gap-2 bg-white border border-slate-200/60 rounded-2xl px-4 py-3 shadow-sm h-full">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</span>
-                                <input 
-                                    type="date" 
-                                    className="bg-transparent border-none outline-none text-slate-700 text-xs font-semibold cursor-pointer w-[110px]"
-                                    value={toDateFilter}
-                                    onChange={(e) => setToDateFilter(e.target.value)}
-                                />
-                            </div>
-                            {(fromDateFilter || toDateFilter) && (
-                                <button 
-                                    onClick={() => { setFromDateFilter(""); setToDateFilter(""); }}
-                                    className="p-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-colors bg-white border border-slate-200/60 shadow-sm h-full flex items-center justify-center"
-                                    title="Clear dates"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            )}
+
+                        {/* Bottom Row: Tabs */}
+                        <div className="flex items-center gap-2 border-t border-slate-100 pt-3 overflow-x-auto hide-scrollbar">
+                            <button onClick={() => setSelectedStatus("All")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${selectedStatus === 'All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>All Projects</button>
+                            <button onClick={() => setSelectedStatus("Upcoming")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${selectedStatus === 'Upcoming' ? 'bg-purple-600 text-white shadow-md shadow-purple-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>Upcoming</button>
+                            <button onClick={() => setSelectedStatus("In Progress")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${selectedStatus === 'In Progress' ? 'bg-blue-500 text-white shadow-md shadow-blue-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>In Progress</button>
+                            <button onClick={() => setSelectedStatus("Completed")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${selectedStatus === 'Completed' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>Completed</button>
+                            <button onClick={() => setSelectedStatus("Overdue")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${selectedStatus === 'Overdue' ? 'bg-rose-500 text-white shadow-md shadow-rose-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>Overdue</button>
                         </div>
                     </div>
 
