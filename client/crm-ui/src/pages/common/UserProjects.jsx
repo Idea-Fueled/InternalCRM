@@ -471,16 +471,25 @@ const UserProjects = ({ role = "developer" }) => {
                                 if (deadline) deadline.setHours(0, 0, 0, 0);
 
                                 let bgClass = "bg-white hover:shadow-blue-900/5 border-slate-200/60";
+                                let timelineTag = "In Progress";
+                                let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
+
                                 if (p.status === "Completed" || p.status === "Done") {
                                     bgClass = "bg-emerald-50 border-emerald-200 hover:shadow-emerald-900/10";
+                                    timelineTag = "Completed";
+                                    timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
                                 } else if (deadline) {
                                     const timeDiff = deadline.getTime() - currentDate.getTime();
                                     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
                                     
                                     if (daysDiff < 0) {
                                         bgClass = "bg-rose-50 border-rose-200 hover:shadow-rose-900/10";
+                                        timelineTag = "Overdue";
+                                        timelineClass = "bg-rose-100 text-rose-700 border-rose-200";
                                     } else if (daysDiff <= 3) {
                                         bgClass = "bg-orange-50 border-orange-200 hover:shadow-orange-900/10";
+                                        timelineTag = "Upcoming";
+                                        timelineClass = "bg-orange-100 text-orange-700 border-orange-200";
                                     }
                                 }
 
@@ -497,11 +506,16 @@ const UserProjects = ({ role = "developer" }) => {
                                             <div className={`p-3 rounded-2xl ${p.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'} transition-colors group-hover:bg-white group-hover:shadow-lg`}>
                                                 <LayoutList className="w-6 h-6" />
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
-                                                p.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                                            }`}>
-                                                {p.status}
-                                            </span>
+                                            <div className="flex flex-wrap gap-2 items-center">
+                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
+                                                    p.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
+                                                }`}>
+                                                    {p.status}
+                                                </span>
+                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${timelineClass}`}>
+                                                    {timelineTag}
+                                                </span>
+                                            </div>
                                         </div>
 
                                         <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1">{p.name}</h3>

@@ -359,16 +359,25 @@ const ProjectsDashboard = () => {
                                 if (deadline) deadline.setHours(0, 0, 0, 0);
 
                                 let bgClass = "bg-white hover:border-blue-300 border-slate-200/60";
+                                let timelineTag = "In Progress";
+                                let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
+
                                 if (project.status === "Completed" || project.status === "Done") {
                                     bgClass = "bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:shadow-emerald-100/50";
+                                    timelineTag = "Completed";
+                                    timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
                                 } else if (deadline) {
                                     const timeDiff = deadline.getTime() - currentDate.getTime();
                                     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
                                     
                                     if (daysDiff < 0) {
                                         bgClass = "bg-rose-50 border-rose-200 hover:border-rose-400 hover:shadow-rose-100/50";
+                                        timelineTag = "Overdue";
+                                        timelineClass = "bg-rose-100 text-rose-700 border-rose-200";
                                     } else if (daysDiff <= 3) {
                                         bgClass = "bg-orange-50 border-orange-200 hover:border-orange-400 hover:shadow-orange-100/50";
+                                        timelineTag = "Upcoming";
+                                        timelineClass = "bg-orange-100 text-orange-700 border-orange-200";
                                     }
                                 }
 
@@ -412,13 +421,18 @@ const ProjectsDashboard = () => {
                                     {/* Middle 2: Stats & Progress */}
                                     <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
                                         <div className="flex items-center justify-between">
-                                            <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
-                                                project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                'bg-slate-50 text-slate-500 border-slate-200'
-                                            }`}>
-                                                {project.status}
-                                            </span>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
+                                                    project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                    project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                    'bg-slate-50 text-slate-500 border-slate-200'
+                                                }`}>
+                                                    {project.status}
+                                                </span>
+                                                <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${timelineClass}`}>
+                                                    {timelineTag}
+                                                </span>
+                                            </div>
                                             
                                             <div className="flex items-center gap-3 text-xs">
                                                 <span className="flex items-center gap-1.5 font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">
