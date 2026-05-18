@@ -750,21 +750,21 @@ const EmployeesDashboard = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Email</p>
-                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.email}</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 break-all">{selectedEmployee.email}</p>
                                 </div>
                                 {selectedEmployee.role !== 'admin' && (
                                     <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Team Lead</p>
-                                        <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.lead}</p>
+                                        <p className="text-[12px] font-semibold text-slate-600 break-words leading-snug">{selectedEmployee.lead}</p>
                                     </div>
                                 )}
                                 <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Department</p>
-                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.dept}</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 break-words leading-snug">{selectedEmployee.dept}</p>
                                 </div>
                                 <div className="p-3 bg-slate-50/30 border border-slate-100 rounded-[12px]">
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">Joined</p>
-                                    <p className="text-[12px] font-semibold text-slate-600 truncate">{selectedEmployee.joinedDate}</p>
+                                    <p className="text-[12px] font-semibold text-slate-600 break-words leading-snug">{selectedEmployee.joinedDate}</p>
                                 </div>
                             </div>
 
