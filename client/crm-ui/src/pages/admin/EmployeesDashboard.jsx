@@ -770,19 +770,43 @@ const EmployeesDashboard = () => {
 
                             {selectedEmployee.role !== 'admin' && (
                                 <>
-                                    {/* Quick Stats Grid - Improved Spacing */}
-                                    <div className="grid grid-cols-3 gap-3">
-                                        <div className="premium-stat-card blue !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                    {/* Quick Stats Stack - Row by Row */}
+                                    <div className="flex flex-col gap-3">
+                                        <div 
+                                            onClick={() => setStatModal({ isOpen: true, title: `${selectedEmployee.name} - Total Tasks`, data: selectedEmployee.tasks.list, type: "task" })}
+                                            className="premium-stat-card blue !p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                                    <ClipboardList className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em]">Total Tasks</span>
+                                            </div>
                                             <span className="text-xl font-black text-blue-600 leading-none">{selectedEmployee.tasks.total}</span>
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Total Tasks</span>
                                         </div>
-                                        <div className="premium-stat-card emerald !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                        <div 
+                                            onClick={() => setStatModal({ isOpen: true, title: `${selectedEmployee.name} - Completed Tasks`, data: selectedEmployee.tasks.list?.filter(t => t.status === 'Completed' || t.status === 'Done'), type: "task" })}
+                                            className="premium-stat-card emerald !p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                                    <CheckCircle className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em]">Completed</span>
+                                            </div>
                                             <span className="text-xl font-black text-emerald-600 leading-none">{selectedEmployee.tasks.done}</span>
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Completed</span>
                                         </div>
-                                        <div className="premium-stat-card rose !p-4 flex flex-col items-center justify-center min-h-[85px]">
+                                        <div 
+                                            onClick={() => setStatModal({ isOpen: true, title: `${selectedEmployee.name} - Overdue Tasks`, data: selectedEmployee.tasks.list?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== 'Completed' && t.status !== 'Done'), type: "task" })}
+                                            className="premium-stat-card rose !p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                                                    <AlertCircle className="w-4 h-4" />
+                                                </div>
+                                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em]">Overdue</span>
+                                            </div>
                                             <span className="text-xl font-black text-rose-600 leading-none">{selectedEmployee.tasks.overdue}</span>
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em] mt-2">Overdue</span>
                                         </div>
                                     </div>
 
