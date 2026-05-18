@@ -133,10 +133,6 @@ const TeamLeadTeam = () => {
                                 <Download className="w-4 h-4 mr-2" />
                                 Export PDF
                             </button>
-                            <button className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200">
-                                <Users className="w-4 h-4 mr-2" />
-                                Invite Member
-                            </button>
                         </div>
                     </div>
 
