@@ -1,8 +1,8 @@
 import React from 'react';
-import UserProjects from '../common/UserProjects';
+import ProjectsDashboard from '../admin/ProjectsDashboard';
 
 const DeveloperProjects = () => {
-    return <UserProjects role="developer" />;
+    return <ProjectsDashboard />;
 };
 
 export default DeveloperProjects;

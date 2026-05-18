@@ -7,10 +7,14 @@ import Topbar from "../../components/Topbar";
 import { exportPDF } from "../../utils/pdfExport";
 import { 
     Download, Trash2, Edit3, Briefcase, 
-    Calendar, Users, MoreVertical, Layout, Search, Filter, X 
+    Calendar, Users, MoreVertical, Layout, LayoutList, LayoutGrid, Search, Filter, X 
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 const ProjectsDashboard = () => {
+    const { user } = useAuth();
+    const role = user?.role || 'admin';
+    const [viewType, setViewType] = useState("list");
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -304,17 +308,21 @@ const ProjectsDashboard = () => {
                             <p className="dashboard-subheading">Manage and track all ongoing project lifecycles across teams.</p>
                         </div>
                         <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <button 
-                                onClick={handleExport} 
-                                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
-                            >
-                                <Download className="w-4 h-4" />
-                                Export
-                            </button>
-                            <button onClick={() => setIsModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
-                                New Project
-                            </button>
+                            {role === 'admin' && (
+                                <>
+                                    <button 
+                                        onClick={handleExport} 
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Export
+                                    </button>
+                                    <button onClick={() => setIsModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                                        New Project
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -366,13 +374,39 @@ const ProjectsDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Bottom Row: Tabs */}
-                        <div className="flex items-center gap-2 border-t border-slate-100 pt-3 overflow-x-auto hide-scrollbar">
-                            <button onClick={() => setStatusFilter("All")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${statusFilter === 'All' || statusFilter === 'Status: All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>All Projects</button>
-                            <button onClick={() => setStatusFilter("Upcoming")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${statusFilter === 'Upcoming' ? 'bg-purple-600 text-white shadow-md shadow-purple-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>Upcoming</button>
-                            <button onClick={() => setStatusFilter("In Progress")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${statusFilter === 'In Progress' ? 'bg-blue-500 text-white shadow-md shadow-blue-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>In Progress</button>
-                            <button onClick={() => setStatusFilter("Completed")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${statusFilter === 'Completed' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>Completed</button>
-                            <button onClick={() => setStatusFilter("Overdue")} className={`px-5 py-2 text-xs font-bold rounded-xl transition whitespace-nowrap ${statusFilter === 'Overdue' ? 'bg-rose-500 text-white shadow-md shadow-rose-200' : 'bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-100'}`}>Overdue</button>
+                        {/* Bottom Row: Status Tabs & View Toggle */}
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {["Status: All", "Upcoming", "In Progress", "Completed", "Overdue"].map((status) => (
+                                    <button
+                                        key={status}
+                                        onClick={() => setStatusFilter(status)}
+                                        className={`px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wide uppercase transition-all ${
+                                            statusFilter === status 
+                                                ? "bg-blue-600 text-white shadow-md shadow-blue-200" 
+                                                : "bg-slate-50 text-slate-500 hover:bg-slate-100"
+                                        }`}
+                                    >
+                                        {status === "Status: All" ? "All Projects" : status}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex bg-slate-50 border border-slate-200 rounded-xl overflow-hidden p-0.5 shadow-sm">
+                                <button 
+                                    onClick={() => setViewType("list")} 
+                                    className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${viewType === "list" ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`} 
+                                    title="List View"
+                                >
+                                    <LayoutList className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={() => setViewType("card")} 
+                                    className={`p-1.5 rounded-lg flex items-center justify-center transition-colors ${viewType === "card" ? "bg-white text-blue-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`} 
+                                    title="Card View"
+                                >
+                                    <LayoutGrid className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -385,7 +419,7 @@ const ProjectsDashboard = () => {
                             {error}
                         </div>
                     ) : (
-                    <div className="space-y-3">
+                    <div className={viewType === "list" ? "space-y-3" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}>
                         {/* Projects List (Card-Table Hybrid) */}
                         {filteredProjects.length === 0 ? (
                             <div className="bg-white rounded-2xl p-20 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm opacity-60">
@@ -443,10 +477,69 @@ const ProjectsDashboard = () => {
                                     }
                                 }
 
-                                return (
+                                return viewType === "card" ? (
+                                    <div 
+                                        key={project._id || i} 
+                                        onClick={() => {
+                                            const routeBase = role === 'TL' ? 'teamLead' : role;
+                                            navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                        }}
+                                        className={`group rounded-3xl p-6 flex flex-col gap-5 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex flex-col gap-1.5">
+                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-fit">{project._id.slice(-6).toUpperCase()}</span>
+                                                <h3 className="text-lg font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
+                                            </div>
+                                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border whitespace-nowrap ${
+                                                project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                'bg-slate-50 text-slate-500 border-slate-200'
+                                            }`}>
+                                                {project.status}
+                                            </span>
+                                        </div>
+
+                                        <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed">{project.description}</p>
+
+                                        <div className="flex items-center gap-3 mt-auto pt-4 border-t border-slate-100">
+                                            <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase overflow-hidden shrink-0">
+                                                {project.teamLead?.profilePic ? (
+                                                    <img src={project.teamLead.profilePic} alt={project.teamLead.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    leadInitial
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col flex-1 overflow-hidden">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Team Lead</span>
+                                                <span className="text-sm font-semibold text-slate-700 truncate">{leadName}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-lg">
+                                                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                <span className="text-xs font-bold text-slate-600">{membersCount}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="w-full">
+                                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
+                                                <span>PROGRESS</span>
+                                                <span>{progress}%</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                                <div 
+                                                    className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                                                    style={{ width: `${progress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
                                 <div 
                                     key={project._id || i} 
-                                    onClick={() => navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`)}
+                                    onClick={() => {
+                                        const routeBase = role === 'TL' ? 'teamLead' : role;
+                                        navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                    }}
                                     className={`group rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
                                 >
                                     
@@ -558,24 +651,29 @@ const ProjectsDashboard = () => {
                                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
                                                 </a>
                                             )}
-                                            <button 
-                                                onClick={(e) => handleEditProject(project, e)}
-                                                className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Edit Project"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            </button>
-                                            <button 
-                                                onClick={(e) => handleDeleteProject(project._id, e)}
-                                                className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Delete Project"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
+                                            {role === 'admin' && (
+                                                <>
+                                                    <button 
+                                                        onClick={(e) => handleEditProject(project, e)}
+                                                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Edit Project"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => handleDeleteProject(project._id, e)}
+                                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete Project"
+                                                    >
+                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                </>
+                                            )}
                                             <button 
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                                    const routeBase = role === 'TL' ? 'teamLead' : role;
+                                                    navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
                                                 }}
                                                 className="px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5"
                                             >
