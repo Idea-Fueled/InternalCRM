@@ -770,73 +770,82 @@ const EmployeesDashboard = () => {
 
                             {selectedEmployee.role !== 'admin' && (
                                 <>
-                                    {/* Quick Stats Stack - Row by Row */}
+                                    {/* Detailed Tasks Breakdown */}
                                     <div className="flex flex-col gap-3">
-                                        <div 
-                                            onClick={() => setStatModal({ isOpen: true, title: `${selectedEmployee.name} - Total Tasks`, data: selectedEmployee.tasks.list, type: "task" })}
-                                            className="premium-stat-card blue !p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                                    <ClipboardList className="w-4 h-4" />
+                                        {/* Overdue Tasks */}
+                                        <div className="bg-rose-50/30 border border-rose-100 rounded-[16px] overflow-hidden">
+                                            <div className="p-4 flex items-center justify-between border-b border-rose-100/50 bg-white/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shadow-sm">
+                                                        <AlertCircle className="w-4 h-4" />
+                                                    </div>
+                                                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.1em]">Overdue Tasks</span>
                                                 </div>
-                                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em]">Total Tasks</span>
+                                                <span className="text-xl font-black text-rose-600 leading-none">{selectedEmployee.tasks.overdue}</span>
                                             </div>
-                                            <span className="text-xl font-black text-blue-600 leading-none">{selectedEmployee.tasks.total}</span>
-                                        </div>
-                                        <div 
-                                            onClick={() => setStatModal({ isOpen: true, title: `${selectedEmployee.name} - Completed Tasks`, data: selectedEmployee.tasks.list?.filter(t => t.status === 'Completed' || t.status === 'Done'), type: "task" })}
-                                            className="premium-stat-card emerald !p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                                    <CheckCircle className="w-4 h-4" />
+                                            {selectedEmployee.tasks.overdue > 0 && (
+                                                <div className="p-3 bg-rose-50/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+                                                    {selectedEmployee.tasks.list?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== 'Completed' && t.status !== 'Done').map((task, idx) => (
+                                                        <div key={idx} className="p-3 bg-white border border-rose-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-rose-300 hover:shadow-md">
+                                                            <span className="text-sm font-bold text-slate-800 break-words">{task.taskName}</span>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide break-words">{task.project?.projectName || 'Internal Project'}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em]">Completed</span>
-                                            </div>
-                                            <span className="text-xl font-black text-emerald-600 leading-none">{selectedEmployee.tasks.done}</span>
+                                            )}
                                         </div>
-                                        <div 
-                                            onClick={() => setStatModal({ isOpen: true, title: `${selectedEmployee.name} - Overdue Tasks`, data: selectedEmployee.tasks.list?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== 'Completed' && t.status !== 'Done'), type: "task" })}
-                                            className="premium-stat-card rose !p-4 flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform"
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
-                                                    <AlertCircle className="w-4 h-4" />
-                                                </div>
-                                                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.1em]">Overdue</span>
-                                            </div>
-                                            <span className="text-xl font-black text-rose-600 leading-none">{selectedEmployee.tasks.overdue}</span>
-                                        </div>
-                                    </div>
 
-                                    {/* Tasks Section */}
-                                    <div className="space-y-3">
-                                        <h3 className="text-[12px] font-bold text-slate-700 flex items-center gap-2">
-                                            <ClipboardList className="w-3.5 h-3.5 text-slate-400" /> Recent Tasks
-                                        </h3>
-                                        <div className="space-y-2">
-                                            {selectedEmployee.tasks.list?.length > 0 ? selectedEmployee.tasks.list.slice(0, 5).map((task, idx) => (
-                                                <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-[12px] hover:border-blue-100 transition-colors shadow-sm">
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="text-[13px] font-bold text-slate-700 truncate">{task.taskName}</p>
-                                                        <p className="text-[10px] text-slate-400 font-medium truncate">{task.project?.projectName || 'Internal'}</p>
+                                        {/* Completed Tasks */}
+                                        <div className="bg-emerald-50/30 border border-emerald-100 rounded-[16px] overflow-hidden">
+                                            <div className="p-4 flex items-center justify-between border-b border-emerald-100/50 bg-white/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                                                        <CheckCircle className="w-4 h-4" />
                                                     </div>
-                                                    <div className="flex flex-col items-end gap-1">
-                                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                                                            task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600' :
-                                                            task.status === 'In Progress' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
-                                                        }`}>
-                                                            {task.status}
-                                                        </span>
-                                                        <span className="text-[9px] font-bold text-slate-300">
-                                                            {task.endDate ? new Date(task.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }) : ''}
-                                                        </span>
-                                                    </div>
+                                                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.1em]">Completed Tasks</span>
                                                 </div>
-                                            )) : (
-                                                <div className="p-6 text-center bg-slate-50/50 rounded-[12px] border border-dashed border-slate-200">
-                                                    <p className="text-[12px] text-slate-400 font-medium">No tasks assigned</p>
+                                                <span className="text-xl font-black text-emerald-600 leading-none">{selectedEmployee.tasks.done}</span>
+                                            </div>
+                                            {selectedEmployee.tasks.done > 0 && (
+                                                <div className="p-3 bg-emerald-50/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
+                                                    {selectedEmployee.tasks.list?.filter(t => t.status === 'Completed' || t.status === 'Done').map((task, idx) => (
+                                                        <div key={idx} className="p-3 bg-white border border-emerald-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-emerald-300 hover:shadow-md">
+                                                            <span className="text-sm font-bold text-slate-800 break-words">{task.taskName}</span>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide break-words">{task.project?.projectName || 'Internal Project'}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Total/All Tasks */}
+                                        <div className="bg-blue-50/30 border border-blue-100 rounded-[16px] overflow-hidden">
+                                            <div className="p-4 flex items-center justify-between border-b border-blue-100/50 bg-white/50">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
+                                                        <ClipboardList className="w-4 h-4" />
+                                                    </div>
+                                                    <span className="text-[11px] font-bold text-slate-600 uppercase tracking-[0.1em]">Total Tasks</span>
+                                                </div>
+                                                <span className="text-xl font-black text-blue-600 leading-none">{selectedEmployee.tasks.total}</span>
+                                            </div>
+                                            {selectedEmployee.tasks.total > 0 && (
+                                                <div className="p-3 bg-blue-50/20 space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
+                                                    {selectedEmployee.tasks.list?.map((task, idx) => (
+                                                        <div key={idx} className="p-3 bg-white border border-blue-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-blue-300 hover:shadow-md">
+                                                            <div className="flex justify-between items-start gap-2">
+                                                                <span className="text-sm font-bold text-slate-800 break-words flex-1">{task.taskName}</span>
+                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
+                                                                    task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
+                                                                    task.status === 'In Progress' ? 'bg-blue-50 text-blue-600 border border-blue-200' : 
+                                                                    'bg-slate-100 text-slate-500 border border-slate-200'
+                                                                }`}>
+                                                                    {task.status}
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide break-words">{task.project?.projectName || 'Internal Project'}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             )}
                                         </div>
