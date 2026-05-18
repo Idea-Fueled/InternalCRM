@@ -72,7 +72,8 @@ const UserProjects = ({ role = "developer" }) => {
                     members: p.teamMembers?.map(m => ({
                         id: m._id,
                         name: m.name,
-                        initial: m.name.charAt(0)
+                        initial: m.name.charAt(0),
+                        profilePic: m.profilePic
                     })) || []
                 };
             });
@@ -375,8 +376,12 @@ const UserProjects = ({ role = "developer" }) => {
                                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
                                         {selectedProject.members.map(member => (
                                             <div key={member.id} className="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-xl transition cursor-default">
-                                                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-xs">
-                                                    {member.initial}
+                                                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center font-bold text-xs overflow-hidden">
+                                                    {member.profilePic ? (
+                                                        <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        member.initial
+                                                    )}
                                                 </div>
                                                 <span className="text-sm font-bold text-slate-700">{member.name}</span>
                                             </div>
@@ -577,10 +582,14 @@ const UserProjects = ({ role = "developer" }) => {
                                         </div>
 
                                         <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                                            <div className="flex -space-x-2">
+                                            <div className="flex -space-x-2" onClick={(e) => e.stopPropagation()}>
                                                 {p.members.slice(0, 3).map((m, i) => (
-                                                    <div key={m.id} className={`w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm ${i === 0 ? 'bg-blue-600 text-white' : i === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
-                                                        {m.initial}
+                                                    <div key={m.id} className={`w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm overflow-hidden ${i === 0 ? 'bg-blue-600 text-white' : i === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                                                        {m.profilePic ? (
+                                                            <img src={m.profilePic} alt={m.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            m.initial
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {p.members.length > 3 && (

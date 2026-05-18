@@ -101,8 +101,8 @@ export const getAllProjects = async (req, res, next) => {
         // Admins see all projects (no additional filter)
 
         const projects = await Project.find(query)
-            .populate("teamLead", "name email role")
-            .populate("teamMembers", "name email role")
+            .populate("teamLead", "name email role profilePic")
+            .populate("teamMembers", "name email role profilePic")
             .sort({ createdAt: -1 });
 
         // Fetch tasks for these projects to include counts/progress
@@ -136,8 +136,8 @@ export const getProjectById = async (req, res, next) => {
     try {
         const { id } = req.params;
         const project = await Project.findOne({ _id: id, isDeleted: false })
-            .populate("teamLead", "name email role")
-            .populate("teamMembers", "name email role");
+            .populate("teamLead", "name email role profilePic")
+            .populate("teamMembers", "name email role profilePic");
 
         if (!project) {
             return res.status(404).json({
@@ -175,8 +175,8 @@ export const updateProject = async (req, res, next) => {
             req.body,
             { new: true, runValidators: true }
         )
-            .populate("teamLead", "name email")
-            .populate("teamMembers", "name email");
+            .populate("teamLead", "name email profilePic")
+            .populate("teamMembers", "name email profilePic");
 
         if (!updatedProject) {
             return res.status(404).json({
