@@ -19,10 +19,11 @@ export const createProject = async (req, res, next) => {
             projectName,
             description,
             teamLead,
-            teamMembers: teamMembers || [],
+            teamMembers: teamMembers ? JSON.parse(teamMembers) : [],
             startDate,
             endDate,
-            status: status || "Active"
+            status: status || "Active",
+            attachment: req.file ? req.file.path : ""
         });
 
         const savedProject = await newProject.save();
@@ -170,9 +171,17 @@ export const updateProject = async (req, res, next) => {
     try {
         const { id } = req.params;
 
+        const updateData = { ...req.body };
+        if (updateData.teamMembers && typeof updateData.teamMembers === 'string') {
+            updateData.teamMembers = JSON.parse(updateData.teamMembers);
+        }
+        if (req.file) {
+            updateData.attachment = req.file.path;
+        }
+
         const updatedProject = await Project.findOneAndUpdate(
             { _id: id, isDeleted: false },
-            req.body,
+            updateData,
             { new: true, runValidators: true }
         )
             .populate("teamLead", "name email profilePic")

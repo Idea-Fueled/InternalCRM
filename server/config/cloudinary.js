@@ -26,4 +26,14 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
-export { cloudinary, upload };
+const attachmentStorage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'ideafueled_crm_attachments',
+        resource_type: 'auto'
+    }
+});
+
+const uploadAttachment = multer({ storage: attachmentStorage });
+
+export { cloudinary, upload, uploadAttachment };

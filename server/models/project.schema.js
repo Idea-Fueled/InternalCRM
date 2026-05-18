@@ -40,6 +40,11 @@ const projectSchema = new mongoose.Schema(
             default: "Active",
         },
 
+        attachment: {
+            type: String,
+            default: "",
+        },
+
         isDeleted: {
             type: Boolean,
             default: false,
