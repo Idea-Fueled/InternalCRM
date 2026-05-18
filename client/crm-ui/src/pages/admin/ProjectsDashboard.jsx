@@ -295,7 +295,7 @@ const ProjectsDashboard = () => {
 
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
-            <AdminSidebar />
+            <AdminSidebar role={role === 'TL' ? 'teamLead' : role} />
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="Projects" />
                 
