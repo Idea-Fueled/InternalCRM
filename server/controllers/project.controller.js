@@ -78,8 +78,8 @@ export const createProject = async (req, res, next) => {
         }
 
         // Notify Team Members (Developers and QAs)
-        if (teamMembers && teamMembers.length > 0) {
-            const members = await User.find({ _id: { $in: teamMembers } });
+        if (parsedTeamMembers && parsedTeamMembers.length > 0) {
+            const members = await User.find({ _id: { $in: parsedTeamMembers } });
             for (const member of members) {
                 if (member._id.toString() !== req.user._id.toString() && member._id.toString() !== teamLead.toString()) {
                     const roleLabel = member.role === 'qa' ? 'QA' : 'Developer';
