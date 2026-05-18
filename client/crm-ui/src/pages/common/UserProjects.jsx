@@ -38,6 +38,28 @@ const UserProjects = ({ role = "developer" }) => {
                 const completedTasks = p.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
                 const overdueTasks = p.tasks?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length || 0;
                 
+                const currentDate = new Date();
+                currentDate.setHours(0, 0, 0, 0);
+                const deadline = p.endDate ? new Date(p.endDate) : null;
+                if (deadline) deadline.setHours(0, 0, 0, 0);
+                const start = p.startDate ? new Date(p.startDate) : null;
+                if (start) start.setHours(0, 0, 0, 0);
+
+                const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
+
+                let timelineTag = "In Progress";
+                if (start && start > currentDate) {
+                    timelineTag = "Upcoming";
+                } else if (isCompleted) {
+                    timelineTag = "Completed";
+                } else if (deadline) {
+                    const timeDiff = deadline.getTime() - currentDate.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    if (daysDiff < 0) {
+                        timelineTag = "Overdue";
+                    }
+                }
+
                 return {
                     ...p,
                     id: p._id,
@@ -46,6 +68,7 @@ const UserProjects = ({ role = "developer" }) => {
                     progress: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
                     totalTasks,
                     overdueTasks,
+                    timelineTag,
                     members: p.teamMembers?.map(m => ({
                         id: m._id,
                         name: m.name,
@@ -103,7 +126,7 @@ const UserProjects = ({ role = "developer" }) => {
 
     const filteredProjects = projects.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = selectedStatus === "All" || p.status === selectedStatus;
+        const matchesStatus = selectedStatus === "All" || p.timelineTag === selectedStatus;
 
         let matchesDateRange = true;
         if (fromDateFilter || toDateFilter) {
@@ -389,10 +412,12 @@ const UserProjects = ({ role = "developer" }) => {
                                 <Download className="w-4 h-4" />
                                 Download Report
                             </button>
-                            <div className="flex items-center gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-200/60">
+                            <div className="flex flex-wrap items-center gap-2 bg-white p-1 rounded-xl shadow-sm border border-slate-200/60">
                                 <button onClick={() => setSelectedStatus("All")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>All</button>
-                                <button onClick={() => setSelectedStatus("Active")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Active' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>Active</button>
-                                <button onClick={() => setSelectedStatus("Completed")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Completed' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>Completed</button>
+                                <button onClick={() => setSelectedStatus("Upcoming")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Upcoming' ? 'bg-purple-600 text-white shadow-md shadow-purple-200' : 'text-slate-500 hover:bg-slate-50'}`}>Upcoming</button>
+                                <button onClick={() => setSelectedStatus("In Progress")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'In Progress' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-slate-50'}`}>In Progress</button>
+                                <button onClick={() => setSelectedStatus("Completed")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Completed' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'text-slate-500 hover:bg-slate-50'}`}>Completed</button>
+                                <button onClick={() => setSelectedStatus("Overdue")} className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${selectedStatus === 'Overdue' ? 'bg-rose-600 text-white shadow-md shadow-rose-200' : 'text-slate-500 hover:bg-slate-50'}`}>Overdue</button>
                             </div>
                         </div>
                     </div>

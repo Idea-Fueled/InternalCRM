@@ -68,7 +68,37 @@ const ProjectsDashboard = () => {
         try {
             setLoading(true);
             const res = await projectService.getAllProjects();
-            setProjects(res.data.projects || []);
+            
+            const formatted = (res.data.projects || []).map(p => {
+                const totalTasks = p.tasks?.length || 0;
+                const completedTasks = p.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
+                
+                const currentDate = new Date();
+                currentDate.setHours(0, 0, 0, 0);
+                const deadline = p.endDate ? new Date(p.endDate) : null;
+                if (deadline) deadline.setHours(0, 0, 0, 0);
+                const start = p.startDate ? new Date(p.startDate) : null;
+                if (start) start.setHours(0, 0, 0, 0);
+
+                const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
+
+                let timelineTag = "In Progress";
+                if (start && start > currentDate) {
+                    timelineTag = "Upcoming";
+                } else if (isCompleted) {
+                    timelineTag = "Completed";
+                } else if (deadline) {
+                    const timeDiff = deadline.getTime() - currentDate.getTime();
+                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                    if (daysDiff < 0) {
+                        timelineTag = "Overdue";
+                    }
+                }
+                
+                return { ...p, timelineTag };
+            });
+            
+            setProjects(formatted);
         } catch (err) {
             setError(err.response?.data?.message || "Failed to load projects");
         } finally {
@@ -213,7 +243,7 @@ const ProjectsDashboard = () => {
     const filteredProjects = projects.filter(proj => {
         const matchesSearch = proj.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                proj.description?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === "Status: All" || proj.status === statusFilter;
+        const matchesStatus = statusFilter === "Status: All" || statusFilter === "All" || proj.timelineTag === statusFilter;
         
         let matchesDateRange = true;
         if (fromDateFilter || toDateFilter) {
@@ -310,17 +340,13 @@ const ProjectsDashboard = () => {
                                 </button>
                             )}
 
-                            <select 
-                                className="px-4 py-2 bg-slate-50 border-none text-slate-600 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none h-[36px]"
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                            >
-                                <option>Status: All</option>
-                                <option>Active</option>
-                                <option>Completed</option>
-                                <option>On Track</option>
-                                <option>At Risk</option>
-                            </select>
+                            <div className="flex flex-wrap items-center gap-2 bg-slate-50 p-1 rounded-xl shadow-sm border border-slate-200/60 h-[36px]">
+                                <button onClick={() => setStatusFilter("All")} className={`px-4 py-1 text-xs font-bold rounded-lg transition ${statusFilter === 'All' || statusFilter === 'Status: All' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-white'}`}>All</button>
+                                <button onClick={() => setStatusFilter("Upcoming")} className={`px-4 py-1 text-xs font-bold rounded-lg transition ${statusFilter === 'Upcoming' ? 'bg-purple-600 text-white shadow-md shadow-purple-200' : 'text-slate-500 hover:bg-white'}`}>Upcoming</button>
+                                <button onClick={() => setStatusFilter("In Progress")} className={`px-4 py-1 text-xs font-bold rounded-lg transition ${statusFilter === 'In Progress' ? 'bg-blue-600 text-white shadow-md shadow-blue-200' : 'text-slate-500 hover:bg-white'}`}>In Progress</button>
+                                <button onClick={() => setStatusFilter("Completed")} className={`px-4 py-1 text-xs font-bold rounded-lg transition ${statusFilter === 'Completed' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200' : 'text-slate-500 hover:bg-white'}`}>Completed</button>
+                                <button onClick={() => setStatusFilter("Overdue")} className={`px-4 py-1 text-xs font-bold rounded-lg transition ${statusFilter === 'Overdue' ? 'bg-rose-600 text-white shadow-md shadow-rose-200' : 'text-slate-500 hover:bg-white'}`}>Overdue</button>
+                            </div>
                         </div>
                     </div>
 
