@@ -21,6 +21,8 @@ const ProjectsDashboard = () => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status: All");
+    const [fromDateFilter, setFromDateFilter] = useState("");
+    const [toDateFilter, setToDateFilter] = useState("");
     const [newProject, setNewProject] = useState({
         projectName: "",
         description: "",
@@ -212,7 +214,25 @@ const ProjectsDashboard = () => {
         const matchesSearch = proj.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                                proj.description?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === "Status: All" || proj.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        
+        let matchesDateRange = true;
+        if (fromDateFilter || toDateFilter) {
+            const projectDate = new Date(proj.createdAt || proj.startDate);
+            projectDate.setHours(0, 0, 0, 0);
+            
+            if (fromDateFilter) {
+                const fromDate = new Date(fromDateFilter);
+                fromDate.setHours(0, 0, 0, 0);
+                if (projectDate < fromDate) matchesDateRange = false;
+            }
+            if (toDateFilter) {
+                const toDate = new Date(toDateFilter);
+                toDate.setHours(0, 0, 0, 0);
+                if (projectDate > toDate) matchesDateRange = false;
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesDateRange;
     });
 
     return (
@@ -262,8 +282,36 @@ const ProjectsDashboard = () => {
 
                         {/* Filters */}
                         <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
+                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 h-[36px]">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</span>
+                                <input 
+                                    type="date" 
+                                    className="bg-transparent border-none outline-none text-slate-600 text-xs font-semibold cursor-pointer w-[110px]"
+                                    value={fromDateFilter}
+                                    onChange={(e) => setFromDateFilter(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 h-[36px]">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</span>
+                                <input 
+                                    type="date" 
+                                    className="bg-transparent border-none outline-none text-slate-600 text-xs font-semibold cursor-pointer w-[110px]"
+                                    value={toDateFilter}
+                                    onChange={(e) => setToDateFilter(e.target.value)}
+                                />
+                            </div>
+                            {(fromDateFilter || toDateFilter) && (
+                                <button 
+                                    onClick={() => { setFromDateFilter(""); setToDateFilter(""); }}
+                                    className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors h-[36px] flex items-center justify-center"
+                                    title="Clear dates"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+
                             <select 
-                                className="px-4 py-2 bg-slate-50 border-none text-slate-600 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none"
+                                className="px-4 py-2 bg-slate-50 border-none text-slate-600 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none h-[36px]"
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
                             >
@@ -273,7 +321,6 @@ const ProjectsDashboard = () => {
                                 <option>On Track</option>
                                 <option>At Risk</option>
                             </select>
-
                         </div>
                     </div>
 

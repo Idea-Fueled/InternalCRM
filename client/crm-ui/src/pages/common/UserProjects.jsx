@@ -4,7 +4,7 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Users, 
-  CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList, Download
+  CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList, Download, X
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
@@ -24,6 +24,8 @@ const UserProjects = ({ role = "developer" }) => {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("All");
+    const [fromDateFilter, setFromDateFilter] = useState("");
+    const [toDateFilter, setToDateFilter] = useState("");
     const [selectedProject, setSelectedProject] = useState(null);
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
@@ -102,7 +104,25 @@ const UserProjects = ({ role = "developer" }) => {
     const filteredProjects = projects.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = selectedStatus === "All" || p.status === selectedStatus;
-        return matchesSearch && matchesStatus;
+
+        let matchesDateRange = true;
+        if (fromDateFilter || toDateFilter) {
+            const projectDate = new Date(p.createdAt || p.startDate);
+            projectDate.setHours(0, 0, 0, 0);
+            
+            if (fromDateFilter) {
+                const fromDate = new Date(fromDateFilter);
+                fromDate.setHours(0, 0, 0, 0);
+                if (projectDate < fromDate) matchesDateRange = false;
+            }
+            if (toDateFilter) {
+                const toDate = new Date(toDateFilter);
+                toDate.setHours(0, 0, 0, 0);
+                if (projectDate > toDate) matchesDateRange = false;
+            }
+        }
+
+        return matchesSearch && matchesStatus && matchesDateRange;
     });
 
     if (selectedProject) {
@@ -377,15 +397,46 @@ const UserProjects = ({ role = "developer" }) => {
                         </div>
                     </div>
 
-                    <div className="relative">
-                        <input 
-                            type="text" 
-                            placeholder="Search your projects..."
-                            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/60 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition font-medium"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                    <div className="flex flex-col lg:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <input 
+                                type="text" 
+                                placeholder="Search your projects..."
+                                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/60 rounded-2xl shadow-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition font-medium"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 bg-white border border-slate-200/60 rounded-2xl px-4 py-3 shadow-sm h-full">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</span>
+                                <input 
+                                    type="date" 
+                                    className="bg-transparent border-none outline-none text-slate-700 text-xs font-semibold cursor-pointer w-[110px]"
+                                    value={fromDateFilter}
+                                    onChange={(e) => setFromDateFilter(e.target.value)}
+                                />
+                            </div>
+                            <div className="flex items-center gap-2 bg-white border border-slate-200/60 rounded-2xl px-4 py-3 shadow-sm h-full">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To</span>
+                                <input 
+                                    type="date" 
+                                    className="bg-transparent border-none outline-none text-slate-700 text-xs font-semibold cursor-pointer w-[110px]"
+                                    value={toDateFilter}
+                                    onChange={(e) => setToDateFilter(e.target.value)}
+                                />
+                            </div>
+                            {(fromDateFilter || toDateFilter) && (
+                                <button 
+                                    onClick={() => { setFromDateFilter(""); setToDateFilter(""); }}
+                                    className="p-3 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-2xl transition-colors bg-white border border-slate-200/60 shadow-sm h-full flex items-center justify-center"
+                                    title="Clear dates"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {loading ? (
