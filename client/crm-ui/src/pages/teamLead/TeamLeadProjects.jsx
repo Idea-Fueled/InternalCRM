@@ -59,8 +59,6 @@ const TeamLeadProjects = () => {
                     progress: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
                     totalTasks,
                     overdueTasks,
-                    startDate: p.startDate ? new Date(p.startDate).toLocaleDateString() : 'N/A',
-                    endDate: p.endDate ? new Date(p.endDate).toLocaleDateString() : 'N/A',
                     members: p.teamMembers?.map(m => ({
                         id: m._id,
                         initial: m.name?.charAt(0).toUpperCase() || "U",
@@ -119,8 +117,6 @@ const TeamLeadProjects = () => {
                 id: p._id,
                 name: p.projectName,
                 status: p.status || "Active",
-                startDate: p.startDate ? new Date(p.startDate).toLocaleDateString() : 'N/A',
-                endDate: p.endDate ? new Date(p.endDate).toLocaleDateString() : 'N/A',
                 members: p.teamMembers?.map(m => ({
                     id: m._id,
                     initial: m.name?.charAt(0).toUpperCase() || "U",
@@ -186,8 +182,6 @@ const TeamLeadProjects = () => {
                 id: p._id,
                 name: p.projectName,
                 status: p.status || "Active",
-                startDate: p.startDate ? new Date(p.startDate).toLocaleDateString() : 'N/A',
-                endDate: p.endDate ? new Date(p.endDate).toLocaleDateString() : 'N/A',
                 members: p.teamMembers?.map(m => ({
                     id: m._id,
                     initial: m.name?.charAt(0).toUpperCase() || "U",
@@ -534,7 +528,7 @@ const TeamLeadProjects = () => {
                                             <div className="flex items-center justify-between text-xs font-medium text-slate-500 mb-6 bg-slate-50 px-3 py-2 rounded-lg">
                                                 <div className="flex items-center">
                                                     <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-                                                    {project.startDate} — {project.endDate}
+                                                    {formatDate(project.startDate)} — {formatDate(project.endDate)}
                                                 </div>
                                             </div>
 
