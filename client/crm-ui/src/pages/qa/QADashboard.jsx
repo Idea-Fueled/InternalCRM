@@ -18,6 +18,7 @@ import {
   Activity,
   AlertTriangle,
   Download
+} from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
 

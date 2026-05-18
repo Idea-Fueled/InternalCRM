@@ -38,7 +38,6 @@ const EmployeesDashboard = () => {
         department: "Engineering",
         teamLeads: []
     });
-    const [roleFilter, setRoleFilter] = useState("All Roles");
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);

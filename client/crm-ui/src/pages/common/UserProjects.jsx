@@ -5,6 +5,7 @@ import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Users, 
   CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList, Download
+} from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
 

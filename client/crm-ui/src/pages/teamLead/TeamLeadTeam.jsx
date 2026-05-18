@@ -5,6 +5,7 @@ import { userService, taskService } from '../../api/services';
 import { 
   Search, Filter, Users, CheckCircle2, Clock, AlertCircle, 
   MoreVertical, X, Calendar, Activity, Briefcase, Download
+} from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
 
