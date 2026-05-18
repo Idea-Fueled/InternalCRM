@@ -118,12 +118,7 @@ const QADashboard = () => {
 
     // Derived stats based on project filter
     const displayStats = useMemo(() => {
-        if (projectFilter === 'All') {
-            const overdueCount = allTasksForStats.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date()).length;
-            return { ...stats, overdueTasks: overdueCount };
-        }
-
-        const filtered = allTasksForStats.filter(t => {
+        const filtered = projectFilter === 'All' ? allTasksForStats : allTasksForStats.filter(t => {
             const projectName = t.project?.projectName || t.project?.name || 'Unassigned';
             return projectName === projectFilter;
         });
@@ -134,7 +129,7 @@ const QADashboard = () => {
             doneTasks: filtered.filter(t => t.status === "Done"),
             overdueTasks: filtered.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date())
         };
-    }, [stats, allTasksForStats, projectFilter]);
+    }, [allTasksForStats, projectFilter]);
 
     useEffect(() => {
         fetchDashboardData();

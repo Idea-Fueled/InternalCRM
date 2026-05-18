@@ -57,7 +57,7 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <p className="text-sm font-bold text-slate-800">{item.taskName}</p>
-                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide mt-0.5">{item.project?.projectName || 'Unassigned Project'}</p>
+                            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wide mt-0.5">{item.project?.projectName || (typeof item.project === 'string' ? item.project : 'Unassigned Project')}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${statusColor}`}>{item.status || 'New'}</span>
@@ -66,7 +66,17 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
                     </div>
                     <div className="flex items-center justify-between mt-1 text-xs">
                         <p className="font-semibold text-slate-600">Assigned: {item.assignedTo?.name || 'Unassigned'}</p>
-                        <p className="font-semibold text-slate-600">Due: {item.endDate ? new Date(item.endDate).toLocaleDateString() : 'N/A'}</p>
+                        <p className="font-semibold text-slate-600">
+                            Due: {(() => {
+                                if (!item.endDate || item.endDate === 'N/A' || item.endDate === 'Invalid Date') return 'N/A';
+                                if (typeof item.endDate === 'string' && (item.endDate.includes('/') || item.endDate.includes('-'))) {
+                                    // if it's already a formatted string and valid
+                                    return item.endDate;
+                                }
+                                const d = new Date(item.endDate);
+                                return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+                            })()}
+                        </p>
                     </div>
                 </div>
             );
