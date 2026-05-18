@@ -470,11 +470,13 @@ const UserProjects = ({ role = "developer" }) => {
                                 const deadline = p.endDate ? new Date(p.endDate) : null;
                                 if (deadline) deadline.setHours(0, 0, 0, 0);
 
+                                const isCompleted = p.totalTasks > 0 && p.progress === 100;
+
                                 let bgClass = "bg-white hover:shadow-blue-900/5 border-slate-200/60";
                                 let timelineTag = "In Progress";
                                 let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
 
-                                if (p.status === "Completed" || p.status === "Done") {
+                                if (isCompleted) {
                                     bgClass = "bg-emerald-50 border-emerald-200 hover:shadow-emerald-900/10";
                                     timelineTag = "Completed";
                                     timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";

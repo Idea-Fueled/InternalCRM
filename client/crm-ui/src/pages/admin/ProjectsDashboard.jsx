@@ -346,7 +346,11 @@ const ProjectsDashboard = () => {
                             </div>
                         ) : (
                             filteredProjects.map((project, i) => {
-                                const progress = project.status === "Completed" ? 100 : 50;
+                                const totalTasks = project.tasks?.length || 0;
+                                const completedTasks = project.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
+                                const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                                const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
+
                                 const leadName = project.teamLead?.name || "Unassigned";
                                 const leadInitial = project.teamLead?.name?.charAt(0) || "U";
                                 const membersCount = project.teamMembers?.length || 0;
@@ -362,7 +366,7 @@ const ProjectsDashboard = () => {
                                 let timelineTag = "In Progress";
                                 let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
 
-                                if (project.status === "Completed" || project.status === "Done") {
+                                if (isCompleted) {
                                     bgClass = "bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:shadow-emerald-100/50";
                                     timelineTag = "Completed";
                                     timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
