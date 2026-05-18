@@ -42,7 +42,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
             <div 
-                className="bg-white w-full max-w-sm rounded-[24px] shadow-xl overflow-hidden animate-in zoom-in-95 duration-300 relative border border-slate-100"
+                className="bg-white w-full max-w-sm max-h-[90vh] flex flex-col rounded-[24px] shadow-xl overflow-hidden animate-in zoom-in-95 duration-300 relative border border-slate-100"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button 
@@ -52,7 +52,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                     <X className="w-5 h-5" />
                 </button>
 
-                <div className="pt-10 pb-8 px-6 text-center">
+                <div className="pt-10 pb-8 px-6 text-center overflow-y-auto scrollbar-thin">
                     {/* Profile Icon with Upload Overlay */}
                     <div className="flex justify-center mb-5">
                         <div className="relative group">
