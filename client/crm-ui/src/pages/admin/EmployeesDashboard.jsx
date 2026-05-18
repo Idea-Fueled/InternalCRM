@@ -710,38 +710,34 @@ const EmployeesDashboard = () => {
                     <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-[440px] max-h-[82vh] overflow-hidden flex flex-col transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100" onClick={e => e.stopPropagation()}>
                         
                         {/* Compact Header */}
-                        <div className="px-6 py-5 flex items-start justify-between border-b border-slate-50">
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-[14px] bg-white border border-blue-200 p-0.5 shadow-sm flex items-center justify-center overflow-hidden">
-                                    <div className="w-full h-full rounded-[10px] bg-blue-50 flex items-center justify-center text-xl font-bold text-blue-600 uppercase overflow-hidden">
-                                        {selectedEmployee.raw.profilePic ? (
-                                            <img src={selectedEmployee.raw.profilePic} alt={selectedEmployee.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            selectedEmployee.name.charAt(0)
-                                        )}
-                                    </div>
-                                </div>
-                                <div>
-                                    <h2 className="text-lg font-bold text-slate-800 leading-none">{selectedEmployee.name}</h2>
-                                    <div className="flex items-center gap-1.5 mt-2">
-                                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded-[6px] uppercase tracking-wider">{selectedEmployee.role}</span>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] flex items-center gap-1 ${
-                                            selectedEmployee.status === 'Active' ? 'bg-emerald-50 text-emerald-600' :
-                                            selectedEmployee.status === 'Overdue' ? 'bg-rose-50 text-rose-600' :
-                                            'bg-slate-50 text-slate-500'
-                                        }`}>
-                                            <div className={`w-1 h-1 rounded-full ${
-                                                selectedEmployee.status === 'Active' ? 'bg-emerald-500' :
-                                                selectedEmployee.status === 'Overdue' ? 'bg-rose-500' : 'bg-slate-400'
-                                            }`}></div>
-                                            {selectedEmployee.status}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <button onClick={() => setSelectedEmployee(null)} className="p-1.5 text-slate-300 hover:text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
+                        <div className="relative px-6 py-6 flex flex-col items-center justify-center border-b border-slate-50">
+                            <button onClick={() => setSelectedEmployee(null)} className="absolute top-4 right-4 p-1.5 text-slate-300 hover:text-slate-500 hover:bg-slate-50 rounded-lg transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
+                            <div className="w-20 h-20 rounded-full bg-white border border-blue-200 p-1 shadow-sm flex items-center justify-center overflow-hidden mb-3">
+                                <div className="w-full h-full rounded-full bg-blue-50 flex items-center justify-center text-2xl font-bold text-blue-600 uppercase overflow-hidden">
+                                    {selectedEmployee.raw.profilePic ? (
+                                        <img src={selectedEmployee.raw.profilePic} alt={selectedEmployee.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                        selectedEmployee.name.charAt(0)
+                                    )}
+                                </div>
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-800 leading-none text-center">{selectedEmployee.name}</h2>
+                            <div className="flex items-center justify-center gap-2 mt-3">
+                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded-[6px] uppercase tracking-wider">{selectedEmployee.role}</span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-[6px] flex items-center gap-1 ${
+                                    selectedEmployee.status === 'Active' ? 'bg-emerald-50 text-emerald-600' :
+                                    selectedEmployee.status === 'Overdue' ? 'bg-rose-50 text-rose-600' :
+                                    'bg-slate-50 text-slate-500'
+                                }`}>
+                                    <div className={`w-1 h-1 rounded-full ${
+                                        selectedEmployee.status === 'Active' ? 'bg-emerald-500' :
+                                        selectedEmployee.status === 'Overdue' ? 'bg-rose-500' : 'bg-slate-400'
+                                    }`}></div>
+                                    {selectedEmployee.status}
+                                </span>
+                            </div>
                         </div>
 
                         <div className="flex-1 overflow-y-auto px-6 pb-6 custom-scrollbar space-y-6 pt-5">
