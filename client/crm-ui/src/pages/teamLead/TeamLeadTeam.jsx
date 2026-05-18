@@ -5,8 +5,8 @@ import { userService, taskService } from '../../api/services';
 import { 
   Search, Filter, Users, CheckCircle2, Clock, AlertCircle, 
   MoreVertical, X, Calendar, Activity, Briefcase, Download
-} from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
+import StatDetailModal from '../../components/StatDetailModal';
 
 const AVAILABILITY_COLORS = {
   'Free': 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -28,6 +28,7 @@ const TeamLeadTeam = () => {
     const [filterAvailability, setFilterAvailability] = useState("All");
     const [selectedMember, setSelectedMember] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -140,7 +141,7 @@ const TeamLeadTeam = () => {
 
                     {/* Insights Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 transition-colors">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Total Members", data: team, type: "employee" })} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 hover:scale-[1.02] cursor-pointer transition-all">
                             <div>
                                 <p className="text-sm font-semibold text-slate-500 mb-1">Total Members</p>
                                 <p className="text-2xl font-bold text-slate-800">{totalMembers}</p>
@@ -149,7 +150,7 @@ const TeamLeadTeam = () => {
                                 <Users className="w-5 h-5" />
                             </div>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 transition-colors">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Total Assigned Tasks", data: team.flatMap(m => m.tasks), type: "task" })} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-blue-300 hover:scale-[1.02] cursor-pointer transition-all">
                             <div>
                                 <p className="text-sm font-semibold text-slate-500 mb-1">Total Assigned Tasks</p>
                                 <p className="text-2xl font-bold text-slate-800">{totalAssigned}</p>
@@ -158,7 +159,7 @@ const TeamLeadTeam = () => {
                                 <Briefcase className="w-5 h-5" />
                             </div>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 transition-colors">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks Completed", data: team.flatMap(m => m.tasks).filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-emerald-300 hover:scale-[1.02] cursor-pointer transition-all">
                             <div>
                                 <p className="text-sm font-semibold text-slate-500 mb-1">Tasks Completed</p>
                                 <p className="text-2xl font-bold text-emerald-600">{totalCompleted}</p>
@@ -167,7 +168,7 @@ const TeamLeadTeam = () => {
                                 <CheckCircle2 className="w-5 h-5" />
                             </div>
                         </div>
-                        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-rose-300 transition-colors">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Overdue Tasks", data: team.flatMap(m => m.tasks).filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), type: "task" })} className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between group hover:border-rose-300 hover:scale-[1.02] cursor-pointer transition-all">
                             <div>
                                 <p className="text-sm font-semibold text-slate-500 mb-1">Overdue Tasks</p>
                                 <p className="text-2xl font-bold text-rose-600">{totalOverdue}</p>
@@ -426,6 +427,14 @@ const TeamLeadTeam = () => {
                     }
                 `}} />
             </div>
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     );
 };

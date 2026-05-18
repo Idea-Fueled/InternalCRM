@@ -9,6 +9,7 @@ import {
     AlertCircle, ClipboardList, History, X, Download, Camera, Trash2
 } from "lucide-react";
 import { exportPDF } from "../../utils/pdfExport";
+import StatDetailModal from "../../components/StatDetailModal";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -22,6 +23,10 @@ const EmployeesDashboard = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ total: 0, active: 0, withOverdue: 0, inactive: 0 });
+    const [roleFilter, setRoleFilter] = useState("All Roles");
+    
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
+
     const [searchQuery, setSearchQuery] = useState("");
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
     const [isDepartmentsModalOpen, setIsDepartmentsModalOpen] = useState(false);
@@ -342,12 +347,12 @@ const EmployeesDashboard = () => {
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         {[
-                            { label: "Total Employees", value: stats.total, color: "text-blue-500", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", variant: "blue" },
-                            { label: "Active", value: stats.active, color: "text-emerald-500", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", variant: "emerald" },
-                            { label: "With Overdue", value: stats.withOverdue, color: "text-amber-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", variant: "amber" },
-                            { label: "Inactive", value: stats.inactive, color: "text-slate-400", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636", variant: "slate" }
+                            { label: "Total Employees", value: stats.total, color: "text-blue-500", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z", variant: "blue", onClick: () => setStatModal({ isOpen: true, title: "Total Employees", data: employees, type: "employee" }) },
+                            { label: "Active", value: stats.active, color: "text-emerald-500", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", variant: "emerald", onClick: () => setStatModal({ isOpen: true, title: "Active Employees", data: employees.filter(e => e.status === "Active" || e.status === "Overdue"), type: "employee" }) },
+                            { label: "With Overdue", value: stats.withOverdue, color: "text-amber-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z", variant: "amber", onClick: () => setStatModal({ isOpen: true, title: "Employees with Overdue Tasks", data: employees.filter(e => e.tasks.overdue > 0), type: "employee" }) },
+                            { label: "Inactive", value: stats.inactive, color: "text-slate-400", icon: "M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636", variant: "slate", onClick: () => setStatModal({ isOpen: true, title: "Inactive Employees", data: employees.filter(e => e.status === "Inactive"), type: "employee" }) }
                         ].map((stat, i) => (
-                            <div key={i} className={`premium-stat-card ${stat.variant} flex flex-row items-center gap-4 p-4 cursor-default h-[90px]`}>
+                            <div key={i} onClick={stat.onClick} className={`premium-stat-card ${stat.variant} flex flex-row items-center gap-4 p-4 cursor-pointer hover:scale-[1.02] transition-transform h-[90px]`}>
                                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${stat.color.replace('text-', 'bg-').replace('500', '100').replace('400', '200')} ${stat.color}`}>
                                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}/></svg>
                                 </div>
@@ -1017,6 +1022,14 @@ const EmployeesDashboard = () => {
                     </div>
                 </div>
             )}
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     );
 };

@@ -10,6 +10,7 @@ import {
     Activity, Star, ClipboardList, Download
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
+import StatDetailModal from '../../components/StatDetailModal';
 
 // RECENT_ACTIVITY will be handled by state
 
@@ -30,6 +31,7 @@ const DeveloperDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [projectFilter, setProjectFilter] = useState('All');
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
     const fetchDashboardData = async () => {
         if (!user?._id) return;
@@ -214,7 +216,7 @@ const DeveloperDashboard = () => {
                     <>
                     {/* KPI Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-                        <div className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px]">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Total Tasks", data: filteredTasks, type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
                                 <ClipboardList className="w-5 h-5" />
                             </div>
@@ -223,7 +225,7 @@ const DeveloperDashboard = () => {
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Tasks</p>
                             </div>
                         </div>
-                        <div className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px]">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "New Tasks", data: filteredTasks.filter(t => t.status === 'New'), type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
                                 <Clock className="w-5 h-5" />
                             </div>
@@ -232,7 +234,7 @@ const DeveloperDashboard = () => {
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New</p>
                             </div>
                         </div>
-                        <div className="premium-stat-card blue flex-row items-center gap-4 p-4 h-[90px]">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks In Progress", data: filteredTasks.filter(t => t.status === 'In Progress'), type: "task" })} className="premium-stat-card blue flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-blue-100 text-blue-600">
                                 <PlayCircle className="w-5 h-5" />
                             </div>
@@ -241,7 +243,7 @@ const DeveloperDashboard = () => {
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">In Progress</p>
                             </div>
                         </div>
-                        <div className="premium-stat-card indigo flex-row items-center gap-4 p-4 h-[90px]">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: filteredTasks.filter(t => t.status === 'QA Review'), type: "task" })} className="premium-stat-card indigo flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-indigo-100 text-indigo-600">
                                 <ShieldCheck className="w-5 h-5" />
                             </div>
@@ -250,7 +252,7 @@ const DeveloperDashboard = () => {
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">QA Review</p>
                             </div>
                         </div>
-                        <div className="premium-stat-card rose flex-row items-center gap-4 p-4 h-[90px]">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Overdue Tasks", data: displayStats.overdueTasks, type: "task" })} className="premium-stat-card rose flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-rose-100 text-rose-600">
                                 <AlertCircle className="w-5 h-5" />
                             </div>
@@ -538,6 +540,14 @@ const DeveloperDashboard = () => {
                     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
                 `}} />
             </div>
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     );
 };

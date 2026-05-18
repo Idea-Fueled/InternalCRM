@@ -5,8 +5,8 @@ import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Users, 
   CheckCircle2, Clock, AlertCircle, LayoutList, ArrowLeft, ClipboardList, Download
-} from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
+import StatDetailModal from '../../components/StatDetailModal';
 
 const UserProjects = ({ role = "developer" }) => {
     const formatDate = (dateString) => {
@@ -24,6 +24,7 @@ const UserProjects = ({ role = "developer" }) => {
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("All");
     const [selectedProject, setSelectedProject] = useState(null);
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
     const fetchProjects = async () => {
         try {
@@ -154,7 +155,7 @@ const UserProjects = ({ role = "developer" }) => {
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                            <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+                                            <div onClick={() => setStatModal({ isOpen: true, title: "Total Tasks", data: selectedProject.tasks || [], type: "task" })} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100 hover:border-blue-300 hover:scale-[1.02] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <div className="p-2 bg-blue-100/50 rounded-lg text-blue-600">
                                                         <LayoutList className="w-4 h-4" />
@@ -163,7 +164,7 @@ const UserProjects = ({ role = "developer" }) => {
                                                 </div>
                                                 <div className="text-2xl font-bold text-slate-800">{selectedProject.totalTasks}</div>
                                             </div>
-                                            <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+                                            <div onClick={() => setStatModal({ isOpen: true, title: "Completed Tasks", data: (selectedProject.tasks || []).filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100 hover:border-emerald-300 hover:scale-[1.02] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <div className="p-2 bg-emerald-100/50 rounded-lg text-emerald-600">
                                                         <CheckCircle2 className="w-4 h-4" />
@@ -172,7 +173,7 @@ const UserProjects = ({ role = "developer" }) => {
                                                 </div>
                                                 <div className="text-2xl font-bold text-slate-800">{selectedProject.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0}</div>
                                             </div>
-                                            <div className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100">
+                                            <div onClick={() => setStatModal({ isOpen: true, title: "Overdue Tasks", data: (selectedProject.tasks || []).filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), type: "task" })} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100 hover:border-rose-300 hover:scale-[1.02] transition-all cursor-pointer">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <div className="p-2 bg-rose-100/50 rounded-lg text-rose-600">
                                                         <Clock className="w-4 h-4" />
@@ -475,6 +476,14 @@ const UserProjects = ({ role = "developer" }) => {
                     )}
                 </main>
             </div>
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     );
 };

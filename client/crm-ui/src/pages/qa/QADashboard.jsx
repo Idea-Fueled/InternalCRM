@@ -18,8 +18,8 @@ import {
   Activity,
   AlertTriangle,
   Download
-} from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
+import StatDetailModal from '../../components/StatDetailModal';
 
 const PRIORITY_COLORS = {
     'Low': 'bg-slate-100 text-slate-600 border-slate-200',
@@ -44,6 +44,8 @@ const QADashboard = () => {
     const [actionTaskId, setActionTaskId] = useState(null);
     const [actionNote, setActionNote] = useState("");
     const [actionAttachment, setActionAttachment] = useState("");
+    
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return "N/A";
@@ -126,10 +128,10 @@ const QADashboard = () => {
         });
 
         return {
-            pendingReviewTasks: filtered.filter(t => t.status === "QA Review").length,
-            completedTasks: filtered.filter(t => t.status === "Completed").length,
-            doneTasks: filtered.filter(t => t.status === "Done").length,
-            overdueTasks: filtered.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date()).length
+            pendingReviewTasks: filtered.filter(t => t.status === "QA Review"),
+            completedTasks: filtered.filter(t => t.status === "Completed"),
+            doneTasks: filtered.filter(t => t.status === "Done"),
+            overdueTasks: filtered.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date())
         };
     }, [stats, allTasksForStats, projectFilter]);
 
@@ -216,12 +218,12 @@ const QADashboard = () => {
                         {/* KPI Section */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                             {[
-                                { label: 'PENDING', value: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
-                                { label: 'COMPLETED', value: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400' },
-                                { label: 'OVERDUE', value: displayStats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400' },
-                                { label: 'REJECTED', value: displayStats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400' },
+                                { label: 'PENDING', value: displayStats.pendingReviewTasks?.length || displayStats.pendingReviewTasks, data: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Pending QA Reviews' },
+                                { label: 'COMPLETED', value: displayStats.completedTasks?.length || displayStats.completedTasks, data: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400', title: 'Completed Tasks' },
+                                { label: 'OVERDUE', value: displayStats.overdueTasks?.length || displayStats.overdueTasks, data: displayStats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Overdue QA Tasks' },
+                                { label: 'REJECTED', value: displayStats.doneTasks?.length || displayStats.doneTasks, data: displayStats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400', title: 'Rejected Tasks' },
                             ].map((stat, i) => (
-                                <div key={i} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-6 transition-transform hover:scale-[1.02]`}>
+                                <div key={i} onClick={() => Array.isArray(stat.data) && setStatModal({ isOpen: true, title: stat.title, data: stat.data, type: "task" })} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-6 cursor-pointer hover:scale-[1.02] transition-transform`}>
                                     <div className={`w-12 h-12 ${stat.iconBg} rounded-full flex items-center justify-center ${stat.iconColor} shadow-sm border border-slate-100`}>
                                         {stat.icon}
                                     </div>
@@ -642,6 +644,14 @@ const QADashboard = () => {
                     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
                 `}} />
             </div>
+
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     );
 };

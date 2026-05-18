@@ -4,6 +4,7 @@ import Topbar from "../../components/Topbar";
 import { userService, taskService, projectService } from "../../api/services";
 import { exportPDF, exportOverallReport } from "../../utils/pdfExport";
 import { Download } from "lucide-react";
+import StatDetailModal from "../../components/StatDetailModal";
 
 const ReportsDashboard = () => {
     const [loading, setLoading] = useState(true);
@@ -13,6 +14,7 @@ const ReportsDashboard = () => {
     const [selectedProjectId, setSelectedProjectId] = useState("All");
     const [fromDate, setFromDate] = useState("2026-04-01");
     const [toDate, setToDate] = useState("2026-05-31");
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -56,12 +58,12 @@ const ReportsDashboard = () => {
     });
 
     const insights = [
-        { label: "New", value: filteredTasks.filter(t => t.status === "New").length, color: "text-slate-500", bg: "bg-slate-100", dot: "bg-slate-400" },
-        { label: "In Progress", value: filteredTasks.filter(t => t.status === "In Progress").length, color: "text-blue-600", bg: "bg-blue-50", dot: "bg-blue-500" },
-        { label: "In QA", value: filteredTasks.filter(t => t.status === "QA Review").length, color: "text-amber-600", bg: "bg-amber-50", dot: "bg-amber-500" },
-        { label: "Completed", value: filteredTasks.filter(t => t.status === "Completed").length, color: "text-emerald-600", bg: "bg-emerald-50", dot: "bg-emerald-500" },
-        { label: "Done", value: filteredTasks.filter(t => t.status === "Done").length, color: "text-indigo-600", bg: "bg-indigo-50", dot: "bg-indigo-500" },
-        { label: "Overdue", value: filteredTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length, color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" }
+        { label: "New", value: filteredTasks.filter(t => t.status === "New").length, data: filteredTasks.filter(t => t.status === "New"), color: "text-slate-500", bg: "bg-slate-100", dot: "bg-slate-400" },
+        { label: "In Progress", value: filteredTasks.filter(t => t.status === "In Progress").length, data: filteredTasks.filter(t => t.status === "In Progress"), color: "text-blue-600", bg: "bg-blue-50", dot: "bg-blue-500" },
+        { label: "In QA", value: filteredTasks.filter(t => t.status === "QA Review").length, data: filteredTasks.filter(t => t.status === "QA Review"), color: "text-amber-600", bg: "bg-amber-50", dot: "bg-amber-500" },
+        { label: "Completed", value: filteredTasks.filter(t => t.status === "Completed").length, data: filteredTasks.filter(t => t.status === "Completed"), color: "text-emerald-600", bg: "bg-emerald-50", dot: "bg-emerald-500" },
+        { label: "Done", value: filteredTasks.filter(t => t.status === "Done").length, data: filteredTasks.filter(t => t.status === "Done"), color: "text-indigo-600", bg: "bg-indigo-50", dot: "bg-indigo-500" },
+        { label: "Overdue", value: filteredTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length, data: filteredTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), color: "text-red-600", bg: "bg-red-50", dot: "bg-red-500" }
     ];
 
     const activeProject = selectedProjectId === "All" ? projects[0] : projects.find(p => p._id === selectedProjectId);
@@ -287,7 +289,7 @@ const ReportsDashboard = () => {
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                             {insights.map((stat, i) => (
-                                <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 hover:shadow-md transition-shadow">
+                                <div key={i} onClick={() => setStatModal({ isOpen: true, title: stat.label + " Tasks", data: stat.data, type: "task" })} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] hover:border-blue-300">
                                     <div className="flex items-center gap-2 mb-2">
                                         <div className={`w-2.5 h-2.5 rounded-full ${stat.dot}`}></div>
                                         <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</span>
@@ -516,6 +518,14 @@ const ReportsDashboard = () => {
 
                 </main>
             </div>
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     );
 };

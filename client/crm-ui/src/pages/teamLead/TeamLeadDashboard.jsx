@@ -14,6 +14,8 @@ import {
   AlertCircle,
   Activity
 } from 'lucide-react';
+import StatDetailModal from '../../components/StatDetailModal';
+
 const TeamLeadDashboard = () => {
     const navigate = useNavigate();
     const [stats, setStats] = useState({
@@ -24,8 +26,11 @@ const TeamLeadDashboard = () => {
     });
     const [teamMembers, setTeamMembers] = useState([]);
     const [projects, setProjects] = useState([]);
+    const [allTasks, setAllTasks] = useState([]);
     const [recentActivity, setRecentActivity] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
     
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return "N/A";
@@ -68,10 +73,12 @@ const TeamLeadDashboard = () => {
 
                 if (usersRes.data?.success && tasksRes.data?.success) {
                     const allUsers = usersRes.data.data || [];
-                    const allTasks = tasksRes.data.tasks || [];
+                    const allTasksFetched = tasksRes.data.tasks || [];
+                    
+                    setAllTasks(allTasksFetched);
 
                     const computedMembers = allUsers.map((u, i) => {
-                        const userTasks = allTasks.filter(t => t.assignedTo?._id === u._id);
+                        const userTasks = allTasksFetched.filter(t => t.assignedTo?._id === u._id);
                         const completed = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
                         const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
                         const total = userTasks.length;
@@ -98,7 +105,7 @@ const TeamLeadDashboard = () => {
 
                     // Compute Recent Activity
                     const activities = [];
-                    allTasks.forEach(t => {
+                    allTasksFetched.forEach(t => {
                         (t.statusHistory || []).forEach(h => {
                             activities.push({
                                 id: h._id,
@@ -124,10 +131,10 @@ const TeamLeadDashboard = () => {
     }, []);
 
     const kpis = [
-      { title: "Team Tasks", value: stats.totalTeamTasks, icon: ListTodo, color: "text-blue-600", bg: "bg-blue-100/50" },
-      { title: "Active Projects", value: stats.activeProjects, icon: FolderKanban, color: "text-indigo-600", bg: "bg-indigo-100/50" },
-      { title: "QA Review Tasks", value: stats.qaReviewTasks, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100/50" },
-      { title: "Overdue Tasks", value: stats.overdueTasks, icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-100/50" },
+      { title: "Team Tasks", value: stats.totalTeamTasks, icon: ListTodo, color: "text-blue-600", bg: "bg-blue-100/50", onClick: () => setStatModal({ isOpen: true, title: "Team Tasks", data: allTasks, type: "task" }) },
+      { title: "Active Projects", value: stats.activeProjects, icon: FolderKanban, color: "text-indigo-600", bg: "bg-indigo-100/50", onClick: () => setStatModal({ isOpen: true, title: "Active Projects", data: projects, type: "project" }) },
+      { title: "QA Review Tasks", value: stats.qaReviewTasks, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100/50", onClick: () => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: allTasks.filter(t => t.status === "QA Review"), type: "task" }) },
+      { title: "Overdue Tasks", value: stats.overdueTasks, icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-100/50", onClick: () => setStatModal({ isOpen: true, title: "Overdue Tasks", data: allTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), type: "task" }) },
     ];
 
     return (
@@ -159,7 +166,7 @@ const TeamLeadDashboard = () => {
                             const variant = variants[kpi.bg] || 'slate';
                             
                             return (
-                                <div key={idx} className={`premium-stat-card ${variant} flex-row items-center gap-4 p-4 h-[90px]`}>
+                                <div key={idx} onClick={kpi.onClick} className={`premium-stat-card ${variant} flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform`}>
                                     <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${kpi.bg.replace('100/50', '200')} ${kpi.color}`}>
                                         <kpi.icon className="w-5 h-5" />
                                     </div>
@@ -380,6 +387,14 @@ const TeamLeadDashboard = () => {
                     }
                 `}} />
             </div>
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     )
 }

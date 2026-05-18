@@ -6,6 +6,7 @@ import { dashboardService, projectService, userService, taskService } from "../.
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { exportPDF } from "../../utils/pdfExport";
+import StatDetailModal from "../../components/StatDetailModal";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -37,9 +38,12 @@ const AdminDashboard = () => {
     const [projects, setProjects] = useState([]);
     const [users, setUsers] = useState([]);
     const [recentTasks, setRecentTasks] = useState([]);
+    const [allTasks, setAllTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
+    
     const [newProject, setNewProject] = useState({
         projectName: "",
         description: "",
@@ -75,6 +79,7 @@ const AdminDashboard = () => {
             });
             
             setUsers(usersWithWorkload);
+            setAllTasks(allTasks);
             
             // Sort tasks by most recently created
             const sortedTasks = (taskRes.data.tasks || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -153,11 +158,11 @@ const AdminDashboard = () => {
     const teamLeads = users.filter(u => u.role === "TL" || u.role === "admin");
 
     const kpis = dashboardData ? [
-        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue", bg: "bg-blue-50" },
-        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", variant: "indigo", bg: "bg-indigo-50" },
-        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", variant: "emerald", bg: "bg-emerald-50" },
-        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", variant: "amber", bg: "bg-amber-50" },
-        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", variant: "rose", bg: "bg-rose-50" },
+        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue", bg: "bg-blue-50", onClick: () => setStatModal({ isOpen: true, title: "Total Employees", data: users, type: "employee" }) },
+        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", variant: "indigo", bg: "bg-indigo-50", onClick: () => setStatModal({ isOpen: true, title: "Total Projects", data: projects, type: "project" }) },
+        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", variant: "emerald", bg: "bg-emerald-50", onClick: () => setStatModal({ isOpen: true, title: "Total Tasks", data: allTasks, type: "task" }) },
+        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", variant: "amber", bg: "bg-amber-50", onClick: () => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: allTasks.filter(t => t.status === "QA Review"), type: "task" }) },
+        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", variant: "rose", bg: "bg-rose-50", onClick: () => setStatModal({ isOpen: true, title: "Overdue Tasks", data: allTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), type: "task" }) },
     ] : [];
 
     return (
@@ -201,7 +206,7 @@ const AdminDashboard = () => {
                             {/* KPIs - Modern Compact Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                                 {kpis.map((kpi, i) => (
-                                    <div key={i} className={`premium-stat-card ${kpi.variant} flex-row items-center gap-4 p-4 h-[90px]`}>
+                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.variant} flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform`}>
                                         <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${kpi.bg.replace('50', '100')} ${kpi.color}`}>
                                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 {kpi.variant === 'blue' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />}
@@ -477,6 +482,14 @@ const AdminDashboard = () => {
                     </div>
                 </div>
             )}
+            
+            <StatDetailModal 
+                isOpen={statModal.isOpen} 
+                onClose={() => setStatModal({ ...statModal, isOpen: false })} 
+                title={statModal.title} 
+                data={statModal.data} 
+                type={statModal.type} 
+            />
         </div>
     )
 }
