@@ -7,7 +7,7 @@ import Topbar from "../../components/Topbar";
 import { exportPDF } from "../../utils/pdfExport";
 import { 
     Download, Trash2, Edit3, Briefcase, 
-    Calendar, Users, MoreVertical, Layout, Search, Filter 
+    Calendar, Users, MoreVertical, Layout, Search, Filter, X 
 } from "lucide-react";
 
 const ProjectsDashboard = () => {
