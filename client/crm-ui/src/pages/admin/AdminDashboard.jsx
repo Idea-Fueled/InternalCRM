@@ -169,6 +169,13 @@ const AdminDashboard = () => {
     };
 
     const teamLeads = users.filter(u => u.role === "TL" || u.role === "admin");
+    const teamMembersList = users.filter(u => {
+        if (!newProject.teamLead) return false;
+        if (u.role !== 'developer' && u.role !== 'qa') return false;
+        return u.teamLeads?.some(tl => 
+            (typeof tl === 'object' ? tl._id === newProject.teamLead : tl === newProject.teamLead)
+        );
+    });
 
     const kpis = dashboardData ? [
         { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue", bg: "bg-blue-50", onClick: () => setStatModal({ isOpen: true, title: "Total Employees", data: users, type: "employee" }) },
@@ -465,7 +472,11 @@ const AdminDashboard = () => {
                                 <div>
                                     <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
                                     <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
-                                        {users.map((user) => (
+                                        {teamMembersList.length === 0 ? (
+                                            <div className="p-4 text-center text-slate-400 text-xs italic">
+                                                {newProject.teamLead ? "No members assigned to this TL" : "Select a Team Lead first"}
+                                            </div>
+                                        ) : teamMembersList.map((user) => (
                                             <label key={user._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
                                                 <input 
                                                     type="checkbox" 
