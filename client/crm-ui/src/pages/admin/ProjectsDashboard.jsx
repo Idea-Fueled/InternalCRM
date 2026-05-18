@@ -427,8 +427,14 @@ const ProjectsDashboard = () => {
                                     <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-800">No projects found</h3>
-                                <p className="text-sm font-medium text-slate-500 mt-1 max-w-xs text-center">It looks like there are no projects matching your criteria. Start by creating a new one!</p>
-                                <button onClick={() => setIsModalOpen(true)} className="mt-6 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm">Create Project</button>
+                                {role === 'admin' ? (
+                                    <>
+                                        <p className="text-sm font-medium text-slate-500 mt-1 max-w-xs text-center">It looks like there are no projects matching your criteria. Start by creating a new one!</p>
+                                        <button onClick={() => setIsModalOpen(true)} className="mt-6 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm">Create Project</button>
+                                    </>
+                                ) : (
+                                    <p className="text-sm font-medium text-slate-500 mt-1 max-w-xs text-center">There are no projects assigned to you that match the selected criteria.</p>
+                                )}
                             </div>
                         ) : (
                             filteredProjects.map((project, i) => {
