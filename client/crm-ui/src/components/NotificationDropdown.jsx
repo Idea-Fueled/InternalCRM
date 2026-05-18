@@ -151,13 +151,6 @@ const NotificationDropdown = ({ role }) => {
                             >
                                 <Check className="w-3 h-3" /> Mark Read
                             </button>
-                            <button 
-                                onClick={handleClearAll}
-                                className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
-                                title="Clear all"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
                         </div>
                     </div>
 
@@ -181,7 +174,7 @@ const NotificationDropdown = ({ role }) => {
                                     return (
                                         <div 
                                             key={n._id} 
-                                            className={`p-4 hover:bg-slate-50 transition-all relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
+                                            className={`group p-4 hover:bg-slate-50 transition-all relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
                                         >
                                             <div className="flex gap-4">
                                                 <div className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-105 ${
