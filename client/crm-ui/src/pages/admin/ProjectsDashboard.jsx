@@ -361,12 +361,18 @@ const ProjectsDashboard = () => {
                                 currentDate.setHours(0, 0, 0, 0);
                                 const deadline = project.endDate ? new Date(project.endDate) : null;
                                 if (deadline) deadline.setHours(0, 0, 0, 0);
+                                const start = project.startDate ? new Date(project.startDate) : null;
+                                if (start) start.setHours(0, 0, 0, 0);
 
                                 let bgClass = "bg-white hover:border-blue-300 border-slate-200/60";
                                 let timelineTag = "In Progress";
                                 let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
 
-                                if (isCompleted) {
+                                if (start && start > currentDate) {
+                                    bgClass = "bg-purple-50 border-purple-200 hover:border-purple-400 hover:shadow-purple-100/50";
+                                    timelineTag = "Upcoming";
+                                    timelineClass = "bg-purple-100 text-purple-700 border-purple-200";
+                                } else if (isCompleted) {
                                     bgClass = "bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:shadow-emerald-100/50";
                                     timelineTag = "Completed";
                                     timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
@@ -380,7 +386,7 @@ const ProjectsDashboard = () => {
                                         timelineClass = "bg-rose-100 text-rose-700 border-rose-200";
                                     } else if (daysDiff <= 3) {
                                         bgClass = "bg-orange-50 border-orange-200 hover:border-orange-400 hover:shadow-orange-100/50";
-                                        timelineTag = "Upcoming";
+                                        timelineTag = "Due Soon";
                                         timelineClass = "bg-orange-100 text-orange-700 border-orange-200";
                                     }
                                 }
