@@ -118,7 +118,10 @@ export default function WelcomePage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 ml-1">Password</label>
+                            <div className="flex items-center justify-between ml-1">
+                                <label className="text-sm font-semibold text-slate-700">Password</label>
+                                <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">Forgot Password?</button>
+                            </div>
                             <input
                                 type="password"
                                 name="password"

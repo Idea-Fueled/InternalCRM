@@ -23,6 +23,7 @@ import QAReviews from "./pages/qa/QAReviews";
 import QAKanban from "./pages/qa/QAKanban";
 import QAProjects from "./pages/qa/QAProjects";
 import AuditLogs from "./pages/common/AuditLogs";
+import ForgotPassword from "./pages/ForgotPassword";
 
 import { Toaster } from "sonner";
 
@@ -35,6 +36,10 @@ const App = () => {
       {
         path: "/",
         element: <WelcomePage />
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />
       },
       // Admin Routes
       {
