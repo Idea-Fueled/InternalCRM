@@ -69,12 +69,9 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
                         <p className="font-semibold text-slate-600">
                             Due: {(() => {
                                 if (!item.endDate || item.endDate === 'N/A' || item.endDate === 'Invalid Date') return 'N/A';
-                                if (typeof item.endDate === 'string' && (item.endDate.includes('/') || item.endDate.includes('-'))) {
-                                    // if it's already a formatted string and valid
-                                    return item.endDate;
-                                }
                                 const d = new Date(item.endDate);
-                                return isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+                                if (!isNaN(d.getTime())) return d.toLocaleDateString();
+                                return item.endDate;
                             })()}
                         </p>
                     </div>
