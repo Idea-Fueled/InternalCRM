@@ -353,11 +353,28 @@ const ProjectsDashboard = () => {
                                 const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A";
                                 const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
 
+                                const currentDate = new Date();
+                                currentDate.setHours(0, 0, 0, 0);
+                                const deadline = project.endDate ? new Date(project.endDate) : null;
+                                if (deadline) deadline.setHours(0, 0, 0, 0);
+
+                                let bgClass = "bg-white hover:border-blue-300 border-slate-200/60";
+                                if (project.status !== "Completed" && project.status !== "Done" && deadline) {
+                                    const timeDiff = deadline.getTime() - currentDate.getTime();
+                                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                                    
+                                    if (daysDiff < 0) {
+                                        bgClass = "bg-rose-50 border-rose-200 hover:border-rose-400 hover:shadow-rose-100/50";
+                                    } else if (daysDiff <= 3) {
+                                        bgClass = "bg-orange-50 border-orange-200 hover:border-orange-400 hover:shadow-orange-100/50";
+                                    }
+                                }
+
                                 return (
                                 <div 
                                     key={project._id || i} 
                                     onClick={() => navigate(`/admin/kanban?project=${encodeURIComponent(project.projectName)}`)}
-                                    className="group bg-white rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border border-slate-200/60 shadow-sm hover:shadow-md hover:border-blue-300 transition-all duration-300 cursor-pointer"
+                                    className={`group rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
                                 >
                                     
                                     {/* Left: Name & Desc */}

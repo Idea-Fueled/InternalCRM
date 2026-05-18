@@ -464,11 +464,29 @@ const UserProjects = ({ role = "developer" }) => {
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                            {filteredProjects.map((p) => (
+                            {filteredProjects.map((p) => {
+                                const currentDate = new Date();
+                                currentDate.setHours(0, 0, 0, 0);
+                                const deadline = p.endDate ? new Date(p.endDate) : null;
+                                if (deadline) deadline.setHours(0, 0, 0, 0);
+
+                                let bgClass = "bg-white hover:shadow-blue-900/5 border-slate-200/60";
+                                if (p.status !== "Completed" && p.status !== "Done" && deadline) {
+                                    const timeDiff = deadline.getTime() - currentDate.getTime();
+                                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
+                                    
+                                    if (daysDiff < 0) {
+                                        bgClass = "bg-rose-50 border-rose-200 hover:shadow-rose-900/10";
+                                    } else if (daysDiff <= 3) {
+                                        bgClass = "bg-orange-50 border-orange-200 hover:shadow-orange-900/10";
+                                    }
+                                }
+
+                                return (
                                 <div 
                                     key={p.id}
                                     onClick={() => setSelectedProject(p)}
-                                    className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 hover:shadow-xl hover:shadow-blue-900/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden"
+                                    className={`rounded-3xl p-6 shadow-sm border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden ${bgClass}`}
                                 >
                                     <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full -z-0 opacity-0 group-hover:opacity-10 transition-opacity ${p.status === 'Active' ? 'bg-emerald-500' : 'bg-blue-500'}`}></div>
                                     
@@ -523,7 +541,8 @@ const UserProjects = ({ role = "developer" }) => {
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </main>
