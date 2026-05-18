@@ -15,11 +15,33 @@ export const createProject = async (req, res, next) => {
             });
         }
 
+        let parsedTeamMembers = [];
+        if (teamMembers) {
+            if (typeof teamMembers === 'string') {
+                try {
+                    parsedTeamMembers = JSON.parse(teamMembers);
+                } catch (e) {
+                    parsedTeamMembers = [];
+                }
+            } else if (Array.isArray(teamMembers)) {
+                parsedTeamMembers = teamMembers;
+            }
+        }
+        
+        // Handle case where teamMembers stringifies to another string (double stringified)
+        if (typeof parsedTeamMembers === 'string') {
+            try {
+                parsedTeamMembers = JSON.parse(parsedTeamMembers);
+            } catch (e) {
+                parsedTeamMembers = [];
+            }
+        }
+
         const newProject = new Project({
             projectName,
             description,
             teamLead,
-            teamMembers: teamMembers ? JSON.parse(teamMembers) : [],
+            teamMembers: parsedTeamMembers,
             startDate,
             endDate,
             status: status || "Active",
@@ -172,8 +194,21 @@ export const updateProject = async (req, res, next) => {
         const { id } = req.params;
 
         const updateData = { ...req.body };
-        if (updateData.teamMembers && typeof updateData.teamMembers === 'string') {
-            updateData.teamMembers = JSON.parse(updateData.teamMembers);
+        if (updateData.teamMembers) {
+            if (typeof updateData.teamMembers === 'string') {
+                try {
+                    updateData.teamMembers = JSON.parse(updateData.teamMembers);
+                } catch (e) {
+                    updateData.teamMembers = [];
+                }
+            }
+            if (typeof updateData.teamMembers === 'string') {
+                try {
+                    updateData.teamMembers = JSON.parse(updateData.teamMembers);
+                } catch (e) {
+                    updateData.teamMembers = [];
+                }
+            }
         }
         if (req.file) {
             updateData.attachment = req.file.path;
