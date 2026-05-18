@@ -471,7 +471,9 @@ const UserProjects = ({ role = "developer" }) => {
                                 if (deadline) deadline.setHours(0, 0, 0, 0);
 
                                 let bgClass = "bg-white hover:shadow-blue-900/5 border-slate-200/60";
-                                if (p.status !== "Completed" && p.status !== "Done" && deadline) {
+                                if (p.status === "Completed" || p.status === "Done") {
+                                    bgClass = "bg-emerald-50 border-emerald-200 hover:shadow-emerald-900/10";
+                                } else if (deadline) {
                                     const timeDiff = deadline.getTime() - currentDate.getTime();
                                     const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
                                     
