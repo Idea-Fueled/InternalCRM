@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
 import User from '../models/user.schema.js';
 import { sendPasswordResetEmail } from '../utils/email.js';
 
