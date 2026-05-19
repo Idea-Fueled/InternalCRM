@@ -38,7 +38,7 @@ router.put("/me/profile-pic", protectRoute, upload.single('profilePic'), updateP
 router.delete("/me/profile-pic", protectRoute, deleteProfilePic);
 
 // --- Protected routes ---
-router.get("/all",           protectRoute, isAdminOrTL, getAllUsers);
+router.get("/all",           protectRoute, getAllUsers);
 router.get("/:_id",          protectRoute, getUserById);
 router.put("/update/:_id",   protectRoute, checkPermission("users.update"), upload.single('profilePic'), updateUser);
 router.delete("/delete/:_id",protectRoute, checkPermission("users.delete"), deleteUser);

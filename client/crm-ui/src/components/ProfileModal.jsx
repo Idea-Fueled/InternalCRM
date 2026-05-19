@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-    X, Mail, Shield, Briefcase, Calendar, Camera, Loader2, 
-    Trash2, Users, UserCheck, ChevronRight, Award, ShieldAlert,
-    Clock, Heart, HelpCircle
+    X, Mail, Briefcase, Calendar, Camera, Loader2, 
+    Trash2, Users, UserCheck, Award
 } from "lucide-react";
 import { authService, userService } from "../api/services";
 import { toast } from "sonner";
@@ -83,7 +82,6 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
 
     // --- Dynamic Relations Calculations ---
     const userRole = user?.role || role;
-    const myTeamLeads = user?.teamLeads || [];
 
     // Helper to get initials
     const getInitials = (name) => {
@@ -118,20 +116,31 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
         }
     };
 
+    // Helper to robustly fetch string ID from any ID type
+    const getIdString = (id) => {
+        if (!id) return "";
+        if (typeof id === 'object') return id._id ? String(id._id) : String(id);
+        return String(id);
+    };
+
+    const myTeamLeadIds = (user?.teamLeads || []).map(tl => getIdString(tl));
+
     // 1. Calculations for Developer / QA
     const reportingManagers = allUsers.filter(u => 
-        u.role === 'TL' && myTeamLeads.includes(u._id)
+        u.role === 'TL' && myTeamLeadIds.includes(getIdString(u._id))
     );
 
     const teammates = allUsers.filter(u => 
-        u._id !== user?._id && 
+        getIdString(u._id) !== getIdString(user?._id) && 
         (u.role === 'developer' || u.role === 'qa') &&
-        u.teamLeads?.some(tlId => myTeamLeads.includes(tlId))
+        (u.teamLeads || []).map(tl => getIdString(tl)).some(tlId => myTeamLeadIds.includes(tlId))
     );
 
     // 2. Calculations for Team Lead (TL)
     const tlManagers = allUsers.filter(u => u.role === 'admin');
-    const reportingTeamTL = allUsers.filter(u => u.teamLeads?.includes(user?._id));
+    const reportingTeamTL = allUsers.filter(u => 
+        (u.teamLeads || []).map(tl => getIdString(tl)).includes(getIdString(user?._id))
+    );
 
     // 3. Calculations for Admin
     const reportingTeamAdmin = allUsers.filter(u => u.role === 'TL');
@@ -142,23 +151,21 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                 className="bg-white w-full max-w-lg max-h-[85vh] flex flex-col rounded-[28px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative border border-slate-100"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Modern Banner Header Background */}
-                <div className="h-28 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 relative flex-shrink-0">
-                    <button 
-                        onClick={onClose}
-                        className="absolute top-5 right-5 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-200 backdrop-blur-md"
-                    >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
+                {/* Clean white top bar with close button */}
+                <button 
+                    onClick={onClose}
+                    className="absolute top-5 right-5 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors z-10"
+                >
+                    <X className="w-5 h-5" />
+                </button>
 
                 {/* Scrollable Container */}
-                <div className="overflow-y-auto flex-1 px-8 pb-8 pt-0 scrollbar-thin scrollbar-thumb-slate-200">
+                <div className="overflow-y-auto flex-1 px-8 pb-8 pt-10 scrollbar-thin scrollbar-thumb-slate-200">
                     
-                    {/* Avatar Container overlapping the Banner */}
-                    <div className="flex flex-col items-center -mt-14 mb-6">
+                    {/* Avatar Container naturally aligned */}
+                    <div className="flex flex-col items-center mb-6">
                         <div className="relative group">
-                            <div className="w-28 h-28 rounded-[24px] flex items-center justify-center text-white text-4xl font-extrabold shadow-xl border-4 border-white bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden relative">
+                            <div className="w-28 h-28 rounded-[24px] flex items-center justify-center text-white text-4xl font-extrabold shadow-xl border-4 border-slate-50 bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden relative">
                                 {user?.profilePic ? (
                                     <img src={user.profilePic} alt={displayName} className="w-full h-full object-cover" />
                                 ) : (
@@ -236,7 +243,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                             </div>
                             <div>
                                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Department</p>
-                                <p className="text-sm font-semibold text-slate-700">{user?.department || "General Administration"}</p>
+                                <p className="text-sm font-semibold text-slate-700">{user?.department || "Engineering"}</p>
                             </div>
                         </div>
 
