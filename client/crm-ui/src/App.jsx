@@ -24,6 +24,7 @@ import QAKanban from "./pages/qa/QAKanban";
 import QAProjects from "./pages/qa/QAProjects";
 import AuditLogs from "./pages/common/AuditLogs";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import { Toaster } from "sonner";
 
@@ -40,6 +41,10 @@ const App = () => {
       {
         path: "/forgot-password",
         element: <ForgotPassword />
+      },
+      {
+        path: "/reset-password",
+        element: <ResetPassword />
       },
       // Admin Routes
       {

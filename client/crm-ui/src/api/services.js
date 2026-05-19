@@ -66,4 +66,6 @@ export const authService = {
     logout: () => axiosInstance.post('/users/logout'),
     checkAuth: () => axiosInstance.get('/users/me'),
     updateProfilePic: (formData) => axiosInstance.put('/users/me/profile-pic', formData),
+    forgotPassword: (email) => axiosInstance.post('/auth/forgot-password', { email }),
+    resetPassword: (token, password) => axiosInstance.post('/auth/reset-password', { token, password }),
 };
