@@ -1,5 +1,9 @@
 import nodemailer from 'nodemailer';
 
+// Log on startup so Render logs show if env vars are missing
+console.log('[email] EMAIL_USER set:', !!process.env.EMAIL_USER);
+console.log('[email] EMAIL_PASS set:', !!process.env.EMAIL_PASS);
+
 /**
  * Creates a Nodemailer transporter configured for Gmail SMTP.
  * Requires EMAIL_USER and EMAIL_PASS (Google App Password) in env.
