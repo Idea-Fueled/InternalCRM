@@ -24,18 +24,35 @@ axiosInstance.interceptors.response.use(
     },
     (error) => {
         if (error.response) {
-            if (error.response.status === 401) {
-                // Silently handle 401 - AuthContext or ProtectedRoute will redirect
-            }
-
-            if (error.response.status === 403) {
-                // Silently handle 403 - Permission denied
+            // Map technical backend error messages to readable ones just in case
+            if (error.response.data && typeof error.response.data.message === 'string') {
+                const message = error.response.data.message;
+                const lower = message.toLowerCase();
+                if (lower.includes("cast to objectid") || lower.includes("casterror") || lower.includes("failed for value")) {
+                    if (lower.includes("assignedqa")) {
+                        error.response.data.message = "Please select a valid QA before assigning the task.";
+                    } else if (lower.includes("assignedto")) {
+                        error.response.data.message = "Please select a valid user before assigning the task.";
+                    } else {
+                        error.response.data.message = "Please select a valid user before assigning the task.";
+                    }
+                } else if (lower.includes("validation failed") || lower.includes("validationerror")) {
+                    error.response.data.message = "Please fill all required fields correctly.";
+                } else if (lower.includes("unauthorized") || lower.includes("jwt") || lower.includes("expired token")) {
+                    error.response.data.message = "Your session has expired. Please login again.";
+                } else if (lower.includes("access denied") || lower.includes("forbidden")) {
+                    error.response.data.message = "You do not have permission to perform this action.";
+                } else if (lower.includes("internal server error") || lower.includes("server error") || lower.includes("500")) {
+                    error.response.data.message = "Something went wrong. Please try again.";
+                }
             }
         } else if (error.request) {
             console.error("Network error! Server might be down or not reachable.");
+            // Set message for network failure to keep UI toasts friendly
+            error.message = "Network error! Server might be down or not reachable. Please try again.";
         } else {
-            // Something happened in setting up the request that triggered an Error
             console.error("Error setting up request:", error.message);
+            error.message = "Something went wrong. Please try again.";
         }
 
         return Promise.reject(error);
