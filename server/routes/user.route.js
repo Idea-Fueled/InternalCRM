@@ -9,6 +9,7 @@ import {
     restoreUser,
     updateUser,
     updateProfilePic,
+    deleteProfilePic,
     hardDeleteUser
 } from "../controllers/user.controller.js";
 import { protectRoute, isAdmin, isAdminOrTL } from "../middlewares/auth.middleware.js";
@@ -34,6 +35,7 @@ router.post("/logout", (req, res) => {
 // CRITICAL: /me must be declared before /:_id
 router.get("/me", protectRoute, getCurrentUser);
 router.put("/me/profile-pic", protectRoute, upload.single('profilePic'), updateProfilePic);
+router.delete("/me/profile-pic", protectRoute, deleteProfilePic);
 
 // --- Protected routes ---
 router.get("/all",           protectRoute, isAdminOrTL, getAllUsers);

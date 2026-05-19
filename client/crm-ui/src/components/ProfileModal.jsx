@@ -1,22 +1,50 @@
-import React from "react";
-import { X, Mail, Shield, Briefcase, Calendar, Camera, Loader2 } from "lucide-react";
-import { authService } from "../api/services";
+import React, { useState, useEffect, useRef } from "react";
+import { 
+    X, Mail, Shield, Briefcase, Calendar, Camera, Loader2, 
+    Trash2, Users, UserCheck, ChevronRight, Award, ShieldAlert,
+    Clock, Heart, HelpCircle
+} from "lucide-react";
+import { authService, userService } from "../api/services";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 
 const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, initial }) => {
     const { updateUserProfile } = useAuth();
-    const [isUploading, setIsUploading] = React.useState(false);
-    const fileInputRef = React.useRef(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [allUsers, setAllUsers] = useState([]);
+    const [isLoadingRelations, setIsLoadingRelations] = useState(false);
+    const fileInputRef = useRef(null);
+
+    // Fetch relations when modal is opened
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const fetchRelations = async () => {
+            try {
+                setIsLoadingRelations(true);
+                const res = await userService.getAllUsers({ status: 'active' });
+                if (res.data?.success && Array.isArray(res.data.data)) {
+                    setAllUsers(res.data.data);
+                }
+            } catch (err) {
+                console.error("Failed to load hierarchy relations:", err);
+            } finally {
+                setIsLoadingRelations(false);
+            }
+        };
+
+        fetchRelations();
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
+    // Handle profile pic upload
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         if (!file.type.startsWith('image/')) {
-            toast.error("Please select an image file");
+            toast.error("Please select a valid image file");
             return;
         }
 
@@ -28,35 +56,109 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
             const res = await authService.updateProfilePic(formData);
             if (res.data?.profilePic) {
                 updateUserProfile({ profilePic: res.data.profilePic });
-                toast.success("Profile picture updated!");
+                toast.success("Profile picture updated successfully!");
             }
         } catch (error) {
             console.error("Upload error:", error);
-            const errorMsg = error.response?.data?.message || "Failed to upload image";
-            toast.error(errorMsg);
+            toast.error(error.response?.data?.message || "Failed to upload image");
         } finally {
             setIsUploading(false);
         }
     };
 
+    // Handle profile pic removal
+    const handleImageDelete = async () => {
+        try {
+            setIsUploading(true);
+            await authService.deleteProfilePic();
+            updateUserProfile({ profilePic: "" });
+            toast.success("Profile picture removed!");
+        } catch (error) {
+            console.error("Pic deletion error:", error);
+            toast.error(error.response?.data?.message || "Failed to remove profile picture");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    // --- Dynamic Relations Calculations ---
+    const userRole = user?.role || role;
+    const myTeamLeads = user?.teamLeads || [];
+
+    // Helper to get initials
+    const getInitials = (name) => {
+        if (!name) return "?";
+        const parts = name.split(" ");
+        if (parts.length > 1) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase();
+    };
+
+    // Helper to format role names beautifully
+    const formatRole = (r) => {
+        if (r === 'TL') return 'Team Lead';
+        if (r === 'qa') return 'QA';
+        return r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Employee';
+    };
+
+    // Role style mapping
+    const getRoleBadgeStyle = (r) => {
+        switch (r) {
+            case 'admin':
+                return 'bg-blue-50 text-blue-700 border-blue-100/50';
+            case 'TL':
+                return 'bg-purple-50 text-purple-700 border-purple-100/50';
+            case 'developer':
+                return 'bg-indigo-50 text-indigo-700 border-indigo-100/50';
+            case 'qa':
+                return 'bg-pink-50 text-pink-700 border-pink-100/50';
+            default:
+                return 'bg-slate-50 text-slate-700 border-slate-100/50';
+        }
+    };
+
+    // 1. Calculations for Developer / QA
+    const reportingManagers = allUsers.filter(u => 
+        u.role === 'TL' && myTeamLeads.includes(u._id)
+    );
+
+    const teammates = allUsers.filter(u => 
+        u._id !== user?._id && 
+        (u.role === 'developer' || u.role === 'qa') &&
+        u.teamLeads?.some(tlId => myTeamLeads.includes(tlId))
+    );
+
+    // 2. Calculations for Team Lead (TL)
+    const tlManagers = allUsers.filter(u => u.role === 'admin');
+    const reportingTeamTL = allUsers.filter(u => u.teamLeads?.includes(user?._id));
+
+    // 3. Calculations for Admin
+    const reportingTeamAdmin = allUsers.filter(u => u.role === 'TL');
+
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
             <div 
-                className="bg-white w-full max-w-sm max-h-[90vh] flex flex-col rounded-[24px] shadow-xl overflow-hidden animate-in zoom-in-95 duration-300 relative border border-slate-100"
+                className="bg-white w-full max-w-lg max-h-[85vh] flex flex-col rounded-[28px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative border border-slate-100"
                 onClick={(e) => e.stopPropagation()}
             >
-                <button 
-                    onClick={onClose}
-                    className="absolute top-5 right-5 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors z-10"
-                >
-                    <X className="w-5 h-5" />
-                </button>
+                {/* Modern Banner Header Background */}
+                <div className="h-28 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 relative flex-shrink-0">
+                    <button 
+                        onClick={onClose}
+                        className="absolute top-5 right-5 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-all duration-200 backdrop-blur-md"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
 
-                <div className="pt-10 pb-8 px-6 text-center overflow-y-auto scrollbar-thin">
-                    {/* Profile Icon with Upload Overlay */}
-                    <div className="flex justify-center mb-5">
+                {/* Scrollable Container */}
+                <div className="overflow-y-auto flex-1 px-8 pb-8 pt-0 scrollbar-thin scrollbar-thumb-slate-200">
+                    
+                    {/* Avatar Container overlapping the Banner */}
+                    <div className="flex flex-col items-center -mt-14 mb-6">
                         <div className="relative group">
-                            <div className="w-24 h-24 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-lg shadow-blue-100 bg-gradient-to-br from-blue-500 to-blue-600 overflow-hidden">
+                            <div className="w-28 h-28 rounded-[24px] flex items-center justify-center text-white text-4xl font-extrabold shadow-xl border-4 border-white bg-gradient-to-br from-blue-500 to-indigo-600 overflow-hidden relative">
                                 {user?.profilePic ? (
                                     <img src={user.profilePic} alt={displayName} className="w-full h-full object-cover" />
                                 ) : (
@@ -64,20 +166,37 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 )}
                                 
                                 {isUploading && (
-                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px]">
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center backdrop-blur-[2px] z-10">
                                         <Loader2 className="w-8 h-8 text-white animate-spin" />
                                     </div>
                                 )}
                             </div>
                             
-                            <button 
-                                onClick={() => fileInputRef.current?.click()}
-                                disabled={isUploading}
-                                className="absolute -bottom-2 -right-2 p-2 bg-white rounded-xl shadow-lg border border-slate-100 text-blue-600 hover:bg-blue-50 transition-all hover:scale-110 active:scale-95"
-                                title="Change Profile Picture"
-                            >
-                                <Camera className="w-4 h-4" />
-                            </button>
+                            {/* Symmetric Avatar Controls */}
+                            <div className="absolute -bottom-2 -left-2 flex gap-1 z-20">
+                                {user?.profilePic && (
+                                    <button 
+                                        onClick={handleImageDelete}
+                                        disabled={isUploading}
+                                        className="p-2 bg-white rounded-xl shadow-lg border border-slate-100 text-rose-500 hover:bg-rose-50 transition-all hover:scale-110 active:scale-95"
+                                        title="Remove Photo"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="absolute -bottom-2 -right-2 flex gap-1 z-20">
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    disabled={isUploading}
+                                    className="p-2 bg-white rounded-xl shadow-lg border border-slate-100 text-blue-600 hover:bg-blue-50 transition-all hover:scale-110 active:scale-95"
+                                    title="Upload Photo"
+                                >
+                                    <Camera className="w-4 h-4" />
+                                </button>
+                            </div>
+                            
                             <input 
                                 type="file" 
                                 ref={fileInputRef} 
@@ -86,50 +205,209 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 onChange={handleImageUpload}
                             />
                         </div>
-                    </div>
 
-                    {/* Name & Role - Blue Theme */}
-                    <div className="mb-8">
-                        <h3 className="text-xl font-bold text-slate-800 mb-1">{displayName}</h3>
-                        <div className="flex items-center justify-center gap-2">
-                            <span className="text-[11px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md text-blue-600 bg-blue-50">
+                        {/* Name and Badges */}
+                        <h3 className="text-2xl font-bold text-slate-800 mt-4 mb-2">{displayName}</h3>
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getRoleBadgeStyle(userRole)}`}>
                                 {displayRole}
                             </span>
-                            <span className="flex items-center gap-1 text-[11px] font-medium text-sky-600 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-100/50">
-                                <div className="w-1.5 h-1.5 rounded-full bg-sky-500" /> Active
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100/50">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active
                             </span>
                         </div>
                     </div>
 
-                    {/* Info Fields - Stacked for full visibility */}
-                    <div className="space-y-3 text-left">
-                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 transition-all hover:bg-blue-50/30 hover:border-blue-100">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</p>
-                            <p className="text-sm font-medium text-slate-700 break-all">{user?.email || "N/A"}</p>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Role</p>
-                                <p className="text-sm font-medium text-slate-700">{displayRole}</p>
+                    {/* Left & Right layout for general info */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-blue-50/20 hover:border-blue-100/50 flex items-start gap-3 col-span-1 sm:col-span-2">
+                            <div className="p-2 bg-blue-50 rounded-xl text-blue-600 mt-0.5">
+                                <Mail className="w-4 h-4" />
                             </div>
-                            <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Department</p>
-                                <p className="text-sm font-medium text-slate-700">{user?.department || "N/A"}</p>
+                            <div className="overflow-hidden">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Email Address</p>
+                                <p className="text-sm font-semibold text-slate-700 truncate">{user?.email || "N/A"}</p>
                             </div>
                         </div>
 
-                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Account Joined</p>
-                            <p className="text-sm font-medium text-slate-700">
-                                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' }) : "N/A"}
-                            </p>
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-indigo-50/20 hover:border-indigo-100/50 flex items-start gap-3">
+                            <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600 mt-0.5">
+                                <Briefcase className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Department</p>
+                                <p className="text-sm font-semibold text-slate-700">{user?.department || "General Administration"}</p>
+                            </div>
                         </div>
+
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-purple-50/20 hover:border-purple-100/50 flex items-start gap-3">
+                            <div className="p-2 bg-purple-50 rounded-xl text-purple-600 mt-0.5">
+                                <Calendar className="w-4 h-4" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Joined CRM</p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' }) : "N/A"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-slate-100 my-6" />
+
+                    {/* ─── Hierarchy / Reporting Section ───────────────────────────── */}
+                    <div className="space-y-6">
+                        {isLoadingRelations ? (
+                            <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                                <p className="text-xs text-slate-400 font-semibold">Resolving organization matrix...</p>
+                            </div>
+                        ) : (
+                            <>
+                                {/* 1. Reporting Manager Block (Developers, QAs, Team Leads only) */}
+                                {userRole !== 'admin' && (
+                                    <div>
+                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                                            <UserCheck className="w-4 h-4 text-blue-500" />
+                                            Reporting Manager
+                                        </h4>
+                                        <div className="space-y-2">
+                                            {userRole === 'TL' ? (
+                                                /* TL reports to Admins */
+                                                tlManagers.length > 0 ? (
+                                                    tlManagers.map(mgr => (
+                                                        <div key={mgr._id} className="flex items-center gap-3 p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all">
+                                                            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm">
+                                                                {mgr.profilePic ? (
+                                                                    <img src={mgr.profilePic} alt={mgr.name} className="w-full h-full object-cover" />
+                                                                ) : getInitials(mgr.name)}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
+                                                                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Corporate Administrator</p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-center text-xs font-medium text-slate-400">
+                                                        No supervisor assigned
+                                                    </div>
+                                                )
+                                            ) : (
+                                                /* Developer / QA report to assigned Team Leads */
+                                                reportingManagers.length > 0 ? (
+                                                    reportingManagers.map(mgr => (
+                                                        <div key={mgr._id} className="flex items-center gap-3 p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all">
+                                                            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm">
+                                                                {mgr.profilePic ? (
+                                                                    <img src={mgr.profilePic} alt={mgr.name} className="w-full h-full object-cover" />
+                                                                ) : getInitials(mgr.name)}
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
+                                                                <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wide">Team Lead / Reporting Manager</p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-4 bg-slate-50/50 border border-slate-100 border-dashed rounded-2xl text-center text-xs font-medium text-slate-400">
+                                                        No reporting manager assigned
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* 2. Reporting Team / Teammates Block */}
+                                <div>
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                                        <Users className="w-4 h-4 text-indigo-500" />
+                                        {userRole === 'admin' ? "Active Team Leads" : userRole === 'TL' ? "Reporting Team Members" : "My Teammates"}
+                                    </h4>
+
+                                    <div className="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
+                                        {/* Render items based on role */}
+                                        {userRole === 'admin' && (
+                                            reportingTeamAdmin.length > 0 ? (
+                                                reportingTeamAdmin.map(member => (
+                                                    <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
+                                                                {member.profilePic ? (
+                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                ) : getInitials(member.name)}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-700">{member.name}</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
+                                                            {formatRole(member.role)}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
+                                                    No active Team Leads registered in the system
+                                                </div>
+                                            )
+                                        )}
+
+                                        {userRole === 'TL' && (
+                                            reportingTeamTL.length > 0 ? (
+                                                reportingTeamTL.map(member => (
+                                                    <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
+                                                                {member.profilePic ? (
+                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                ) : getInitials(member.name)}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-700">{member.name}</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
+                                                            {formatRole(member.role)}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
+                                                    No developers or QA assigned under you yet
+                                                </div>
+                                            )
+                                        )}
+
+                                        {(userRole === 'developer' || userRole === 'qa') && (
+                                            teammates.length > 0 ? (
+                                                teammates.map(member => (
+                                                    <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
+                                                                {member.profilePic ? (
+                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                ) : getInitials(member.name)}
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-700">{member.name}</span>
+                                                        </div>
+                                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
+                                                            {formatRole(member.role)}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
+                                                    No teammates found under your reporting lead
+                                                </div>
+                                            )
+                                        )}
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
 
                     <button 
                         onClick={onClose}
-                        className="w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all active:scale-[0.98] bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
+                        className="w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all duration-200 active:scale-[0.98] bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
                     >
                         Close Profile
                     </button>

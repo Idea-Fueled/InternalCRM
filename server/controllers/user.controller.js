@@ -131,6 +131,8 @@ export const loginController = async (req, res) => {
                 name: user.name,
                 role: user.role,
                 profilePic: user.profilePic,
+                teamLeads: user.teamLeads || [],
+                teamMembers: user.teamMembers || [],
                 permissions: user.role === 'admin'
                     ? DEFAULT_ROLE_PERMISSIONS.admin
                     : (user.permissions || [])
@@ -162,6 +164,8 @@ export const getCurrentUser = (req, res) => {
                 role: user.role,
                 department: user.department || null,
                 profilePic: user.profilePic || "",
+                teamLeads: user.teamLeads || [],
+                teamMembers: user.teamMembers || [],
                 permissions: user.role === 'admin'
                     ? DEFAULT_ROLE_PERMISSIONS.admin
                     : (user.permissions || [])
@@ -388,3 +392,34 @@ export const hardDeleteUser = async (req, res) => {
         return res.status(500).json({ message: error.message });
     }
 }
+
+export const deleteProfilePic = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Delete from Cloudinary if exists
+        if (user.profilePicPublicId) {
+            try {
+                await cloudinary.uploader.destroy(user.profilePicPublicId);
+            } catch (delErr) {
+                console.error("Cloudinary delete error (deleteProfilePic):", delErr);
+            }
+        }
+
+        user.profilePic = "";
+        user.profilePicPublicId = "";
+        await user.save();
+
+        return res.status(200).json({
+            message: "Profile picture removed successfully",
+            profilePic: ""
+        });
+    } catch (error) {
+        console.error("deleteProfilePic error:", error);
+        return res.status(500).json({ 
+            message: "Failed to remove profile picture",
+            error: error.message 
+        });
+    }
+};
