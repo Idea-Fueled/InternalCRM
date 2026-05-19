@@ -1,9 +1,9 @@
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
 import User from '../models/user.schema.js';
+import { hashPassword } from '../utils/hashPassword.js';
 import { sendPasswordResetEmail } from '../utils/email.js';
 
-// ─── Helper: hash a raw token for secure DB storage ──────────────────────────
+// ─── Helper: SHA-256 hash of a raw token for secure DB storage ───────────────
 const hashToken = (rawToken) =>
     crypto.createHash('sha256').update(rawToken).digest('hex');
 
@@ -20,7 +20,7 @@ export const forgotPassword = async (req, res) => {
 
         const user = await User.findOne({ email: email.trim().toLowerCase() });
 
-        // Always return 200 to prevent user enumeration attacks
+        // Always 200 to prevent user enumeration
         if (!user) {
             return res.status(200).json({
                 success: true,
@@ -28,22 +28,26 @@ export const forgotPassword = async (req, res) => {
             });
         }
 
-        // 1. Generate cryptographically secure raw token
+        // Generate a cryptographically secure raw token
         const rawToken = crypto.randomBytes(32).toString('hex');
 
-        // 2. Store only the HASHED token in the DB (security best practice)
+        // Store the HASHED version in DB — never the raw token
         user.resetPasswordToken = hashToken(rawToken);
         user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
         await user.save();
 
-        // 3. Build the reset URL — raw token goes in the URL, never the hashed one
+        // Build the reset URL using raw token (never hash)
         const frontendUrl = process.env.FRONTEND_URL
             ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/$/, '')
             : 'http://localhost:5173';
         const resetLink = `${frontendUrl}/reset-password?token=${rawToken}`;
 
-        // 4. Send the email via Nodemailer
+        console.log(`[forgotPassword] Sending reset email to: ${user.email}`);
+
+        // Send email
         await sendPasswordResetEmail(user.email, user.name, resetLink);
+
+        console.log(`[forgotPassword] Email sent successfully to: ${user.email}`);
 
         return res.status(200).json({
             success: true,
@@ -54,7 +58,7 @@ export const forgotPassword = async (req, res) => {
         console.error('[forgotPassword] Error:', error.message || error);
         return res.status(500).json({
             success: false,
-            message: 'Something went wrong. Please try again later.'
+            message: 'Failed to send reset email. Please try again later.'
         });
     }
 };
@@ -74,12 +78,12 @@ export const resetPassword = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
         }
 
-        // 1. Hash the incoming raw token and look it up in the DB
+        // Hash the incoming raw token and look it up
         const hashedToken = hashToken(token);
 
         const user = await User.findOne({
             resetPasswordToken: hashedToken,
-            resetPasswordExpires: { $gt: new Date() } // token must not be expired
+            resetPasswordExpires: { $gt: new Date() }
         });
 
         if (!user) {
@@ -89,13 +93,13 @@ export const resetPassword = async (req, res) => {
             });
         }
 
-        // 2. Hash the new password and update the user
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        user.password = hashedPassword;
+        // Use the same hashPassword utility the rest of the app uses
+        user.password = await hashPassword(password);
         user.resetPasswordToken = null;
         user.resetPasswordExpires = null;
         await user.save();
+
+        console.log(`[resetPassword] Password reset successfully for: ${user.email}`);
 
         return res.status(200).json({
             success: true,
@@ -106,7 +110,7 @@ export const resetPassword = async (req, res) => {
         console.error('[resetPassword] Error:', error.message || error);
         return res.status(500).json({
             success: false,
-            message: 'Something went wrong. Please try again later.'
+            message: 'Failed to reset password. Please try again later.'
         });
     }
 };
