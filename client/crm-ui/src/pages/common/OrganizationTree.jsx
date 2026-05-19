@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { 
-    Users, Search, ChevronDown, ChevronRight, Briefcase, 
-    UserCheck, Award, Network, CheckCircle2, Shield, Loader2,
-    Eye, Building2, UserMinus
+    Search, Loader2, Building2, UserMinus, Plus, Minus, Pin, 
+    Compass, User, Landmark, HelpCircle
 } from "lucide-react";
 import { userService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
@@ -14,14 +13,24 @@ const OrganizationTree = () => {
     const [allUsers, setAllUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedDept, setSelectedDept] = useState("All");
-    const [viewMode, setViewMode] = useState("Full"); // "Full" | "MyTeam" | "ReportingChain"
+    const [groupByDept, setGroupByDept] = useState(false);
+    const [zoomScale, setZoomScale] = useState(1.0);
     const [expandedNodes, setExpandedNodes] = useState({});
-    const [selectedChainUser, setSelectedChainUser] = useState("");
+    
+    // Viewport references for panning & auto-centering
+    const canvasViewportRef = useRef(null);
+    const canvasContentRef = useRef(null);
+    
+    // Drag-to-pan states
+    const [isDragging, setIsDragging] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [startY, setStartY] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
+    const [scrollTop, setScrollTop] = useState(0);
 
     const currentRole = user?.role === 'TL' ? 'teamLead' : user?.role || 'admin';
 
-    // Fetch active users in organizational directory
+    // Fetch active employees
     useEffect(() => {
         const fetchUsers = async () => {
             try {
@@ -39,7 +48,7 @@ const OrganizationTree = () => {
         fetchUsers();
     }, []);
 
-    // Expand all nodes initially once users load
+    // Expand all branches by default initially
     useEffect(() => {
         if (allUsers.length > 0) {
             const initialExpanded = {};
@@ -50,30 +59,7 @@ const OrganizationTree = () => {
         }
     }, [allUsers]);
 
-    // Set fallback selected user for reporting chain
-    useEffect(() => {
-        if (allUsers.length > 0 && !selectedChainUser) {
-            setSelectedChainUser(user?._id || allUsers[0]?._id);
-        }
-    }, [allUsers, user, selectedChainUser]);
-
-    // Unique list of departments for filtering
-    const departments = useMemo(() => {
-        const depts = new Set();
-        allUsers.forEach(u => {
-            if (u.department) depts.add(u.department);
-        });
-        return ["All", ...Array.from(depts)];
-    }, [allUsers]);
-
-    // Helper to get string ID
-    const getIdString = (id) => {
-        if (!id) return "";
-        if (typeof id === 'object') return id._id ? String(id._id) : String(id);
-        return String(id);
-    };
-
-    // Helper for initials
+    // Helper to get initials
     const getInitials = (name) => {
         if (!name) return "?";
         const parts = name.split(" ");
@@ -85,50 +71,17 @@ const OrganizationTree = () => {
 
     // Format role names beautifully
     const formatRole = (r) => {
-        if (r === 'TL') return 'Team Lead';
-        if (r === 'qa') return 'QA';
+        if (r === 'TL') return 'Technical Team Lead';
+        if (r === 'qa') return 'QA Engineer';
+        if (r === 'developer') return 'Software Developer Engineer - 1';
         return r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Employee';
     };
 
-    // Role styling
-    const getRoleStyles = (r) => {
-        switch (r) {
-            case 'admin':
-                return {
-                    border: 'border-l-blue-500 hover:border-blue-400',
-                    bg: 'bg-blue-50 text-blue-700 border-blue-100',
-                    initialsBg: 'from-blue-600 to-indigo-600',
-                    badge: 'bg-blue-100 text-blue-800'
-                };
-            case 'TL':
-                return {
-                    border: 'border-l-purple-500 hover:border-purple-400',
-                    bg: 'bg-purple-50 text-purple-700 border-purple-100',
-                    initialsBg: 'from-purple-600 to-violet-600',
-                    badge: 'bg-purple-100 text-purple-800'
-                };
-            case 'developer':
-                return {
-                    border: 'border-l-indigo-500 hover:border-indigo-400',
-                    bg: 'bg-indigo-50 text-indigo-700 border-indigo-100',
-                    initialsBg: 'from-indigo-600 to-blue-500',
-                    badge: 'bg-indigo-100 text-indigo-800'
-                };
-            case 'qa':
-                return {
-                    border: 'border-l-pink-500 hover:border-pink-400',
-                    bg: 'bg-pink-50 text-pink-700 border-pink-100',
-                    initialsBg: 'from-pink-600 to-rose-600',
-                    badge: 'bg-pink-100 text-pink-800'
-                };
-            default:
-                return {
-                    border: 'border-l-slate-400 hover:border-slate-300',
-                    bg: 'bg-slate-50 text-slate-700 border-slate-100',
-                    initialsBg: 'from-slate-500 to-slate-600',
-                    badge: 'bg-slate-100 text-slate-800'
-                };
-        }
+    // Helper to extract string ID
+    const getIdString = (id) => {
+        if (!id) return "";
+        if (typeof id === 'object') return id._id ? String(id._id) : String(id);
+        return String(id);
     };
 
     const toggleExpand = (nodeId) => {
@@ -138,134 +91,144 @@ const OrganizationTree = () => {
         }));
     };
 
-    // --- Dynamic Hierarchy Builder ---
-    const buildHierarchyData = () => {
+    // Pan viewport to center on a specific node card element
+    const centerOnNode = (nodeId) => {
+        const element = document.getElementById(`node-card-${nodeId}`);
+        const viewport = canvasViewportRef.current;
+        if (element && viewport) {
+            // Scroll matching node directly to center of viewport
+            const elementRect = element.getBoundingClientRect();
+            const viewportRect = viewport.getBoundingClientRect();
+
+            const targetScrollLeft = viewport.scrollLeft + (elementRect.left - viewportRect.left) - (viewportRect.width / 2) + (elementRect.width / 2);
+            const targetScrollTop = viewport.scrollTop + (elementRect.top - viewportRect.top) - (viewportRect.height / 2) + (elementRect.height / 2);
+
+            viewport.scrollTo({
+                left: targetScrollLeft,
+                top: targetScrollTop,
+                behavior: "smooth"
+            });
+        }
+    };
+
+    // --- Shortcuts Navigation ---
+    const handleGoToMe = () => {
+        if (user?._id) {
+            centerOnNode(getIdString(user._id));
+        }
+    };
+
+    const handleGoToTop = () => {
+        // Find topmost admins
+        const admins = allUsers.filter(u => u.role === 'admin');
+        if (admins.length > 0) {
+            centerOnNode(getIdString(admins[0]._id));
+        }
+    };
+
+    const handleGoToMyDepartment = () => {
+        if (user?.department) {
+            const sameDept = allUsers.find(u => u.department === user.department);
+            if (sameDept) {
+                centerOnNode(getIdString(sameDept._id));
+            }
+        }
+    };
+
+    // --- Kinetic Panning Handlers ---
+    const handleMouseDown = (e) => {
+        if (e.button !== 0 || e.target.closest('button') || e.target.closest('input')) return;
+        setIsDragging(true);
+        setStartX(e.pageX - canvasViewportRef.current.offsetLeft);
+        setStartY(e.pageY - canvasViewportRef.current.offsetTop);
+        setScrollLeft(canvasViewportRef.current.scrollLeft);
+        setScrollTop(canvasViewportRef.current.scrollTop);
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        const x = e.pageX - canvasViewportRef.current.offsetLeft;
+        const y = e.pageY - canvasViewportRef.current.offsetTop;
+        const walkX = (x - startX) * 1.5; 
+        const walkY = (y - startY) * 1.5;
+        canvasViewportRef.current.scrollLeft = scrollLeft - walkX;
+        canvasViewportRef.current.scrollTop = scrollTop - walkY;
+    };
+
+    const handleMouseUpOrLeave = () => {
+        setIsDragging(false);
+    };
+
+    // --- Zoom Controls ---
+    const handleZoomIn = () => setZoomScale(prev => Math.min(prev + 0.1, 1.5));
+    const handleZoomOut = () => setZoomScale(prev => Math.max(prev - 0.1, 0.5));
+    const handleResetZoom = () => {
+        setZoomScale(1.0);
+        handleGoToTop();
+    };
+
+    // --- Hierarchy Data Structuring ---
+    const rootNodes = useMemo(() => {
+        if (allUsers.length === 0) return [];
+
+        const admins = allUsers.filter(u => u.role === 'admin');
+        const tls = allUsers.filter(u => u.role === 'TL');
+        const members = allUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+
+        // Resolve structural scope by current user role permissions
         const loggedInUserId = getIdString(user?._id);
         const loggedInUserRole = user?.role || 'admin';
         const myTeamLeads = (user?.teamLeads || []).map(tl => getIdString(tl));
 
-        // Filter active system list based on view modes & search queries
-        let workingList = [...allUsers];
+        // Define dynamic tree nesting function
+        const buildTree = (roots) => {
+            return roots.map(root => {
+                // Nested children are TLs who report to this admin
+                let children = [];
+                if (root.role === 'admin') {
+                    const adminTLs = tls.filter(tl => (tl.teamLeads || []).map(t => getIdString(t)).includes(getIdString(root._id)));
+                    children = adminTLs.length > 0 ? adminTLs : tls;
+                } else if (root.role === 'TL') {
+                    // Children under Team Leads
+                    children = members.filter(m => (m.teamLeads || []).map(t => getIdString(t)).includes(getIdString(root._id)));
+                }
 
-        // 1. Search Query Filters
-        if (searchQuery.trim()) {
+                return {
+                    ...root,
+                    children: children.length > 0 ? buildTree(children) : []
+                };
+            });
+        };
+
+        // Decide top management roots based on role visibility
+        if (loggedInUserRole === 'admin') {
+            return buildTree(admins);
+        } else if (loggedInUserRole === 'TL') {
+            const selfTL = allUsers.find(u => getIdString(u._id) === loggedInUserId);
+            return selfTL ? buildTree([selfTL]) : [];
+        } else {
+            const reportingTLs = allUsers.filter(u => u.role === 'TL' && myTeamLeads.includes(getIdString(u._id)));
+            return reportingTLs.length > 0 ? buildTree(reportingTLs) : buildTree(admins);
+        }
+    }, [allUsers, user]);
+
+    // Live search highlighting and centering trigger
+    useEffect(() => {
+        if (searchQuery.trim() && allUsers.length > 0) {
             const query = searchQuery.toLowerCase();
-            workingList = workingList.filter(u => 
-                u.name.toLowerCase().includes(query) || 
-                formatRole(u.role).toLowerCase().includes(query) ||
-                (u.department && u.department.toLowerCase().includes(query))
-            );
-        }
-
-        // 2. Department Selector Filter
-        if (selectedDept !== "All") {
-            workingList = workingList.filter(u => u.department === selectedDept);
-        }
-
-        // Divide into Roles
-        const admins = workingList.filter(u => u.role === 'admin');
-        const tls = workingList.filter(u => u.role === 'TL');
-        const members = workingList.filter(u => u.role === 'developer' || u.role === 'qa');
-
-        // Resolve Tree Data based on View Modes + Logged-in User Roles
-        if (viewMode === 'MyTeam') {
-            // "My Team" structural scope
-            if (loggedInUserRole === 'admin') {
-                // Admins see all Team Leads and members under them
-                return admins.map(adm => ({
-                    ...adm,
-                    children: tls.map(tl => ({
-                        ...tl,
-                        children: members.filter(m => (m.teamLeads || []).map(t => getIdString(t)).includes(getIdString(tl._id)))
-                    }))
-                }));
-            } else if (loggedInUserRole === 'TL') {
-                // Team Lead sees themselves at top, with developers & QAs reporting under them
-                const selfTL = allUsers.find(u => getIdString(u._id) === loggedInUserId);
-                if (!selfTL) return [];
-                return [{
-                    ...selfTL,
-                    children: members.filter(m => (m.teamLeads || []).map(t => getIdString(t)).includes(loggedInUserId))
-                }];
-            } else {
-                // Developer/QA sees their reporting TLs at top, with all teammates under them
-                const reportingTLs = allUsers.filter(u => u.role === 'TL' && myTeamLeads.includes(getIdString(u._id)));
-                return reportingTLs.map(tl => ({
-                    ...tl,
-                    children: allUsers.filter(u => 
-                        (u.role === 'developer' || u.role === 'qa') &&
-                        (u.teamLeads || []).map(t => getIdString(t)).includes(getIdString(tl._id))
-                    )
-                }));
+            const matched = allUsers.find(u => u.name.toLowerCase().includes(query));
+            if (matched) {
+                centerOnNode(getIdString(matched._id));
             }
         }
+    }, [searchQuery, allUsers]);
 
-        if (viewMode === 'ReportingChain' && selectedChainUser) {
-            // "Reporting Chain" scope: dynamic vertical upward/downward reporting path for selected user
-            const focusUser = allUsers.find(u => getIdString(u._id) === selectedChainUser);
-            if (!focusUser) return [];
-
-            if (focusUser.role === 'admin') {
-                return [{
-                    ...focusUser,
-                    children: tls.filter(tl => (tl.teamLeads || []).map(t => getIdString(t)).includes(getIdString(focusUser._id)))
-                }];
-            } else if (focusUser.role === 'TL') {
-                const focusManagers = allUsers.filter(u => u.role === 'admin' && (focusUser.teamLeads || []).map(t => getIdString(t)).includes(getIdString(u._id)));
-                const rootManagers = focusManagers.length > 0 ? focusManagers : allUsers.filter(u => u.role === 'admin');
-                
-                return rootManagers.map(mgr => ({
-                    ...mgr,
-                    children: [{
-                        ...focusUser,
-                        children: members.filter(m => (m.teamLeads || []).map(t => getIdString(t)).includes(getIdString(focusUser._id)))
-                    }]
-                }));
-            } else {
-                const focusTLs = allUsers.filter(u => u.role === 'TL' && (focusUser.teamLeads || []).map(t => getIdString(t)).includes(getIdString(u._id)));
-                
-                return focusTLs.map(tl => {
-                    const tlManagers = allUsers.filter(u => u.role === 'admin' && (tl.teamLeads || []).map(t => getIdString(t)).includes(getIdString(u._id)));
-                    const rootMgrs = tlManagers.length > 0 ? tlManagers : allUsers.filter(u => u.role === 'admin');
-                    
-                    return rootMgrs.map(mgr => ({
-                        ...mgr,
-                        children: [{
-                            ...tl,
-                            children: [focusUser]
-                        }]
-                    }));
-                }).flat();
-            }
-        }
-
-        // DEFAULT: "Full Organization" Tree representation
-        // Root nodes are Admins.
-        // Nested children of Admins are Team Leads who report to them (or all TLs if no direct mapping).
-        // Nested children of Team Leads are Developers and QAs who report to them.
-        return admins.map(adm => {
-            const adminTLs = tls.filter(tl => (tl.teamLeads || []).map(t => getIdString(t)).includes(getIdString(adm._id)));
-            const childTLs = adminTLs.length > 0 ? adminTLs : tls;
-
-            return {
-                ...adm,
-                children: childTLs.map(tl => ({
-                    ...tl,
-                    children: members.filter(m => (m.teamLeads || []).map(t => getIdString(t)).includes(getIdString(tl._id)))
-                }))
-            };
-        });
-    };
-
-    const treeData = buildHierarchyData();
-
-    // Recursive component to render tree nodes with guidelines
+    // Recursive Tree Node Renderer in Horizontal Layout
     const TreeNode = ({ node }) => {
-        const styles = getRoleStyles(node.role);
         const hasChildren = node.children && node.children.length > 0;
         const isExpanded = expandedNodes[node._id] !== false;
 
-        // Check if this node matches the search query for high-fidelity highlighting
         const isSearchMatch = searchQuery.trim() && (
             node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             formatRole(node.role).toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -273,64 +236,74 @@ const OrganizationTree = () => {
         );
 
         return (
-            <div className="flex flex-col relative">
-                {/* Node Card wrapper */}
-                <div className="flex items-center gap-3 relative z-10">
-                    
-                    {/* Collapsible toggle */}
-                    {hasChildren ? (
-                        <button 
-                            onClick={() => toggleExpand(node._id)}
-                            className="p-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg shadow-sm text-slate-500 hover:text-slate-700 transition-colors z-20 cursor-pointer focus:outline-none"
-                        >
-                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                        </button>
-                    ) : (
-                        <div className="w-5.5 h-5.5 flex-shrink-0" />
-                    )}
+            <div className="flex flex-col items-center select-none">
+                {/* Node Card */}
+                <div 
+                    id={`node-card-${node._id}`}
+                    className={`bg-white border border-slate-200 rounded-[14px] px-6 py-4 shadow-sm flex items-center gap-4 w-[280px] text-left transition-all duration-300 relative z-10 ${
+                        isSearchMatch ? 'ring-2 ring-purple-600 shadow-purple-50 shadow-lg scale-105 border-purple-300' : 'hover:shadow-md hover:border-slate-300'
+                    }`}
+                >
+                    {/* Round avatar image / fallback */}
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold text-base shadow-sm overflow-hidden flex-shrink-0">
+                        {node.profilePic ? (
+                            <img src={node.profilePic} alt={node.name} className="w-full h-full object-cover" />
+                        ) : getInitials(node.name)}
+                    </div>
 
-                    {/* Org Node Card */}
-                    <div className={`flex items-center gap-4 bg-white px-5 py-4 border-l-4 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200 w-full max-w-sm ${styles.border} ${isSearchMatch ? 'ring-2 ring-blue-500 shadow-blue-50/50 scale-[1.01]' : ''}`}>
-                        
-                        {/* Avatar initials / Image */}
-                        <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${styles.initialsBg} text-white flex items-center justify-center font-extrabold text-sm shadow-sm overflow-hidden flex-shrink-0`}>
-                            {node.profilePic ? (
-                                <img src={node.profilePic} alt={node.name} className="w-full h-full object-cover" />
-                            ) : getInitials(node.name)}
-                        </div>
-
-                        {/* Node details */}
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-0.5">
-                                <h5 className="text-sm font-bold text-slate-800 truncate">{node.name}</h5>
-                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${styles.bg}`}>
-                                    {formatRole(node.role)}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-3 text-slate-400 text-xs font-semibold">
-                                <span className="flex items-center gap-1">
-                                    <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                                    {node.department || "Engineering"}
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                    Active
-                                </span>
-                            </div>
-                        </div>
+                    {/* Employee info */}
+                    <div className="flex-1 min-w-0">
+                        <h6 className="text-sm font-bold text-slate-800 truncate mb-0.5">{node.name}</h6>
+                        <p className="text-xs text-slate-400 font-medium truncate">{formatRole(node.role)}</p>
+                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Punjab</p>
+                        <p className={`text-[9px] font-black tracking-wider uppercase mt-2 w-max rounded px-1.5 py-0.5 ${
+                            groupByDept ? 'bg-purple-50 text-purple-700 border border-purple-100' : 'text-slate-400'
+                        }`}>
+                            {node.department || "SOFTWARE DEVELOPMENT"}
+                        </p>
                     </div>
                 </div>
 
-                {/* Guidelines connectors recursively drawn */}
+                {/* Collapse / Expand Indicator Trigger */}
+                {hasChildren && (
+                    <button 
+                        onClick={() => toggleExpand(node._id)}
+                        className="w-5 h-5 rounded-full bg-purple-700 hover:bg-purple-800 text-white flex items-center justify-center -mb-2.5 mt-2.5 shadow-md transition-colors z-20 cursor-pointer font-bold text-xs border border-white focus:outline-none"
+                    >
+                        {isExpanded ? "−" : "+"}
+                    </button>
+                )}
+
+                {/* Vertical guiding connector line to child block */}
                 {hasChildren && isExpanded && (
-                    <div className="relative pl-7 ml-7 border-l border-slate-200/80 mt-1 space-y-4 pt-1 pb-1">
-                        {node.children.map((child, idx) => (
-                            <div key={child._id || idx} className="relative">
-                                {/* Horizontal guideline */}
-                                <div className="absolute top-8 -left-7 w-7 border-t border-slate-200/80" />
-                                <TreeNode node={child} />
-                            </div>
-                        ))}
+                    <div className="w-0.5 h-8 bg-slate-200 mt-2.5" />
+                )}
+
+                {/* Children container block in horizontal flow */}
+                {hasChildren && isExpanded && (
+                    <div className="flex gap-8 relative pt-6 justify-center">
+                        {node.children.map((child, idx) => {
+                            const childrenArr = node.children;
+                            const isFirst = idx === 0;
+                            const isLast = idx === childrenArr.length - 1;
+                            const isSingle = childrenArr.length === 1;
+
+                            return (
+                                <div key={child._id || idx} className="flex flex-col items-center relative">
+                                    {/* Horizontal structural guideline span */}
+                                    {!isSingle && (
+                                        <div className="absolute -top-6 left-0 right-0 flex h-0.5">
+                                            <div className={`flex-1 ${isFirst ? 'bg-transparent' : 'bg-slate-200'}`} />
+                                            <div className={`flex-1 ${isLast ? 'bg-transparent' : 'bg-slate-200'}`} />
+                                        </div>
+                                    )}
+                                    {/* Vertical guideline segment to child */}
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 bg-slate-200" />
+                                    
+                                    <TreeNode node={child} />
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -339,132 +312,134 @@ const OrganizationTree = () => {
 
     return (
         <div className="flex h-screen bg-slate-50">
-            {/* Unified Portal Sidebar */}
             <AdminSidebar role={currentRole} />
 
-            {/* Main Layout Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
                 <Topbar DashboardTile="Organization Matrix" role={currentRole} />
 
-                {/* Dashboard Inner Scrollable Body */}
-                <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin">
-                    <div className="max-w-6xl mx-auto space-y-6">
+                {/* Fixed Control Bar matching screenshot */}
+                <div className="bg-white px-8 py-4 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-4 z-30 shadow-sm">
+                    {/* Search input box */}
+                    <div className="relative w-full lg:w-72">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <input 
+                            type="text"
+                            placeholder="Search employee"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/10 transition-all outline-none"
+                        />
+                    </div>
 
-                        {/* Top Control Board: Title, Search, Filters & View Options */}
-                        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100/80 space-y-4">
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
-                                        <Network className="w-6 h-6" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-800">Organizational Hierarchy</h3>
-                                        <p className="text-xs text-slate-400 font-semibold mt-0.5">Visualize direct reporting structures, teammates, and leadership layout</p>
-                                    </div>
-                                </div>
+                    {/* Navigation buttons and grouping controls */}
+                    <div className="flex flex-wrap items-center gap-4 text-slate-500 text-xs font-semibold select-none">
+                        <div className="flex items-center gap-2">
+                            <span className="text-slate-400">Go to</span>
+                            <button 
+                                onClick={handleGoToMyDepartment}
+                                className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                            >
+                                <Building2 className="w-3.5 h-3.5" /> My Department
+                            </button>
+                            <button 
+                                onClick={handleGoToTop}
+                                className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+                            >
+                                <Landmark className="w-3.5 h-3.5" /> Top of the Org
+                            </button>
+                            <button 
+                                onClick={handleGoToMe}
+                                className="px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 font-bold"
+                            >
+                                <User className="w-3.5 h-3.5" /> Me
+                            </button>
+                        </div>
 
-                                {/* View Selector */}
-                                <div className="flex items-center bg-slate-100 p-1 rounded-xl text-slate-600 w-max self-start md:self-auto">
-                                    {user?.role === 'admin' && (
-                                        <button 
-                                            onClick={() => setViewMode("Full")}
-                                            className={`px-4 py-2 text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1.5 ${viewMode === 'Full' ? 'bg-white text-blue-600 shadow-sm' : 'hover:text-slate-800'}`}
-                                        >
-                                            <Eye className="w-3.5 h-3.5" /> Full Org
-                                        </button>
-                                    )}
-                                    <button 
-                                        onClick={() => setViewMode("MyTeam")}
-                                        className={`px-4 py-2 text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1.5 ${viewMode === 'MyTeam' ? 'bg-white text-blue-600 shadow-sm' : 'hover:text-slate-800'}`}
-                                    >
-                                        <Users className="w-3.5 h-3.5" /> My Team
-                                    </button>
-                                    <button 
-                                        onClick={() => setViewMode("ReportingChain")}
-                                        className={`px-4 py-2 text-xs font-bold rounded-lg cursor-pointer transition-all flex items-center gap-1.5 ${viewMode === 'ReportingChain' ? 'bg-white text-blue-600 shadow-sm' : 'hover:text-slate-800'}`}
-                                    >
-                                        <UserCheck className="w-3.5 h-3.5" /> Chain view
-                                    </button>
-                                </div>
+                        <div className="h-6 w-px bg-slate-200 hidden md:block" />
+
+                        {/* Group by department switch */}
+                        <div className="flex items-center gap-2">
+                            <button 
+                                onClick={() => setGroupByDept(prev => !prev)}
+                                className={`w-10 h-5 rounded-full p-0.5 transition-colors cursor-pointer focus:outline-none ${groupByDept ? 'bg-purple-700' : 'bg-slate-200'}`}
+                            >
+                                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${groupByDept ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                            <span>Group by department</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Miro-Style Interactive Panning Canvas viewport */}
+                <div 
+                    ref={canvasViewportRef}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUpOrLeave}
+                    onMouseLeave={handleMouseUpOrLeave}
+                    className={`flex-1 overflow-auto bg-slate-50 p-16 select-none relative scroll-smooth scrollbar-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                >
+                    <div 
+                        ref={canvasContentRef}
+                        style={{ 
+                            transform: `scale(${zoomScale})`, 
+                            transformOrigin: 'top center',
+                            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+                        }}
+                        className="w-max mx-auto flex justify-center pb-32"
+                    >
+                        {loading ? (
+                            <div className="flex flex-col items-center justify-center gap-3 py-32">
+                                <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                                <p className="text-sm text-slate-400 font-semibold">Generating organizational view...</p>
                             </div>
-
-                            {/* Search and Filters Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-slate-100">
-                                
-                                {/* Search input */}
-                                <div className="relative">
-                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input 
-                                        type="text"
-                                        placeholder="Search by name, role, department..."
-                                        value={searchQuery}
-                                        onChange={e => setSearchQuery(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
-                                    />
-                                </div>
-
-                                {/* Department selection filter */}
-                                <div className="relative">
-                                    <select 
-                                        value={selectedDept}
-                                        onChange={e => setSelectedDept(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer"
-                                    >
-                                        <option value="All">All Departments</option>
-                                        {departments.filter(d => d !== "All").map(d => (
-                                            <option key={d} value={d}>{d}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {/* Chain User selection (Only visible during Chain View mode) */}
-                                {viewMode === 'ReportingChain' && (
-                                    <div className="relative">
-                                        <select 
-                                            value={selectedChainUser}
-                                            onChange={e => setSelectedChainUser(e.target.value)}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer"
-                                        >
-                                            {allUsers.map(u => (
-                                                <option key={u._id} value={u._id}>{u.name} ({formatRole(u.role)})</option>
-                                            ))}
-                                        </select>
+                        ) : (
+                            <div className="flex flex-col items-center gap-12">
+                                {rootNodes.length > 0 ? (
+                                    rootNodes.map((rootNode, idx) => (
+                                        <div key={rootNode._id || idx} className="flex flex-col items-center">
+                                            <TreeNode node={rootNode} />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 gap-3">
+                                        <div className="p-4 bg-slate-100 text-slate-400 rounded-full">
+                                            <UserMinus className="w-8 h-8" />
+                                        </div>
+                                        <div className="text-center">
+                                            <h5 className="font-bold text-slate-700">No hierarchy results resolved</h5>
+                                            <p className="text-xs text-slate-400 font-semibold mt-1">Please check user profile structures in employees menu</p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
-                        </div>
-
-                        {/* Tree Diagram Container */}
-                        <div className="bg-white p-8 rounded-[24px] shadow-sm border border-slate-100/80 min-h-[450px] relative">
-                            {loading ? (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                                    <p className="text-sm text-slate-400 font-semibold">Resolving company matrix structure...</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    {treeData.length > 0 ? (
-                                        treeData.map((rootNode, idx) => (
-                                            <div key={rootNode._id || idx} className="border-b border-slate-50 last:border-b-0 pb-6 last:pb-0">
-                                                <TreeNode node={rootNode} />
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-16 gap-3">
-                                            <div className="p-4 bg-slate-50 text-slate-400 rounded-full">
-                                                <UserMinus className="w-8 h-8" />
-                                            </div>
-                                            <div className="text-center">
-                                                <h5 className="font-bold text-slate-700">No hierarchy results found</h5>
-                                                <p className="text-xs text-slate-400 font-semibold mt-1">Try resetting the department filter or editing search terms</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
+                        )}
                     </div>
+                </div>
+
+                {/* Floating Canvas Zoom Controls on the Right side matching screenshot */}
+                <div className="absolute right-8 bottom-28 flex flex-col gap-2 z-40 select-none">
+                    <button 
+                        onClick={handleZoomIn}
+                        className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-lg hover:scale-105 transition-all text-slate-500 hover:text-slate-700 cursor-pointer focus:outline-none"
+                        title="Zoom In"
+                    >
+                        <Plus className="w-4 h-4" />
+                    </button>
+                    <button 
+                        onClick={handleZoomOut}
+                        className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-lg hover:scale-105 transition-all text-slate-500 hover:text-slate-700 cursor-pointer focus:outline-none"
+                        title="Zoom Out"
+                    >
+                        <Minus className="w-4 h-4" />
+                    </button>
+                    <button 
+                        onClick={handleResetZoom}
+                        className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-lg hover:scale-105 transition-all text-slate-500 hover:text-slate-700 cursor-pointer focus:outline-none"
+                        title="Center & Reset Zoom"
+                    >
+                        <Pin className="w-4 h-4" />
+                    </button>
                 </div>
             </div>
         </div>
