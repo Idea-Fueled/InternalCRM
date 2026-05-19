@@ -74,8 +74,16 @@ export const forgotPassword = async (req, res) => {
         return res.status(200).json({ success: true, message: 'If this email exists, a reset link has been sent.' });
 
     } catch (error) {
-        console.error('Forgot password error:', error?.response?.body || error);
-        return res.status(500).json({ success: false, message: 'Failed to send reset email. Please try again.' });
+        // Log full SendGrid error details for debugging
+        if (error?.response) {
+            console.error('SendGrid error status:', error.response.status);
+            console.error('SendGrid error body:', JSON.stringify(error.response.body, null, 2));
+        } else {
+            console.error('Forgot password error:', error.message || error);
+        }
+        const sgErrors = error?.response?.body?.errors;
+        const detail = sgErrors?.[0]?.message || 'Failed to send reset email. Please try again.';
+        return res.status(500).json({ success: false, message: detail });
     }
 };
 
