@@ -99,7 +99,8 @@ export const loginController = async (req, res) => {
             })
         }
 
-        const user = await User.findOne({ email });
+        const formattedEmail = email.trim().toLowerCase();
+        const user = await User.findOne({ email: formattedEmail });
         if (!user) {
             return res.status(401).json({
                 message: "Invalid email or password."
