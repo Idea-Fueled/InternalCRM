@@ -15,15 +15,19 @@ const createTransporter = () => {
 
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,           // SSL on port 465
+        port: 587,          // 587 STARTTLS — Render supports this; port 465 (IPv6) fails
+        secure: false,      // false = STARTTLS upgrade after connection
+        family: 4,          // Force IPv4 — Render free tier blocks IPv6 outbound
         auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS, // Must be a Google App Password, not your Gmail password
+            pass: process.env.EMAIL_PASS,
         },
-        connectionTimeout: 10000, // 10 seconds
+        tls: {
+            rejectUnauthorized: true,   // enforce valid TLS cert
+        },
+        connectionTimeout: 15000,
         greetingTimeout: 10000,
-        socketTimeout: 15000,
+        socketTimeout: 20000,
     });
 };
 
