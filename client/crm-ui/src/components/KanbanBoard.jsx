@@ -6,7 +6,7 @@ import {
     CheckCircle2, PlayCircle, ShieldCheck, FileText,
     AlertTriangle, MessageSquare, ArrowRight, History, Lock, Trash2
 } from 'lucide-react';
-import { taskService } from '../api/services';
+import { taskService, projectService } from '../api/services';
 import usePermission from '../hooks/usePermission';
 
 const COLUMNS = [
@@ -49,11 +49,14 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
+    const [projectMembers, setProjectMembers] = useState([]);
     const [editTaskData, setEditTaskData] = useState({
         taskName: "",
         description: "",
         priority: "Medium",
-        endDate: ""
+        endDate: "",
+        assignedTo: "",
+        assignedQA: ""
     });
     
     // Delete Confirmation State
@@ -194,16 +197,38 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         }
     };
 
-    const handleEditTask = (task, e) => {
+    const handleEditTask = async (task, e) => {
         if (e) e.stopPropagation();
         setEditingTask(task);
+        
+        // Determine selected assignees
+        const assignedToId = task.assignedTo ? (typeof task.assignedTo === 'object' ? task.assignedTo._id : task.assignedTo) : "";
+        const assignedQAId = task.assignedQA ? (typeof task.assignedQA === 'object' ? task.assignedQA._id : task.assignedQA) : "";
+
         setEditTaskData({
             taskName: getTaskName(task),
             description: task.description || "",
             priority: task.priority || "Medium",
-            endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : ""
+            endDate: task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : "",
+            assignedTo: assignedToId,
+            assignedQA: assignedQAId
         });
+        
         setIsEditModalOpen(true);
+        setProjectMembers([]); // Reset members
+
+        // Fetch project team members dynamically
+        const projectId = task.project ? (typeof task.project === 'object' ? task.project._id : task.project) : null;
+        if (projectId) {
+            try {
+                const res = await projectService.getProjectById(projectId);
+                if (res.data.success && res.data.project) {
+                    setProjectMembers(res.data.project.teamMembers || []);
+                }
+            } catch (err) {
+                console.error("Failed to load project members in edit modal", err);
+            }
+        }
     };
 
     const handleUpdateTask = async (e) => {
@@ -782,6 +807,34 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                         onChange={e => setEditTaskData({...editTaskData, description: e.target.value})}
                                         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none resize-none"
                                     />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Assignee</label>
+                                        <select
+                                            value={editTaskData.assignedTo}
+                                            onChange={e => setEditTaskData({...editTaskData, assignedTo: e.target.value})}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer"
+                                        >
+                                            <option value="">Unassigned</option>
+                                            {projectMembers.filter(m => m.role === 'developer').map(u => (
+                                                <option key={u._id} value={u._id}>{u.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Assigned QA</label>
+                                        <select
+                                            value={editTaskData.assignedQA}
+                                            onChange={e => setEditTaskData({...editTaskData, assignedQA: e.target.value})}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer"
+                                        >
+                                            <option value="">Unassigned</option>
+                                            {projectMembers.filter(m => m.role === 'qa').map(u => (
+                                                <option key={u._id} value={u._id}>{u.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
