@@ -130,7 +130,10 @@ export const loginController = async (req, res) => {
                 email: user.email,
                 name: user.name,
                 role: user.role,
-                profilePic: user.profilePic
+                profilePic: user.profilePic,
+                permissions: user.role === 'admin'
+                    ? DEFAULT_ROLE_PERMISSIONS.admin
+                    : (user.permissions || [])
             }
         })
 

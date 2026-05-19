@@ -5,8 +5,15 @@ import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import KanbanBoard from '../../components/KanbanBoard';
 import { Plus, Search, Filter, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import usePermission from '../../hooks/usePermission';
 
 const KanbanDashboard = () => {
+    const { user } = useAuth();
+    const { can } = usePermission();
+    const role = user?.role || 'admin';
+    const currentRole = role === 'TL' ? 'teamLead' : role;
+
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -88,10 +95,10 @@ const KanbanDashboard = () => {
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
-            <AdminSidebar role="admin" />
+            <AdminSidebar role={currentRole} />
 
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                <Topbar DashboardTile="Kanban Board" role="admin" />
+                <Topbar DashboardTile="Kanban Board" role={currentRole} />
 
                 <main className="flex-1 p-4 md:p-6 flex flex-col overflow-hidden">
                     {/* Header */}
@@ -107,22 +114,24 @@ const KanbanDashboard = () => {
                                     className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-64 shadow-sm" />
                             </div>
 
-                            <button onClick={() => setIsTaskModalOpen(true)}
-                                className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200">
-                                <Plus className="w-4 h-4 mr-1.5" /> Add Task
-                            </button>
+                            {can('tasks.create') && (
+                                <button onClick={() => setIsTaskModalOpen(true)}
+                                    className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shadow-blue-200">
+                                    <Plus className="w-4 h-4 mr-1.5" /> Add Task
+                                </button>
+                            )}
                         </div>
                     </div>
 
                     {/* Kanban Board (shared component handles drag, modal, sidebar) */}
-                    <KanbanBoard tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} loading={loading} role="admin" />
+                    <KanbanBoard tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} loading={loading} role={currentRole} />
                 </main>
 
                 <style dangerouslySetInnerHTML={{ __html: `.custom-scrollbar::-webkit-scrollbar{width:4px;height:4px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#94a3b8}` }} />
             </div>
 
             {/* Create Task Modal */}
-            {isTaskModalOpen && (
+            {can('tasks.create') && isTaskModalOpen && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
                         <div className="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
