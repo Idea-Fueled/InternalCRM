@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ children, allowedRoles, requiredPermission }) => {
     const { user, loading } = useAuth();
 
     if (loading) {
@@ -17,11 +17,27 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         return <Navigate to="/" replace />;
     }
 
-    if (allowedRoles && !allowedRoles.includes(user.role)) {
-        return <Navigate to="/" replace />;
+    // Admins have bypass access to everything
+    if (user.role === 'admin') {
+        return children;
     }
 
-    return children;
+    // Check dynamic permission
+    if (requiredPermission) {
+        const permissions = user.permissions || [];
+        const requiredArray = Array.isArray(requiredPermission) ? requiredPermission : [requiredPermission];
+        const hasPerm = requiredArray.some(p => permissions.includes(p));
+        if (hasPerm) {
+            return children;
+        }
+    }
+
+    // Check role
+    if (allowedRoles && allowedRoles.includes(user.role)) {
+        return children;
+    }
+
+    return <Navigate to="/" replace />;
 };
 
 export default ProtectedRoute;

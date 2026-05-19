@@ -53,11 +53,11 @@ const App = () => {
       },
       {
         path: "/admin/employees",
-        element: <ProtectedRoute allowedRoles={["admin"]}><EmployeesDashboard /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["admin"]} requiredPermission={["users.create", "users.update"]}><EmployeesDashboard /></ProtectedRoute>
       },
       {
         path: "/admin/projects",
-        element: <ProtectedRoute allowedRoles={["admin"]}><ProjectsDashboard /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["admin"]} requiredPermission={["projects.create", "projects.update"]}><ProjectsDashboard /></ProtectedRoute>
       },
       {
         path: "/admin/kanban",
@@ -65,11 +65,11 @@ const App = () => {
       },
       {
         path: "/admin/reports",
-        element: <ProtectedRoute allowedRoles={["admin"]}><ReportsDashboard /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["admin"]} requiredPermission="reports.view"><ReportsDashboard /></ProtectedRoute>
       },
       {
         path: "/admin/trash",
-        element: <ProtectedRoute allowedRoles={["admin"]}><TrashDashboard /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["admin"]} requiredPermission="trash.view"><TrashDashboard /></ProtectedRoute>
       },
       {
         path: "/admin/audit-logs",

@@ -3,13 +3,68 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, authService, departmentService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
+import usePermission from "../../hooks/usePermission";
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
-    AlertCircle, ClipboardList, History, X, Download, Camera, Trash2
+    AlertCircle, ClipboardList, History, X, Download, Camera, Trash2, ShieldCheck
 } from "lucide-react";
 import { exportPDF } from "../../utils/pdfExport";
 import StatDetailModal from "../../components/StatDetailModal";
+
+// All permissions the admin can assign
+const ALL_PERMISSIONS = [
+    { key: 'users.create',    label: 'Create Users',    group: 'Users' },
+    { key: 'users.update',    label: 'Edit Users',      group: 'Users' },
+    { key: 'users.delete',    label: 'Delete Users',    group: 'Users' },
+    { key: 'projects.create', label: 'Create Projects', group: 'Projects' },
+    { key: 'projects.update', label: 'Edit Projects',   group: 'Projects' },
+    { key: 'projects.delete', label: 'Delete Projects', group: 'Projects' },
+    { key: 'tasks.create',    label: 'Create Tasks',    group: 'Tasks' },
+    { key: 'tasks.update',    label: 'Edit Tasks',      group: 'Tasks' },
+    { key: 'tasks.delete',    label: 'Delete Tasks',    group: 'Tasks' },
+    { key: 'reports.view',    label: 'View Reports',    group: 'Reports' },
+    { key: 'trash.view',      label: 'View Trash',      group: 'Reports' },
+];
+
+const DEFAULT_ROLE_PERMISSIONS = {
+    admin:     ALL_PERMISSIONS.map(p => p.key),
+    TL:        ['tasks.create', 'tasks.update', 'projects.update', 'users.update'],
+    developer: ['tasks.update'],
+    qa:        ['tasks.update'],
+};
+
+const PermissionGroups = ({ permissions, onChange }) => {
+    const groups = [...new Set(ALL_PERMISSIONS.map(p => p.group))];
+    return (
+        <div className="space-y-4">
+            {groups.map(group => (
+                <div key={group}>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{group}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                        {ALL_PERMISSIONS.filter(p => p.group === group).map(perm => (
+                            <label key={perm.key} className="flex items-center gap-2 cursor-pointer group">
+                                <input
+                                    type="checkbox"
+                                    checked={permissions.includes(perm.key)}
+                                    onChange={() => {
+                                        if (permissions.includes(perm.key)) {
+                                            onChange(permissions.filter(p => p !== perm.key));
+                                        } else {
+                                            onChange([...permissions, perm.key]);
+                                        }
+                                    }}
+                                    className="w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                />
+                                <span className="text-xs font-medium text-slate-600 group-hover:text-slate-900 transition-colors">{perm.label}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -20,6 +75,7 @@ const Card = ({ children, className = "" }) => (
 
 const EmployeesDashboard = () => {
     const { user } = useAuth();
+    const { can } = usePermission();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ total: 0, active: 0, withOverdue: 0, inactive: 0 });
@@ -36,7 +92,8 @@ const EmployeesDashboard = () => {
         password: "",
         role: "developer",
         department: "Engineering",
-        teamLeads: []
+        teamLeads: [],
+        permissions: DEFAULT_ROLE_PERMISSIONS['developer']
     });
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -164,6 +221,8 @@ const EmployeesDashboard = () => {
             if (newEmployee.profilePic) {
                 formData.append('profilePic', newEmployee.profilePic);
             }
+            // Append permissions
+            (newEmployee.permissions || []).forEach(p => formData.append('permissions[]', p));
 
             await authService.register(formData);
             toast.success("Employee added successfully");
@@ -176,6 +235,7 @@ const EmployeesDashboard = () => {
                 role: "developer",
                 department: "Engineering",
                 teamLeads: [],
+                permissions: DEFAULT_ROLE_PERMISSIONS['developer'],
                 profilePic: null
             });
             fetchData();
@@ -197,6 +257,7 @@ const EmployeesDashboard = () => {
             role: emp.role,
             department: emp.dept,
             teamLeads: emp.raw.teamLeads?.map(tl => tl._id || tl) || [],
+            permissions: emp.raw.permissions?.length > 0 ? emp.raw.permissions : (DEFAULT_ROLE_PERMISSIONS[emp.role] || []),
             profilePic: null
         });
         setIsEditEmployeeModalOpen(true);
@@ -228,6 +289,8 @@ const EmployeesDashboard = () => {
             if (newEmployee.profilePic) {
                 formData.append('profilePic', newEmployee.profilePic);
             }
+            // Append permissions
+            (newEmployee.permissions || []).forEach(p => formData.append('permissions[]', p));
             
             await userService.updateUser(editingEmployee._id, formData);
             toast.success("Employee updated successfully");
@@ -241,6 +304,7 @@ const EmployeesDashboard = () => {
                 role: "developer",
                 department: "Engineering",
                 teamLeads: [],
+                permissions: DEFAULT_ROLE_PERMISSIONS['developer'],
                 profilePic: null
             });
             fetchData();
@@ -336,10 +400,12 @@ const EmployeesDashboard = () => {
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                 Departments
                             </button>
-                            <button onClick={() => setIsAddEmployeeModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
-                                Add Employee
-                            </button>
+                            {can('users.create') && (
+                                <button onClick={() => setIsAddEmployeeModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                                    Add Employee
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -461,30 +527,37 @@ const EmployeesDashboard = () => {
 
                                     <div className="flex items-center gap-4">
                                         <button 
-                                            onClick={() => handleStatusToggle(emp)}
+                                            onClick={() => can('users.update') && handleStatusToggle(emp)}
+                                            disabled={!can('users.update')}
                                             className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${
-                                                emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100' :
-                                                emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100' :
-                                                'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                                                !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
+                                            } ${
+                                                emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                'bg-slate-50 text-slate-500 border-slate-200'
                                             }`}
                                         >
                                             {emp.status}
                                         </button>
                                         <div className="flex items-center gap-1.5">
-                                            <button 
-                                                onClick={(e) => handleEditEmployee(emp, e)}
-                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Edit Employee"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                            </button>
-                                            <button 
-                                                onClick={(e) => handleDeleteEmployee(emp.id, e)}
-                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                title="Delete Employee"
-                                            >
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
+                                            {can('users.update') && (
+                                                <button 
+                                                    onClick={(e) => handleEditEmployee(emp, e)}
+                                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Edit Employee"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                </button>
+                                            )}
+                                            {can('users.delete') && (
+                                                <button 
+                                                    onClick={(e) => handleDeleteEmployee(emp.id, e)}
+                                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete Employee"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -603,7 +676,14 @@ const EmployeesDashboard = () => {
                                     <label className="text-sm font-bold text-slate-700">Role</label>
                                     <select 
                                         value={newEmployee.role}
-                                        onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
+                                        onChange={(e) => {
+                                            const role = e.target.value;
+                                            setNewEmployee({
+                                                ...newEmployee, 
+                                                role, 
+                                                permissions: DEFAULT_ROLE_PERMISSIONS[role] || []
+                                            });
+                                        }}
                                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
                                     >
                                         <option value="developer">Developer</option>
@@ -663,6 +743,18 @@ const EmployeesDashboard = () => {
                                             ))}
                                         </div>
                                         {teamLeads.length === 0 && <p className="text-xs text-slate-400 text-center py-2">No team leads found</p>}
+                                    </div>
+                                </div>
+                                <div className="space-y-1.5 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <ShieldCheck className="w-4 h-4 text-blue-600" />
+                                        <label className="text-sm font-bold text-slate-700">Permissions & Access Control</label>
+                                    </div>
+                                    <div className="w-full border border-slate-200 rounded-lg p-4 bg-slate-50/30 max-h-[220px] overflow-y-auto custom-scrollbar">
+                                        <PermissionGroups 
+                                            permissions={newEmployee.permissions || []} 
+                                            onChange={(perms) => setNewEmployee({...newEmployee, permissions: perms})} 
+                                        />
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
@@ -910,7 +1002,14 @@ const EmployeesDashboard = () => {
                                     <label className="text-sm font-bold text-slate-700">Role</label>
                                     <select 
                                         value={newEmployee.role}
-                                        onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
+                                        onChange={(e) => {
+                                            const role = e.target.value;
+                                            setNewEmployee({
+                                                ...newEmployee, 
+                                                role, 
+                                                permissions: DEFAULT_ROLE_PERMISSIONS[role] || []
+                                            });
+                                        }}
                                         disabled={user?._id === editingEmployee?._id}
                                         className={`w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none text-sm transition-all ${
                                             user?._id === editingEmployee?._id 
@@ -975,6 +1074,18 @@ const EmployeesDashboard = () => {
                                         </div>
                                     </div>
                                 )}
+                                <div className="space-y-1.5 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <ShieldCheck className="w-4 h-4 text-blue-600" />
+                                        <label className="text-sm font-bold text-slate-700">Permissions & Access Control</label>
+                                    </div>
+                                    <div className="w-full border border-slate-200 rounded-lg p-4 bg-slate-50/30 max-h-[220px] overflow-y-auto custom-scrollbar">
+                                        <PermissionGroups 
+                                            permissions={newEmployee.permissions || []} 
+                                            onChange={(perms) => setNewEmployee({...newEmployee, permissions: perms})} 
+                                        />
+                                    </div>
+                                </div>
                                 <div className="space-y-1.5 md:col-span-2">
                                     <label className="text-sm font-bold text-slate-700">Update Profile Picture</label>
                                     <div className="flex items-center gap-4 p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">

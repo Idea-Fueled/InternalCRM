@@ -12,6 +12,7 @@ import {
     hardDeleteUser
 } from "../controllers/user.controller.js";
 import { protectRoute, isAdmin, isAdminOrTL } from "../middlewares/auth.middleware.js";
+import { checkPermission } from "../middlewares/permission.middleware.js";
 import { upload } from "../config/cloudinary.js";
 
 const router = express.Router();
@@ -20,7 +21,7 @@ const router = express.Router();
 router.post("/register", upload.single('profilePic'), registerUser);
 router.post("/login", loginController);
 
-// --- Auth routes (must come BEFORE /:_id to prevent Express treating "me" as an _id) ---
+// --- Auth routes ---
 router.post("/logout", (req, res) => {
     res.clearCookie("token", {
         httpOnly: true,
@@ -35,11 +36,11 @@ router.get("/me", protectRoute, getCurrentUser);
 router.put("/me/profile-pic", protectRoute, upload.single('profilePic'), updateProfilePic);
 
 // --- Protected routes ---
-router.get("/all", protectRoute, isAdminOrTL, getAllUsers);
-router.get("/:_id", protectRoute, getUserById);
-router.put("/update/:_id", protectRoute, isAdmin, upload.single('profilePic'), updateUser);
-router.delete("/delete/:_id", protectRoute, isAdmin, deleteUser);
-router.delete("/hard/:_id", protectRoute, isAdmin, hardDeleteUser);
-router.put("/restore/:_id", protectRoute, isAdmin, restoreUser);
+router.get("/all",           protectRoute, isAdminOrTL, getAllUsers);
+router.get("/:_id",          protectRoute, getUserById);
+router.put("/update/:_id",   protectRoute, checkPermission("users.update"), upload.single('profilePic'), updateUser);
+router.delete("/delete/:_id",protectRoute, checkPermission("users.delete"), deleteUser);
+router.delete("/hard/:_id",  protectRoute, isAdmin, hardDeleteUser);
+router.put("/restore/:_id",  protectRoute, isAdmin, restoreUser);
 
 export default router;

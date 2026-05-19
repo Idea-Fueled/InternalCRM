@@ -67,6 +67,23 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpires: {
         type: Date,
         default: null
+    },
+    permissions: {
+        type: [String],
+        default: [],
+        // All valid permission strings
+        validate: {
+            validator: function(perms) {
+                const valid = [
+                    'users.create', 'users.update', 'users.delete',
+                    'projects.create', 'projects.update', 'projects.delete',
+                    'tasks.create', 'tasks.update', 'tasks.delete',
+                    'reports.view', 'trash.view'
+                ];
+                return perms.every(p => valid.includes(p));
+            },
+            message: props => `${props.value} contains an invalid permission.`
+        }
     }
 }, {
     timestamps: true

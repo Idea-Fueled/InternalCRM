@@ -2,6 +2,7 @@ import User from "../models/user.schema.js";
 import { generateToken } from "../utils/authToken.js";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";
 import { cloudinary } from "../config/cloudinary.js";
+import { DEFAULT_ROLE_PERMISSIONS } from "../middlewares/permission.middleware.js";
 
 export const registerUser = async (req, res, next) => {
     try {
@@ -46,6 +47,15 @@ export const registerUser = async (req, res, next) => {
         // Filter out duplicates and invalid IDs
         finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
 
+        // Parse permissions from body or fall back to role defaults
+        let permissions = [];
+        const rawPerms = req.body.permissions || req.body['permissions[]'];
+        if (rawPerms) {
+            permissions = Array.isArray(rawPerms) ? rawPerms : String(rawPerms).split(',').map(p => p.trim()).filter(Boolean);
+        } else {
+            permissions = DEFAULT_ROLE_PERMISSIONS[role] || [];
+        }
+
         const user = new User({
             name, 
             email, 
@@ -54,7 +64,8 @@ export const registerUser = async (req, res, next) => {
             department, 
             teamLeads: finalTeamLeads,
             profilePic,
-            profilePicPublicId
+            profilePicPublicId,
+            permissions
         });
 
         await user.save();
@@ -146,7 +157,10 @@ export const getCurrentUser = (req, res) => {
                 email: user.email,
                 role: user.role,
                 department: user.department || null,
-                profilePic: user.profilePic || ""
+                profilePic: user.profilePic || "",
+                permissions: user.role === 'admin'
+                    ? DEFAULT_ROLE_PERMISSIONS.admin
+                    : (user.permissions || [])
             }
         });
     } catch (error) {
@@ -232,15 +246,24 @@ export const updateUser = async (req, res) => {
                 finalTeamLeads = [incomingTeamLeads];
             }
         }
-        // Filter out duplicates and invalid IDs
         finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+
+        // Parse permissions
+        const rawPerms = req.body.permissions || req.body['permissions[]'];
+        let parsedPermissions = null;
+        if (rawPerms !== undefined) {
+            parsedPermissions = Array.isArray(rawPerms)
+                ? rawPerms
+                : String(rawPerms).split(',').map(p => p.trim()).filter(Boolean);
+        }
 
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
         const updateData = {
             ...otherData,
-            teamLeads: finalTeamLeads
+            teamLeads: finalTeamLeads,
+            ...(parsedPermissions !== null && { permissions: parsedPermissions })
         };
 
         if (req.file) {

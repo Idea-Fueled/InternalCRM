@@ -7,6 +7,7 @@ import {
     AlertTriangle, MessageSquare, ArrowRight, History, Lock, Trash2
 } from 'lucide-react';
 import { taskService } from '../api/services';
+import usePermission from '../hooks/usePermission';
 
 const COLUMNS = [
     { id: 'New', title: 'New', color: 'bg-slate-100', dot: 'bg-slate-400', dragOver: 'ring-slate-400', icon: Clock },
@@ -25,6 +26,7 @@ const PRIORITY_COLORS = {
 
 /** Reusable Kanban board with drag-drop + status change modal + task detail sidebar */
 const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
+    const { can } = usePermission();
     // Drag state
     const dragTaskId = useRef(null);
     const dragFromCol = useRef(null);
@@ -61,6 +63,12 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
 
     // ─── Drag Handlers ────────────────────────────────────────────────────────
     const onDragStart = (e, taskId, colId) => {
+        if (!can('tasks.update')) {
+            e.preventDefault();
+            toast.error("You do not have permission to update tasks");
+            return;
+        }
+        
         // Developer restrictions: Can only move their own tasks and only to specific statuses
         const isDeveloper = role === 'developer';
         const isQA = role === 'qa';
@@ -102,6 +110,11 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         e.preventDefault();
         setDragOverCol(null);
         if (!dragTaskId.current || dragFromCol.current === targetColId) return;
+
+        if (!can('tasks.update')) {
+            toast.error("You do not have permission to update tasks");
+            return;
+        }
 
         const isDeveloper = role === 'developer';
         const isQA = role === 'qa';
@@ -423,7 +436,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                             <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
                                                                 {task.priority || 'Medium'}
                                                             </span>
-                                                            {(role === 'admin' || role === 'TL' || role === 'teamLead') && (
+                                                            {can('tasks.update') && (
                                                                 <button 
                                                                     onClick={(e) => handleEditTask(task, e)}
                                                                     className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
@@ -432,7 +445,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                                 </button>
                                                             )}
-                                                            {role === 'admin' && (
+                                                            {can('tasks.delete') && (
                                                                 <button 
                                                                     onClick={(e) => handleDeleteTask(getTaskId(task), e)}
                                                                     className="p-1 text-slate-400 hover:text-red-600 transition-colors"
