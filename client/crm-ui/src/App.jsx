@@ -23,6 +23,7 @@ import QAReviews from "./pages/qa/QAReviews";
 import QAKanban from "./pages/qa/QAKanban";
 import QAProjects from "./pages/qa/QAProjects";
 import AuditLogs from "./pages/common/AuditLogs";
+import OrganizationTree from "./pages/common/OrganizationTree";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -75,6 +76,10 @@ const App = () => {
         path: "/admin/audit-logs",
         element: <ProtectedRoute allowedRoles={["admin"]}><AuditLogs /></ProtectedRoute>
       },
+      {
+        path: "/admin/organization-tree",
+        element: <ProtectedRoute allowedRoles={["admin"]}><OrganizationTree /></ProtectedRoute>
+      },
       // Team Lead Routes
       {
         path: "/teamlead/dashboard",
@@ -95,6 +100,10 @@ const App = () => {
       {
         path: "/teamLead/audit-logs",
         element: <ProtectedRoute allowedRoles={["TL", "admin"]}><AuditLogs /></ProtectedRoute>
+      },
+      {
+        path: "/teamLead/organization-tree",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><OrganizationTree /></ProtectedRoute>
       },
       // Developer Routes
       {
@@ -117,6 +126,10 @@ const App = () => {
         path: "/developer/audit-logs",
         element: <ProtectedRoute allowedRoles={["developer", "admin"]}><AuditLogs /></ProtectedRoute>
       },
+      {
+        path: "/developer/organization-tree",
+        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><OrganizationTree /></ProtectedRoute>
+      },
       // QA Routes
       {
         path: "/qa/dashboard",
@@ -137,6 +150,10 @@ const App = () => {
       {
         path: "/qa/audit-logs",
         element: <ProtectedRoute allowedRoles={["qa", "admin"]}><AuditLogs /></ProtectedRoute>
+      },
+      {
+        path: "/qa/organization-tree",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><OrganizationTree /></ProtectedRoute>
       },
       {
         path: "*",
