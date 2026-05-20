@@ -90,7 +90,7 @@ export default function WelcomePage() {
                     <img 
                         src={logoImgNew} 
                         alt="Idea Fueled" 
-                        className="h-16 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-sm cursor-pointer" 
+                        className="h-16 w-auto drop-shadow-sm" 
                     />
                 </div>
 
