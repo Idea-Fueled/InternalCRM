@@ -45,6 +45,7 @@ export const userService = {
     deleteUser: (id) => axiosInstance.delete(`/users/delete/${id}`),
     hardDeleteUser: (id) => axiosInstance.delete(`/users/hard/${id}`),
     restoreUser: (id) => axiosInstance.put(`/users/restore/${id}`),
+    changeUserPassword: (id, newPassword) => axiosInstance.put(`/users/change-password/${id}`, { newPassword }),
 };
 
 // Notification Services

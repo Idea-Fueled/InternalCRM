@@ -259,6 +259,11 @@ export const updateUser = async (req, res) => {
     try {
         const { _id } = req.params;
         const { ...otherData } = req.body;
+
+        // SECURITY: Never allow password to be updated through the generic updateUser route.
+        // Password changes must go through the dedicated changeUserPassword endpoint.
+        delete otherData.password;
+
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
         
         // Robustly normalize teamLeads
@@ -323,6 +328,41 @@ export const updateUser = async (req, res) => {
         });
     }
 }
+
+// ─── Change User Password (Admin-initiated, properly hashed) ─────────────────
+export const changeUserPassword = async (req, res) => {
+    try {
+        const { _id } = req.params;
+        const { newPassword } = req.body;
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters long."
+            });
+        }
+
+        const user = await User.findById(_id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found." });
+        }
+
+        const hashed = await hashPassword(newPassword);
+        user.password = hashed;
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully. The employee can now login with the new password."
+        });
+    } catch (error) {
+        console.error("changeUserPassword error:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Failed to update password."
+        });
+    }
+};
 
 export const updateProfilePic = async (req, res) => {
     try {

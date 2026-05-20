@@ -10,7 +10,8 @@ import {
     updateUser,
     updateProfilePic,
     deleteProfilePic,
-    hardDeleteUser
+    hardDeleteUser,
+    changeUserPassword
 } from "../controllers/user.controller.js";
 import { protectRoute, isAdmin, isAdminOrTL } from "../middlewares/auth.middleware.js";
 import { checkPermission } from "../middlewares/permission.middleware.js";
@@ -41,8 +42,9 @@ router.delete("/me/profile-pic", protectRoute, deleteProfilePic);
 router.get("/all",           protectRoute, getAllUsers);
 router.get("/:_id",          protectRoute, getUserById);
 router.put("/update/:_id",   protectRoute, checkPermission("users.update"), upload.single('profilePic'), updateUser);
-router.delete("/delete/:_id",protectRoute, checkPermission("users.delete"), deleteUser);
-router.delete("/hard/:_id",  protectRoute, isAdmin, hardDeleteUser);
-router.put("/restore/:_id",  protectRoute, isAdmin, restoreUser);
+router.delete("/delete/:_id",           protectRoute, checkPermission("users.delete"), deleteUser);
+router.delete("/hard/:_id",             protectRoute, isAdmin, hardDeleteUser);
+router.put("/restore/:_id",             protectRoute, isAdmin, restoreUser);
+router.put("/change-password/:_id",     protectRoute, isAdmin, changeUserPassword);
 
 export default router;

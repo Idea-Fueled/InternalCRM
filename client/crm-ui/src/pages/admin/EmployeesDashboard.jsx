@@ -7,7 +7,7 @@ import usePermission from "../../hooks/usePermission";
 import { toast } from "sonner";
 import { 
     Mail, User, Building, Calendar, Laptop, CheckCircle, 
-    AlertCircle, ClipboardList, History, X, Download, Camera, Trash2, ShieldCheck
+    AlertCircle, ClipboardList, History, X, Download, Camera, Trash2, ShieldCheck, KeyRound, Eye, EyeOff, ShieldAlert
 } from "lucide-react";
 import { exportPDF } from "../../utils/pdfExport";
 import StatDetailModal from "../../components/StatDetailModal";
@@ -107,6 +107,17 @@ const EmployeesDashboard = () => {
     const [employeeToDelete, setEmployeeToDelete] = useState(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeptLoading, setIsDeptLoading] = useState(false);
+
+    // ─── Change Password Modal State ───────────────────────────────────────────
+    const [isChangePwdModalOpen, setIsChangePwdModalOpen] = useState(false);
+    const [changePwdEmployeeId, setChangePwdEmployeeId] = useState(null);
+    const [changePwdEmployeeName, setChangePwdEmployeeName] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPwd, setShowNewPwd] = useState(false);
+    const [showConfirmPwd, setShowConfirmPwd] = useState(false);
+    const [isChangingPwd, setIsChangingPwd] = useState(false);
+    const [pwdSubmitted, setPwdSubmitted] = useState(false);
 
     const fetchDepartments = async () => {
         try {
@@ -253,7 +264,6 @@ const EmployeesDashboard = () => {
         setNewEmployee({
             name: emp.name,
             email: emp.email,
-            password: "",
             role: emp.role,
             department: emp.dept,
             teamLeads: emp.raw.teamLeads?.map(tl => tl._id || tl) || [],
@@ -277,7 +287,7 @@ const EmployeesDashboard = () => {
             const formData = new FormData();
             formData.append('name', newEmployee.name);
             formData.append('email', newEmployee.email);
-            if (newEmployee.password) formData.append('password', newEmployee.password);
+            // NOTE: Password is intentionally NOT sent here — use the Change Password modal
             formData.append('role', newEmployee.role);
             formData.append('department', newEmployee.department);
             // Append each team lead ID
@@ -300,7 +310,6 @@ const EmployeesDashboard = () => {
             setNewEmployee({
                 name: "",
                 email: "",
-                password: "",
                 role: "developer",
                 department: "Engineering",
                 teamLeads: [],
@@ -347,6 +356,59 @@ const EmployeesDashboard = () => {
             fetchData();
         } catch (err) {
             toast.error("Failed to update status");
+        }
+    };
+
+    // ─── Password Strength Helper ──────────────────────────────────────────────
+    const getPwdStrength = (pwd) => {
+        if (!pwd) return { score: 0, label: '', color: '' };
+        let score = 0;
+        if (pwd.length >= 6)  score++;
+        if (pwd.length >= 10) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+        const map = [
+            { label: 'Very Weak', color: 'bg-red-500',    text: 'text-red-500'    },
+            { label: 'Weak',      color: 'bg-orange-400',  text: 'text-orange-500' },
+            { label: 'Fair',      color: 'bg-yellow-400',  text: 'text-yellow-600' },
+            { label: 'Good',      color: 'bg-blue-500',    text: 'text-blue-600'   },
+            { label: 'Strong',    color: 'bg-emerald-500', text: 'text-emerald-600'},
+            { label: 'Very Strong', color: 'bg-emerald-600', text: 'text-emerald-700'},
+        ];
+        return { score, ...map[score] };
+    };
+
+    const openChangePwdModal = (empId, empName, e) => {
+        if (e) e.stopPropagation();
+        setChangePwdEmployeeId(empId);
+        setChangePwdEmployeeName(empName);
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowNewPwd(false);
+        setShowConfirmPwd(false);
+        setPwdSubmitted(false);
+        setIsChangePwdModalOpen(true);
+    };
+
+    const handleChangePassword = async (e) => {
+        e.preventDefault();
+        setPwdSubmitted(true);
+        if (!newPassword || newPassword.length < 6) return;
+        if (newPassword !== confirmPassword) return;
+        try {
+            setIsChangingPwd(true);
+            await userService.changeUserPassword(changePwdEmployeeId, newPassword);
+            toast.success(`Password updated! ${changePwdEmployeeName} can now login with the new password.`);
+            setIsChangePwdModalOpen(false);
+            setChangePwdEmployeeId(null);
+            setNewPassword('');
+            setConfirmPassword('');
+            setPwdSubmitted(false);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to change password');
+        } finally {
+            setIsChangingPwd(false);
         }
     };
 
@@ -1024,13 +1086,31 @@ const EmployeesDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Password <span className="text-slate-400 font-normal text-[10px]">(Leave blank to keep current)</span></label>
-                                    <input 
-                                        type="password" 
-                                        value={newEmployee.password}
-                                        onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all" 
-                                    />
+                                    <label className="text-sm font-bold text-slate-700">Password</label>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsEditEmployeeModalOpen(false);
+                                            openChangePwdModal(
+                                                editingEmployee._id,
+                                                newEmployee.name,
+                                                e
+                                            );
+                                        }}
+                                        className="w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-amber-50 border border-amber-200 text-amber-700 font-semibold rounded-xl hover:bg-amber-100 hover:border-amber-300 transition-all text-sm group"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <KeyRound className="w-4 h-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                                            Change Password
+                                        </div>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-600 border border-amber-200">
+                                            Secure Flow
+                                        </span>
+                                    </button>
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        Password changes are handled securely through a dedicated modal.
+                                    </p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Department</label>
@@ -1127,6 +1207,141 @@ const EmployeesDashboard = () => {
                     </div>
                 </div>
             )}
+            {/* ─── Change Password Modal ────────────────────────────────────── */}
+            {isChangePwdModalOpen && (() => {
+                const strength = getPwdStrength(newPassword);
+                const pwdMismatch = pwdSubmitted && newPassword !== confirmPassword;
+                const pwdTooShort = pwdSubmitted && newPassword.length < 6;
+                return (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                            {/* Header */}
+                            <div className="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center">
+                                    <KeyRound className="w-5 h-5 text-amber-500" />
+                                </div>
+                                <div className="flex-1">
+                                    <h2 className="text-base font-bold text-slate-800">Change Password</h2>
+                                    <p className="text-xs text-slate-500 mt-0.5">Setting new credentials for <span className="font-bold text-slate-700">{changePwdEmployeeName}</span></p>
+                                </div>
+                                <button
+                                    onClick={() => setIsChangePwdModalOpen(false)}
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            {/* Security notice */}
+                            <div className="mx-6 mt-5 flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-xl p-3.5">
+                                <ShieldAlert className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                                <p className="text-xs text-blue-700 font-medium leading-relaxed">
+                                    The new password will be <span className="font-bold">securely hashed</span> using bcrypt before saving. The employee can login immediately after this change.
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleChangePassword} noValidate>
+                                <div className="p-6 space-y-4">
+                                    {/* New Password */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">New Password *</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showNewPwd ? 'text' : 'password'}
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                placeholder="Min. 6 characters"
+                                                className={`w-full px-4 py-2.5 pr-11 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400 ${
+                                                    pwdTooShort ? 'border-red-400 bg-red-50/30' : 'border-slate-200'
+                                                }`}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowNewPwd(p => !p)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                            >
+                                                {showNewPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        {pwdTooShort && (
+                                            <p className="text-red-500 text-[11px] font-semibold animate-in fade-in slide-in-from-top-1">Password must be at least 6 characters.</p>
+                                        )}
+
+                                        {/* Strength meter */}
+                                        {newPassword.length > 0 && (
+                                            <div className="space-y-1.5 mt-2">
+                                                <div className="flex gap-1">
+                                                    {[1,2,3,4,5].map(i => (
+                                                        <div
+                                                            key={i}
+                                                            className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                                                                i <= strength.score ? strength.color : 'bg-slate-200'
+                                                            }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <p className={`text-[11px] font-bold ${strength.text}`}>{strength.label}</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Confirm Password */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-sm font-bold text-slate-700">Confirm Password *</label>
+                                        <div className="relative">
+                                            <input
+                                                type={showConfirmPwd ? 'text' : 'password'}
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder="Re-enter new password"
+                                                className={`w-full px-4 py-2.5 pr-11 bg-slate-50 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400 ${
+                                                    pwdMismatch ? 'border-red-400 bg-red-50/30' : (confirmPassword && confirmPassword === newPassword ? 'border-emerald-400 bg-emerald-50/20' : 'border-slate-200')
+                                                }`}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPwd(p => !p)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                            >
+                                                {showConfirmPwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                            {confirmPassword && confirmPassword === newPassword && !pwdMismatch && (
+                                                <CheckCircle className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                                            )}
+                                        </div>
+                                        {pwdMismatch && (
+                                            <p className="text-red-500 text-[11px] font-semibold animate-in fade-in slide-in-from-top-1">Passwords do not match.</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className="px-6 pb-6 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsChangePwdModalOpen(false)}
+                                        className="flex-1 px-4 py-2.5 bg-slate-50 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-100 transition-colors border border-slate-200"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={isChangingPwd}
+                                        className="flex-1 px-4 py-2.5 bg-amber-500 text-white font-bold text-sm rounded-xl hover:bg-amber-600 transition-colors shadow-lg shadow-amber-100 disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {isChangingPwd ? (
+                                            <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Updating…</>
+                                        ) : (
+                                            <><KeyRound className="w-4 h-4" /> Update Password</>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* ─── Delete Confirmation Modal ───────────────────────────────── */}
             {isDeleteModalOpen && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
