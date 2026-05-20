@@ -4,7 +4,8 @@ import Topbar from '../../components/Topbar';
 import { 
   Search, Filter, Calendar, Clock, AlertTriangle, 
   ChevronRight, X, PlayCircle, ShieldCheck, FileText,
-  MessageSquare, Star, ArrowRightCircle, Activity
+  MessageSquare, Star, ArrowRightCircle, Activity,
+  Paperclip, ExternalLink
 } from 'lucide-react';
 
 import { taskService } from '../../api/services';
@@ -59,7 +60,10 @@ const DeveloperTasks = () => {
                     status: h.status,
                     notes: h.notes,
                     time: new Date(h.changedAt).toLocaleString(),
-                    changedBy: h.changedBy
+                    changedBy: h.changedBy,
+                    attachments: h.attachments || [],
+                    screenshotLinks: h.screenshotLinks || [],
+                    attachment: h.attachment || ""
                 })).reverse()
             }));
             setTasks(formattedTasks);
@@ -358,6 +362,47 @@ const DeveloperTasks = () => {
                                                                 : 'bg-slate-50 border border-slate-100 text-slate-600'
                                                             }`}>
                                                                 {update.notes}
+                                                            </div>
+                                                        )}
+                                                        {((update.attachments && update.attachments.length > 0) || (update.screenshotLinks && update.screenshotLinks.length > 0)) && (
+                                                            <div className="mt-2.5 space-y-2 border-t border-slate-100/50 pt-2.5">
+                                                                {update.attachments && update.attachments.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {update.attachments.map((file, idx) => (
+                                                                            <a
+                                                                                key={idx}
+                                                                                href={file.url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 border border-slate-200/50 rounded-lg text-xs font-semibold text-slate-700 transition-colors shadow-sm"
+                                                                                title="View / Download"
+                                                                            >
+                                                                                <Paperclip className="w-3.5 h-3.5 text-slate-500" />
+                                                                                <span className="truncate max-w-[150px]">{file.filename}</span>
+                                                                            </a>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {update.screenshotLinks && update.screenshotLinks.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {update.screenshotLinks.map((url, idx) => {
+                                                                            const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+                                                                            return (
+                                                                                <a
+                                                                                    key={idx}
+                                                                                    href={cleanUrl}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100/30 rounded-lg text-xs font-semibold text-indigo-700 transition-colors shadow-sm"
+                                                                                    title="Open External Link"
+                                                                                >
+                                                                                    <ExternalLink className="w-3.5 h-3.5 text-indigo-500" />
+                                                                                    <span className="truncate max-w-[180px]">{url}</span>
+                                                                                </a>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                         <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{update.time}</p>

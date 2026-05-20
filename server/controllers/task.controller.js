@@ -257,9 +257,11 @@ export const getAllTasks = async (req, res) => {
                 orConditions.push({ project: { $in: ledProjectIds } });
             }
 
-            // If QA, also show all tasks in QA Review status so they can see the queue
+            // If QA, also show all tasks in QA Review status so they can see the queue,
+            // and tasks they have previously changed status on (so their recent activity works)
             if (role === "qa") {
                 orConditions.push({ status: "QA Review" });
+                orConditions.push({ "statusHistory.changedBy": _id });
             }
 
             query = { 
@@ -461,6 +463,11 @@ export const updateTaskStatus = async (req, res) => {
                 statusHistory: historyEntry
             }
         };
+
+        // If a QA changes status, assign them as the QA reviewer if not already assigned
+        if (role === "qa" && (!taskToUpdate.assignedQA || taskToUpdate.assignedQA.toString() !== req.user._id.toString())) {
+            updateObj.assignedQA = req.user._id;
+        }
 
         // Append new attachments and screenshot links to the top-level task arrays
         const pushToArrays = {};

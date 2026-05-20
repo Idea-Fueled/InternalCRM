@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { dashboardService, taskService } from '../../api/services';
+import { useAuth } from '../../context/AuthContext';
+import { toast } from 'sonner';
 import { 
   ClipboardCheck, 
   Clock, 
@@ -17,7 +19,17 @@ import {
   FileText,
   Activity,
   AlertTriangle,
-  Download
+  Download,
+  Upload,
+  Link2,
+  Plus,
+  Loader2,
+  Image,
+  Archive,
+  Video,
+  File,
+  ExternalLink,
+  Globe
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
@@ -29,8 +41,28 @@ const PRIORITY_COLORS = {
     'Critical': 'bg-rose-50 text-rose-700 border-rose-100',
 };
 
+const getFileIcon = (fileType = '', filename = '') => {
+    const t = (fileType + filename).toLowerCase();
+    if (t.match(/\.(jpg|jpeg|png|gif|webp|svg|avif)/) || t.startsWith('image/')) return { icon: Image,   color: 'text-emerald-500', bg: 'bg-emerald-50',  badge: 'IMG'  };
+    if (t.match(/\.pdf/) || t.includes('pdf'))                                     return { icon: FileText,color: 'text-rose-500',    bg: 'bg-rose-50',     badge: 'PDF'  };
+    if (t.match(/\.(zip|rar|7z|tar|gz)/) || t.includes('zip'))                   return { icon: Archive, color: 'text-amber-500',   bg: 'bg-amber-50',    badge: 'ZIP'  };
+    if (t.match(/\.(mp4|mov|avi|webm)/) || t.startsWith('video/'))               return { icon: Video,   color: 'text-purple-500',  bg: 'bg-purple-50',   badge: 'VID'  };
+    return { icon: File, color: 'text-blue-500', bg: 'bg-blue-50', badge: 'FILE' };
+};
+
+const getLinkMeta = (url = '') => {
+    const lower = url.toLowerCase();
+    if (lower.includes('loom.com'))         return { label: 'Loom',         color: 'bg-violet-100 text-violet-700', icon: Video  };
+    if (lower.includes('drive.google.com')) return { label: 'Google Drive',  color: 'bg-blue-100 text-blue-700',    icon: Globe  };
+    if (lower.includes('figma.com'))        return { label: 'Figma',         color: 'bg-pink-100 text-pink-700',    icon: Globe  };
+    if (lower.includes('github.com'))       return { label: 'GitHub',        color: 'bg-slate-100 text-slate-700',  icon: Globe  };
+    if (lower.includes('notion.so'))        return { label: 'Notion',        color: 'bg-slate-100 text-slate-800',  icon: Globe  };
+    return { label: 'Link', color: 'bg-indigo-100 text-indigo-700', icon: Link2 };
+};
+
 const QADashboard = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0, overdueTasks: 0 });
     const [searchQuery, setSearchQuery] = useState("");
@@ -44,7 +76,13 @@ const QADashboard = () => {
     const [actionType, setActionType] = useState(null); // 'Approve' or 'Reject'
     const [actionTaskId, setActionTaskId] = useState(null);
     const [actionNote, setActionNote] = useState("");
-    const [actionAttachment, setActionAttachment] = useState("");
+    
+    const [uploadedFiles, setUploadedFiles] = useState([]);
+    const [screenshotLinks, setScreenshotLinks] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
+    const [linkInput, setLinkInput] = useState("");
+    const [dragOver, setDragOver] = useState(false);
+    const fileInputRef = useRef(null);
     
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
@@ -85,22 +123,26 @@ const QADashboard = () => {
                 const activities = [];
                 allTasks.forEach(t => {
                     (t.statusHistory || []).forEach(h => {
-                        if (h.status === 'Completed') {
-                            activities.push({
-                                id: h._id,
-                                type: 'Approve',
-                                task: t.taskName,
-                                note: h.notes,
-                                timestamp: new Date(h.changedAt).getTime()
-                            });
-                        } else if (h.status === 'In Progress' && h.changedBy?.role === 'qa') {
-                            activities.push({
-                                id: h._id,
-                                type: 'Reject',
-                                task: t.taskName,
-                                note: h.notes,
-                                timestamp: new Date(h.changedAt).getTime()
-                            });
+                        const changedById = h.changedBy?._id || h.changedBy;
+                        const isChangedByMe = changedById && user?._id && (changedById.toString() === user._id.toString());
+                        if (isChangedByMe) {
+                            if (h.status === 'Completed') {
+                                activities.push({
+                                    id: h._id,
+                                    type: 'Approve',
+                                    task: t.taskName,
+                                    note: h.notes,
+                                    timestamp: new Date(h.changedAt).getTime()
+                                });
+                            } else if (h.status === 'In Progress') {
+                                activities.push({
+                                    id: h._id,
+                                    type: 'Reject',
+                                    task: t.taskName,
+                                    note: h.notes,
+                                    timestamp: new Date(h.changedAt).getTime()
+                                });
+                            }
                         }
                     });
                 });
@@ -159,12 +201,85 @@ const QADashboard = () => {
         return matchesSearch && matchesProject;
     });
 
+    const handleFileUpload = async (file) => {
+        setIsUploading(true);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+            const res = await taskService.uploadAttachment(formData);
+            if (res.data.success) {
+                setUploadedFiles(prev => [...prev, res.data.file]);
+                toast.success(`${file.name} uploaded successfully`);
+            } else {
+                toast.error('Upload failed');
+            }
+        } catch (err) {
+            toast.error('Failed to upload file');
+            console.error(err);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const removeUploadedFile = (idx) => setUploadedFiles(prev => prev.filter((_, i) => i !== idx));
+    const addScreenshotLink  = (url) => setScreenshotLinks(prev => [...prev, url]);
+    const removeScreenshotLink = (idx) => setScreenshotLinks(prev => prev.filter((_, i) => i !== idx));
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setDragOver(true);
+    };
+
+    const handleDragLeave = () => {
+        setDragOver(false);
+    };
+
+    const handleDrop = async (e) => {
+        e.preventDefault();
+        setDragOver(false);
+        const files = e.dataTransfer?.files;
+        if (!files || files.length === 0) return;
+        setIsUploading(true);
+        try {
+            for (const file of Array.from(files)) {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await taskService.uploadAttachment(formData);
+                if (res.data.success) {
+                    setUploadedFiles(prev => [...prev, res.data.file]);
+                    toast.success(`${file.name} uploaded successfully`);
+                } else {
+                    toast.error(`Failed to upload ${file.name}`);
+                }
+            }
+        } catch (err) {
+            toast.error('Failed to upload file');
+            console.error(err);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleAddLink = () => {
+        const val = linkInput.trim();
+        if (!val) return;
+        if (!val.startsWith('http://') && !val.startsWith('https://')) {
+            toast.error('Link must start with http:// or https://');
+            return;
+        }
+        setScreenshotLinks(prev => [...prev, val]);
+        setLinkInput("");
+    };
+
     const openActionModal = (taskId, type, e) => {
         if (e) e.stopPropagation();
         setActionTaskId(taskId);
         setActionType(type);
         setActionNote("");
-        setActionAttachment("");
+        setUploadedFiles([]);
+        setScreenshotLinks([]);
+        setLinkInput("");
+        setDragOver(false);
         setIsActionModalOpen(true);
     };
 
@@ -172,13 +287,15 @@ const QADashboard = () => {
         if (!actionTaskId || !actionType) return;
         const newStatus = actionType === 'Approve' ? 'Completed' : 'In Progress';
         try {
-            await taskService.updateTaskStatus(actionTaskId, newStatus, actionNote, actionAttachment);
+            await taskService.updateTaskStatus(actionTaskId, newStatus, actionNote, uploadedFiles, screenshotLinks);
             setTasks(prev => prev.filter(t => t._id !== actionTaskId));
             if (selectedTask?._id === actionTaskId) setSelectedTask(null);
             setIsActionModalOpen(false);
             fetchDashboardData();
+            toast.success(`Task successfully ${actionType === 'Approve' ? 'approved' : 'rejected'}`);
         } catch (error) {
             console.error(`Failed to ${actionType.toLowerCase()} task`, error);
+            toast.error(`Failed to ${actionType.toLowerCase()} task`);
         }
     };
 
@@ -583,7 +700,7 @@ const QADashboard = () => {
                                 </button>
                             </div>
 
-                            <div className="p-6 space-y-6">
+                            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                                         {actionType === 'Approve' ? 'Approval Note' : 'Reason for Rejection'}
@@ -596,21 +713,144 @@ const QADashboard = () => {
                                     />
                                 </div>
 
+                                {/* Drag-and-Drop Attachment Zone */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                                        <span>Attachment (Optional)</span>
-                                        <span className="text-[10px] font-medium text-slate-400 normal-case">Link or File Name</span>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        Upload Attachments (Optional)
                                     </label>
-                                    <div className="relative">
-                                        <Paperclip className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input 
-                                            type="text" 
-                                            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all"
-                                            placeholder="Paste attachment link or file name..."
-                                            value={actionAttachment}
-                                            onChange={(e) => setActionAttachment(e.target.value)}
+                                    <div
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className={`relative border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${
+                                            dragOver
+                                                ? 'border-indigo-500 bg-indigo-50/50'
+                                                : 'border-slate-200 bg-slate-50 hover:border-indigo-400 hover:bg-indigo-50/10'
+                                        }`}
+                                    >
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            multiple
+                                            accept="image/*,.pdf,.zip,.rar,.7z,.doc,.docx,.xls,.xlsx,.mp4,.mov"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                                const files = e.target.files;
+                                                if (files && files.length > 0) {
+                                                    for (const file of Array.from(files)) {
+                                                        handleFileUpload(file);
+                                                    }
+                                                }
+                                            }}
                                         />
+                                        {isUploading ? (
+                                            <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                                        ) : (
+                                            <Upload className={`w-8 h-8 ${dragOver ? 'text-indigo-500' : 'text-slate-400'}`} />
+                                        )}
+                                        <div className="text-center">
+                                            <p className={`text-sm font-semibold ${dragOver ? 'text-indigo-600' : 'text-slate-600'}`}>
+                                                {isUploading ? 'Uploading…' : 'Drop files here or click to browse'}
+                                            </p>
+                                            <p className="text-xs text-slate-400 mt-1">Images, PDFs, ZIPs — Max 10MB</p>
+                                        </div>
                                     </div>
+
+                                    {uploadedFiles.length > 0 && (
+                                        <div className="space-y-2 mt-3">
+                                            {uploadedFiles.map((f, i) => {
+                                                const meta = getFileIcon(f.fileType, f.filename);
+                                                const Icon = meta.icon;
+                                                return (
+                                                    <div key={i} className="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-sm">
+                                                        <div className={`w-8 h-8 rounded-lg ${meta.bg} flex items-center justify-center shrink-0`}>
+                                                            <Icon className={`w-4 h-4 ${meta.color}`} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-semibold text-slate-700 truncate">{f.filename}</p>
+                                                            <p className="text-[9px] text-slate-400 uppercase tracking-wider">{meta.badge}</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                removeUploadedFile(i);
+                                                            }}
+                                                            className="shrink-0 p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Reference / Screenshot Link Manager */}
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        Reference / Screenshot Links (Optional)
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Link2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="url"
+                                                value={linkInput}
+                                                onChange={(e) => setLinkInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleAddLink();
+                                                    }
+                                                }}
+                                                placeholder="https://loom.com/share/… or Drive link"
+                                                className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 transition-all placeholder-slate-400"
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleAddLink}
+                                            className="shrink-0 p-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100 rounded-xl transition-all flex items-center justify-center"
+                                        >
+                                            <Plus className="w-5 h-5" />
+                                        </button>
+                                    </div>
+
+                                    {screenshotLinks.length > 0 && (
+                                        <div className="space-y-2 mt-3">
+                                            {screenshotLinks.map((url, i) => {
+                                                const meta = getLinkMeta(url);
+                                                const Icon = meta.icon;
+                                                const short = url.length > 40 ? url.substring(0, 40) + '…' : url;
+                                                return (
+                                                    <div key={i} className="flex items-center gap-3 bg-white border border-slate-100 rounded-xl px-3 py-2 shadow-sm">
+                                                        <div className={`w-8 h-8 rounded-lg ${meta.color.split(' ')[0]} flex items-center justify-center shrink-0`}>
+                                                            <Icon className={`w-4 h-4 ${meta.color.split(' ')[1]}`} />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs font-semibold text-indigo-600 truncate hover:underline cursor-pointer">
+                                                                <a href={url} target="_blank" rel="noopener noreferrer">{short}</a>
+                                                            </p>
+                                                            <p className="text-[9px] text-slate-400 uppercase tracking-wider">{meta.label}</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                removeScreenshotLink(i);
+                                                            }}
+                                                            className="shrink-0 p-1 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                                        >
+                                                            <X className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
