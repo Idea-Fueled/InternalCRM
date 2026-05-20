@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
     Loader2, Building2, UserMinus, Plus, Minus, Pin,
     User, Landmark, MoreVertical, 
-    Eye, UserCheck, ShieldCheck
+    Eye, UserCheck
 } from "lucide-react";
 import { userService, projectService, taskService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
@@ -446,9 +446,7 @@ const OrganizationTree = () => {
                                     Reports to: <strong className="text-slate-500 truncate max-w-[100px]">{managerName.split(" ")[0]}</strong>
                                 </span>
                             ) : (
-                                <span className="flex items-center gap-1 text-blue-500 font-bold">
-                                    <ShieldCheck className="w-3.5 h-3.5 text-blue-400" /> Executive Board
-                                </span>
+                                <span />
                             )}
 
                             {reporteesCount > 0 && (
