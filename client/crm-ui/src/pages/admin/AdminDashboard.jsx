@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 
-import { dashboardService, projectService, userService, taskService } from "../../api/services";
+import { dashboardService, projectService, userService, taskService, notificationService } from "../../api/services";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { exportPDF } from "../../utils/pdfExport";
@@ -58,11 +58,12 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [dashRes, projRes, userRes, taskRes] = await Promise.all([
+            const [dashRes, projRes, userRes, taskRes, notifRes] = await Promise.all([
                 dashboardService.getAdminDashboard(),
                 projectService.getAllProjects(),
                 userService.getAllUsers(),
-                taskService.getAllTasks()
+                taskService.getAllTasks(),
+                notificationService.getMyNotifications()
             ]);
             
             setDashboardData(dashRes.data.data);
@@ -82,9 +83,9 @@ const AdminDashboard = () => {
             setUsers(usersWithWorkload);
             setAllTasks(allTasks);
             
-            // Sort tasks by most recently created
-            const sortedTasks = (taskRes.data.tasks || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-            setRecentTasks(sortedTasks.slice(0, 5));
+            // Set recent activities from notifications
+            const notifications = notifRes.data.notifications || [];
+            setRecentTasks(notifications);
         } catch (err) {
             if (err.response?.status === 401) {
                 navigate("/");
@@ -333,7 +334,7 @@ const AdminDashboard = () => {
                             <div className="flex items-center justify-between px-1">
                                 <h3 className="text-lg font-bold text-slate-800 tracking-tight">Real-Time Feed</h3>
                             </div>
-                            <Card className="flex-1 flex flex-col gap-4 !p-0 overflow-hidden">
+                            <Card className="h-[580px] flex flex-col gap-4 !p-0 overflow-hidden">
                                 <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Latest Updates</span>
                                     <span className="relative flex h-2.5 w-2.5">
@@ -341,7 +342,7 @@ const AdminDashboard = () => {
                                       <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                                     </span>
                                 </div>
-                                <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5">
+                                <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5 custom-scrollbar">
                                     {/* Feed Items */}
                                     {recentTasks.length === 0 ? (
                                         <div className="h-full flex flex-col items-center justify-center py-10 opacity-60">
@@ -351,32 +352,37 @@ const AdminDashboard = () => {
                                             <p className="text-sm font-semibold text-slate-500 text-center">No recent activity found</p>
                                         </div>
                                     ) : (
-                                        recentTasks.map((task, i) => (
-                                            <div key={task._id || i} className="flex gap-4 text-sm relative">
+                                        recentTasks.map((item, i) => (
+                                            <div key={item._id || i} className="flex gap-4 text-sm relative">
                                                 {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100"></div>}
                                                 <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase overflow-hidden`}>
-                                                    {task.assignedBy?.profilePic ? (
-                                                        <img src={task.assignedBy.profilePic} alt={task.assignedBy.name} className="w-full h-full object-cover" />
+                                                    {item.sender?.profilePic ? (
+                                                        <img src={item.sender.profilePic} alt={item.sender.name} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        task.assignedBy?.name?.charAt(0) || task.taskName.charAt(0)
+                                                        item.sender?.name?.charAt(0) || "S"
                                                     )}
                                                 </div>
-                                                <div className="pt-0.5">
+                                                <div className="pt-0.5 flex-1">
                                                     <p className="text-slate-600 leading-snug">
-                                                        Task <span className="font-bold text-slate-800">{task.taskName}</span> was created by <span className="font-bold text-blue-600">{task.assignedBy?.name || "System"}</span>
+                                                        <span className="font-bold text-slate-800">{item.title}</span>: {item.message}
                                                     </p>
                                                     <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(task.createdAt)}</span>
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(item.createdAt)}</span>
                                                         <span className="text-slate-200 text-xs">•</span>
-                                                        <span className="text-[10px] font-bold text-slate-500">Status: {task.status}</span>
+                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                            item.category === 'status_change' ? 'bg-indigo-50 text-indigo-600' :
+                                                            item.category === 'creation' ? 'bg-emerald-50 text-emerald-600' :
+                                                            item.category === 'update' ? 'bg-blue-50 text-blue-600' :
+                                                            item.category === 'deletion' ? 'bg-rose-50 text-rose-600' :
+                                                            'bg-slate-100 text-slate-500'
+                                                        }`}>
+                                                            {(item.category || "System").replace(/_/g, ' ')}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))
                                     )}
-                                </div>
-                                <div className="p-3 border-t border-slate-100 bg-slate-50/50">
-                                    <button className="w-full py-2 text-sm font-semibold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition">View Full History</button>
                                 </div>
                             </Card>
                         </div>
@@ -519,6 +525,13 @@ const AdminDashboard = () => {
                 data={statModal.data} 
                 type={statModal.type} 
             />
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+            `}} />
         </div>
     )
 }

@@ -239,6 +239,10 @@ export const updateProject = async (req, res, next) => {
                 });
             }
             
+            // Also notify all admins of project update
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+            
             if (req.user?._id) {
                 recipients.delete(req.user._id.toString());
             }
@@ -296,6 +300,10 @@ export const deleteProject = async (req, res, next) => {
             if (deletedProject.teamMembers) {
                 deletedProject.teamMembers.forEach(m => recipients.add(m.toString()));
             }
+            
+            // Also notify all admins of project deletion
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
             
             recipients.delete(req.user._id.toString());
 

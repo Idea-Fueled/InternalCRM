@@ -193,6 +193,26 @@ export const createTask = async (req, res) => {
             });
         }
 
+        // Notify all admins of task creation
+        try {
+            const admins = await User.find({ role: "admin" });
+            for (const admin of admins) {
+                if (admin._id.toString() !== req.user._id.toString()) {
+                    await createNotification({
+                        recipient: admin._id,
+                        sender: req.user._id,
+                        title: "New Task Created",
+                        message: `${populatedTask.taskName} has been created in ${populatedTask.project?.projectName || 'Project'} by ${req.user.name}`,
+                        type: "task",
+                        category: "creation",
+                        link: `/kanban/${populatedTask.project?._id}?taskId=${populatedTask._id}`
+                    });
+                }
+            }
+        } catch (notifErr) {
+            console.error("Notification error on task creation:", notifErr);
+        }
+
         return res.status(201).json({
             success: true,
             message: "Task created successfully",
@@ -340,6 +360,10 @@ export const updateTask = async (req, res) => {
             if (updatedTask.project?.teamLead) recipients.add(updatedTask.project.teamLead.toString());
             if (updatedTask.assignedTo?._id) recipients.add(updatedTask.assignedTo._id.toString());
             if (updatedTask.assignedQA?._id) recipients.add(updatedTask.assignedQA._id.toString());
+            
+            // Also notify all admins of task update
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
             
             // Remove the person who made the change from recipients
             if (req.user?._id) {
@@ -588,6 +612,10 @@ export const deleteTask = async (req, res) => {
             const recipients = new Set();
             if (populatedTask.project?.teamLead) recipients.add(populatedTask.project.teamLead.toString());
             if (populatedTask.assignedTo) recipients.add(populatedTask.assignedTo.toString());
+            
+            // Also notify all admins of task deletion
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
             
             recipients.delete(req.user._id.toString());
 
