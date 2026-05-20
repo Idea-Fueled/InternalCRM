@@ -156,16 +156,9 @@ const AdminSidebar = ({ role = "admin" }) => {
                         <img 
                             src={logoImg} 
                             alt="Idea Fueled" 
-                            className={`h-auto object-contain transition-all duration-300 ${isMinimized ? 'w-10' : 'w-40'}`} 
+                            className={`transition-all duration-300 ${isMinimized ? 'w-10 h-10 object-cover object-left' : 'w-40 h-auto object-contain'}`} 
                         />
                     </div>
-                    {!isMinimized && (
-                        <div className="flex flex-col opacity-100 transition-opacity duration-300 overflow-hidden mt-3 ml-1">
-                            <span className="bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wider uppercase shadow-sm w-max">
-                                {currentConfig.portalName}
-                            </span>
-                        </div>
-                    )}
                 </div>
 
                 <nav className="flex flex-col gap-1.5 px-1">
