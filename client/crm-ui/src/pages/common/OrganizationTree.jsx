@@ -428,10 +428,10 @@ const OrganizationTree = () => {
         const managerName = getManagerName(node);
         const reporteesCount = getReporteesCount(node._id);
 
+        const isMe = nodeStrId === loggedInUserId;
+
         const isHighlightedPath = activeTab === "Me" && meRelatedNodeIds.has(nodeStrId) && !isMe;
         const isDimmed = activeTab === "Me" && !meRelatedNodeIds.has(nodeStrId);
-
-        const isMe = nodeStrId === loggedInUserId;
 
         const isDeptHighlight = selectedDept !== "All" && node.department === selectedDept;
         const isDeptDimmed = selectedDept !== "All" && node.department !== selectedDept;
