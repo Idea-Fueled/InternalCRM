@@ -10,14 +10,17 @@ import {
     getDeletedTasks,
     getTasksByProject,
     getTasksByUser,
-    hardDeleteTask
+    hardDeleteTask,
+    uploadTaskAttachment
 } from "../controllers/task.controller.js";
 import { isAdmin, protectRoute } from "../middlewares/auth.middleware.js";
 import { checkPermission } from "../middlewares/permission.middleware.js";
+import { uploadAttachment } from "../config/cloudinary.js";
 
 const router = express.Router();
 
 router.post("/create",            protectRoute, checkPermission("tasks.create"), createTask);
+router.post("/upload-attachment",  protectRoute, uploadAttachment.single("file"), uploadTaskAttachment);
 router.get("/trash",              protectRoute, checkPermission("trash.view"), getDeletedTasks);
 router.get("/project/:projectId", protectRoute, getTasksByProject);
 router.get("/user/:userId",       protectRoute, getTasksByUser);

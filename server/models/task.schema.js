@@ -53,8 +53,13 @@ const taskSchema = new mongoose.Schema({
     },
     attachments: [
         {
-            type: String
+            url: { type: String },
+            filename: { type: String },
+            fileType: { type: String }
         }
+    ],
+    screenshotLinks: [
+        { type: String }
     ],
     isDeleted: {
         type: Boolean,
@@ -66,6 +71,16 @@ const taskSchema = new mongoose.Schema({
             status: { type: String },
             notes: { type: String, default: "" },
             attachment: { type: String, default: "" },
+            attachments: [
+                {
+                    url: { type: String },
+                    filename: { type: String },
+                    fileType: { type: String }
+                }
+            ],
+            screenshotLinks: [
+                { type: String }
+            ],
             changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
             changedAt: { type: Date, default: Date.now }
         }

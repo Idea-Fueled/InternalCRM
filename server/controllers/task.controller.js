@@ -2,10 +2,119 @@ import { Task } from "../models/task.schema.js";
 import { createNotification } from "./notification.controller.js";
 import User from "../models/user.schema.js";
 
+// ─── Hierarchy-Based Visibility Helper ────────────────────────────────────────
+// Filters statusHistory entries so that notes, attachments, and screenshotLinks
+// are only visible to users allowed by the role hierarchy.
+const filterTaskVisibility = (task, currentUser) => {
+    if (!task || !task.statusHistory) return task;
+
+    const userId = currentUser._id.toString();
+    const userRole = currentUser.role;
+
+    // Admin sees everything
+    if (userRole === "admin") return task;
+
+    // Check if user is project TL
+    const projectTL = task.project?.teamLead
+        ? (typeof task.project.teamLead === "object"
+            ? task.project.teamLead._id?.toString()
+            : task.project.teamLead.toString())
+        : null;
+    const isTL = projectTL === userId;
+
+    // TL sees everything in their project
+    if (isTL) return task;
+
+    const assignedToId = task.assignedTo
+        ? (typeof task.assignedTo === "object" ? task.assignedTo._id?.toString() : task.assignedTo.toString())
+        : null;
+    const assignedQAId = task.assignedQA
+        ? (typeof task.assignedQA === "object" ? task.assignedQA._id?.toString() : task.assignedQA.toString())
+        : null;
+
+    const isAssignedDev = assignedToId === userId;
+    const isAssignedQA = assignedQAId === userId;
+
+    // If user is neither assigned dev nor assigned QA, restrict everything
+    if (!isAssignedDev && !isAssignedQA) {
+        task.statusHistory = task.statusHistory.map(h => {
+            const obj = h.toObject ? h.toObject() : { ...h };
+            return {
+                ...obj,
+                notes: "[Restricted Visibility]",
+                attachment: "",
+                attachments: [],
+                screenshotLinks: []
+            };
+        });
+        return task;
+    }
+
+    // For assigned dev/QA: show entries they created + entries created by TL/Admin.
+    // Hide entries from the *other* assignee only if the creator is that other assignee.
+    task.statusHistory = task.statusHistory.map(h => {
+        const obj = h.toObject ? h.toObject() : { ...h };
+        const changedById = obj.changedBy
+            ? (typeof obj.changedBy === "object" ? obj.changedBy._id?.toString() : obj.changedBy.toString())
+            : null;
+
+        // If I created it, show it
+        if (changedById === userId) return obj;
+
+        // If created by TL or admin, show it (TL already returned above; this handles admin entries)
+        // We can't easily check the role of changedBy without populating, so we allow it
+        // unless it was specifically created by the OTHER assignee
+        if (isAssignedDev && changedById === assignedQAId) {
+            // Developer viewing QA's entry – QA entries ARE visible to assigned dev per requirements
+            return obj;
+        }
+        if (isAssignedQA && changedById === assignedToId) {
+            // QA viewing Developer's entry – Dev entries ARE visible to assigned QA per requirements
+            return obj;
+        }
+
+        // For any other person's entry (someone not TL, not the other assignee), show it
+        // This covers admin entries and TL entries
+        return obj;
+    });
+
+    return task;
+};
+
+// ─── Upload Task Attachment ───────────────────────────────────────────────────
+export const uploadTaskAttachment = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "No file uploaded"
+            });
+        }
+
+        const fileData = {
+            url: req.file.path,
+            filename: req.file.originalname || req.file.filename || "attachment",
+            fileType: req.file.mimetype || ""
+        };
+
+        return res.status(200).json({
+            success: true,
+            message: "File uploaded successfully",
+            file: fileData
+        });
+    } catch (error) {
+        console.error("Upload attachment error:", error);
+        return res.status(500).json({
+            success: false,
+            message: error.message || "Failed to upload attachment"
+        });
+    }
+};
+
 // Create Task
 export const createTask = async (req, res) => {
     try {
-        const { taskName, description, project, assignedTo, assignedQA, assignedBy, status, priority, startDate, endDate, developerNotes, qaNotes, attachments, isDeleted } = req.body;
+        const { taskName, description, project, assignedTo, assignedQA, assignedBy, status, priority, startDate, endDate, developerNotes, qaNotes, attachments, screenshotLinks, isDeleted } = req.body;
 
         if (!taskName || !project) {
             return res.status(400).json({
@@ -27,7 +136,8 @@ export const createTask = async (req, res) => {
             endDate,
             developerNotes,
             qaNotes,
-            attachments,
+            attachments: attachments || [],
+            screenshotLinks: screenshotLinks || [],
             isDeleted,
             statusHistory: [{
                 fromStatus: "Created",
@@ -139,16 +249,22 @@ export const getAllTasks = async (req, res) => {
         }
 
         const tasks = await Task.find(query)
-            .populate("project", "projectName name status")
+            .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role")
             .sort({ createdAt: -1 });
 
+        // Apply visibility filtering to each task
+        const filteredTasks = tasks.map(t => {
+            const taskObj = t.toObject ? t.toObject() : { ...t };
+            return filterTaskVisibility(taskObj, req.user);
+        });
+
         return res.status(200).json({
             success: true,
-            tasks
+            tasks: filteredTasks
         });
     } catch (error) {
         return res.status(500).json({
@@ -163,10 +279,11 @@ export const getSingleTask = async (req, res) => {
     try {
         const { id } = req.params;
         const task = await Task.findOne({ _id: id, isDeleted: false })
-            .populate("project", "projectName name description status")
+            .populate("project", "projectName name description status teamLead")
             .populate("assignedTo", "name email role profilePic")
+            .populate("assignedQA", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role");
+            .populate("statusHistory.changedBy", "name role profilePic");
 
         if (!task) {
             return res.status(404).json({
@@ -175,24 +292,13 @@ export const getSingleTask = async (req, res) => {
             });
         }
 
-        // Visibility Scoping for Sensitive Notes/Attachments
-        const isAuthorized = 
-            req.user.role === 'admin' || 
-            (task.project && task.project.teamLead && task.project.teamLead.toString() === req.user._id.toString()) ||
-            (task.assignedTo && task.assignedTo._id.toString() === req.user._id.toString()) ||
-            (task.assignedQA && task.assignedQA.toString() === req.user._id.toString());
-
-        if (!isAuthorized && task.statusHistory) {
-            task.statusHistory = task.statusHistory.map(h => ({
-                ...h.toObject(),
-                notes: "[Restricted Visibility]",
-                attachment: "[Restricted Visibility]"
-            }));
-        }
+        // Apply hierarchy-based visibility
+        const taskObj = task.toObject();
+        const filtered = filterTaskVisibility(taskObj, req.user);
 
         return res.status(200).json({
             success: true,
-            task
+            task: filtered
         });
     } catch (error) {
         return res.status(500).json({
@@ -268,11 +374,11 @@ export const updateTask = async (req, res) => {
     }
 };
 
-// Update Task Status (with optional notes and attachment logged to statusHistory)
+// Update Task Status (with optional notes, attachments, and screenshot links logged to statusHistory)
 export const updateTaskStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status, notes, attachment } = req.body;
+        const { status, notes, attachment, attachments, screenshotLinks } = req.body;
 
         if (!status) {
             return res.status(400).json({
@@ -312,27 +418,48 @@ export const updateTaskStatus = async (req, res) => {
             }
         }
 
-        // Build history entry
+        // Build history entry with rich data
         const historyEntry = {
             fromStatus: taskToUpdate.status,
             status,
             notes: notes || "",
             attachment: attachment || "",
+            attachments: Array.isArray(attachments) ? attachments : [],
+            screenshotLinks: Array.isArray(screenshotLinks) ? screenshotLinks : [],
             changedBy: req.user._id,
             changedAt: new Date()
         };
 
+        // Build the update object — also append attachments & screenshotLinks to top-level arrays
+        const updateObj = {
+            status,
+            $push: {
+                statusHistory: historyEntry
+            }
+        };
+
+        // Append new attachments and screenshot links to the top-level task arrays
+        const pushToArrays = {};
+        if (Array.isArray(attachments) && attachments.length > 0) {
+            pushToArrays.attachments = { $each: attachments };
+        }
+        if (Array.isArray(screenshotLinks) && screenshotLinks.length > 0) {
+            pushToArrays.screenshotLinks = { $each: screenshotLinks };
+        }
+        if (Object.keys(pushToArrays).length > 0) {
+            // Merge into $push
+            Object.assign(updateObj.$push, pushToArrays);
+        }
+
         const task = await Task.findOneAndUpdate(
             { _id: id, isDeleted: false },
-            {
-                status,
-                $push: { statusHistory: historyEntry }
-            },
+            updateObj,
             { new: true }
         )
         .populate("project", "projectName name status teamLead")
         .populate("assignedTo", "name email profilePic")
-        .populate("statusHistory.changedBy", "name profilePic");
+        .populate("assignedQA", "name email profilePic")
+        .populate("statusHistory.changedBy", "name role profilePic");
 
         if (!task) {
             return res.status(404).json({
@@ -547,14 +674,22 @@ export const getTasksByProject = async (req, res) => {
     try {
         const { projectId } = req.params;
         const tasks = await Task.find({ project: projectId, isDeleted: false })
+            .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role")
+            .populate("assignedQA", "name email role profilePic")
+            .populate("statusHistory.changedBy", "name role profilePic")
             .sort({ createdAt: -1 });
+
+        // Apply visibility filtering
+        const filteredTasks = tasks.map(t => {
+            const taskObj = t.toObject ? t.toObject() : { ...t };
+            return filterTaskVisibility(taskObj, req.user);
+        });
 
         return res.status(200).json({
             success: true,
-            tasks
+            tasks: filteredTasks
         });
     } catch (error) {
         return res.status(500).json({
@@ -569,16 +704,22 @@ export const getTasksByUser = async (req, res) => {
     try {
         const { userId } = req.params;
         const tasks = await Task.find({ assignedTo: userId, isDeleted: false })
-            .populate("project", "projectName name status")
+            .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role profilePic")
             .sort({ createdAt: -1 });
 
+        // Apply visibility filtering
+        const filteredTasks = tasks.map(t => {
+            const taskObj = t.toObject ? t.toObject() : { ...t };
+            return filterTaskVisibility(taskObj, req.user);
+        });
+
         return res.status(200).json({
             success: true,
-            tasks
+            tasks: filteredTasks
         });
     } catch (error) {
         return res.status(500).json({

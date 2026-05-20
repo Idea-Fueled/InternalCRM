@@ -26,7 +26,11 @@ export const taskService = {
     getTasksByProject: (projectId) => axiosInstance.get(`/tasks/project/${projectId}`),
     getTasksByUser: (userId) => axiosInstance.get(`/tasks/user/${userId}`),
     createTask: (data) => axiosInstance.post('/tasks/create', data),
-    updateTaskStatus: (id, status, notes = "", attachment = "") => axiosInstance.put(`/tasks/${id}/status`, { status, notes, attachment }),
+    uploadAttachment: (formData) => axiosInstance.post('/tasks/upload-attachment', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    updateTaskStatus: (id, status, notes = "", attachments = [], screenshotLinks = []) =>
+        axiosInstance.put(`/tasks/${id}/status`, { status, notes, attachments, screenshotLinks }),
     updateTask: (id, data) => axiosInstance.put(`/tasks/${id}`, data),
     deleteTask: (id) => axiosInstance.delete(`/tasks/${id}`),
     hardDeleteTask: (id) => axiosInstance.delete(`/tasks/hard/${id}`),
