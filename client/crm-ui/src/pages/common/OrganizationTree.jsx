@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
     Search, Loader2, Building2, UserMinus, Plus, Minus, Pin,
     User, Landmark, Users, Briefcase, ListTodo, MoreVertical, 
-    Eye, Share2, Anchor, UserCheck, ShieldCheck
+    Eye, UserCheck, ShieldCheck
 } from "lucide-react";
 import { userService, projectService, taskService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
@@ -432,24 +432,12 @@ const OrganizationTree = () => {
 
                     {/* Action Dropdown Menu */}
                     {activeMenuId === nodeStrId && (
-                        <div className="absolute top-12 right-6 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 w-44 z-50 animate-in fade-in slide-in-from-top-2 duration-150" onClick={e => e.stopPropagation()}>
+                        <div className="absolute top-12 right-6 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 w-36 z-50 animate-in fade-in slide-in-from-top-2 duration-150" onClick={e => e.stopPropagation()}>
                             <button
                                 onClick={() => { handleOpenProfile(node); setActiveMenuId(null); }}
                                 className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
                             >
                                 <Eye className="w-3.5 h-3.5" /> View Profile
-                            </button>
-                            <button
-                                onClick={() => { centerOnNode(nodeStrId); setActiveMenuId(null); }}
-                                className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
-                            >
-                                <Anchor className="w-3.5 h-3.5" /> Focus Card
-                            </button>
-                            <button
-                                onClick={() => { setSelectedChainUser(nodeStrId); setViewMode("ReportingChain"); setActiveMenuId(null); }}
-                                className="w-full px-4 py-2 text-left text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors flex items-center gap-2 cursor-pointer"
-                            >
-                                <Share2 className="w-3.5 h-3.5" /> Trace Structure
                             </button>
                         </div>
                     )}
