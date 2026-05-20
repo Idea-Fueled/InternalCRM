@@ -22,12 +22,10 @@ const OrganizationTree = () => {
     // UI Interaction States
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDept, setSelectedDept] = useState("All");
-    const [viewMode, setViewMode] = useState("Full"); // "Full" | "MyTeam" | "ReportingChain"
+    const [activeTab, setActiveTab] = useState("Top"); // "Top" | "Me" | "Dept"
     const [zoomScale, setZoomScale] = useState(1.0);
     const [expandedNodes, setExpandedNodes] = useState({});
-    const [selectedChainUser, setSelectedChainUser] = useState("");
     const [activeMenuId, setActiveMenuId] = useState(null);
-    const [groupByDept, setGroupByDept] = useState(false);
 
     // Helper functions
     const formatRole = (r) => {
@@ -115,13 +113,6 @@ const OrganizationTree = () => {
             setExpandedNodes(initialExpanded);
         }
     }, [allUsers]);
-
-    // Set fallback selected user for reporting chain
-    useEffect(() => {
-        if (allUsers.length > 0 && !selectedChainUser) {
-            setSelectedChainUser(user?._id || allUsers[0]?._id);
-        }
-    }, [allUsers, user, selectedChainUser]);
 
     // Unique list of departments for filtering
     const departments = useMemo(() => {
@@ -227,86 +218,153 @@ const OrganizationTree = () => {
         handleGoToTop();
     };
 
-    // --- Reporting Chain Highlight Calculations ---
-    const highlightedNodeIds = useMemo(() => {
-        if (viewMode !== 'ReportingChain' || !selectedChainUser) return new Set();
-        const path = new Set();
-        path.add(selectedChainUser);
-
-        // Move Upwards to Admins
-        let currentId = selectedChainUser;
-        let safety = 0;
-        while (currentId && safety < 10) {
-            const currentObj = allUsers.find(u => getIdString(u._id) === currentId);
-            if (currentObj && currentObj.teamLeads && currentObj.teamLeads.length > 0) {
-                const parentId = getIdString(currentObj.teamLeads[0]);
-                path.add(parentId);
-                currentId = parentId;
-            } else {
-                break;
-            }
-            safety++;
-        }
-
-        // Move Downwards to developers/QAs
-        const addChildren = (id) => {
-            allUsers.forEach(u => {
-                const parents = (u.teamLeads || []).map(tl => getIdString(tl));
-                if (parents.includes(id) && !path.has(getIdString(u._id))) {
-                    path.add(getIdString(u._id));
-                    addChildren(getIdString(u._id));
-                }
-            });
-        };
-        addChildren(selectedChainUser);
-
-        return path;
-    }, [viewMode, selectedChainUser, allUsers]);
-
     // --- Dynamic Tree Hierarchy Builder ---
     const rootNodes = useMemo(() => {
         if (allUsers.length === 0) return [];
 
-        const admins = allUsers.filter(u => u.role === 'admin');
-        const tls = allUsers.filter(u => u.role === 'TL');
-        const members = allUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+        const activeUsers = allUsers.filter(u => u.isActive !== false);
 
-        const loggedInUserId = getIdString(user?._id);
-        const loggedInUserRole = user?.role || 'admin';
-        const myTeamLeads = (user?.teamLeads || []).map(tl => getIdString(tl));
+        // Helper: Check if a user ID reports to a given lead ID
+        const reportsTo = (emp, leadId) => {
+            return (emp.teamLeads || []).some(lead => {
+                const id = typeof lead === 'object' ? lead._id : lead;
+                return getIdString(id) === getIdString(leadId);
+            });
+        };
 
-        const buildTree = (roots) => {
+        // Recursive tree builder for full/general structures
+        const buildTreeFromRoots = (roots, tlsList, staffList) => {
             return roots.map(root => {
                 let children = [];
                 if (root.role === 'admin') {
-                    const adminTLs = tls.filter(tl => (tl.teamLeads || []).map(t => getIdString(t)).includes(getIdString(root._id)));
-                    children = adminTLs.length > 0 ? adminTLs : tls;
+                    // Find TLs reporting to this Admin
+                    let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
+                    
+                    // Fallback: If a TL has no valid admin lead in the database, attach them to the first Admin
+                    const allAdminsInScope = roots.filter(u => u.role === 'admin');
+                    if (allAdminsInScope[0] && getIdString(root._id) === getIdString(allAdminsInScope[0]._id)) {
+                        const orphanedTLs = tlsList.filter(tl => {
+                            const hasValidAdminLead = (tl.teamLeads || []).some(leadId => 
+                                allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
+                            );
+                            return !hasValidAdminLead;
+                        });
+                        directTLs = [...directTLs, ...orphanedTLs];
+                    }
+                    children = directTLs;
                 } else if (root.role === 'TL') {
-                    children = members.filter(m => (m.teamLeads || []).map(t => getIdString(t)).includes(getIdString(root._id)));
+                    // Find developers & QAs reporting to this TL
+                    children = staffList.filter(m => reportsTo(m, root._id));
                 }
 
                 return {
                     ...root,
-                    children: children.length > 0 ? buildTree(children) : []
+                    children: children.length > 0 ? buildTreeFromRoots(children, tlsList, staffList) : []
                 };
             });
         };
 
-        if (viewMode === 'MyTeam') {
-            if (loggedInUserRole === 'admin') {
-                return buildTree(admins);
-            } else if (loggedInUserRole === 'TL') {
-                const selfTL = allUsers.find(u => getIdString(u._id) === loggedInUserId);
-                return selfTL ? buildTree([selfTL]) : [];
+        // 1. "Top of the Org" Tab (Full Organization)
+        if (activeTab === "Top") {
+            const admins = activeUsers.filter(u => u.role === 'admin');
+            const tls = activeUsers.filter(u => u.role === 'TL');
+            const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+
+            if (admins.length > 0) {
+                return buildTreeFromRoots(admins, tls, staff);
             } else {
-                const reportingTLs = allUsers.filter(u => u.role === 'TL' && myTeamLeads.includes(getIdString(u._id)));
-                return reportingTLs.length > 0 ? buildTree(reportingTLs) : buildTree(admins);
+                // If there are no admins, treat Team Leads as top-level
+                return buildTreeFromRoots(tls, tls, staff);
             }
         }
 
-        // Default or ReportingChain View Mode
-        return buildTree(admins);
-    }, [allUsers, user, viewMode]);
+        // 2. "Me" Tab (Logged-in user's team structure)
+        if (activeTab === "Me") {
+            if (!user) return [];
+            const loggedInUserId = getIdString(user._id);
+            const dbUser = activeUsers.find(u => getIdString(u._id) === loggedInUserId) || user;
+
+            // Case A: Admin - shows TLs and developers reporting to them
+            if (dbUser.role === 'admin') {
+                const tls = activeUsers.filter(u => u.role === 'TL');
+                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                
+                let directTLs = tls.filter(tl => reportsTo(tl, dbUser._id));
+                if (directTLs.length === 0) {
+                    directTLs = tls; // Fallback to all TLs if none report directly
+                }
+                
+                return buildTreeFromRoots([dbUser], directTLs, staff);
+            }
+
+            // Case B: Team Lead - shows them at root and their developers/QAs
+            if (dbUser.role === 'TL') {
+                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                return buildTreeFromRoots([dbUser], [], staff);
+            }
+
+            // Case C: Developer / QA
+            // Find their Team Lead
+            const tls = activeUsers.filter(u => u.role === 'TL');
+            const myLeadId = dbUser.teamLeads && dbUser.teamLeads.length > 0 ? getIdString(dbUser.teamLeads[0]) : null;
+            const myLead = tls.find(tl => getIdString(tl._id) === myLeadId);
+
+            if (myLead) {
+                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                return buildTreeFromRoots([myLead], [], staff);
+            }
+
+            // Case D: Developer / QA reporting to an Admin
+            const admins = activeUsers.filter(u => u.role === 'admin');
+            const myAdminId = dbUser.teamLeads && dbUser.teamLeads.length > 0 ? getIdString(dbUser.teamLeads[0]) : null;
+            const myAdmin = admins.find(adm => getIdString(adm._id) === myAdminId);
+
+            if (myAdmin) {
+                const tls = activeUsers.filter(u => u.role === 'TL');
+                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                
+                let adminTLs = tls.filter(tl => reportsTo(tl, myAdmin._id));
+                const directStaff = staff.filter(m => reportsTo(m, myAdmin._id));
+
+                const tlNodes = adminTLs.map(tl => {
+                    const tlChildren = staff.filter(m => reportsTo(m, tl._id));
+                    return {
+                        ...tl,
+                        children: tlChildren.map(m => ({ ...m, children: [] }))
+                    };
+                });
+
+                return [{
+                    ...myAdmin,
+                    children: [...tlNodes, ...directStaff.map(m => ({ ...m, children: [] }))]
+                }];
+            }
+
+            // Fallback: Just the user themselves
+            return [{ ...dbUser, children: [] }];
+        }
+
+        // 3. "My Department" Tab (Hierarchy within own department only)
+        if (activeTab === "Dept") {
+            if (!user || !user.department) return [];
+            const myDept = user.department.toLowerCase().trim();
+            const deptUsers = activeUsers.filter(u => u.department && u.department.toLowerCase().trim() === myDept);
+
+            const admins = deptUsers.filter(u => u.role === 'admin');
+            const tls = deptUsers.filter(u => u.role === 'TL');
+            const staff = deptUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+
+            if (admins.length > 0) {
+                return buildTreeFromRoots(admins, tls, staff);
+            } else if (tls.length > 0) {
+                return buildTreeFromRoots(tls, tls, staff);
+            } else {
+                return staff.map(m => ({ ...m, children: [] }));
+            }
+        }
+
+        return [];
+    }, [allUsers, user, activeTab]);
 
     // Live search highlighting snaps
     useEffect(() => {
@@ -349,8 +407,8 @@ const OrganizationTree = () => {
         const managerName = getManagerName(node);
         const reporteesCount = getReporteesCount(node._id);
 
-        const isHighlightedPath = viewMode === 'ReportingChain' && highlightedNodeIds.has(nodeStrId);
-        const isDimmed = viewMode === 'ReportingChain' && !highlightedNodeIds.has(nodeStrId);
+        const isHighlightedPath = false;
+        const isDimmed = false;
 
         const isMe = nodeStrId === loggedInUserId;
         const isSearchMatch = searchQuery.trim() && (
@@ -480,7 +538,7 @@ const OrganizationTree = () => {
                             const isSingle = childrenArr.length === 1;
 
                             // Highlight connecting lines path
-                            const isChildHighlighted = isHighlightedPath && highlightedNodeIds.has(getIdString(child._id));
+                            const isChildHighlighted = false;
 
                             return (
                                 <div key={child._id || idx} className="flex flex-col items-center relative">
@@ -535,87 +593,36 @@ const OrganizationTree = () => {
                                 />
                             </div>
 
-                            {/* View Selector Filters */}
+                            {/* View Selector Tabs */}
                             <div className="flex flex-wrap items-center gap-4 text-slate-500 text-xs font-semibold select-none">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-400">Go to</span>
+                                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl">
                                     <button
-                                        onClick={handleGoToMyDepartment}
-                                        className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 focus:outline-none"
+                                        onClick={() => {
+                                            setActiveTab("Top");
+                                            setTimeout(handleGoToTop, 100);
+                                        }}
+                                        className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Top' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                                     >
-                                        <Building2 className="w-3.5 h-3.5 text-slate-400" /> My Department
+                                        <Landmark className="w-3.5 h-3.5" /> Top of the Org
                                     </button>
                                     <button
-                                        onClick={handleGoToTop}
-                                        className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 focus:outline-none"
-                                    >
-                                        <Landmark className="w-3.5 h-3.5 text-slate-400" /> Top of the Org
-                                    </button>
-                                    <button
-                                        onClick={handleGoToMe}
-                                        className="px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 font-bold focus:outline-none"
+                                        onClick={() => {
+                                            setActiveTab("Me");
+                                            setTimeout(handleGoToMe, 100);
+                                        }}
+                                        className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Me' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                                     >
                                         <User className="w-3.5 h-3.5" /> Me
                                     </button>
-                                </div>
-
-                                <div className="h-6 w-px bg-slate-200 hidden md:block" />
-
-                                {/* Smart Modes Selector */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-400">Mode</span>
-                                    <select
-                                        value={viewMode}
-                                        onChange={e => setViewMode(e.target.value)}
-                                        className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer focus:border-purple-600"
-                                    >
-                                        <option value="Full">Full Organization</option>
-                                        <option value="MyTeam">My Team Scope</option>
-                                        <option value="ReportingChain">Reporting Chain</option>
-                                    </select>
-                                </div>
-
-                                {/* Chain User selection (Only visible during Chain View mode) */}
-                                {viewMode === 'ReportingChain' && (
-                                    <div className="relative animate-in fade-in duration-200">
-                                        <select
-                                            value={selectedChainUser}
-                                            onChange={e => setSelectedChainUser(e.target.value)}
-                                            className="px-3 py-2 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg text-xs font-bold outline-none cursor-pointer"
-                                        >
-                                            {allUsers.map(u => (
-                                                <option key={u._id} value={u._id}>{u.name}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-
-                                {/* Department selection filter */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-400">Department</span>
-                                    <select
-                                        value={selectedDept}
-                                        onChange={e => setSelectedDept(e.target.value)}
-                                        className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer focus:border-purple-600"
-                                    >
-                                        <option value="All">All Departments</option>
-                                        {departments.filter(d => d !== "All").map(d => (
-                                            <option key={d} value={d}>{d}</option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="h-6 w-px bg-slate-200 hidden md:block" />
-
-                                {/* Group by department switch */}
-                                <div className="flex items-center gap-2">
                                     <button
-                                        onClick={() => setGroupByDept(prev => !prev)}
-                                        className={`w-10 h-5 rounded-full p-0.5 transition-colors cursor-pointer focus:outline-none ${groupByDept ? 'bg-purple-700' : 'bg-slate-200'}`}
+                                        onClick={() => {
+                                            setActiveTab("Dept");
+                                            setTimeout(handleGoToMyDepartment, 100);
+                                        }}
+                                        className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Dept' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                                     >
-                                        <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${groupByDept ? 'translate-x-5' : 'translate-x-0'}`} />
+                                        <Building2 className="w-3.5 h-3.5" /> My Department
                                     </button>
-                                    <span>Division Highlight</span>
                                 </div>
                             </div>
                         </div>
@@ -647,11 +654,11 @@ const OrganizationTree = () => {
                                 ) : (
                                     <div className="flex flex-col items-center">
                                         {rootNodes.length > 0 ? (
-                                            rootNodes.map((rootNode, idx) => (
-                                                <div key={rootNode._id || idx} className="flex flex-col items-center">
-                                                    <TreeNode node={rootNode} />
-                                                </div>
-                                            ))
+                                            <div className="flex flex-row gap-16 justify-center items-start">
+                                                {rootNodes.map((rootNode, idx) => (
+                                                    <TreeNode key={rootNode._id || idx} node={rootNode} />
+                                                ))}
+                                            </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-24 gap-3">
                                                 <div className="p-4 bg-slate-50 text-slate-400 rounded-full">
