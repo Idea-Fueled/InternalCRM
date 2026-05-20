@@ -654,6 +654,47 @@ const QADashboard = () => {
                                                          <span className="text-[10px] text-indigo-500 font-bold">by {h.changedBy?.name || 'System'}</span>
                                                      </div>
                                                      {h.notes && <p className="text-xs text-slate-600 italic">"{h.notes}"</p>}
+                                                     {((h.attachments && h.attachments.length > 0) || (h.screenshotLinks && h.screenshotLinks.length > 0)) && (
+                                                         <div className="mt-2 space-y-1.5 border-t border-slate-100/50 pt-2">
+                                                             {h.attachments && h.attachments.length > 0 && (
+                                                                 <div className="flex flex-wrap gap-1.5">
+                                                                     {h.attachments.map((file, idx) => (
+                                                                         <a
+                                                                             key={idx}
+                                                                             href={file.url}
+                                                                             target="_blank"
+                                                                             rel="noopener noreferrer"
+                                                                             className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200/50 rounded-lg text-[11px] font-semibold text-slate-600 transition-colors shadow-xs"
+                                                                             title="View / Download"
+                                                                         >
+                                                                             <Paperclip className="w-3 h-3 text-slate-400" />
+                                                                             <span className="truncate max-w-[120px]">{file.filename}</span>
+                                                                         </a>
+                                                                     ))}
+                                                                 </div>
+                                                             )}
+                                                             {h.screenshotLinks && h.screenshotLinks.length > 0 && (
+                                                                 <div className="flex flex-wrap gap-1.5">
+                                                                     {h.screenshotLinks.map((url, idx) => {
+                                                                         const cleanUrl = url.startsWith('http') ? url : `https://${url}`;
+                                                                         return (
+                                                                             <a
+                                                                                 key={idx}
+                                                                                 href={cleanUrl}
+                                                                                 target="_blank"
+                                                                                 rel="noopener noreferrer"
+                                                                                 className="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-50/50 hover:bg-indigo-100/50 border border-indigo-100/20 rounded-lg text-[11px] font-semibold text-indigo-600 transition-colors shadow-xs"
+                                                                                 title="Open External Link"
+                                                                             >
+                                                                                 <ExternalLink className="w-3 h-3 text-indigo-400" />
+                                                                                 <span className="truncate max-w-[150px]">{url}</span>
+                                                                             </a>
+                                                                         );
+                                                                     })}
+                                                                 </div>
+                                                             )}
+                                                         </div>
+                                                     )}
                                                  </div>
                                             ))}
                                         </div>
