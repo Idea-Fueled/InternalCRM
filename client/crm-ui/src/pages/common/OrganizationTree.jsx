@@ -17,6 +17,28 @@ const getIdString = (id) => {
     return String(id);
 };
 
+// Pure helper to get department badge color theme
+const getDeptColor = (dept) => {
+    if (!dept) return { bg: 'bg-slate-50', text: 'text-slate-500', border: 'border-slate-100' };
+    const d = String(dept).toLowerCase().trim();
+    if (d.includes('eng') || d.includes('dev') || d.includes('tech') || d.includes('soft')) {
+        return { bg: 'bg-blue-50/80', text: 'text-blue-600', border: 'border-blue-100/50' };
+    }
+    if (d.includes('mark') || d.includes('sale') || d.includes('pr')) {
+        return { bg: 'bg-rose-50/80', text: 'text-rose-600', border: 'border-rose-100/50' };
+    }
+    if (d.includes('design') || d.includes('ui') || d.includes('ux')) {
+        return { bg: 'bg-amber-50/80', text: 'text-amber-600', border: 'border-amber-100/50' };
+    }
+    if (d.includes('hr') || d.includes('talent') || d.includes('peop')) {
+        return { bg: 'bg-emerald-50/80', text: 'text-emerald-600', border: 'border-emerald-100/50' };
+    }
+    if (d.includes('finance') || d.includes('acc') || d.includes('pay') || d.includes('fin')) {
+        return { bg: 'bg-indigo-50/80', text: 'text-indigo-600', border: 'border-indigo-100/50' };
+    }
+    return { bg: 'bg-purple-50/80', text: 'text-purple-600', border: 'border-purple-100/50' };
+};
+
 const OrganizationTree = () => {
     const { user } = useAuth();
 
@@ -27,8 +49,7 @@ const OrganizationTree = () => {
     const [loading, setLoading] = useState(true);
 
     // UI Interaction States
-    const [selectedDept, setSelectedDept] = useState("All");
-    const [activeTab, setActiveTab] = useState("Top"); // "Top" | "Me" | "Dept"
+    const [activeTab, setActiveTab] = useState("Top"); // "Top" | "Team"
     const [zoomScale, setZoomScale] = useState(1.0);
     const [expandedNodes, setExpandedNodes] = useState({});
     const [activeMenuId, setActiveMenuId] = useState(null);
@@ -160,14 +181,7 @@ const OrganizationTree = () => {
         return set;
     }, [currentUserObj, allUsers]);
 
-    // Unique list of departments for filtering
-    const departments = useMemo(() => {
-        const depts = new Set();
-        allUsers.forEach(u => {
-            if (u.department) depts.add(u.department);
-        });
-        return ["All", ...Array.from(depts)];
-    }, [allUsers]);
+    // (departments filter removed for clean department-grouped hierarchy matrix)
 
     // Calculate dynamic manager name
     const getManagerName = (node) => {
@@ -202,25 +216,10 @@ const OrganizationTree = () => {
     };
 
     // --- Shortcuts Navigation ---
-    const handleGoToMe = () => {
-        if (user?._id) {
-            centerOnNode(getIdString(user._id));
-        }
-    };
-
     const handleGoToTop = () => {
         const admins = allUsers.filter(u => u.role === 'admin');
         if (admins.length > 0) {
             centerOnNode(getIdString(admins[0]._id));
-        }
-    };
-
-    const handleGoToMyDepartment = () => {
-        if (user?.department) {
-            const sameDept = allUsers.find(u => u.department === user.department);
-            if (sameDept) {
-                centerOnNode(getIdString(sameDept._id));
-            }
         }
     };
 
@@ -292,33 +291,91 @@ const OrganizationTree = () => {
         };
 
         // Recursive tree builder for full/general structures
-        const buildTreeFromRoots = (roots, tlsList, staffList) => {
+        const buildTreeFromRoots = (roots, tlsList, staffList, isTopView) => {
             return roots.map(root => {
                 let children = [];
                 if (root.role === 'admin') {
-                    // Find TLs reporting to this Admin
-                    let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
-                    
-                    // Fallback: If a TL has no valid admin lead in the database, attach them to the first Admin
-                    const allAdminsInScope = roots.filter(u => u.role === 'admin');
-                    if (allAdminsInScope[0] && getIdString(root._id) === getIdString(allAdminsInScope[0]._id)) {
-                        const orphanedTLs = tlsList.filter(tl => {
-                            const hasValidAdminLead = (tl.teamLeads || []).some(leadId => 
-                                allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
-                            );
-                            return !hasValidAdminLead;
+                    if (isTopView) {
+                        // Gather TLs reporting to this admin
+                        let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
+                        // Gather staff reporting to this admin
+                        let directStaff = staffList.filter(s => reportsTo(s, root._id));
+
+                        // Fallback for first Admin: collect orphaned TLs and orphaned staff
+                        const allAdminsInScope = roots.filter(u => u.role === 'admin');
+                        if (allAdminsInScope[0] && getIdString(root._id) === getIdString(allAdminsInScope[0]._id)) {
+                            // Orphaned TLs
+                            const orphanedTLs = tlsList.filter(tl => {
+                                const hasValidAdminLead = (tl.teamLeads || []).some(leadId => 
+                                    allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
+                                );
+                                return !hasValidAdminLead;
+                            });
+                            directTLs = [...directTLs, ...orphanedTLs];
+
+                            // Orphaned staff (no active TL in the database)
+                            const orphanedStaff = staffList.filter(s => {
+                                const hasActiveTL = (s.teamLeads || []).some(leadId =>
+                                    tlsList.some(tl => getIdString(tl._id) === getIdString(leadId))
+                                );
+                                const reportsToAdmin = (s.teamLeads || []).some(leadId =>
+                                    allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
+                                );
+                                return !hasActiveTL && !reportsToAdmin;
+                            });
+                            directStaff = [...directStaff, ...orphanedStaff];
+                        }
+
+                        // Group these TLs and staff by department
+                        const deptsMap = {};
+                        const addToDept = (node) => {
+                            const deptName = node.department || "Engineering";
+                            if (!deptsMap[deptName]) {
+                                deptsMap[deptName] = [];
+                            }
+                            deptsMap[deptName].push(node);
+                        };
+
+                        directTLs.forEach(addToDept);
+                        directStaff.forEach(addToDept);
+
+                        // Create virtual department nodes under this Admin
+                        children = Object.keys(deptsMap).map(deptName => {
+                            return {
+                                _id: `dept_${getIdString(root._id)}_${deptName}`,
+                                name: deptName,
+                                role: 'department',
+                                isVirtual: true,
+                                department: deptName,
+                                children: deptsMap[deptName]
+                            };
                         });
-                        directTLs = [...directTLs, ...orphanedTLs];
+                    } else {
+                        // In My Team tab: Flat tree structure managed under logged-in Admin
+                        let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
+                        const allAdminsInScope = roots.filter(u => u.role === 'admin');
+                        if (allAdminsInScope[0] && getIdString(root._id) === getIdString(allAdminsInScope[0]._id)) {
+                            const orphanedTLs = tlsList.filter(tl => {
+                                const hasValidAdminLead = (tl.teamLeads || []).some(leadId => 
+                                    allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
+                                );
+                                return !hasValidAdminLead;
+                            });
+                            directTLs = [...directTLs, ...orphanedTLs];
+                        }
+                        children = directTLs;
                     }
-                    children = directTLs;
                 } else if (root.role === 'TL') {
                     // Find developers & QAs reporting to this TL
                     children = staffList.filter(m => reportsTo(m, root._id));
+                } else if (root.role === 'department') {
+                    // Virtual department node: children are already mapped
+                    children = root.children;
                 }
 
                 return {
                     ...root,
-                    children: children.length > 0 ? buildTreeFromRoots(children, tlsList, staffList) : []
+                    children: children.length > 0 ? buildTreeFromRoots(children, tlsList, staffList, isTopView) : []
                 };
             });
         };
@@ -328,13 +385,14 @@ const OrganizationTree = () => {
             const roleLower = String(user?.role || 'admin').toLowerCase();
             
             if (roleLower === 'admin') {
-                const admins = activeUsers.filter(u => u.role === 'admin');
+                const admins = activeUsers.filter(u => u.role === 'admin' && getIdString(u._id) === getIdString(user?._id));
                 const tls = activeUsers.filter(u => u.role === 'TL');
                 const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
                 if (admins.length > 0) {
-                    return buildTreeFromRoots(admins, tls, staff);
+                    return buildTreeFromRoots(admins, tls, staff, false);
                 } else {
-                    return buildTreeFromRoots(tls, tls, staff);
+                    const allAdmins = activeUsers.filter(u => u.role === 'admin');
+                    return buildTreeFromRoots(allAdmins, tls, staff, false);
                 }
             } else if (roleLower === 'tl') {
                 const currentTlObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
@@ -347,7 +405,7 @@ const OrganizationTree = () => {
                 }
                 return [];
             } else {
-                // Developer & QA
+                // Developer & QA: show their TL + teammates under same TL
                 const currentEmpObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
                 const myLeadIds = (currentEmpObj?.teamLeads || []).map(l => getIdString(typeof l === 'object' ? l._id : l));
                 const myLeads = activeUsers.filter(u => u.role === 'TL' && myLeadIds.includes(getIdString(u._id)));
@@ -369,36 +427,47 @@ const OrganizationTree = () => {
             }
         }
 
-        // 1. If selectedDept is "All", show the full organization tree
-        if (selectedDept === "All") {
-            const admins = activeUsers.filter(u => u.role === 'admin');
-            const tls = activeUsers.filter(u => u.role === 'TL');
-            const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+        // Top of the Organization tab: Show full hierarchy with department-wise visual separation
+        const admins = activeUsers.filter(u => u.role === 'admin');
+        const tls = activeUsers.filter(u => u.role === 'TL');
+        const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
 
-            if (admins.length > 0) {
-                return buildTreeFromRoots(admins, tls, staff);
-            } else {
-                // If there are no admins, treat Team Leads as top-level
-                return buildTreeFromRoots(tls, tls, staff);
-            }
+        if (admins.length > 0) {
+            return buildTreeFromRoots(admins, tls, staff, true);
         } else {
-            // 2. Otherwise, filter purely within the selected department
-            const targetDept = selectedDept.toLowerCase().trim();
-            const deptUsers = activeUsers.filter(u => u.department && u.department.toLowerCase().trim() === targetDept);
+            // Treat departments as root nodes if no Admins exist
+            const deptsMap = {};
+            const addToDept = (node) => {
+                const deptName = node.department || "Engineering";
+                if (!deptsMap[deptName]) {
+                    deptsMap[deptName] = [];
+                }
+                deptsMap[deptName].push(node);
+            };
 
-            const admins = deptUsers.filter(u => u.role === 'admin');
-            const tls = deptUsers.filter(u => u.role === 'TL');
-            const staff = deptUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+            tls.forEach(addToDept);
 
-            if (admins.length > 0) {
-                return buildTreeFromRoots(admins, tls, staff);
-            } else if (tls.length > 0) {
-                return buildTreeFromRoots(tls, tls, staff);
-            } else {
-                return staff.map(m => ({ ...m, children: [] }));
-            }
+            const orphanedStaff = staff.filter(s => {
+                return !(s.teamLeads || []).some(leadId =>
+                    tls.some(tl => getIdString(tl._id) === getIdString(leadId))
+                );
+            });
+            orphanedStaff.forEach(addToDept);
+
+            const deptRoots = Object.keys(deptsMap).map(deptName => {
+                return {
+                    _id: `dept_root_${deptName}`,
+                    name: deptName,
+                    role: 'department',
+                    isVirtual: true,
+                    department: deptName,
+                    children: deptsMap[deptName]
+                };
+            });
+
+            return buildTreeFromRoots(deptRoots, tls, staff, true);
         }
-    }, [allUsers, selectedDept, activeTab, user]);
+    }, [allUsers, activeTab, user]);
 
 
     // Direct Profile modal trigger
@@ -430,24 +499,84 @@ const OrganizationTree = () => {
 
         const isMe = nodeStrId === loggedInUserId;
 
-        const isHighlightedPath = activeTab === "Me" && meRelatedNodeIds.has(nodeStrId) && !isMe;
-        const isDimmed = activeTab === "Me" && !meRelatedNodeIds.has(nodeStrId);
+        if (node.isVirtual) {
+            const deptColor = getDeptColor(node.department);
 
-        const isDeptHighlight = selectedDept !== "All" && node.department === selectedDept;
-        const isDeptDimmed = selectedDept !== "All" && node.department !== selectedDept;
+            return (
+                <div className="flex flex-col items-center transition-all duration-300">
+                    {/* Beautiful Premium Department Card */}
+                    <div
+                        id={`node-card-${node._id}`}
+                        className="bg-white/95 backdrop-blur-md border rounded-[22px] p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center gap-4 w-[280px] text-left relative z-10 border-slate-200/80 hover:border-purple-300 ring-1 ring-slate-100 hover:ring-purple-100"
+                    >
+                        <div className={`w-12 h-12 rounded-2xl ${deptColor.bg} ${deptColor.text} ${deptColor.border} border flex items-center justify-center font-black text-lg shadow-sm flex-shrink-0`}>
+                            <Building2 className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 font-bold">Department</span>
+                            <h6 className="text-sm font-black text-slate-800 truncate leading-tight mt-0.5">{node.department || "General"}</h6>
+                            <p className="text-[11px] text-slate-500 font-semibold truncate leading-normal mt-0.5">
+                                {node.children?.length || 0} Member{(node.children?.length !== 1) ? 's' : ''}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Collapse/Expand Node Toggles */}
+                    {hasChildren && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleExpand(node._id);
+                            }}
+                            className="w-6 h-6 rounded-full flex items-center justify-center -mb-3 mt-3 shadow-md transition-all z-20 cursor-pointer text-sm font-black border border-white focus:outline-none bg-slate-200 hover:bg-slate-300 text-slate-600"
+                        >
+                            {isExpanded ? "−" : "+"}
+                        </button>
+                    )}
+
+                    {/* Vertical guiding connector to child row */}
+                    {hasChildren && isExpanded && (
+                        <div className="w-0.5 h-8 mt-3 bg-slate-200/80" />
+                    )}
+
+                    {/* Children row container */}
+                    {hasChildren && isExpanded && (
+                        <div className="flex gap-10 relative pt-6 justify-center">
+                            {node.children.map((child, idx) => {
+                                const childrenArr = node.children;
+                                const isFirst = idx === 0;
+                                const isLast = idx === childrenArr.length - 1;
+                                const isSingle = childrenArr.length === 1;
+
+                                return (
+                                    <div key={child._id || idx} className="flex flex-col items-center relative">
+                                        {/* Horizontal Guidelines connected span */}
+                                        {!isSingle && (
+                                            <div className="absolute -top-6 left-0 right-0 flex h-0.5">
+                                                <div className={`flex-1 ${isFirst ? 'bg-transparent' : 'bg-slate-200/80'}`} />
+                                                <div className={`flex-1 ${isLast ? 'bg-transparent' : 'bg-slate-200/80'}`} />
+                                            </div>
+                                        )}
+                                        {/* Vertical Guideline connector to child card */}
+                                        <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 bg-slate-200/80" />
+
+                                        <TreeNode node={child} />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            );
+        }
 
         return (
-            <div className={`flex flex-col items-center transition-all duration-300 ${isDimmed || isDeptDimmed ? 'opacity-40 filter grayscale-[20%]' : ''
-                }`}>
+            <div className="flex flex-col items-center transition-all duration-300">
                 {/* Node Card Container */}
                 <div
                     id={`node-card-${node._id}`}
                     onClick={() => handleOpenProfile(node)}
-                    className={`bg-white/95 backdrop-blur-md border rounded-[22px] p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-[300px] text-left relative z-10 cursor-pointer ${isMe ? 'ring-2 ring-amber-500 border-amber-300 shadow-amber-50 shadow-lg scale-[1.02]' :
-                            isHighlightedPath ? 'ring-2 ring-purple-600 border-purple-300 shadow-purple-50 shadow-lg scale-[1.02]' :
-                                isDeptHighlight ? 'ring-2 ring-emerald-500 border-emerald-300 shadow-emerald-50 shadow-lg scale-[1.02]' :
-                                    'border-slate-200/80 hover:border-slate-300'
-                        }`}
+                    className={`bg-white/95 backdrop-blur-md border rounded-[22px] p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-[300px] text-left relative z-10 cursor-pointer ${isMe ? 'ring-2 ring-amber-500 border-amber-300 shadow-amber-50 shadow-lg scale-[1.02]' : 'border-slate-200/80 hover:border-slate-300'}`}
                 >
                     {/* Top details block */}
                     <div className="flex items-center gap-4">
@@ -485,7 +614,9 @@ const OrganizationTree = () => {
                                 </button>
                             </div>
                             <p className="text-[11px] text-slate-500 font-semibold truncate leading-normal">{formatRole(node.role)}</p>
-                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">{node.department || "SOFTWARE DEVELOPMENT"}</p>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider mt-1.5 border ${getDeptColor(node.department).bg} ${getDeptColor(node.department).text} ${getDeptColor(node.department).border}`}>
+                                {node.department || "Engineering"}
+                            </span>
                         </div>
                     </div>
 
@@ -529,8 +660,7 @@ const OrganizationTree = () => {
                             e.stopPropagation();
                             toggleExpand(node._id);
                         }}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center -mb-3 mt-3 shadow-md transition-all z-20 cursor-pointer text-sm font-black border border-white focus:outline-none ${isHighlightedPath ? 'bg-purple-700 hover:bg-purple-800 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-600'
-                            }`}
+                        className="w-6 h-6 rounded-full flex items-center justify-center -mb-3 mt-3 shadow-md transition-all z-20 cursor-pointer text-sm font-black border border-white focus:outline-none bg-slate-200 hover:bg-slate-300 text-slate-600"
                     >
                         {isExpanded ? "−" : "+"}
                     </button>
@@ -538,8 +668,7 @@ const OrganizationTree = () => {
 
                 {/* Vertical guiding connector to child row */}
                 {hasChildren && isExpanded && (
-                    <div className={`w-0.5 h-8 mt-3 ${activeTab === "Me" && meRelatedNodeIds.has(nodeStrId) && node.children.some(c => meRelatedNodeIds.has(getIdString(c._id))) ? 'bg-purple-600' : 'bg-slate-200/80'
-                        }`} />
+                    <div className="w-0.5 h-8 mt-3 bg-slate-200/80" />
                 )}
 
                 {/* Children row container */}
@@ -551,25 +680,17 @@ const OrganizationTree = () => {
                             const isLast = idx === childrenArr.length - 1;
                             const isSingle = childrenArr.length === 1;
 
-                            // Highlight connecting lines path
-                            const isChildHighlighted = activeTab === "Me" && meRelatedNodeIds.has(getIdString(child._id)) && meRelatedNodeIds.has(nodeStrId);
-
                             return (
                                 <div key={child._id || idx} className="flex flex-col items-center relative">
                                     {/* Horizontal Guidelines connected span */}
                                     {!isSingle && (
                                         <div className="absolute -top-6 left-0 right-0 flex h-0.5">
-                                            <div className={`flex-1 ${isFirst ? 'bg-transparent' :
-                                                isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
-                                                }`} />
-                                            <div className={`flex-1 ${isLast ? 'bg-transparent' :
-                                                isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
-                                                }`} />
+                                            <div className={`flex-1 ${isFirst ? 'bg-transparent' : 'bg-slate-200/80'}`} />
+                                            <div className={`flex-1 ${isLast ? 'bg-transparent' : 'bg-slate-200/80'}`} />
                                         </div>
                                     )}
                                     {/* Vertical Guideline connector to child card */}
-                                    <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 ${isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
-                                        }`} />
+                                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 bg-slate-200/80" />
 
                                     <TreeNode node={child} />
                                 </div>
@@ -593,23 +714,21 @@ const OrganizationTree = () => {
                     <div className="max-w-7xl mx-auto space-y-6">
 
                         {/* Navigation Actions Panel */}
-                        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100/80 flex flex-col md:flex-row justify-between items-center gap-4 w-full select-none">
+                        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100/80 flex justify-center items-center gap-4 w-full select-none">
 
-                            {/* View Selector Tabs (Left Side) */}
+                            {/* View Selector Tabs */}
                             <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl">
                                 <button
                                     onClick={() => {
-                                        setSelectedDept("All");
                                         setActiveTab("Top");
                                         setTimeout(handleGoToTop, 100);
                                     }}
                                     className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Top' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                                 >
-                                    <Landmark className="w-3.5 h-3.5" /> Top of the Org
+                                    <Landmark className="w-3.5 h-3.5" /> Top of the Organization
                                 </button>
                                 <button
                                     onClick={() => {
-                                        setSelectedDept("All");
                                         setActiveTab("Team");
                                         setTimeout(handleGoToMyTeam, 100);
                                     }}
@@ -617,66 +736,6 @@ const OrganizationTree = () => {
                                 >
                                     <Users className="w-3.5 h-3.5" /> My Team
                                 </button>
-                                <button
-                                    onClick={() => {
-                                        setSelectedDept("All");
-                                        setActiveTab("Me");
-                                        setTimeout(handleGoToMe, 100);
-                                    }}
-                                    className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Me' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                                >
-                                    <User className="w-3.5 h-3.5" /> Me
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        const myDept = user?.department || "All";
-                                        setSelectedDept(myDept);
-                                        setActiveTab("Dept");
-                                        setTimeout(handleGoToMyDepartment, 100);
-                                    }}
-                                    className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Dept' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                                >
-                                    <Building2 className="w-3.5 h-3.5" /> My Department
-                                </button>
-                            </div>
-
-                            {/* Department Explorer Dropdown (Right Side) */}
-                            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
-                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Explore:</span>
-                                <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl hover:border-slate-300 hover:bg-slate-100/50 transition-all shadow-sm w-full md:w-auto min-w-[200px]">
-                                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
-                                    <select
-                                        value={selectedDept}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            setSelectedDept(val);
-                                            if (val === "All") {
-                                                setActiveTab("Top");
-                                                setTimeout(handleGoToTop, 100);
-                                            } else {
-                                                setActiveTab("Dept");
-                                                setTimeout(() => {
-                                                    const firstInDept = allUsers.find(u => u.department === val);
-                                                    if (firstInDept) {
-                                                        centerOnNode(getIdString(firstInDept._id));
-                                                    }
-                                                }, 150);
-                                            }
-                                        }}
-                                        className="pl-10 pr-8 py-2.5 bg-transparent border-0 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-0 cursor-pointer w-full appearance-none"
-                                    >
-                                        {departments.map((dept) => (
-                                            <option key={dept} value={dept}>
-                                                {dept === "All" ? "All Departments" : dept}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute right-3.5 pointer-events-none text-slate-400">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
