@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
-    Search, Loader2, Building2, UserMinus, Plus, Minus, Pin,
+    Loader2, Building2, UserMinus, Plus, Minus, Pin,
     User, Landmark, MoreVertical, 
     Eye, UserCheck, ShieldCheck
 } from "lucide-react";
@@ -20,7 +20,6 @@ const OrganizationTree = () => {
     const [loading, setLoading] = useState(true);
 
     // UI Interaction States
-    const [searchQuery, setSearchQuery] = useState("");
     const [selectedDept, setSelectedDept] = useState("All");
     const [activeTab, setActiveTab] = useState("Top"); // "Top" | "Me" | "Dept"
     const [zoomScale, setZoomScale] = useState(1.0);
@@ -366,19 +365,6 @@ const OrganizationTree = () => {
         return [];
     }, [allUsers, user, activeTab]);
 
-    // Live search highlighting snaps
-    useEffect(() => {
-        if (searchQuery.trim() && allUsers.length > 0) {
-            const query = searchQuery.toLowerCase();
-            const matched = allUsers.find(u =>
-                u.name.toLowerCase().includes(query) ||
-                formatRole(u.role).toLowerCase().includes(query)
-            );
-            if (matched) {
-                centerOnNode(getIdString(matched._id));
-            }
-        }
-    }, [searchQuery, allUsers]);
 
     // Direct Profile modal trigger
     const handleOpenProfile = (employee) => {
@@ -411,10 +397,6 @@ const OrganizationTree = () => {
         const isDimmed = false;
 
         const isMe = nodeStrId === loggedInUserId;
-        const isSearchMatch = searchQuery.trim() && (
-            node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            formatRole(node.role).toLowerCase().includes(searchQuery.toLowerCase())
-        );
 
         const isDeptHighlight = selectedDept !== "All" && node.department === selectedDept;
         const isDeptDimmed = selectedDept !== "All" && node.department !== selectedDept;
@@ -427,7 +409,6 @@ const OrganizationTree = () => {
                     id={`node-card-${node._id}`}
                     onClick={() => handleOpenProfile(node)}
                     className={`bg-white/95 backdrop-blur-md border rounded-[22px] p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-[300px] text-left relative z-10 cursor-pointer ${isMe ? 'ring-2 ring-amber-500 border-amber-300 shadow-amber-50 shadow-lg scale-[1.02]' :
-                        isSearchMatch ? 'ring-2 ring-blue-500 border-blue-300 shadow-blue-50 shadow-lg scale-[1.02]' :
                             isHighlightedPath ? 'ring-2 ring-purple-600 border-purple-300 shadow-purple-50 shadow-lg scale-[1.02]' :
                                 isDeptHighlight ? 'ring-2 ring-emerald-500 border-emerald-300 shadow-emerald-50 shadow-lg scale-[1.02]' :
                                     'border-slate-200/80 hover:border-slate-300'
@@ -579,19 +560,7 @@ const OrganizationTree = () => {
                     <div className="max-w-7xl mx-auto space-y-6">
 
                         {/* Navigation Actions Panel */}
-                        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-
-                            {/* Search input box */}
-                            <div className="relative w-full lg:w-80">
-                                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                                <input
-                                    type="text"
-                                    placeholder="Search employee by name or role..."
-                                    value={searchQuery}
-                                    onChange={e => setSearchQuery(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/10 transition-all outline-none"
-                                />
-                            </div>
+                        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100/80 flex justify-center items-center">
 
                             {/* View Selector Tabs */}
                             <div className="flex flex-wrap items-center gap-4 text-slate-500 text-xs font-semibold select-none">
