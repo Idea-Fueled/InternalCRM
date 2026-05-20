@@ -10,6 +10,13 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import ProfileModal from "../../components/ProfileModal";
 
+// Pure helper to get string ID
+const getIdString = (id) => {
+    if (!id) return "";
+    if (typeof id === 'object') return id._id ? String(id._id) : String(id);
+    return String(id);
+};
+
 const OrganizationTree = () => {
     const { user } = useAuth();
 
@@ -161,13 +168,6 @@ const OrganizationTree = () => {
         });
         return ["All", ...Array.from(depts)];
     }, [allUsers]);
-
-    // Helper to get string ID
-    const getIdString = (id) => {
-        if (!id) return "";
-        if (typeof id === 'object') return id._id ? String(id._id) : String(id);
-        return String(id);
-    };
 
     // Calculate dynamic manager name
     const getManagerName = (node) => {
