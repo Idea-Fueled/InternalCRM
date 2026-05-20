@@ -43,13 +43,9 @@ export const sendPasswordResetEmail = async (toEmail, userName, resetLink) => {
           <!-- Header Logo / Branding -->
           <tr>
             <td align="center" style="padding-bottom:32px;">
-              <table cellpadding="0" cellspacing="0" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:8px 16px;">
-                <tr>
-                  <td style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
-                    <span style="background:linear-gradient(135deg,#3b82f6,#6366f1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">IdeaFueled</span> <span style="color:#94a3b8;font-weight:400;">CRM</span>
-                  </td>
-                </tr>
-              </table>
+              <img src="https://res.cloudinary.com/dlkn3acmr/image/upload/v1779278941/ideafueled_crm_brand/IF-white.png" 
+                   alt="IdeaFueled CRM" 
+                   style="height:48px;width:auto;display:block;margin:0 auto;object-fit:contain;" />
             </td>
           </tr>
 
