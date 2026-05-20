@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
     Loader2, Building2, UserMinus, Plus, Minus, Pin,
     User, Landmark, MoreVertical, 
-    Eye, UserCheck
+    Eye, UserCheck, Users
 } from "lucide-react";
 import { userService, projectService, taskService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
@@ -224,6 +224,24 @@ const OrganizationTree = () => {
         }
     };
 
+    const handleGoToMyTeam = () => {
+        const roleLower = String(user?.role || 'admin').toLowerCase();
+        if (roleLower === 'admin') {
+            handleGoToTop();
+        } else if (roleLower === 'tl') {
+            if (user?._id) {
+                centerOnNode(getIdString(user._id));
+            }
+        } else {
+            const myLeadIds = (currentUserObj?.teamLeads || []).map(l => getIdString(typeof l === 'object' ? l._id : l));
+            if (myLeadIds.length > 0) {
+                centerOnNode(myLeadIds[0]);
+            } else if (user?._id) {
+                centerOnNode(getIdString(user._id));
+            }
+        }
+    };
+
     // --- Kinetic Panning ---
     const handleMouseDown = (e) => {
         if (e.button !== 0 || e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) return;
@@ -305,6 +323,52 @@ const OrganizationTree = () => {
             });
         };
 
+        // If in "My Team" tab, filter hierarchy dynamically by role
+        if (activeTab === "Team") {
+            const roleLower = String(user?.role || 'admin').toLowerCase();
+            
+            if (roleLower === 'admin') {
+                const admins = activeUsers.filter(u => u.role === 'admin');
+                const tls = activeUsers.filter(u => u.role === 'TL');
+                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                if (admins.length > 0) {
+                    return buildTreeFromRoots(admins, tls, staff);
+                } else {
+                    return buildTreeFromRoots(tls, tls, staff);
+                }
+            } else if (roleLower === 'tl') {
+                const currentTlObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
+                if (currentTlObj) {
+                    const staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, currentTlObj._id));
+                    return [{
+                        ...currentTlObj,
+                        children: staff.map(s => ({ ...s, children: [] }))
+                    }];
+                }
+                return [];
+            } else {
+                // Developer & QA
+                const currentEmpObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
+                const myLeadIds = (currentEmpObj?.teamLeads || []).map(l => getIdString(typeof l === 'object' ? l._id : l));
+                const myLeads = activeUsers.filter(u => u.role === 'TL' && myLeadIds.includes(getIdString(u._id)));
+                
+                if (myLeads.length > 0) {
+                    return myLeads.map(lead => {
+                        const staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, lead._id));
+                        return {
+                            ...lead,
+                            children: staff.map(s => ({ ...s, children: [] }))
+                        };
+                    });
+                } else {
+                    if (currentEmpObj) {
+                        return [{ ...currentEmpObj, children: [] }];
+                    }
+                    return [];
+                }
+            }
+        }
+
         // 1. If selectedDept is "All", show the full organization tree
         if (selectedDept === "All") {
             const admins = activeUsers.filter(u => u.role === 'admin');
@@ -334,7 +398,7 @@ const OrganizationTree = () => {
                 return staff.map(m => ({ ...m, children: [] }));
             }
         }
-    }, [allUsers, selectedDept]);
+    }, [allUsers, selectedDept, activeTab, user]);
 
 
     // Direct Profile modal trigger
@@ -542,6 +606,16 @@ const OrganizationTree = () => {
                                     className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Top' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
                                 >
                                     <Landmark className="w-3.5 h-3.5" /> Top of the Org
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedDept("All");
+                                        setActiveTab("Team");
+                                        setTimeout(handleGoToMyTeam, 100);
+                                    }}
+                                    className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Team' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    <Users className="w-3.5 h-3.5" /> My Team
                                 </button>
                                 <button
                                     onClick={() => {
