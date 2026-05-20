@@ -263,8 +263,8 @@ const OrganizationTree = () => {
             });
         };
 
-        // 1. "Top of the Org" Tab (Full Organization)
-        if (activeTab === "Top") {
+        // 1. If selectedDept is "All", show the full organization tree
+        if (selectedDept === "All") {
             const admins = activeUsers.filter(u => u.role === 'admin');
             const tls = activeUsers.filter(u => u.role === 'TL');
             const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
@@ -275,79 +275,10 @@ const OrganizationTree = () => {
                 // If there are no admins, treat Team Leads as top-level
                 return buildTreeFromRoots(tls, tls, staff);
             }
-        }
-
-        // 2. "Me" Tab (Logged-in user's team structure)
-        if (activeTab === "Me") {
-            if (!user) return [];
-            const loggedInUserId = getIdString(user._id);
-            const dbUser = activeUsers.find(u => getIdString(u._id) === loggedInUserId) || user;
-
-            // Case A: Admin - shows TLs and developers reporting to them
-            if (dbUser.role === 'admin') {
-                const tls = activeUsers.filter(u => u.role === 'TL');
-                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
-                
-                let directTLs = tls.filter(tl => reportsTo(tl, dbUser._id));
-                if (directTLs.length === 0) {
-                    directTLs = tls; // Fallback to all TLs if none report directly
-                }
-                
-                return buildTreeFromRoots([dbUser], directTLs, staff);
-            }
-
-            // Case B: Team Lead - shows them at root and their developers/QAs
-            if (dbUser.role === 'TL') {
-                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
-                return buildTreeFromRoots([dbUser], [], staff);
-            }
-
-            // Case C: Developer / QA
-            // Find their Team Lead
-            const tls = activeUsers.filter(u => u.role === 'TL');
-            const myLeadId = dbUser.teamLeads && dbUser.teamLeads.length > 0 ? getIdString(dbUser.teamLeads[0]) : null;
-            const myLead = tls.find(tl => getIdString(tl._id) === myLeadId);
-
-            if (myLead) {
-                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
-                return buildTreeFromRoots([myLead], [], staff);
-            }
-
-            // Case D: Developer / QA reporting to an Admin
-            const admins = activeUsers.filter(u => u.role === 'admin');
-            const myAdminId = dbUser.teamLeads && dbUser.teamLeads.length > 0 ? getIdString(dbUser.teamLeads[0]) : null;
-            const myAdmin = admins.find(adm => getIdString(adm._id) === myAdminId);
-
-            if (myAdmin) {
-                const tls = activeUsers.filter(u => u.role === 'TL');
-                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
-                
-                let adminTLs = tls.filter(tl => reportsTo(tl, myAdmin._id));
-                const directStaff = staff.filter(m => reportsTo(m, myAdmin._id));
-
-                const tlNodes = adminTLs.map(tl => {
-                    const tlChildren = staff.filter(m => reportsTo(m, tl._id));
-                    return {
-                        ...tl,
-                        children: tlChildren.map(m => ({ ...m, children: [] }))
-                    };
-                });
-
-                return [{
-                    ...myAdmin,
-                    children: [...tlNodes, ...directStaff.map(m => ({ ...m, children: [] }))]
-                }];
-            }
-
-            // Fallback: Just the user themselves
-            return [{ ...dbUser, children: [] }];
-        }
-
-        // 3. "My Department" Tab (Hierarchy within own department only)
-        if (activeTab === "Dept") {
-            if (!user || !user.department) return [];
-            const myDept = user.department.toLowerCase().trim();
-            const deptUsers = activeUsers.filter(u => u.department && u.department.toLowerCase().trim() === myDept);
+        } else {
+            // 2. Otherwise, filter purely within the selected department
+            const targetDept = selectedDept.toLowerCase().trim();
+            const deptUsers = activeUsers.filter(u => u.department && u.department.toLowerCase().trim() === targetDept);
 
             const admins = deptUsers.filter(u => u.role === 'admin');
             const tls = deptUsers.filter(u => u.role === 'TL');
@@ -361,9 +292,7 @@ const OrganizationTree = () => {
                 return staff.map(m => ({ ...m, children: [] }));
             }
         }
-
-        return [];
-    }, [allUsers, user, activeTab]);
+    }, [allUsers, selectedDept]);
 
 
     // Direct Profile modal trigger
@@ -560,38 +489,79 @@ const OrganizationTree = () => {
                     <div className="max-w-7xl mx-auto space-y-6">
 
                         {/* Navigation Actions Panel */}
-                        <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100/80 flex justify-center items-center">
+                        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100/80 flex flex-col md:flex-row justify-between items-center gap-4 w-full select-none">
 
-                            {/* View Selector Tabs */}
-                            <div className="flex flex-wrap items-center gap-4 text-slate-500 text-xs font-semibold select-none">
-                                <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl">
-                                    <button
-                                        onClick={() => {
-                                            setActiveTab("Top");
-                                            setTimeout(handleGoToTop, 100);
+                            {/* View Selector Tabs (Left Side) */}
+                            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl">
+                                <button
+                                    onClick={() => {
+                                        setSelectedDept("All");
+                                        setActiveTab("Top");
+                                        setTimeout(handleGoToTop, 100);
+                                    }}
+                                    className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Top' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    <Landmark className="w-3.5 h-3.5" /> Top of the Org
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSelectedDept("All");
+                                        setActiveTab("Me");
+                                        setTimeout(handleGoToMe, 100);
+                                    }}
+                                    className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Me' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    <User className="w-3.5 h-3.5" /> Me
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        const myDept = user?.department || "All";
+                                        setSelectedDept(myDept);
+                                        setActiveTab("Dept");
+                                        setTimeout(handleGoToMyDepartment, 100);
+                                    }}
+                                    className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Dept' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    <Building2 className="w-3.5 h-3.5" /> My Department
+                                </button>
+                            </div>
+
+                            {/* Department Explorer Dropdown (Right Side) */}
+                            <div className="flex items-center gap-2 w-full md:w-auto justify-end">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:inline">Explore:</span>
+                                <div className="relative flex items-center bg-slate-50 border border-slate-200/80 rounded-xl hover:border-slate-300 hover:bg-slate-100/50 transition-all shadow-sm w-full md:w-auto min-w-[200px]">
+                                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                                    <select
+                                        value={selectedDept}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setSelectedDept(val);
+                                            if (val === "All") {
+                                                setActiveTab("Top");
+                                                setTimeout(handleGoToTop, 100);
+                                            } else {
+                                                setActiveTab("Dept");
+                                                setTimeout(() => {
+                                                    const firstInDept = allUsers.find(u => u.department === val);
+                                                    if (firstInDept) {
+                                                        centerOnNode(getIdString(firstInDept._id));
+                                                    }
+                                                }, 150);
+                                            }
                                         }}
-                                        className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Top' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
+                                        className="pl-10 pr-8 py-2.5 bg-transparent border-0 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-0 cursor-pointer w-full appearance-none"
                                     >
-                                        <Landmark className="w-3.5 h-3.5" /> Top of the Org
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setActiveTab("Me");
-                                            setTimeout(handleGoToMe, 100);
-                                        }}
-                                        className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Me' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                                    >
-                                        <User className="w-3.5 h-3.5" /> Me
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setActiveTab("Dept");
-                                            setTimeout(handleGoToMyDepartment, 100);
-                                        }}
-                                        className={`px-4 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold focus:outline-none ${activeTab === 'Dept' ? 'bg-white text-purple-700 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
-                                    >
-                                        <Building2 className="w-3.5 h-3.5" /> My Department
-                                    </button>
+                                        {departments.map((dept) => (
+                                            <option key={dept} value={dept}>
+                                                {dept === "All" ? "All Departments" : dept}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3.5 pointer-events-none text-slate-400">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
