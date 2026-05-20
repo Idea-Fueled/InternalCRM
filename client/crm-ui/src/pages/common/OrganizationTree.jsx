@@ -53,6 +53,7 @@ const OrganizationTree = () => {
     const [zoomScale, setZoomScale] = useState(1.0);
     const [expandedNodes, setExpandedNodes] = useState({});
     const [activeMenuId, setActiveMenuId] = useState(null);
+    const [selectedDept, setSelectedDept] = useState("All");
 
     // Helper functions
     const formatRole = (r) => {
@@ -181,7 +182,14 @@ const OrganizationTree = () => {
         return set;
     }, [currentUserObj, allUsers]);
 
-    // (departments filter removed for clean department-grouped hierarchy matrix)
+    // Dynamic list of unique departments from fetched users
+    const uniqueDepartments = useMemo(() => {
+        if (allUsers.length === 0) return [];
+        const depts = allUsers
+            .map(u => u.department)
+            .filter(d => d && typeof d === 'string' && d.trim() !== "");
+        return ["All", ...Array.from(new Set(depts))];
+    }, [allUsers]);
 
     // Calculate dynamic manager name
     const getManagerName = (node) => {
@@ -350,6 +358,10 @@ const OrganizationTree = () => {
                                 children: deptsMap[deptName]
                             };
                         });
+
+                        if (selectedDept && selectedDept !== "All") {
+                            children = children.filter(c => String(c.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+                        }
                     } else {
                         // In My Team tab: Flat tree structure managed under logged-in Admin
                         let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
@@ -386,8 +398,14 @@ const OrganizationTree = () => {
             
             if (roleLower === 'admin') {
                 const admins = activeUsers.filter(u => u.role === 'admin' && getIdString(u._id) === getIdString(user?._id));
-                const tls = activeUsers.filter(u => u.role === 'TL');
-                const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                let tls = activeUsers.filter(u => u.role === 'TL');
+                let staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                
+                if (selectedDept && selectedDept !== "All") {
+                    tls = tls.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+                    staff = staff.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+                }
+
                 if (admins.length > 0) {
                     return buildTreeFromRoots(admins, tls, staff, false);
                 } else {
@@ -397,7 +415,12 @@ const OrganizationTree = () => {
             } else if (roleLower === 'tl') {
                 const currentTlObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
                 if (currentTlObj) {
-                    const staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, currentTlObj._id));
+                    let staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, currentTlObj._id));
+                    
+                    if (selectedDept && selectedDept !== "All") {
+                        staff = staff.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+                    }
+
                     return [{
                         ...currentTlObj,
                         children: staff.map(s => ({ ...s, children: [] }))
@@ -408,11 +431,20 @@ const OrganizationTree = () => {
                 // Developer & QA: show their TL + teammates under same TL
                 const currentEmpObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
                 const myLeadIds = (currentEmpObj?.teamLeads || []).map(l => getIdString(typeof l === 'object' ? l._id : l));
-                const myLeads = activeUsers.filter(u => u.role === 'TL' && myLeadIds.includes(getIdString(u._id)));
+                let myLeads = activeUsers.filter(u => u.role === 'TL' && myLeadIds.includes(getIdString(u._id)));
                 
+                if (selectedDept && selectedDept !== "All") {
+                    myLeads = myLeads.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+                }
+
                 if (myLeads.length > 0) {
                     return myLeads.map(lead => {
-                        const staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, lead._id));
+                        let staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, lead._id));
+                        
+                        if (selectedDept && selectedDept !== "All") {
+                            staff = staff.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+                        }
+
                         return {
                             ...lead,
                             children: staff.map(s => ({ ...s, children: [] }))
@@ -420,6 +452,10 @@ const OrganizationTree = () => {
                     });
                 } else {
                     if (currentEmpObj) {
+                        // Apply department filter to self if self is the only root
+                        if (selectedDept && selectedDept !== "All" && String(currentEmpObj.department).toLowerCase().trim() !== String(selectedDept).toLowerCase().trim()) {
+                            return [];
+                        }
                         return [{ ...currentEmpObj, children: [] }];
                     }
                     return [];
@@ -454,7 +490,7 @@ const OrganizationTree = () => {
             });
             orphanedStaff.forEach(addToDept);
 
-            const deptRoots = Object.keys(deptsMap).map(deptName => {
+            let deptRoots = Object.keys(deptsMap).map(deptName => {
                 return {
                     _id: `dept_root_${deptName}`,
                     name: deptName,
@@ -464,6 +500,10 @@ const OrganizationTree = () => {
                     children: deptsMap[deptName]
                 };
             });
+
+            if (selectedDept && selectedDept !== "All") {
+                deptRoots = deptRoots.filter(c => String(c.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
+            }
 
             return buildTreeFromRoots(deptRoots, tls, staff, true);
         }
@@ -714,7 +754,7 @@ const OrganizationTree = () => {
                     <div className="max-w-7xl mx-auto space-y-6">
 
                         {/* Navigation Actions Panel */}
-                        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100/80 flex justify-center items-center gap-4 w-full select-none">
+                        <div className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100/80 flex flex-col sm:flex-row justify-between items-center gap-4 w-full select-none">
 
                             {/* View Selector Tabs */}
                             <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-2xl">
@@ -736,6 +776,30 @@ const OrganizationTree = () => {
                                 >
                                     <Users className="w-3.5 h-3.5" /> My Team
                                 </button>
+                            </div>
+
+                            {/* Premium Department Dropdown */}
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs font-black text-slate-400 uppercase tracking-wider hidden md:inline">Department Filter</span>
+                                <div className="relative">
+                                    <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-600 pointer-events-none" />
+                                    <select
+                                        value={selectedDept}
+                                        onChange={(e) => setSelectedDept(e.target.value)}
+                                        className="pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-xs rounded-2xl focus:outline-none focus:ring-4 focus:ring-purple-500/10 focus:border-purple-500 transition-all duration-300 cursor-pointer appearance-none shadow-sm min-w-[200px]"
+                                    >
+                                        {uniqueDepartments.map(dept => (
+                                            <option key={dept} value={dept}>
+                                                {dept === "All" ? "All Departments" : dept}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
