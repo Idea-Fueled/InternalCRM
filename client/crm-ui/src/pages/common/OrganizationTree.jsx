@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
     Search, Loader2, Building2, UserMinus, Plus, Minus, Pin,
-    User, Landmark, Users, Briefcase, ListTodo, MoreVertical, 
+    User, Landmark, MoreVertical, 
     Eye, UserCheck, ShieldCheck
 } from "lucide-react";
 import { userService, projectService, taskService } from "../../api/services";
@@ -131,21 +131,6 @@ const OrganizationTree = () => {
         });
         return ["All", ...Array.from(depts)];
     }, [allUsers]);
-
-    // Mini analytics statistics
-    const metrics = useMemo(() => {
-        const totalEmployees = allUsers.filter(u => u.isActive !== false).length;
-        const totalProjects = projects.length;
-        const pendingTasks = tasks.filter(t => t.status !== 'completed').length;
-        const activeDepts = departments.filter(d => d !== "All").length || 4;
-
-        return [
-            { label: "Total Members", value: totalEmployees, icon: <Users className="w-5 h-5" />, color: "from-blue-500 to-indigo-500", bg: "bg-blue-50/50" },
-            { label: "Active Projects", value: totalProjects, icon: <Briefcase className="w-5 h-5" />, color: "from-purple-500 to-violet-500", bg: "bg-purple-50/50" },
-            { label: "Pending Tasks", value: pendingTasks, icon: <ListTodo className="w-5 h-5" />, color: "from-rose-500 to-pink-500", bg: "bg-rose-50/50" },
-            { label: "Core Divisions", value: activeDepts, icon: <Building2 className="w-5 h-5" />, color: "from-emerald-500 to-teal-500", bg: "bg-emerald-50/50" }
-        ];
-    }, [allUsers, projects, tasks, departments]);
 
     // Helper to get string ID
     const getIdString = (id) => {
@@ -534,21 +519,6 @@ const OrganizationTree = () => {
                 {/* Custom Scrollable Body */}
                 <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin">
                     <div className="max-w-7xl mx-auto space-y-6">
-
-                        {/* Dynamic Mini Analytics Header Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {metrics.map((card, idx) => (
-                                <div key={idx} className="bg-white p-5 rounded-[22px] border border-slate-100 flex items-center justify-between shadow-sm hover:shadow transition-shadow duration-200">
-                                    <div className="space-y-1.5">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{card.label}</p>
-                                        <h4 className="text-2xl font-black text-slate-800">{card.value}</h4>
-                                    </div>
-                                    <div className={`p-3 rounded-2xl bg-gradient-to-br ${card.color} text-white shadow-md shadow-slate-100`}>
-                                        {card.icon}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
 
                         {/* Navigation Actions Panel */}
                         <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
