@@ -68,7 +68,7 @@ const OrganizationTree = () => {
                 setLoading(true);
                 // Parallel fetching for high performance
                 const [usersRes, projectsRes, tasksRes] = await Promise.all([
-                    userService.getAllUsers({ status: 'active' }),
+                    userService.getAllUsers({ status: 'active', orgTree: true }),
                     projectService.getAllProjects(),
                     taskService.getAllTasks()
                 ]);

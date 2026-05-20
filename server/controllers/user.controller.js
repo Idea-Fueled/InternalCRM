@@ -179,7 +179,7 @@ export const getCurrentUser = (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const { teamLeadId, teamLead, role, status } = req.query;
+        const { teamLeadId, teamLead, role, status, orgTree } = req.query;
         const targetTeamLead = teamLeadId || teamLead;
         const { role: userRole, _id } = req.user;
         let query = {};
@@ -192,7 +192,7 @@ export const getAllUsers = async (req, res) => {
             query.isActive = true;
         }
         
-        if (userRole === 'TL') {
+        if (userRole === 'TL' && orgTree !== 'true' && orgTree !== true) {
             // Find users assigned to this TL, or the TL themselves
             query = {
                 ...query,
