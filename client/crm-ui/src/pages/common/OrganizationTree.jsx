@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { 
-    Search, Loader2, Building2, UserMinus, Plus, Minus, Pin, 
-    Compass, User, Landmark, HelpCircle, Network, Users, 
+import {
+    Search, Loader2, Building2, UserMinus, Plus, Minus, Pin,
+    Compass, User, Landmark, HelpCircle, Network, Users,
     Briefcase, ListTodo, MoreVertical, Eye, Share2, Anchor,
     UserCheck, ShieldCheck, CheckCircle2, ChevronDown, ChevronRight
 } from "lucide-react";
@@ -13,13 +13,13 @@ import ProfileModal from "../../components/ProfileModal";
 
 const OrganizationTree = () => {
     const { user } = useAuth();
-    
+
     // Core States
     const [allUsers, setAllUsers] = useState([]);
     const [projects, setProjects] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // UI Interaction States
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDept, setSelectedDept] = useState("All");
@@ -32,11 +32,11 @@ const OrganizationTree = () => {
     // Profile Modal States
     const [selectedProfileUser, setSelectedProfileUser] = useState(null);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    
+
     // Viewport references for panning
     const canvasViewportRef = useRef(null);
     const canvasContentRef = useRef(null);
-    
+
     // Drag-to-pan states
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
@@ -206,7 +206,7 @@ const OrganizationTree = () => {
         e.preventDefault();
         const x = e.pageX - canvasViewportRef.current.offsetLeft;
         const y = e.pageY - canvasViewportRef.current.offsetTop;
-        const walkX = (x - startX) * 1.5; 
+        const walkX = (x - startX) * 1.5;
         const walkY = (y - startY) * 1.5;
         canvasViewportRef.current.scrollLeft = scrollLeft - walkX;
         canvasViewportRef.current.scrollTop = scrollTop - walkY;
@@ -229,7 +229,7 @@ const OrganizationTree = () => {
         if (viewMode !== 'ReportingChain' || !selectedChainUser) return new Set();
         const path = new Set();
         path.add(selectedChainUser);
-        
+
         // Move Upwards to Admins
         let currentId = selectedChainUser;
         let safety = 0;
@@ -244,7 +244,7 @@ const OrganizationTree = () => {
             }
             safety++;
         }
-        
+
         // Move Downwards to developers/QAs
         const addChildren = (id) => {
             allUsers.forEach(u => {
@@ -256,7 +256,7 @@ const OrganizationTree = () => {
             });
         };
         addChildren(selectedChainUser);
-        
+
         return path;
     }, [viewMode, selectedChainUser, allUsers]);
 
@@ -309,7 +309,7 @@ const OrganizationTree = () => {
     useEffect(() => {
         if (searchQuery.trim() && allUsers.length > 0) {
             const query = searchQuery.toLowerCase();
-            const matched = allUsers.find(u => 
+            const matched = allUsers.find(u =>
                 u.name.toLowerCase().includes(query) ||
                 formatRole(u.role).toLowerCase().includes(query)
             );
@@ -355,7 +355,7 @@ const OrganizationTree = () => {
     const TreeNode = ({ node }) => {
         const hasChildren = node.children && node.children.length > 0;
         const isExpanded = expandedNodes[node._id] !== false;
-        
+
         const nodeStrId = getIdString(node._id);
         const loggedInUserId = getIdString(user?._id);
         const managerName = getManagerName(node);
@@ -363,7 +363,7 @@ const OrganizationTree = () => {
 
         const isHighlightedPath = viewMode === 'ReportingChain' && highlightedNodeIds.has(nodeStrId);
         const isDimmed = viewMode === 'ReportingChain' && !highlightedNodeIds.has(nodeStrId);
-        
+
         const isMe = nodeStrId === loggedInUserId;
         const isSearchMatch = searchQuery.trim() && (
             node.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -374,31 +374,28 @@ const OrganizationTree = () => {
         const isDeptDimmed = selectedDept !== "All" && node.department !== selectedDept;
 
         return (
-            <div className={`flex flex-col items-center transition-all duration-300 ${
-                isDimmed || isDeptDimmed ? 'opacity-40 filter grayscale-[20%]' : ''
-            }`}>
+            <div className={`flex flex-col items-center transition-all duration-300 ${isDimmed || isDeptDimmed ? 'opacity-40 filter grayscale-[20%]' : ''
+                }`}>
                 {/* Node Card Container */}
-                <div 
+                <div
                     id={`node-card-${node._id}`}
                     onClick={() => handleOpenProfile(node)}
-                    className={`bg-white/95 backdrop-blur-md border rounded-[22px] p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-[300px] text-left relative z-10 cursor-pointer ${
-                        isMe ? 'ring-2 ring-amber-500 border-amber-300 shadow-amber-50 shadow-lg scale-[1.02]' :
+                    className={`bg-white/95 backdrop-blur-md border rounded-[22px] p-5 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col w-[300px] text-left relative z-10 cursor-pointer ${isMe ? 'ring-2 ring-amber-500 border-amber-300 shadow-amber-50 shadow-lg scale-[1.02]' :
                         isSearchMatch ? 'ring-2 ring-blue-500 border-blue-300 shadow-blue-50 shadow-lg scale-[1.02]' :
-                        isHighlightedPath ? 'ring-2 ring-purple-600 border-purple-300 shadow-purple-50 shadow-lg scale-[1.02]' :
-                        isDeptHighlight ? 'ring-2 ring-emerald-500 border-emerald-300 shadow-emerald-50 shadow-lg scale-[1.02]' :
-                        'border-slate-200/80 hover:border-slate-300'
-                    }`}
+                            isHighlightedPath ? 'ring-2 ring-purple-600 border-purple-300 shadow-purple-50 shadow-lg scale-[1.02]' :
+                                isDeptHighlight ? 'ring-2 ring-emerald-500 border-emerald-300 shadow-emerald-50 shadow-lg scale-[1.02]' :
+                                    'border-slate-200/80 hover:border-slate-300'
+                        }`}
                 >
                     {/* Top details block */}
                     <div className="flex items-center gap-4">
                         {/* Profile initials / Image */}
                         <div className="relative flex-shrink-0">
-                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${
-                                node.role === 'admin' ? 'from-blue-500 to-indigo-600' :
+                            <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${node.role === 'admin' ? 'from-blue-500 to-indigo-600' :
                                 node.role === 'TL' ? 'from-purple-500 to-violet-600' :
-                                node.role === 'developer' ? 'from-indigo-500 to-blue-500' :
-                                'from-pink-500 to-rose-600'
-                            } text-white flex items-center justify-center font-black text-lg shadow-sm overflow-hidden`}>
+                                    node.role === 'developer' ? 'from-indigo-500 to-blue-500' :
+                                        'from-pink-500 to-rose-600'
+                                } text-white flex items-center justify-center font-black text-lg shadow-sm overflow-hidden`}>
                                 {node.profilePic ? (
                                     <img src={node.profilePic} alt={node.name} className="w-full h-full object-cover" />
                                 ) : getInitials(node.name)}
@@ -413,9 +410,9 @@ const OrganizationTree = () => {
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-0.5">
                                 <h6 className="text-sm font-bold text-slate-800 truncate pr-2">{node.name}</h6>
-                                
+
                                 {/* Quick Menu */}
-                                <button 
+                                <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setActiveMenuId(activeMenuId === nodeStrId ? null : nodeStrId);
@@ -433,19 +430,19 @@ const OrganizationTree = () => {
                     {/* Action Dropdown Menu */}
                     {activeMenuId === nodeStrId && (
                         <div className="absolute top-12 right-6 bg-white border border-slate-100 rounded-2xl shadow-xl py-2 w-44 z-50 animate-in fade-in slide-in-from-top-2 duration-150" onClick={e => e.stopPropagation()}>
-                            <button 
+                            <button
                                 onClick={() => { handleOpenProfile(node); setActiveMenuId(null); }}
                                 className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
                             >
                                 <Eye className="w-3.5 h-3.5" /> View Profile
                             </button>
-                            <button 
+                            <button
                                 onClick={() => { centerOnNode(nodeStrId); setActiveMenuId(null); }}
                                 className="w-full px-4 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
                             >
                                 <Anchor className="w-3.5 h-3.5" /> Focus Card
                             </button>
-                            <button 
+                            <button
                                 onClick={() => { setSelectedChainUser(nodeStrId); setViewMode("ReportingChain"); setActiveMenuId(null); }}
                                 className="w-full px-4 py-2 text-left text-xs font-semibold text-purple-600 hover:bg-purple-50 transition-colors flex items-center gap-2 cursor-pointer"
                             >
@@ -479,14 +476,13 @@ const OrganizationTree = () => {
 
                 {/* Collapse/Expand Node Toggles */}
                 {hasChildren && (
-                    <button 
+                    <button
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleExpand(node._id);
                         }}
-                        className={`w-6 h-6 rounded-full flex items-center justify-center -mb-3 mt-3 shadow-md transition-all z-20 cursor-pointer text-sm font-black border border-white focus:outline-none ${
-                            isHighlightedPath ? 'bg-purple-700 hover:bg-purple-800 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-600'
-                        }`}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center -mb-3 mt-3 shadow-md transition-all z-20 cursor-pointer text-sm font-black border border-white focus:outline-none ${isHighlightedPath ? 'bg-purple-700 hover:bg-purple-800 text-white' : 'bg-slate-200 hover:bg-slate-300 text-slate-600'
+                            }`}
                     >
                         {isExpanded ? "−" : "+"}
                     </button>
@@ -494,9 +490,8 @@ const OrganizationTree = () => {
 
                 {/* Vertical guiding connector to child row */}
                 {hasChildren && isExpanded && (
-                    <div className={`w-0.5 h-8 mt-3 ${
-                        isHighlightedPath ? 'bg-purple-600' : 'bg-slate-200/80'
-                    }`} />
+                    <div className={`w-0.5 h-8 mt-3 ${isHighlightedPath ? 'bg-purple-600' : 'bg-slate-200/80'
+                        }`} />
                 )}
 
                 {/* Children row container */}
@@ -516,21 +511,18 @@ const OrganizationTree = () => {
                                     {/* Horizontal Guidelines connected span */}
                                     {!isSingle && (
                                         <div className="absolute -top-6 left-0 right-0 flex h-0.5">
-                                            <div className={`flex-1 ${
-                                                isFirst ? 'bg-transparent' : 
+                                            <div className={`flex-1 ${isFirst ? 'bg-transparent' :
                                                 isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
-                                            }`} />
-                                            <div className={`flex-1 ${
-                                                isLast ? 'bg-transparent' : 
+                                                }`} />
+                                            <div className={`flex-1 ${isLast ? 'bg-transparent' :
                                                 isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
-                                            }`} />
+                                                }`} />
                                         </div>
                                     )}
                                     {/* Vertical Guideline connector to child card */}
-                                    <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 ${
-                                        isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
-                                    }`} />
-                                    
+                                    <div className={`absolute -top-6 left-1/2 -translate-x-1/2 w-0.5 h-6 ${isChildHighlighted ? 'bg-purple-600' : 'bg-slate-200/80'
+                                        }`} />
+
                                     <TreeNode node={child} />
                                 </div>
                             );
@@ -569,11 +561,11 @@ const OrganizationTree = () => {
 
                         {/* Navigation Actions Panel */}
                         <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                            
+
                             {/* Search input box */}
                             <div className="relative w-full lg:w-80">
                                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                                <input 
+                                <input
                                     type="text"
                                     placeholder="Search employee by name or role..."
                                     value={searchQuery}
@@ -586,19 +578,19 @@ const OrganizationTree = () => {
                             <div className="flex flex-wrap items-center gap-4 text-slate-500 text-xs font-semibold select-none">
                                 <div className="flex items-center gap-2">
                                     <span className="text-slate-400">Go to</span>
-                                    <button 
+                                    <button
                                         onClick={handleGoToMyDepartment}
                                         className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 focus:outline-none"
                                     >
                                         <Building2 className="w-3.5 h-3.5 text-slate-400" /> My Department
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleGoToTop}
                                         className="px-4 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 focus:outline-none"
                                     >
                                         <Landmark className="w-3.5 h-3.5 text-slate-400" /> Top of the Org
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleGoToMe}
                                         className="px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 font-bold focus:outline-none"
                                     >
@@ -611,7 +603,7 @@ const OrganizationTree = () => {
                                 {/* Smart Modes Selector */}
                                 <div className="flex items-center gap-2">
                                     <span className="text-slate-400">Mode</span>
-                                    <select 
+                                    <select
                                         value={viewMode}
                                         onChange={e => setViewMode(e.target.value)}
                                         className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer focus:border-purple-600"
@@ -625,7 +617,7 @@ const OrganizationTree = () => {
                                 {/* Chain User selection (Only visible during Chain View mode) */}
                                 {viewMode === 'ReportingChain' && (
                                     <div className="relative animate-in fade-in duration-200">
-                                        <select 
+                                        <select
                                             value={selectedChainUser}
                                             onChange={e => setSelectedChainUser(e.target.value)}
                                             className="px-3 py-2 bg-purple-50 border border-purple-200 text-purple-700 rounded-lg text-xs font-bold outline-none cursor-pointer"
@@ -640,7 +632,7 @@ const OrganizationTree = () => {
                                 {/* Department selection filter */}
                                 <div className="flex items-center gap-2">
                                     <span className="text-slate-400">Department</span>
-                                    <select 
+                                    <select
                                         value={selectedDept}
                                         onChange={e => setSelectedDept(e.target.value)}
                                         className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer focus:border-purple-600"
@@ -656,7 +648,7 @@ const OrganizationTree = () => {
 
                                 {/* Group by department switch */}
                                 <div className="flex items-center gap-2">
-                                    <button 
+                                    <button
                                         onClick={() => setGroupByDept(prev => !prev)}
                                         className={`w-10 h-5 rounded-full p-0.5 transition-colors cursor-pointer focus:outline-none ${groupByDept ? 'bg-purple-700' : 'bg-slate-200'}`}
                                     >
@@ -668,20 +660,19 @@ const OrganizationTree = () => {
                         </div>
 
                         {/* Draggable Viewport Canvas Frame */}
-                        <div 
+                        <div
                             ref={canvasViewportRef}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUpOrLeave}
                             onMouseLeave={handleMouseUpOrLeave}
-                            className={`bg-white rounded-[28px] border border-slate-100 shadow-sm relative min-h-[550px] overflow-auto p-16 scrollbar-none ${
-                                isDragging ? 'cursor-grabbing' : 'cursor-grab'
-                            }`}
+                            className={`bg-white rounded-[28px] border border-slate-100 shadow-sm relative min-h-[550px] overflow-auto p-16 scrollbar-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'
+                                }`}
                         >
-                            <div 
+                            <div
                                 ref={canvasContentRef}
-                                style={{ 
-                                    transform: `scale(${zoomScale})`, 
+                                style={{
+                                    transform: `scale(${zoomScale})`,
                                     transformOrigin: 'top center',
                                     transition: isDragging ? 'none' : 'transform 0.15s ease-out'
                                 }}
@@ -721,21 +712,21 @@ const OrganizationTree = () => {
 
                 {/* Floating zoom widgets */}
                 <div className="absolute right-8 bottom-8 flex flex-col gap-2 z-40 select-none">
-                    <button 
+                    <button
                         onClick={handleZoomIn}
                         className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-lg hover:scale-105 transition-all text-slate-500 hover:text-slate-700 cursor-pointer focus:outline-none"
                         title="Zoom In"
                     >
                         <Plus className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                         onClick={handleZoomOut}
                         className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-lg hover:scale-105 transition-all text-slate-500 hover:text-slate-700 cursor-pointer focus:outline-none"
                         title="Zoom Out"
                     >
                         <Minus className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                         onClick={handleResetZoom}
                         className="p-2.5 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl shadow-lg hover:scale-105 transition-all text-slate-500 hover:text-slate-700 cursor-pointer focus:outline-none"
                         title="Center & Reset Zoom"
@@ -747,7 +738,7 @@ const OrganizationTree = () => {
 
             {/* Direct Integration with Premium Hierarchy-Aware Profile Modal */}
             {isProfileModalOpen && selectedProfileUser && (
-                <ProfileModal 
+                <ProfileModal
                     isOpen={isProfileModalOpen}
                     onClose={() => {
                         setIsProfileModalOpen(false);
@@ -758,8 +749,8 @@ const OrganizationTree = () => {
                     displayName={selectedProfileUser.name}
                     displayRole={
                         selectedProfileUser.role === 'TL' ? 'Team Lead' :
-                        selectedProfileUser.role === 'admin' ? 'Administrator' :
-                        selectedProfileUser.role === 'developer' ? 'Developer' : 'QA'
+                            selectedProfileUser.role === 'admin' ? 'Administrator' :
+                                selectedProfileUser.role === 'developer' ? 'Developer' : 'QA'
                     }
                     initial={getInitials(selectedProfileUser.name)}
                 />
