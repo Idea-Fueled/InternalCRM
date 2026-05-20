@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import logoImgNew from "../assets/logo-idea-fueled-enhanced.png";
+import logoImgNew from "../assets/IF-black.png";
 import { toast } from "sonner";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Eye, EyeOff, Lock, CheckCircle2, AlertTriangle } from "lucide-react";

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import logoImgNew from "../assets/logo-idea-fueled-enhanced.png";
+import logoImgNew from "../assets/IF-black.png";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Mail, Send } from "lucide-react";

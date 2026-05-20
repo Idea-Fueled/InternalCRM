@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import logoImg from "../../assets/logo-idea-fueled-enhanced.png";
+import logoImg from "../../assets/IF-white.png";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import ProfileModal from "../ProfileModal";
