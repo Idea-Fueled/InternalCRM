@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import logo from '../assets/logo-idea-fueled-new.png';
+import logo from '../assets/logo-idea-fueled-enhanced.png';
 
 export const exportPDF = ({
     title,

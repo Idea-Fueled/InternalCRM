@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImg from '../assets/logo-idea-fueled.png';
+import logoImg from '../assets/logo-idea-fueled-enhanced.png';
 
 const Logo = ({ className = "w-10 h-10" }) => {
     return (
