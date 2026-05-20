@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
     Search, Loader2, Building2, UserMinus, Plus, Minus, Pin,
-    Compass, User, Landmark, HelpCircle, Network, Users,
-    Briefcase, ListTodo, MoreVertical, Eye, Share2, Anchor,
-    UserCheck, ShieldCheck, CheckCircle2, ChevronDown, ChevronRight
+    User, Landmark, Users, Briefcase, ListTodo, MoreVertical, 
+    Eye, Share2, Anchor, UserCheck, ShieldCheck
 } from "lucide-react";
 import { userService, projectService, taskService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
@@ -28,6 +27,25 @@ const OrganizationTree = () => {
     const [expandedNodes, setExpandedNodes] = useState({});
     const [selectedChainUser, setSelectedChainUser] = useState("");
     const [activeMenuId, setActiveMenuId] = useState(null);
+    const [groupByDept, setGroupByDept] = useState(false);
+
+    // Helper functions
+    const formatRole = (r) => {
+        if (!r) return "Employee";
+        const roleLower = String(r).toLowerCase();
+        if (roleLower === 'tl') return 'Technical Team Lead';
+        if (roleLower === 'qa') return 'QA Engineer';
+        if (roleLower === 'developer') return 'Software Developer';
+        if (roleLower === 'admin') return 'Administrator';
+        return r.charAt(0).toUpperCase() + r.slice(1);
+    };
+
+    const toggleExpand = (nodeId) => {
+        setExpandedNodes(prev => ({
+            ...prev,
+            [nodeId]: prev[nodeId] === false ? true : false
+        }));
+    };
 
     // Profile Modal States
     const [selectedProfileUser, setSelectedProfileUser] = useState(null);
@@ -335,21 +353,6 @@ const OrganizationTree = () => {
         return name.substring(0, 2).toUpperCase();
     };
 
-    // Role style mapping
-    const getRoleBadgeStyle = (r) => {
-        switch (r) {
-            case 'admin':
-                return 'bg-blue-50 text-blue-700 border-blue-100';
-            case 'TL':
-                return 'bg-purple-50 text-purple-700 border-purple-100';
-            case 'developer':
-                return 'bg-indigo-50 text-indigo-700 border-indigo-100';
-            case 'qa':
-                return 'bg-pink-50 text-pink-700 border-pink-100';
-            default:
-                return 'bg-slate-50 text-slate-700 border-slate-100';
-        }
-    };
 
     // Recursive Tree Node Renderer
     const TreeNode = ({ node }) => {
