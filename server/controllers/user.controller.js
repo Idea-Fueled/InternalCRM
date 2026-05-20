@@ -192,17 +192,35 @@ export const getAllUsers = async (req, res) => {
             query.isActive = true;
         }
         
-        if (userRole === 'TL' && orgTree !== 'true' && orgTree !== true) {
-            // Find users assigned to this TL, or the TL themselves
-            query = {
-                ...query,
-                $or: [
-                    { teamLeads: _id },
-                    { _id: _id }
-                ]
-            };
-        } else if (targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
-            query.teamLeads = targetTeamLead;
+        const isOrgTree = orgTree === 'true' || orgTree === true || String(orgTree).toLowerCase() === 'true';
+
+        if (isOrgTree) {
+            // CENTRALIZED COMPANY-WIDE EXPLORER: Completely bypass ALL restrictions for ALL roles
+            // All users (Admin, TL, Developer, QA) see the entire organization tree
+        } else {
+            // Standard scoping for other modules (task assignment / dropdown lists)
+            if (userRole === 'TL') {
+                query = {
+                    ...query,
+                    $or: [
+                        { teamLeads: _id },
+                        { _id: _id }
+                    ]
+                };
+            } else if (userRole === 'developer' || userRole === 'qa') {
+                // Scope Developer and QA to their respective teams (same as TLs)
+                const leads = req.user.teamLeads || [];
+                query = {
+                    ...query,
+                    $or: [
+                        { teamLeads: { $in: leads } },
+                        { _id: { $in: leads } },
+                        { _id: _id }
+                    ]
+                };
+            } else if (targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
+                query.teamLeads = targetTeamLead;
+            }
         }
         
         if (role) {

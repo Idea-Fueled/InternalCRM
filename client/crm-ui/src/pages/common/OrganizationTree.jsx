@@ -113,6 +113,46 @@ const OrganizationTree = () => {
         }
     }, [allUsers]);
 
+    // Find complete user details in fetched allUsers list
+    const currentUserObj = useMemo(() => {
+        if (!user?._id || allUsers.length === 0) return null;
+        return allUsers.find(u => getIdString(u._id) === getIdString(user._id));
+    }, [allUsers, user]);
+
+    // Calculate all user IDs related to the logged-in user (leads, teammates, reports)
+    const meRelatedNodeIds = useMemo(() => {
+        if (!currentUserObj || allUsers.length === 0) return new Set();
+        const set = new Set();
+        const myId = getIdString(currentUserObj._id);
+        
+        // Add myself
+        set.add(myId);
+
+        // Add my team leads
+        const leads = (currentUserObj.teamLeads || []).map(l => getIdString(l));
+        leads.forEach(id => set.add(id));
+
+        // Add my teammates (peers sharing at least one team lead)
+        if (leads.length > 0) {
+            allUsers.forEach(u => {
+                const uLeads = (u.teamLeads || []).map(l => getIdString(l));
+                if (uLeads.some(lId => leads.includes(lId))) {
+                    set.add(getIdString(u._id));
+                }
+            });
+        }
+
+        // Add my subordinates (people who report directly to me)
+        allUsers.forEach(u => {
+            const uLeads = (u.teamLeads || []).map(l => getIdString(l));
+            if (uLeads.includes(myId)) {
+                set.add(getIdString(u._id));
+            }
+        });
+
+        return set;
+    }, [currentUserObj, allUsers]);
+
     // Unique list of departments for filtering
     const departments = useMemo(() => {
         const depts = new Set();
@@ -225,8 +265,10 @@ const OrganizationTree = () => {
 
         // Helper: Check if a user ID reports to a given lead ID
         const reportsTo = (emp, leadId) => {
+            if (!emp) return false;
             return (emp.teamLeads || []).some(lead => {
-                const id = typeof lead === 'object' ? lead._id : lead;
+                if (!lead) return false;
+                const id = typeof lead === 'object' && lead._id ? lead._id : lead;
                 return getIdString(id) === getIdString(leadId);
             });
         };
@@ -322,8 +364,8 @@ const OrganizationTree = () => {
         const managerName = getManagerName(node);
         const reporteesCount = getReporteesCount(node._id);
 
-        const isHighlightedPath = false;
-        const isDimmed = false;
+        const isHighlightedPath = activeTab === "Me" && meRelatedNodeIds.has(nodeStrId) && !isMe;
+        const isDimmed = activeTab === "Me" && !meRelatedNodeIds.has(nodeStrId);
 
         const isMe = nodeStrId === loggedInUserId;
 
@@ -434,7 +476,7 @@ const OrganizationTree = () => {
 
                 {/* Vertical guiding connector to child row */}
                 {hasChildren && isExpanded && (
-                    <div className={`w-0.5 h-8 mt-3 ${isHighlightedPath ? 'bg-purple-600' : 'bg-slate-200/80'
+                    <div className={`w-0.5 h-8 mt-3 ${activeTab === "Me" && meRelatedNodeIds.has(nodeStrId) && node.children.some(c => meRelatedNodeIds.has(getIdString(c._id))) ? 'bg-purple-600' : 'bg-slate-200/80'
                         }`} />
                 )}
 
@@ -448,7 +490,7 @@ const OrganizationTree = () => {
                             const isSingle = childrenArr.length === 1;
 
                             // Highlight connecting lines path
-                            const isChildHighlighted = false;
+                            const isChildHighlighted = activeTab === "Me" && meRelatedNodeIds.has(getIdString(child._id)) && meRelatedNodeIds.has(nodeStrId);
 
                             return (
                                 <div key={child._id || idx} className="flex flex-col items-center relative">
