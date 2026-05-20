@@ -37,7 +37,7 @@ const AdminDashboard = () => {
     const [dashboardData, setDashboardData] = useState(null);
     const [projects, setProjects] = useState([]);
     const [users, setUsers] = useState([]);
-    const [recentTasks, setRecentTasks] = useState([]);
+    const [activities, setActivities] = useState([]);
     const [allTasks, setAllTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
