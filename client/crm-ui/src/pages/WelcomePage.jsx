@@ -141,7 +141,7 @@ export default function WelcomePage() {
                             disabled={loading || authLoading}
                             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base py-3.5 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? "Authenticating..." : (authLoading ? "Initializing..." : "Sign In to Idea Fueled")}
+                            {loading ? "Authenticating..." : (authLoading ? "Initializing..." : "Sign In")}
                         </button>
                     </form>
 
