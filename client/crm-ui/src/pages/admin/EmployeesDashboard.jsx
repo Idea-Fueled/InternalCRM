@@ -711,7 +711,7 @@ const EmployeesDashboard = () => {
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                             <form id="addEmployeeForm" onSubmit={handleAddEmployee} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Full Name *</label>
+                                    <label className="block text-sm font-bold text-slate-700">Full Name *</label>
                                     <input 
                                         type="text" 
                                         required
@@ -724,7 +724,7 @@ const EmployeesDashboard = () => {
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Email *</label>
+                                    <label className="block text-sm font-bold text-slate-700">Email *</label>
                                     <input 
                                         type="email" 
                                         required
@@ -737,7 +737,7 @@ const EmployeesDashboard = () => {
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Role</label>
+                                    <label className="block text-sm font-bold text-slate-700">Role</label>
                                     <select 
                                         value={newEmployee.role}
                                         onChange={(e) => {
@@ -757,7 +757,7 @@ const EmployeesDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Password (Optional)</label>
+                                    <label className="block text-sm font-bold text-slate-700">Password (Optional)</label>
                                     <input 
                                         type="password" 
                                         value={newEmployee.password}
@@ -770,7 +770,7 @@ const EmployeesDashboard = () => {
                                     </p>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Department</label>
+                                    <label className="block text-sm font-bold text-slate-700">Department</label>
                                     <select 
                                         value={newEmployee.department}
                                         onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
@@ -783,7 +783,7 @@ const EmployeesDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Team Leads</label>
+                                    <label className="block text-sm font-bold text-slate-700">Team Leads</label>
                                     <div className="w-full border border-slate-200 rounded-lg p-2 max-h-[120px] overflow-y-auto bg-slate-50/30">
                                         <div className="grid grid-cols-2 gap-2">
                                             {teamLeads.map(tl => (
@@ -812,7 +812,7 @@ const EmployeesDashboard = () => {
                                 <div className="space-y-1.5 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                     <div className="flex items-center gap-2 mb-2">
                                         <ShieldCheck className="w-4 h-4 text-blue-600" />
-                                        <label className="text-sm font-bold text-slate-700">Permissions & Access Control</label>
+                                        <label className="block text-sm font-bold text-slate-700">Permissions & Access Control</label>
                                     </div>
                                     <div className="w-full border border-slate-200 rounded-lg p-4 bg-slate-50/30 max-h-[220px] overflow-y-auto custom-scrollbar">
                                         <PermissionGroups 
@@ -822,7 +822,7 @@ const EmployeesDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Profile Picture</label>
+                                    <label className="block text-sm font-bold text-slate-700">Profile Picture</label>
                                     <div className="flex items-center gap-4 p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
                                         <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden shadow-sm">
                                             {newEmployee.profilePic ? (
@@ -1037,7 +1037,7 @@ const EmployeesDashboard = () => {
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                             <form id="editEmployeeForm" onSubmit={handleUpdateEmployee} noValidate className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Full Name *</label>
+                                    <label className="block text-sm font-bold text-slate-700">Full Name *</label>
                                     <input 
                                         type="text" 
                                         required
@@ -1050,7 +1050,7 @@ const EmployeesDashboard = () => {
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Email *</label>
+                                    <label className="block text-sm font-bold text-slate-700">Email *</label>
                                     <input 
                                         type="email" 
                                         required
@@ -1063,7 +1063,7 @@ const EmployeesDashboard = () => {
                                     )}
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Role</label>
+                                    <label className="block text-sm font-bold text-slate-700">Role</label>
                                     <select 
                                         value={newEmployee.role}
                                         onChange={(e) => {
@@ -1088,7 +1088,7 @@ const EmployeesDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Password</label>
+                                    <label className="block text-sm font-bold text-slate-700">Password</label>
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -1115,7 +1115,7 @@ const EmployeesDashboard = () => {
                                     </p>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Department</label>
+                                    <label className="block text-sm font-bold text-slate-700">Department</label>
                                     <select 
                                         value={newEmployee.department}
                                         onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
@@ -1129,7 +1129,7 @@ const EmployeesDashboard = () => {
                                 </div>
                                 {newEmployee.role !== 'admin' && (
                                     <div className="space-y-1.5 md:col-span-2">
-                                        <label className="text-sm font-bold text-slate-700">Team Leads</label>
+                                        <label className="block text-sm font-bold text-slate-700">Team Leads</label>
                                         <div className="w-full border border-slate-200 rounded-lg p-2 max-h-[120px] overflow-y-auto bg-slate-50/30">
                                             <div className="grid grid-cols-2 gap-2">
                                                 {teamLeads.map(tl => (
@@ -1159,7 +1159,7 @@ const EmployeesDashboard = () => {
                                 <div className="space-y-1.5 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                     <div className="flex items-center gap-2 mb-2">
                                         <ShieldCheck className="w-4 h-4 text-blue-600" />
-                                        <label className="text-sm font-bold text-slate-700">Permissions & Access Control</label>
+                                        <label className="block text-sm font-bold text-slate-700">Permissions & Access Control</label>
                                     </div>
                                     <div className="w-full border border-slate-200 rounded-lg p-4 bg-slate-50/30 max-h-[220px] overflow-y-auto custom-scrollbar">
                                         <PermissionGroups 
@@ -1169,7 +1169,7 @@ const EmployeesDashboard = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
-                                    <label className="text-sm font-bold text-slate-700">Update Profile Picture</label>
+                                    <label className="block text-sm font-bold text-slate-700">Update Profile Picture</label>
                                     <div className="flex items-center gap-4 p-3 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
                                         <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 overflow-hidden shadow-sm">
                                             {newEmployee.profilePic ? (
@@ -1246,7 +1246,7 @@ const EmployeesDashboard = () => {
                                 <div className="p-6 space-y-4">
                                     {/* New Password */}
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-bold text-slate-700">New Password *</label>
+                                        <label className="block text-sm font-bold text-slate-700">New Password *</label>
                                         <div className="relative">
                                             <input
                                                 type={showNewPwd ? 'text' : 'password'}
@@ -1289,7 +1289,7 @@ const EmployeesDashboard = () => {
 
                                     {/* Confirm Password */}
                                     <div className="space-y-1.5">
-                                        <label className="text-sm font-bold text-slate-700">Confirm Password *</label>
+                                        <label className="block text-sm font-bold text-slate-700">Confirm Password *</label>
                                         <div className="relative">
                                             <input
                                                 type={showConfirmPwd ? 'text' : 'password'}

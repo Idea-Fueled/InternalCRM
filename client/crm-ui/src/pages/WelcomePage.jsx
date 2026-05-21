@@ -90,7 +90,7 @@ export default function WelcomePage() {
 
                 <form className="space-y-6" onSubmit={handleSubmit} noValidate>
                     <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
+                        <label className="block text-sm font-semibold text-slate-700 ml-1">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
@@ -141,13 +141,8 @@ export default function WelcomePage() {
                     </button>
                 </form>
 
-                <div className="relative pt-8">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-100"></div>
-                    </div>
-                    <div className="relative flex justify-center text-[11px] uppercase tracking-[0.2em] font-bold">
-                        <span className="px-4 bg-transparent backdrop-blur-xl text-slate-400">Secure Internal Access</span>
-                    </div>
+                <div className="pt-6 text-center text-[9px] uppercase tracking-[0.2em] font-bold text-slate-400">
+                    Secure Internal Access
                 </div>
             </div>
 

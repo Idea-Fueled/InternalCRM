@@ -79,7 +79,7 @@ export default function ForgotPassword() {
                 {!sent ? (
                     <form onSubmit={handleSubmit} noValidate className="space-y-5">
                         <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
+                            <label className="block text-sm font-semibold text-slate-700 ml-1">Email Address</label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 <input
