@@ -507,7 +507,7 @@ const OrganizationTree = () => {
 
             return buildTreeFromRoots(deptRoots, tls, staff, true);
         }
-    }, [allUsers, activeTab, user]);
+    }, [allUsers, activeTab, user, selectedDept]);
 
 
     // Direct Profile modal trigger
