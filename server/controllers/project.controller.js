@@ -230,7 +230,8 @@ export const getProjectById = async (req, res, next) => {
 
         const tasks = await Task.find({ project: id, isDeleted: false })
             .populate("assignedTo", "name email role profilePic")
-            .populate("assignedQA", "name email role profilePic");
+            .populate("assignedQA", "name email role profilePic")
+            .populate("statusHistory.changedBy", "name email role profilePic");
 
         // Filter task notes and attachments according to rules:
         // "When task status changes and notes/attachments are added: Visibility must be limited only to: Assigned Developer, Assigned QA, Project Team Lead, Admin"

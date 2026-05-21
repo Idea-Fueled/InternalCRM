@@ -1,13 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Outfit', sans-serif;
+  --font-sans: 'Montserrat', sans-serif;
 }
 
 /* Global Typography System */
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   @apply text-slate-600 antialiased;
 }
 

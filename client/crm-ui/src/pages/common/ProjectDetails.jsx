@@ -772,7 +772,7 @@ const ProjectDetails = () => {
                                             ) : (
                                                 <Plus className="w-4 h-4" />
                                             )}
-                                            {uploadingFiles ? "Uploading..." : "+ Add More"}
+                                            {uploadingFiles ? "Uploading..." : "Add More"}
                                         </button>
                                     </div>
                                 </div>
@@ -876,25 +876,25 @@ const ProjectDetails = () => {
                                 </div>
 
                                 {/* Post Note Form */}
-                                <form onSubmit={handleAddProjectNote} className="flex gap-2.5 items-end">
+                                <form onSubmit={handleAddProjectNote} className="flex gap-2.5 items-center">
                                     <div className="flex-1">
-                                        <textarea
+                                        <input
+                                            type="text"
                                             value={newCommentText}
                                             onChange={(e) => setNewCommentText(e.target.value)}
-                                            rows="2"
                                             placeholder="Post a secure update or architectural note to the team..."
-                                            className="w-full p-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition font-semibold text-xs text-slate-700 placeholder-slate-400 resize-none"
-                                        ></textarea>
+                                            className="w-full h-11 px-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:bg-white outline-none transition font-semibold text-xs text-slate-700 placeholder-slate-400"
+                                        />
                                     </div>
                                     <button
                                         type="submit"
                                         disabled={commentSubmitting || !newCommentText.trim()}
-                                        className="p-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-md transition disabled:opacity-50 flex items-center justify-center shrink-0"
+                                        className="w-11 h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl shadow-md transition disabled:opacity-50 flex items-center justify-center shrink-0 cursor-pointer"
                                     >
                                         {commentSubmitting ? (
-                                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                                         ) : (
-                                            <Send className="w-5 h-5" />
+                                            <Send className="w-4.5 h-4.5" />
                                         )}
                                     </button>
                                 </form>
@@ -1004,53 +1004,55 @@ const ProjectDetails = () => {
                             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 space-y-4">
                                 <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-50">Sprint Activity Feed</h3>
 
-                                <div className="relative border-l-2 border-slate-100 pl-4 space-y-6 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin py-2">
-                                    {timelineEvents.map((ev) => {
-                                        const isCreate = ev.type === "project_created";
-                                        const isNote = ev.type === "note";
-                                        const isAttach = ev.type === "attachment";
-                                        const isTask = ev.type === "task_status";
+                                <div className="max-h-[400px] overflow-y-auto pr-2 pl-6 scrollbar-thin py-2">
+                                    <div className="relative border-l-2 border-slate-100 pl-4 space-y-6">
+                                        {timelineEvents.map((ev) => {
+                                            const isCreate = ev.type === "project_created";
+                                            const isNote = ev.type === "note";
+                                            const isAttach = ev.type === "attachment";
+                                            const isTask = ev.type === "task_status";
 
-                                        return (
-                                            <div key={ev.id} className="relative space-y-1.5">
-                                                {/* Left dot */}
-                                                <span className={`absolute -left-[23px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
-                                                    isCreate ? "bg-amber-500" :
-                                                    isNote ? "bg-indigo-500" :
-                                                    isAttach ? "bg-rose-500" :
-                                                    "bg-blue-500"
-                                                }`}></span>
+                                            return (
+                                                <div key={ev.id} className="relative space-y-1.5">
+                                                    {/* Left dot */}
+                                                    <span className={`absolute -left-[23px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-white shadow-sm flex items-center justify-center ${
+                                                        isCreate ? "bg-amber-500" :
+                                                        isNote ? "bg-indigo-500" :
+                                                        isAttach ? "bg-rose-500" :
+                                                        "bg-blue-500"
+                                                    }`}></span>
 
-                                                <div className="leading-tight">
-                                                    <span className="text-[10px] font-black text-slate-400">{formatDate(ev.date)}</span>
-                                                    <h4 className="text-xs font-black text-slate-800">{ev.title}</h4>
-                                                </div>
-                                                <p className="text-[11px] font-semibold text-slate-500 leading-normal">
-                                                    {ev.description}
-                                                </p>
-                                                {ev.comment && (
-                                                    <p className="text-[10px] font-bold text-slate-400 italic bg-slate-50 p-1.5 rounded-lg border border-slate-100/50">
-                                                        "{ev.comment}"
-                                                    </p>
-                                                )}
-                                                <div className="flex items-center gap-1.5 pt-0.5">
-                                                    <div className="w-4.5 h-4.5 bg-slate-200 rounded-full flex items-center justify-center font-black text-[7px] text-slate-600 overflow-hidden">
-                                                        {ev.user?.profilePic ? (
-                                                            <img src={ev.user.profilePic} alt="" className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            ev.user?.name?.charAt(0) || "S"
-                                                        )}
+                                                    <div className="leading-tight">
+                                                        <span className="text-[10px] font-black text-slate-400">{formatDate(ev.date)}</span>
+                                                        <h4 className="text-xs font-black text-slate-800">{ev.title}</h4>
                                                     </div>
-                                                    <span className="text-[9px] font-bold text-slate-400">{ev.user?.name || "System"}</span>
+                                                    <p className="text-[11px] font-semibold text-slate-500 leading-normal">
+                                                        {ev.description}
+                                                    </p>
+                                                    {ev.comment && (
+                                                        <p className="text-[10px] font-bold text-slate-400 italic bg-slate-50 p-1.5 rounded-lg border border-slate-100/50">
+                                                            "{ev.comment}"
+                                                        </p>
+                                                    )}
+                                                    <div className="flex items-center gap-1.5 pt-0.5">
+                                                        <div className="w-4.5 h-4.5 bg-slate-200 rounded-full flex items-center justify-center font-black text-[7px] text-slate-600 overflow-hidden">
+                                                            {ev.user?.profilePic ? (
+                                                                <img src={ev.user.profilePic} alt="" className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                ev.user?.name?.charAt(0) || "S"
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[9px] font-bold text-slate-400">{ev.user?.name || "System"}</span>
+                                                    </div>
                                                 </div>
+                                            );
+                                        })}
+                                        {timelineEvents.length === 0 && (
+                                            <div className="py-4 text-center text-xs text-slate-400 font-bold">
+                                                No recent activities logged
                                             </div>
-                                        );
-                                    })}
-                                    {timelineEvents.length === 0 && (
-                                        <div className="py-4 text-center text-xs text-slate-400 font-bold">
-                                            No recent activities logged
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1381,8 +1383,6 @@ const ProjectDetails = () => {
                                                             ))}
                                                         </div>
                                                     )}
-
-                                                    <span className="text-[9px] font-black text-slate-400 block pt-0.5">Changed by {h.changedBy?.name || "Member"}</span>
                                                 </div>
                                             ))}
                                             {(selectedTask.statusHistory || []).length === 0 && (
