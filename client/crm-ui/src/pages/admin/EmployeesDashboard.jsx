@@ -213,7 +213,7 @@ const EmployeesDashboard = () => {
         e.preventDefault();
         setSubmitted(true);
 
-        if (!newEmployee.name || !newEmployee.email || !newEmployee.password) {
+        if (!newEmployee.name || !newEmployee.email) {
             return;
         }
 
@@ -222,7 +222,9 @@ const EmployeesDashboard = () => {
             const formData = new FormData();
             formData.append('name', newEmployee.name);
             formData.append('email', newEmployee.email);
-            formData.append('password', newEmployee.password);
+            if (newEmployee.password) {
+                formData.append('password', newEmployee.password);
+            }
             formData.append('role', newEmployee.role);
             formData.append('department', newEmployee.department);
             // Append each team lead ID
@@ -755,17 +757,17 @@ const EmployeesDashboard = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-sm font-bold text-slate-700">Password *</label>
+                                    <label className="text-sm font-bold text-slate-700">Password (Optional)</label>
                                     <input 
                                         type="password" 
-                                        required
                                         value={newEmployee.password}
                                         onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-                                        className={`w-full px-3 py-2 bg-white border ${submitted && !newEmployee.password ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
+                                        placeholder="Leave blank to send setup email"
+                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all placeholder:text-slate-300" 
                                     />
-                                    {submitted && !newEmployee.password && (
-                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Password is required!</p>
-                                    )}
+                                    <p className="text-slate-400 text-[10px] font-medium leading-normal mt-0.5">
+                                        If left blank, the employee will receive a welcome email with a secure link to set up their password.
+                                    </p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="text-sm font-bold text-slate-700">Department</label>

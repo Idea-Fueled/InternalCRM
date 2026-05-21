@@ -3,15 +3,17 @@ import { generateToken } from "../utils/authToken.js";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";
 import { cloudinary } from "../config/cloudinary.js";
 import { DEFAULT_ROLE_PERMISSIONS } from "../middlewares/permission.middleware.js";
+import crypto from "crypto";
+import { sendWelcomeEmail } from "../utils/email.js";
 
 export const registerUser = async (req, res, next) => {
     try {
-        const { name, email, password, role, department, status } = req.body;
+        let { name, email, password, role, department, status } = req.body;
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
 
-        if (!name || !email || !password || !role) {
+        if (!name || !email || !role) {
             return res.status(400).json({
-                message: "Name, email, password and role are required!"
+                message: "Name, email, and role are required!"
             })
         }
 
@@ -20,6 +22,11 @@ export const registerUser = async (req, res, next) => {
             return res.status(400).json({
                 message: "User already exists!"
             })
+        }
+
+        // Generate a secure random password if none is provided
+        if (!password || !password.trim()) {
+            password = crypto.randomBytes(16).toString('hex');
         }
 
         const hashedPassword = await hashPassword(password);
@@ -68,7 +75,25 @@ export const registerUser = async (req, res, next) => {
             permissions
         });
 
+        // Generate setup password token (expires in 24 hours)
+        const rawToken = crypto.randomBytes(32).toString('hex');
+        user.resetPasswordToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+        user.resetPasswordExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
         await user.save();
+
+        // Send Welcome & Password Setup email in the background
+        const frontendUrl = process.env.FRONTEND_URL
+            ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/$/, '')
+            : 'http://localhost:5173';
+        const setupLink = `${frontendUrl}/reset-password?token=${rawToken}`;
+
+        console.log(`[registerUser] Dispatching welcome email with password setup to: ${user.email}`);
+        try {
+            await sendWelcomeEmail(user.email, user.name, setupLink);
+        } catch (emailErr) {
+            console.error('[registerUser] Welcome email sending failed:', emailErr.message || emailErr);
+        }
 
         return res.status(201).json({
             message: "User created successfully!",
