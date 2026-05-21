@@ -107,6 +107,13 @@ export const loginController = async (req, res) => {
             })
         }
 
+        if (user.isActive === false) {
+            return res.status(403).json({
+                message: "Your account has been deactivated. Please contact the management team.",
+                isDeactivated: true
+            })
+        }
+
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({

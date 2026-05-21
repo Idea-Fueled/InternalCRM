@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import logoImgNew from "../assets/IF-black.png";
 import { toast } from "sonner"
 import { useNavigate } from "react-router-dom";
+import { ShieldAlert, X } from "lucide-react";
 import { useLottie } from "lottie-react";
 import welcomeLottie from "../../Lottie/welcome-page-lottie.json";
 import { authService } from "../api/services";
@@ -15,6 +16,7 @@ export default function WelcomePage() {
         password: ""
     });
     const [loading, setLoading] = useState(false);
+    const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
 
     useEffect(() => {
         if (user && !authLoading) {
@@ -57,8 +59,12 @@ export default function WelcomePage() {
             // useEffect will handle navigation once user state updates
         } catch (err) {
             console.error("Login error:", err);
-            const errorMsg = err.response?.data?.message || "Invalid credentials. Please try again.";
-            toast.error(errorMsg);
+            if (err.response?.status === 403 || err.response?.data?.isDeactivated) {
+                setShowDeactivatedModal(true);
+            } else {
+                const errorMsg = err.response?.data?.message || "Invalid credentials. Please try again.";
+                toast.error(errorMsg);
+            }
             setFormData(prev => ({ ...prev, password: "" }));
         } finally {
             setLoading(false);
@@ -155,6 +161,35 @@ export default function WelcomePage() {
                     </div>
                 </div>
             </div>
+            {/* Deactivated Account Modal */}
+            {showDeactivatedModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-md overflow-hidden relative animate-in zoom-in-95 duration-200">
+                        <button 
+                            onClick={() => setShowDeactivatedModal(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="p-8 flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-6 shadow-sm border border-red-100">
+                                <ShieldAlert className="w-8 h-8" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Account Deactivated</h3>
+                            <p className="text-slate-500 text-sm mb-8 leading-relaxed">
+                                Your account has been deactivated or moved to trash. Please contact the management team or your system administrator for further assistance.
+                            </p>
+                            <button 
+                                onClick={() => setShowDeactivatedModal(false)}
+                                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl transition-all shadow-sm active:scale-[0.98]"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
