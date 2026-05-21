@@ -506,16 +506,37 @@ export const updateTaskStatus = async (req, res) => {
             const projectName = task.project?.projectName || "Project";
             const projectId = task.project?._id;
 
+            // Explicit QA Approval / Rejection detection
+            let customTitle = "Task Status Updated";
+            let customMsg = `${taskName} in ${projectName} moved to ${status} by ${senderName}`;
+            let category = "status_change";
+
+            if (taskToUpdate.status === "QA Review") {
+                if (status === "Completed") {
+                    customTitle = "QA Task Approved";
+                    customMsg = `Task "${taskName}" has been APPROVED by QA ${senderName} in project "${projectName}".`;
+                    category = "qa_approval";
+                } else if (status === "In Progress") {
+                    customTitle = "QA Task Rejected";
+                    customMsg = `Task "${taskName}" was REJECTED by QA ${senderName} in "${projectName}". Reason: ${notes || "No comments provided"}`;
+                    category = "qa_rejection";
+                }
+            } else if (status === "QA Review") {
+                customTitle = "QA Review Request";
+                customMsg = `Task "${taskName}" in project "${projectName}" has been submitted for QA Review by Developer ${senderName}.`;
+                category = "qa_review";
+            }
+
             // Notify Project TL
             if (task.project?.teamLead && task.project.teamLead.toString() !== req.user._id.toString()) {
                 await createNotification({
                     recipient: task.project.teamLead,
                     sender: req.user._id,
-                    title: "Task Status Updated",
-                    message: `${taskName} in ${projectName} moved to ${status} by ${senderName}`,
+                    title: customTitle,
+                    message: customMsg,
                     type: "task",
-                    category: "status_change",
-                    link: `/kanban/${projectId}?taskId=${task._id}`
+                    category: category,
+                    link: `/projects/${projectId}`
                 });
             }
 
@@ -524,11 +545,11 @@ export const updateTaskStatus = async (req, res) => {
                 await createNotification({
                     recipient: task.assignedTo._id,
                     sender: req.user._id,
-                    title: "Task Status Updated",
-                    message: `Your task ${taskName} was moved to ${status} by ${senderName}`,
+                    title: customTitle,
+                    message: customMsg,
                     type: "task",
-                    category: "status_change",
-                    link: `/developer/tasks?taskId=${task._id}`
+                    category: category,
+                    link: `/projects/${projectId}`
                 });
             }
 
@@ -543,7 +564,7 @@ export const updateTaskStatus = async (req, res) => {
                         message: `${taskName} in ${projectName} is ready for your review`,
                         type: "task",
                         category: "qa_review",
-                        link: `/qa/tasks?taskId=${task._id}`
+                        link: `/projects/${projectId}`
                     });
                 } else {
                     // Fallback: Notify all QAs if no specific QA assigned
@@ -557,7 +578,7 @@ export const updateTaskStatus = async (req, res) => {
                                 message: `${taskName} in ${projectName} is ready for review`,
                                 type: "task",
                                 category: "approval",
-                                link: `/qa/dashboard?taskId=${task._id}`
+                                link: `/projects/${projectId}`
                             });
                         }
                     }
@@ -571,11 +592,11 @@ export const updateTaskStatus = async (req, res) => {
                     await createNotification({
                         recipient: admin._id,
                         sender: req.user._id,
-                        title: "Task Status Updated",
-                        message: `${taskName} in ${projectName} moved to ${status} by ${senderName}`,
+                        title: customTitle,
+                        message: customMsg,
                         type: "task",
-                        category: "status_change",
-                        link: `/kanban/${projectId}?taskId=${task._id}`
+                        category: category,
+                        link: `/projects/${projectId}`
                     });
                 }
             }

@@ -26,6 +26,7 @@ import AuditLogs from "./pages/common/AuditLogs";
 import OrganizationTree from "./pages/common/OrganizationTree";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import ProjectDetails from "./pages/common/ProjectDetails";
 
 import { Toaster } from "sonner";
 
@@ -46,6 +47,10 @@ const App = () => {
       {
         path: "/reset-password",
         element: <ResetPassword />
+      },
+      {
+        path: "/projects/:projectId",
+        element: <ProtectedRoute allowedRoles={["admin", "TL", "developer", "qa"]}><ProjectDetails /></ProtectedRoute>
       },
       // Admin Routes
       {

@@ -6,7 +6,7 @@ import { Task } from "../models/task.schema.js";
 // Create a new project
 export const createProject = async (req, res, next) => {
     try {
-        const { projectName, description, teamLead, teamMembers, startDate, endDate, status } = req.body;
+        const { projectName, description, teamLead, teamMembers, startDate, endDate, status, priority, clientName, estimatedTasks, notes } = req.body;
 
         if (!projectName || !teamLead || !startDate || !endDate) {
             return res.status(400).json({
@@ -37,6 +37,44 @@ export const createProject = async (req, res, next) => {
             }
         }
 
+        let parsedTechStack = [];
+        if (req.body.techStack) {
+            if (Array.isArray(req.body.techStack)) {
+                parsedTechStack = req.body.techStack;
+            } else if (typeof req.body.techStack === "string") {
+                try {
+                    parsedTechStack = JSON.parse(req.body.techStack);
+                } catch (e) {
+                    parsedTechStack = req.body.techStack.split(",").map(t => t.trim()).filter(Boolean);
+                }
+            }
+        }
+
+        let parsedAttachments = [];
+        if (req.files && req.files.length > 0) {
+            parsedAttachments = req.files.map(file => ({
+                url: file.path,
+                filename: file.originalname || file.filename || "Attachment",
+                fileType: file.mimetype || "",
+                uploadedBy: req.user._id
+            }));
+        } else if (req.file) {
+            parsedAttachments = [{
+                url: req.file.path,
+                filename: req.file.originalname || req.file.filename || "Attachment",
+                fileType: req.file.mimetype || "",
+                uploadedBy: req.user._id
+            }];
+        }
+
+        let parsedNotes = [];
+        if (notes && typeof notes === "string" && notes.trim() !== "") {
+            parsedNotes.push({
+                text: notes.trim(),
+                author: req.user._id
+            });
+        }
+
         const newProject = new Project({
             projectName,
             description,
@@ -45,7 +83,13 @@ export const createProject = async (req, res, next) => {
             startDate,
             endDate,
             status: status || "Active",
-            attachment: req.file ? req.file.path : ""
+            priority: priority || "Medium",
+            techStack: parsedTechStack,
+            clientName: clientName || "",
+            estimatedTasks: Number(estimatedTasks) || 0,
+            attachments: parsedAttachments,
+            notes: parsedNotes,
+            attachment: parsedAttachments.length > 0 ? parsedAttachments[0].url : ""
         });
 
         const savedProject = await newProject.save();
@@ -91,10 +135,10 @@ export const createProject = async (req, res, next) => {
                         type: "project",
                         category: "assignment",
                         link: `/projects/${savedProject._id}`
-                    });
-                }
-            }
-        }
+					});
+				}
+			}
+		}
 
         return res.status(201).json({
             success: true,
@@ -160,7 +204,9 @@ export const getProjectById = async (req, res, next) => {
         const { id } = req.params;
         const project = await Project.findOne({ _id: id, isDeleted: false })
             .populate("teamLead", "name email role profilePic")
-            .populate("teamMembers", "name email role profilePic");
+            .populate("teamMembers", "name email role profilePic")
+            .populate("notes.author", "name email role profilePic")
+            .populate("attachments.uploadedBy", "name email role profilePic");
 
         if (!project) {
             return res.status(404).json({
@@ -169,15 +215,56 @@ export const getProjectById = async (req, res, next) => {
             });
         }
 
+        // Project Visibility Scoping
+        const { role, _id } = req.user;
+        const isLead = project.teamLead?._id?.toString() === _id.toString() || project.teamLead?.toString() === _id.toString();
+        const isMember = project.teamMembers?.some(m => m._id?.toString() === _id.toString() || m.toString() === _id.toString());
+        const isAdminUser = role === "admin";
+
+        if (!isAdminUser && !isLead && !isMember) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized Access: You are not assigned to this project."
+            });
+        }
+
         const tasks = await Task.find({ project: id, isDeleted: false })
-            .populate("assignedTo", "name email role")
-            .populate("assignedQA", "name email role");
+            .populate("assignedTo", "name email role profilePic")
+            .populate("assignedQA", "name email role profilePic");
+
+        // Filter task notes and attachments according to rules:
+        // "When task status changes and notes/attachments are added: Visibility must be limited only to: Assigned Developer, Assigned QA, Project Team Lead, Admin"
+        const filteredTasks = tasks.map(task => {
+            const isAssignedDev = task.assignedTo?._id?.toString() === _id.toString() || task.assignedTo?.toString() === _id.toString();
+            const isAssignedQA = task.assignedQA?._id?.toString() === _id.toString() || task.assignedQA?.toString() === _id.toString();
+            
+            const isSecuredTaskRole = isAdminUser || isLead || isAssignedDev || isAssignedQA;
+            
+            const taskObj = task.toObject();
+            if (!isSecuredTaskRole) {
+                // Mask confidential fields for unauthorized project members
+                taskObj.developerNotes = "";
+                taskObj.qaNotes = "";
+                taskObj.attachments = [];
+                taskObj.screenshotLinks = [];
+                if (taskObj.statusHistory) {
+                    taskObj.statusHistory = taskObj.statusHistory.map(h => ({
+                        ...h,
+                        notes: "[Access Restricted]",
+                        attachment: "",
+                        attachments: [],
+                        screenshotLinks: []
+                    }));
+                }
+            }
+            return taskObj;
+        });
 
         return res.status(200).json({
             success: true,
             project: {
                 ...project.toObject(),
-                tasks
+                tasks: filteredTasks
             }
         });
     } catch (error) {
@@ -194,40 +281,91 @@ export const updateProject = async (req, res, next) => {
         const { id } = req.params;
 
         const updateData = { ...req.body };
+        
+        let parsedTeamMembers;
         if (updateData.teamMembers) {
             if (typeof updateData.teamMembers === 'string') {
                 try {
-                    updateData.teamMembers = JSON.parse(updateData.teamMembers);
+                    parsedTeamMembers = JSON.parse(updateData.teamMembers);
                 } catch (e) {
-                    updateData.teamMembers = [];
+                    parsedTeamMembers = [];
                 }
+            } else if (Array.isArray(updateData.teamMembers)) {
+                parsedTeamMembers = updateData.teamMembers;
             }
-            if (typeof updateData.teamMembers === 'string') {
+        }
+
+        // Handle double-stringification
+        if (typeof parsedTeamMembers === 'string') {
+            try {
+                parsedTeamMembers = JSON.parse(parsedTeamMembers);
+            } catch (e) {
+                parsedTeamMembers = [];
+            }
+        }
+
+        let parsedTechStack;
+        if (updateData.techStack) {
+            if (Array.isArray(updateData.techStack)) {
+                parsedTechStack = updateData.techStack;
+            } else if (typeof updateData.techStack === "string") {
                 try {
-                    updateData.teamMembers = JSON.parse(updateData.teamMembers);
+                    parsedTechStack = JSON.parse(updateData.techStack);
                 } catch (e) {
-                    updateData.teamMembers = [];
+                    parsedTechStack = updateData.techStack.split(",").map(t => t.trim()).filter(Boolean);
                 }
             }
         }
-        if (req.file) {
-            updateData.attachment = req.file.path;
+
+        let newAttachments = [];
+        if (req.files && req.files.length > 0) {
+            newAttachments = req.files.map(file => ({
+                url: file.path,
+                filename: file.originalname || file.filename || "Attachment",
+                fileType: file.mimetype || "",
+                uploadedBy: req.user._id
+            }));
+        } else if (req.file) {
+            newAttachments = [{
+                url: req.file.path,
+                filename: req.file.originalname || req.file.filename || "Attachment",
+                fileType: req.file.mimetype || "",
+                uploadedBy: req.user._id
+            }];
         }
 
-        const updatedProject = await Project.findOneAndUpdate(
-            { _id: id, isDeleted: false },
-            updateData,
-            { new: true, runValidators: true }
-        )
-            .populate("teamLead", "name email profilePic")
-            .populate("teamMembers", "name email profilePic");
-
-        if (!updatedProject) {
+        const project = await Project.findOne({ _id: id, isDeleted: false });
+        if (!project) {
             return res.status(404).json({
                 success: false,
                 message: "Project not found or is deleted"
             });
         }
+
+        // Update fields if provided
+        if (updateData.projectName) project.projectName = updateData.projectName;
+        if (updateData.description !== undefined) project.description = updateData.description;
+        if (updateData.teamLead) project.teamLead = updateData.teamLead;
+        if (updateData.startDate) project.startDate = updateData.startDate;
+        if (updateData.endDate) project.endDate = updateData.endDate;
+        if (updateData.status) project.status = updateData.status;
+        if (updateData.priority) project.priority = updateData.priority;
+        if (updateData.clientName !== undefined) project.clientName = updateData.clientName;
+        if (updateData.estimatedTasks !== undefined) project.estimatedTasks = Number(updateData.estimatedTasks) || 0;
+        
+        if (parsedTeamMembers !== undefined) project.teamMembers = parsedTeamMembers;
+        if (parsedTechStack !== undefined) project.techStack = parsedTechStack;
+
+        if (newAttachments.length > 0) {
+            project.attachments.push(...newAttachments);
+            project.attachment = project.attachments[0].url; // fallback legacy
+        }
+
+        const updatedProject = await project.save();
+        await updatedProject.populate([
+            { path: "teamLead", select: "name email role profilePic" },
+            { path: "teamMembers", select: "name email role profilePic" }
+        ]);
 
         // Notify Team Lead and Team Members
         try {
@@ -412,5 +550,233 @@ export const hardDeleteProject = async (req, res, next) => {
             success: false,
             message: error.message
         });
+    }
+};
+
+// Add a project note / comment
+export const addProjectNote = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { text } = req.body;
+        if (!text) {
+            return res.status(400).json({ success: false, message: "Note text is required" });
+        }
+
+        const project = await Project.findById(id);
+        if (!project || project.isDeleted) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Check permission
+        const { role, _id } = req.user;
+        const isLead = project.teamLead?.toString() === _id.toString();
+        const isMember = project.teamMembers?.some(m => m.toString() === _id.toString());
+        const isAdminUser = role === "admin";
+
+        if (!isAdminUser && !isLead && !isMember) {
+            return res.status(403).json({ success: false, message: "Unauthorized to add notes to this project" });
+        }
+
+        project.notes.push({
+            text,
+            author: _id
+        });
+
+        await project.save();
+
+        // Fetch populated notes to return
+        const updatedProject = await Project.findById(id)
+            .populate("notes.author", "name email role profilePic");
+
+        // Notify other project members
+        try {
+            const recipients = new Set();
+            if (project.teamLead) recipients.add(project.teamLead.toString());
+            if (project.teamMembers) {
+                project.teamMembers.forEach(m => recipients.add(m.toString()));
+            }
+            // Also notify admins
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+
+            recipients.delete(_id.toString()); // remove self
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: _id,
+                    title: "New Project Comment/Note",
+                    message: `A new comment/note has been added to project "${project.projectName}" by ${req.user.name}`,
+                    type: "project",
+                    category: "update",
+                    link: `/projects/${project._id}`
+                });
+            }
+        } catch (err) {
+            console.error("Note notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Note added successfully",
+            notes: updatedProject.notes
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Upload additional project attachments
+export const uploadProjectAttachments = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const project = await Project.findById(id);
+        if (!project || project.isDeleted) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Check permission
+        const { role, _id } = req.user;
+        const isLead = project.teamLead?.toString() === _id.toString();
+        const isMember = project.teamMembers?.some(m => m.toString() === _id.toString());
+        const isAdminUser = role === "admin";
+
+        if (!isAdminUser && !isLead && !isMember) {
+            return res.status(403).json({ success: false, message: "Unauthorized to upload attachments to this project" });
+        }
+
+        let newAttachments = [];
+        if (req.files && req.files.length > 0) {
+            newAttachments = req.files.map(file => ({
+                url: file.path,
+                filename: file.originalname || file.filename || "Attachment",
+                fileType: file.mimetype || "",
+                uploadedBy: _id
+            }));
+        }
+
+        if (req.file) {
+            newAttachments.push({
+                url: req.file.path,
+                filename: req.file.originalname || req.file.filename || "Attachment",
+                fileType: req.file.mimetype || "",
+                uploadedBy: _id
+            });
+        }
+
+        if (newAttachments.length === 0) {
+            return res.status(400).json({ success: false, message: "No files were uploaded" });
+        }
+
+        project.attachments.push(...newAttachments);
+        await project.save();
+
+        const updatedProject = await Project.findById(id)
+            .populate("attachments.uploadedBy", "name email role profilePic");
+
+        // Notify other project members
+        try {
+            const recipients = new Set();
+            if (project.teamLead) recipients.add(project.teamLead.toString());
+            if (project.teamMembers) {
+                project.teamMembers.forEach(m => recipients.add(m.toString()));
+            }
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+
+            recipients.delete(_id.toString()); // remove self
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: _id,
+                    title: "New Project Attachment",
+                    message: `${newAttachments.length} new file(s) uploaded to project "${project.projectName}" by ${req.user.name}`,
+                    type: "project",
+                    category: "update",
+                    link: `/projects/${project._id}`
+                });
+            }
+        } catch (err) {
+            console.error("Attachment notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Files uploaded successfully",
+            attachments: updatedProject.attachments
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Update project members list
+export const updateProjectMembers = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { teamMembers } = req.body;
+
+        const project = await Project.findById(id);
+        if (!project || project.isDeleted) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        // Check permission: Admin or Project Team Lead can manage members
+        const { role, _id } = req.user;
+        const isLead = project.teamLead?.toString() === _id.toString();
+        const isAdminUser = role === "admin";
+
+        if (!isAdminUser && !isLead) {
+            return res.status(403).json({ success: false, message: "Only Admin or Team Lead can update project members" });
+        }
+
+        let parsedMembers = [];
+        if (teamMembers) {
+            if (Array.isArray(teamMembers)) {
+                parsedMembers = teamMembers;
+            } else if (typeof teamMembers === "string") {
+                try {
+                    parsedMembers = JSON.parse(teamMembers);
+                } catch (e) {
+                    parsedMembers = [];
+                }
+            }
+        }
+
+        project.teamMembers = parsedMembers;
+        await project.save();
+
+        const updatedProject = await Project.findById(id)
+            .populate("teamLead", "name email role profilePic")
+            .populate("teamMembers", "name email role profilePic");
+
+        // Send notifications to new/remaining team members
+        try {
+            const members = await User.find({ _id: { $in: parsedMembers } });
+            for (const member of members) {
+                if (member._id.toString() !== _id.toString()) {
+                    await createNotification({
+                        recipient: member._id,
+                        sender: _id,
+                        title: "Project Assignment Update",
+                        message: `You are assigned to project "${project.projectName}".`,
+                        type: "project",
+                        category: "assignment",
+                        link: `/projects/${project._id}`
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Member update notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Project members updated successfully",
+            project: updatedProject
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
 };

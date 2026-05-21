@@ -18,6 +18,11 @@ export const projectService = {
     hardDeleteProject: (id) => axiosInstance.delete(`/projects/hard/${id}`),
     getTrashProjects: () => axiosInstance.get('/projects/trash'),
     restoreProject: (id) => axiosInstance.put(`/projects/restore/${id}`),
+    addProjectNote: (id, text) => axiosInstance.post(`/projects/${id}/notes`, { text }),
+    uploadProjectAttachments: (id, formData) => axiosInstance.post(`/projects/${id}/attachments`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+    updateProjectMembers: (id, teamMembers) => axiosInstance.put(`/projects/${id}/members`, { teamMembers }),
 };
 
 // Task Services

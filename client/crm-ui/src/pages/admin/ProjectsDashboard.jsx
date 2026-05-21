@@ -35,7 +35,14 @@ const ProjectsDashboard = () => {
         teamLead: "",
         startDate: "",
         endDate: "",
-        teamMembers: []
+        teamMembers: [],
+        priority: "Medium",
+        status: "Active",
+        techStack: "",
+        clientName: "",
+        estimatedTasks: 0,
+        notes: "",
+        attachments: []
     });
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
@@ -123,7 +130,7 @@ const ProjectsDashboard = () => {
         e.preventDefault();
         setSubmitted(true);
 
-        if (!newProject.projectName || !newProject.teamLead || !newProject.startDate || !newProject.endDate) {
+        if (!newProject.projectName || !newProject.description || !newProject.teamLead || !newProject.startDate || !newProject.endDate || !newProject.teamMembers || newProject.teamMembers.length === 0) {
             return;
         }
 
@@ -136,8 +143,18 @@ const ProjectsDashboard = () => {
             formData.append("startDate", newProject.startDate);
             formData.append("endDate", newProject.endDate);
             formData.append("teamMembers", JSON.stringify(newProject.teamMembers));
-            if (newProject.attachment) {
-                formData.append("attachment", newProject.attachment);
+            formData.append("priority", newProject.priority);
+            formData.append("status", newProject.status);
+            formData.append("techStack", JSON.stringify(newProject.techStack.split(",").map(t => t.trim()).filter(Boolean)));
+            formData.append("clientName", newProject.clientName);
+            formData.append("estimatedTasks", newProject.estimatedTasks);
+            if (newProject.notes) {
+                formData.append("notes", newProject.notes);
+            }
+            if (newProject.attachments && newProject.attachments.length > 0) {
+                newProject.attachments.forEach(file => {
+                    formData.append("attachments", file);
+                });
             }
 
             await projectService.createProject(formData);
@@ -151,7 +168,13 @@ const ProjectsDashboard = () => {
                 startDate: "",
                 endDate: "",
                 teamMembers: [],
-                attachment: null
+                priority: "Medium",
+                status: "Active",
+                techStack: "",
+                clientName: "",
+                estimatedTasks: 0,
+                notes: "",
+                attachments: []
             });
             fetchProjects();
         } catch (err) {
@@ -170,7 +193,14 @@ const ProjectsDashboard = () => {
             teamLead: proj.teamLead?._id || proj.teamLead || "",
             startDate: proj.startDate ? new Date(proj.startDate).toISOString().split('T')[0] : "",
             endDate: proj.endDate ? new Date(proj.endDate).toISOString().split('T')[0] : "",
-            teamMembers: proj.teamMembers?.map(m => m._id || m) || []
+            teamMembers: proj.teamMembers?.map(m => m._id || m) || [],
+            priority: proj.priority || "Medium",
+            status: proj.status || "Active",
+            techStack: proj.techStack?.join(", ") || "",
+            clientName: proj.clientName || "",
+            estimatedTasks: proj.estimatedTasks || 0,
+            notes: "",
+            attachments: []
         });
         setIsEditModalOpen(true);
     };
@@ -180,7 +210,7 @@ const ProjectsDashboard = () => {
         if (!editingProject) return;
         setSubmitted(true);
 
-        if (!newProject.projectName || !newProject.teamLead || !newProject.startDate || !newProject.endDate) {
+        if (!newProject.projectName || !newProject.description || !newProject.teamLead || !newProject.startDate || !newProject.endDate || !newProject.teamMembers || newProject.teamMembers.length === 0) {
             return;
         }
 
@@ -193,8 +223,15 @@ const ProjectsDashboard = () => {
             formData.append("startDate", newProject.startDate);
             formData.append("endDate", newProject.endDate);
             formData.append("teamMembers", JSON.stringify(newProject.teamMembers));
-            if (newProject.attachment) {
-                formData.append("attachment", newProject.attachment);
+            formData.append("priority", newProject.priority);
+            formData.append("status", newProject.status);
+            formData.append("techStack", JSON.stringify(newProject.techStack.split(",").map(t => t.trim()).filter(Boolean)));
+            formData.append("clientName", newProject.clientName);
+            formData.append("estimatedTasks", newProject.estimatedTasks);
+            if (newProject.attachments && newProject.attachments.length > 0) {
+                newProject.attachments.forEach(file => {
+                    formData.append("attachments", file);
+                });
             }
 
             await projectService.updateProject(editingProject._id, formData);
@@ -209,7 +246,13 @@ const ProjectsDashboard = () => {
                 startDate: "",
                 endDate: "",
                 teamMembers: [],
-                attachment: null
+                priority: "Medium",
+                status: "Active",
+                techStack: "",
+                clientName: "",
+                estimatedTasks: 0,
+                notes: "",
+                attachments: []
             });
             fetchProjects();
         } catch (err) {
@@ -491,8 +534,7 @@ const ProjectsDashboard = () => {
                                     <div 
                                         key={project._id || i} 
                                         onClick={() => {
-                                            const routeBase = role === 'TL' ? 'teamLead' : role;
-                                            navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                            navigate(`/projects/${project._id}`);
                                         }}
                                         className={`group rounded-3xl p-6 flex flex-col gap-5 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
                                     >
@@ -547,8 +589,7 @@ const ProjectsDashboard = () => {
                                 <div 
                                     key={project._id || i} 
                                     onClick={() => {
-                                        const routeBase = role === 'TL' ? 'teamLead' : role;
-                                        navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                        navigate(`/projects/${project._id}`);
                                     }}
                                     className={`group rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
                                 >
@@ -714,69 +755,103 @@ const ProjectsDashboard = () => {
 
             {/* Create Project Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-[500px] flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100/50 shrink-0">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out] border border-slate-100">
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 shrink-0 bg-slate-50/50">
                             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2.5">
-                                <div className="text-[#1d4ed8] relative flex items-center justify-center">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg>
-                                    <svg className="w-2.5 h-2.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"/></svg>
+                                <div className="text-blue-600 relative flex items-center justify-center bg-blue-50 p-2 rounded-xl">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
                                 </div>
                                 Create New Project
                             </h2>
-                            <button onClick={() => { setIsModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition">
+                            <button onClick={() => { setIsModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-all">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <form onSubmit={handleCreateProject} noValidate className="flex flex-col flex-1 overflow-hidden">
-                            <div className="px-6 py-5 space-y-4 text-sm overflow-y-auto flex-1 scrollbar-thin">
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
-                                    <input 
-                                        type="text" 
-                                        required
-                                        value={newProject.projectName}
-                                        onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
-                                        placeholder="e.g. E-Commerce Platform" 
-                                        className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.projectName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700`} 
-                                    />
-                                    {submitted && !newProject.projectName && (
-                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Project Name is required!</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Description</label>
-                                    <textarea 
-                                        value={newProject.description}
-                                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                                        placeholder="Brief project description" 
-                                        rows="3" 
-                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700"
-                                    ></textarea>
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <select 
+                            <div className="px-6 py-5 space-y-5 text-sm overflow-y-auto flex-1 scrollbar-thin">
+                                {/* Name and Client Name */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="text" 
                                             required
-                                            value={newProject.teamLead}
-                                            onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
-                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.teamLead ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold`}
-                                        >
-                                            <option value="">Select Team Lead</option>
-                                            {teamLeads.map(tl => (
-                                                <option key={tl._id} value={tl._id}>{tl.name}</option>
-                                            ))}
-                                        </select>
-                                        {submitted && !newProject.teamLead && (
-                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Team Lead is required!</p>
+                                            value={newProject.projectName}
+                                            onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
+                                            placeholder="e.g. E-Commerce Platform" 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.projectName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700`} 
+                                        />
+                                        {submitted && !newProject.projectName && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">Project Name is required!</p>
                                         )}
-                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Client Name (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProject.clientName}
+                                            onChange={(e) => setNewProject({...newProject, clientName: e.target.value})}
+                                            placeholder="e.g. Acme Corp" 
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Description <span className="text-red-500">*</span></label>
+                                    <textarea 
+                                        required
+                                        value={newProject.description}
+                                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                                        placeholder="Detailed project description outlining scope and goals..." 
+                                        rows="3" 
+                                        className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.description ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700`}
+                                    ></textarea>
+                                    {submitted && !newProject.description && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1">Description is required!</p>
+                                    )}
+                                </div>
+
+                                {/* Team Lead & Tech Stack */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <select 
+                                                required
+                                                value={newProject.teamLead}
+                                                onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
+                                                className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.teamLead ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold`}
+                                            >
+                                                <option value="">Select Team Lead</option>
+                                                {teamLeads.map(tl => (
+                                                    <option key={tl._id} value={tl._id}>{tl.name}</option>
+                                                ))}
+                                            </select>
+                                            {submitted && !newProject.teamLead && (
+                                                <p className="text-red-500 text-[11px] font-semibold mt-1">Team Lead is required!</p>
+                                            )}
+                                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Tech Stack (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProject.techStack}
+                                            onChange={(e) => setNewProject({...newProject, techStack: e.target.value})}
+                                            placeholder="e.g. React, Node.js, MongoDB" 
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Start & End Dates */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block font-bold text-slate-800 mb-1.5">Start Date <span className="text-red-500">*</span></label>
                                         <input 
@@ -784,10 +859,10 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.startDate}
                                             onChange={(e) => setNewProject({...newProject, startDate: e.target.value})}
-                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.startDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.startDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
                                         />
                                         {submitted && !newProject.startDate && (
-                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Start Date is required!</p>
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">Start Date is required!</p>
                                         )}
                                     </div>
                                     <div>
@@ -797,52 +872,194 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.endDate}
                                             onChange={(e) => setNewProject({...newProject, endDate: e.target.value})}
-                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
                                         />
                                         {submitted && !newProject.endDate && (
-                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">End Date is required!</p>
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">End Date is required!</p>
                                         )}
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
-                                    <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
-                                        {teamMembersList.length === 0 ? (
-                                            <div className="p-4 text-center text-slate-400 text-xs italic">
-                                                {newProject.teamLead ? "No members assigned to this TL" : "Select a Team Lead first"}
-                                            </div>
-                                        ) : teamMembersList.map((user) => (
-                                            <label key={user._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={newProject.teamMembers.includes(user._id)}
-                                                    onChange={() => toggleMember(user._id)}
-                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer" 
-                                                />
-                                                <span className="text-slate-700 font-bold text-sm">{user.name} <span className="text-slate-400 font-medium ml-1">({user.role})</span></span>
-                                            </label>
-                                        ))}
+
+                                {/* Priority, Status & Estimated Tasks */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Priority <span className="text-red-500">*</span></label>
+                                        <select 
+                                            required
+                                            value={newProject.priority}
+                                            onChange={(e) => setNewProject({...newProject, priority: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-700 font-bold transition appearance-none cursor-pointer"
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Project Status <span className="text-red-500">*</span></label>
+                                        <select 
+                                            required
+                                            value={newProject.status}
+                                            onChange={(e) => setNewProject({...newProject, status: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-700 font-bold transition appearance-none cursor-pointer"
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="On Track">On Track</option>
+                                            <option value="At Risk">At Risk</option>
+                                            <option value="Upcoming">Upcoming</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Planning">Planning</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Estimated Tasks (Optional)</label>
+                                        <input 
+                                            type="number" 
+                                            min="0"
+                                            value={newProject.estimatedTasks}
+                                            onChange={(e) => setNewProject({...newProject, estimatedTasks: parseInt(e.target.value) || 0})}
+                                            placeholder="e.g. 15" 
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        />
                                     </div>
                                 </div>
+
+                                {/* Team Members Checklist Cards */}
                                 <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Attachment (Optional)</label>
-                                    <input 
-                                        type="file" 
-                                        onChange={(e) => setNewProject({...newProject, attachment: e.target.files[0]})}
-                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition font-medium text-slate-700 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
-                                    />
+                                    <label className="block font-bold text-slate-800 mb-2">Team Members <span className="text-red-500">*</span></label>
+                                    <div className="w-full border border-slate-100 rounded-2xl bg-slate-50/50 p-4 max-h-[220px] overflow-y-auto scrollbar-thin">
+                                        {teamMembersList.length === 0 ? (
+                                            <div className="p-8 text-center text-slate-400 text-sm italic flex flex-col items-center gap-2">
+                                                <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                {newProject.teamLead ? "No members are assigned under this Team Lead" : "Please select a Team Lead above first"}
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {teamMembersList.map((user) => {
+                                                    const isChecked = newProject.teamMembers.includes(user._id);
+                                                    const initials = user.name ? user.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase() : 'U';
+                                                    return (
+                                                        <label 
+                                                            key={user._id} 
+                                                            className={`flex items-center gap-3.5 p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 select-none ${
+                                                                isChecked 
+                                                                    ? 'bg-blue-50/50 border-blue-500 shadow-sm shadow-blue-50' 
+                                                                    : 'bg-white border-slate-200/60 hover:bg-slate-100/30'
+                                                            }`}
+                                                        >
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={isChecked}
+                                                                onChange={() => toggleMember(user._id)}
+                                                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer" 
+                                                            />
+                                                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200/50 text-xs shrink-0 overflow-hidden shadow-inner">
+                                                                {user.profilePic ? (
+                                                                    <img src={user.profilePic} alt={user.name} className="w-full h-full object-cover" />
+                                                                ) : initials}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-slate-800 font-bold text-sm truncate">{user.name}</span>
+                                                                <span className={`text-[10px] font-bold tracking-wider uppercase ${
+                                                                    user.role === 'qa' ? 'text-amber-600' : 'text-indigo-600'
+                                                                }`}>{user.role === 'qa' ? 'QA Reviewer' : 'Developer'}</span>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {submitted && (!newProject.teamMembers || newProject.teamMembers.length === 0) && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1">Please assign at least one Team Member!</p>
+                                    )}
+                                </div>
+
+                                {/* Project Notes */}
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Project Notes (Optional)</label>
+                                    <textarea 
+                                        value={newProject.notes}
+                                        onChange={(e) => setNewProject({...newProject, notes: e.target.value})}
+                                        placeholder="Add initial notes or scope requirements here..." 
+                                        rows="2" 
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700"
+                                    ></textarea>
+                                </div>
+
+                                {/* Attachments with Multi-Upload Previews */}
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-2">Attachments (Optional)</label>
+                                    
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <label className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-100 cursor-pointer transition-colors shadow-sm text-xs">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
+                                                + Add Files
+                                                <input 
+                                                    type="file" 
+                                                    multiple
+                                                    onChange={(e) => {
+                                                        const files = Array.from(e.target.files);
+                                                        setNewProject(prev => ({
+                                                            ...prev,
+                                                            attachments: [...prev.attachments, ...files]
+                                                        }));
+                                                    }}
+                                                    className="hidden" 
+                                                />
+                                            </label>
+                                            <span className="text-slate-400 text-xs font-semibold">Supports Images, Screenshots, PDFs, ZIPs, Docs</span>
+                                        </div>
+
+                                        {newProject.attachments.length > 0 && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto scrollbar-thin bg-slate-50/50 p-2.5 border border-slate-100 rounded-xl">
+                                                {newProject.attachments.map((file, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between p-2 bg-white border border-slate-200/50 rounded-lg group shadow-sm">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="text-blue-500 shrink-0">
+                                                                {file.type?.includes('image') ? (
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                                ) : (
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-slate-700 font-bold text-xs truncate max-w-[200px]">{file.name}</span>
+                                                                <span className="text-[10px] text-slate-400 font-medium">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setNewProject(prev => ({
+                                                                    ...prev,
+                                                                    attachments: prev.attachments.filter((_, i) => i !== idx)
+                                                                }));
+                                                            }}
+                                                            className="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
-                                <button type="button" onClick={() => { setIsModalOpen(false); setSubmitted(false); }} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
+                            <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100 bg-slate-50/50">
+                                <button type="button" onClick={() => { setIsModalOpen(false); setSubmitted(false); }} className="flex-1 justify-center px-6 py-2.5 text-slate-700 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
                                     Cancel
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={isCreating}
-                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-[#1d4ed8] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-sm disabled:opacity-50"
+                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 disabled:opacity-50"
                                 >
-                                    {isCreating ? "Creating..." : "Create Project"}
+                                    {isCreating ? "Creating Project..." : "Create Project"}
                                 </button>
                             </div>
                         </form>
@@ -851,68 +1068,103 @@ const ProjectsDashboard = () => {
             )}
             {/* Edit Project Modal */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-[500px] flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100/50 shrink-0">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[700px] flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out] border border-slate-100">
+                        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 shrink-0 bg-slate-50/50">
                             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2.5">
-                                <div className="text-blue-600 relative flex items-center justify-center">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg>
+                                <div className="text-blue-600 relative flex items-center justify-center bg-blue-50 p-2 rounded-xl">
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 </div>
                                 Edit Project
                             </h2>
-                            <button onClick={() => { setIsEditModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 transition">
+                            <button onClick={() => { setIsEditModalOpen(false); setSubmitted(false); }} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded-lg transition-all">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
                         <form onSubmit={handleUpdateProject} noValidate className="flex flex-col flex-1 overflow-hidden">
-                            <div className="px-6 py-5 space-y-4 text-sm overflow-y-auto flex-1 scrollbar-thin">
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
-                                    <input 
-                                        type="text" 
-                                        required
-                                        value={newProject.projectName}
-                                        onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
-                                        placeholder="e.g. E-Commerce Platform" 
-                                        className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.projectName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700`} 
-                                    />
-                                    {submitted && !newProject.projectName && (
-                                        <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Project Name is required!</p>
-                                    )}
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Description</label>
-                                    <textarea 
-                                        value={newProject.description}
-                                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
-                                        placeholder="Brief project description" 
-                                        rows="3" 
-                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700"
-                                    ></textarea>
-                                </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
-                                    <div className="relative">
-                                        <select 
+                            <div className="px-6 py-5 space-y-5 text-sm overflow-y-auto flex-1 scrollbar-thin">
+                                {/* Name and Client Name */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Project Name <span className="text-red-500">*</span></label>
+                                        <input 
+                                            type="text" 
                                             required
-                                            value={newProject.teamLead}
-                                            onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
-                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.teamLead ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold`}
-                                        >
-                                            <option value="">Select Team Lead</option>
-                                            {teamLeads.map(tl => (
-                                                <option key={tl._id} value={tl._id}>{tl.name}</option>
-                                            ))}
-                                        </select>
-                                        {submitted && !newProject.teamLead && (
-                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Team Lead is required!</p>
+                                            value={newProject.projectName}
+                                            onChange={(e) => setNewProject({...newProject, projectName: e.target.value})}
+                                            placeholder="e.g. E-Commerce Platform" 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.projectName ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700`} 
+                                        />
+                                        {submitted && !newProject.projectName && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">Project Name is required!</p>
                                         )}
-                                        <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Client Name (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProject.clientName}
+                                            onChange={(e) => setNewProject({...newProject, clientName: e.target.value})}
+                                            placeholder="e.g. Acme Corp" 
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        />
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+
+                                {/* Description */}
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-1.5">Description <span className="text-red-500">*</span></label>
+                                    <textarea 
+                                        required
+                                        value={newProject.description}
+                                        onChange={(e) => setNewProject({...newProject, description: e.target.value})}
+                                        placeholder="Detailed project description outlining scope and goals..." 
+                                        rows="3" 
+                                        className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.description ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 resize-none font-medium text-slate-700`}
+                                    ></textarea>
+                                    {submitted && !newProject.description && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1">Description is required!</p>
+                                    )}
+                                </div>
+
+                                {/* Team Lead & Tech Stack */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Team Lead <span className="text-red-500">*</span></label>
+                                        <div className="relative">
+                                            <select 
+                                                required
+                                                value={newProject.teamLead}
+                                                onChange={(e) => setNewProject({...newProject, teamLead: e.target.value})}
+                                                className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.teamLead ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition cursor-pointer appearance-none text-slate-700 font-bold`}
+                                            >
+                                                <option value="">Select Team Lead</option>
+                                                {teamLeads.map(tl => (
+                                                    <option key={tl._id} value={tl._id}>{tl.name}</option>
+                                                ))}
+                                            </select>
+                                            {submitted && !newProject.teamLead && (
+                                                <p className="text-red-500 text-[11px] font-semibold mt-1">Team Lead is required!</p>
+                                            )}
+                                            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Tech Stack (Optional)</label>
+                                        <input 
+                                            type="text" 
+                                            value={newProject.techStack}
+                                            onChange={(e) => setNewProject({...newProject, techStack: e.target.value})}
+                                            placeholder="e.g. React, Node.js, MongoDB" 
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Start & End Dates */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block font-bold text-slate-800 mb-1.5">Start Date <span className="text-red-500">*</span></label>
                                         <input 
@@ -920,10 +1172,10 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.startDate}
                                             onChange={(e) => setNewProject({...newProject, startDate: e.target.value})}
-                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.startDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.startDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
                                         />
                                         {submitted && !newProject.startDate && (
-                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Start Date is required!</p>
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">Start Date is required!</p>
                                         )}
                                     </div>
                                     <div>
@@ -933,55 +1185,209 @@ const ProjectsDashboard = () => {
                                             required
                                             value={newProject.endDate}
                                             onChange={(e) => setNewProject({...newProject, endDate: e.target.value})}
-                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
+                                            className={`w-full px-3.5 py-2.5 bg-white border ${submitted && !newProject.endDate ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition text-slate-700 font-medium`} 
                                         />
                                         {submitted && !newProject.endDate && (
-                                            <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">End Date is required!</p>
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">End Date is required!</p>
                                         )}
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Team Members</label>
-                                    <div className="w-full border border-slate-200 rounded-lg h-[140px] overflow-y-auto scrollbar-thin">
-                                        {teamMembersList.length === 0 ? (
-                                            <div className="p-4 text-center text-slate-400 text-xs italic">
-                                                {newProject.teamLead ? "No members assigned to this TL" : "Select a Team Lead first"}
-                                            </div>
-                                        ) : teamMembersList.map((user) => (
-                                            <label key={user._id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-50 cursor-pointer transition">
-                                                <input 
-                                                    type="checkbox" 
-                                                    checked={newProject.teamMembers.includes(user._id)}
-                                                    onChange={() => toggleMember(user._id)}
-                                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer" 
-                                                />
-                                                <span className="text-slate-700 font-bold text-sm">{user.name} <span className="text-slate-400 font-medium ml-1">({user.role})</span></span>
-                                            </label>
-                                        ))}
+
+                                {/* Priority, Status & Estimated Tasks */}
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Priority <span className="text-red-500">*</span></label>
+                                        <select 
+                                            required
+                                            value={newProject.priority}
+                                            onChange={(e) => setNewProject({...newProject, priority: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-700 font-bold transition appearance-none cursor-pointer"
+                                        >
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Critical">Critical</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Project Status <span className="text-red-500">*</span></label>
+                                        <select 
+                                            required
+                                            value={newProject.status}
+                                            onChange={(e) => setNewProject({...newProject, status: e.target.value})}
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none text-slate-700 font-bold transition appearance-none cursor-pointer"
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="On Track">On Track</option>
+                                            <option value="At Risk">At Risk</option>
+                                            <option value="Upcoming">Upcoming</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Planning">Planning</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-1.5">Estimated Tasks (Optional)</label>
+                                        <input 
+                                            type="number" 
+                                            min="0"
+                                            value={newProject.estimatedTasks}
+                                            onChange={(e) => setNewProject({...newProject, estimatedTasks: parseInt(e.target.value) || 0})}
+                                            placeholder="e.g. 15" 
+                                            className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition placeholder-slate-300 font-medium text-slate-700" 
+                                        />
                                     </div>
                                 </div>
+
+                                {/* Team Members Checklist Cards */}
                                 <div>
-                                    <label className="block font-bold text-slate-800 mb-1.5">Attachment (Optional)</label>
-                                    <input 
-                                        type="file" 
-                                        onChange={(e) => setNewProject({...newProject, attachment: e.target.files[0]})}
-                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition font-medium text-slate-700 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" 
-                                    />
-                                    {editingProject?.attachment && (
-                                        <div className="mt-2 text-xs text-slate-500">
-                                            Current Attachment: <a href={editingProject.attachment} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View File</a>
-                                        </div>
+                                    <label className="block font-bold text-slate-800 mb-2">Team Members <span className="text-red-500">*</span></label>
+                                    <div className="w-full border border-slate-100 rounded-2xl bg-slate-50/50 p-4 max-h-[220px] overflow-y-auto scrollbar-thin">
+                                        {teamMembersList.length === 0 ? (
+                                            <div className="p-8 text-center text-slate-400 text-sm italic flex flex-col items-center gap-2">
+                                                <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                {newProject.teamLead ? "No members are assigned under this Team Lead" : "Please select a Team Lead above first"}
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                                {teamMembersList.map((user) => {
+                                                    const isChecked = newProject.teamMembers.includes(user._id);
+                                                    const initials = user.name ? user.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase() : 'U';
+                                                    return (
+                                                        <label 
+                                                            key={user._id} 
+                                                            className={`flex items-center gap-3.5 p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 select-none ${
+                                                                isChecked 
+                                                                    ? 'bg-blue-50/50 border-blue-500 shadow-sm shadow-blue-50' 
+                                                                    : 'bg-white border-slate-200/60 hover:bg-slate-100/30'
+                                                            }`}
+                                                        >
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={isChecked}
+                                                                onChange={() => toggleMember(user._id)}
+                                                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer" 
+                                                            />
+                                                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-600 border border-slate-200/50 text-xs shrink-0 overflow-hidden shadow-inner">
+                                                                {user.profilePic ? (
+                                                                    <img src={user.profilePic} alt={user.name} className="w-full h-full object-cover" />
+                                                                ) : initials}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-slate-800 font-bold text-sm truncate">{user.name}</span>
+                                                                <span className={`text-[10px] font-bold tracking-wider uppercase ${
+                                                                    user.role === 'qa' ? 'text-amber-600' : 'text-indigo-600'
+                                                                }`}>{user.role === 'qa' ? 'QA Reviewer' : 'Developer'}</span>
+                                                            </div>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {submitted && (!newProject.teamMembers || newProject.teamMembers.length === 0) && (
+                                        <p className="text-red-500 text-[11px] font-semibold mt-1">Please assign at least one Team Member!</p>
                                     )}
                                 </div>
+
+                                {/* Existing Attachments Section */}
+                                {editingProject?.attachments && editingProject.attachments.length > 0 && (
+                                    <div>
+                                        <label className="block font-bold text-slate-800 mb-2">Existing Attachments</label>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50/50 p-2.5 border border-slate-150 rounded-xl max-h-[140px] overflow-y-auto scrollbar-thin">
+                                            {editingProject.attachments.map((file, idx) => (
+                                                <div key={file._id || idx} className="flex items-center justify-between p-2 bg-white border border-slate-200/50 rounded-lg shadow-sm">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <div className="text-blue-500 shrink-0">
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                        </div>
+                                                        <div className="flex flex-col min-w-0">
+                                                            <span className="text-slate-700 font-bold text-xs truncate max-w-[200px]">{file.filename || "Attachment"}</span>
+                                                        </div>
+                                                    </div>
+                                                    <a 
+                                                        href={file.url} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        className="text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline px-2"
+                                                    >
+                                                        View
+                                                    </a>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Attachments with Multi-Upload Previews */}
+                                <div>
+                                    <label className="block font-bold text-slate-800 mb-2">Upload More Attachments (Optional)</label>
+                                    
+                                    <div className="flex flex-col gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <label className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl border border-blue-100 cursor-pointer transition-colors shadow-sm text-xs">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4"/></svg>
+                                                + Add Files
+                                                <input 
+                                                    type="file" 
+                                                    multiple
+                                                    onChange={(e) => {
+                                                        const files = Array.from(e.target.files);
+                                                        setNewProject(prev => ({
+                                                            ...prev,
+                                                            attachments: [...prev.attachments, ...files]
+                                                        }));
+                                                    }}
+                                                    className="hidden" 
+                                                />
+                                            </label>
+                                            <span className="text-slate-400 text-xs font-semibold">Add new files to this project</span>
+                                        </div>
+
+                                        {newProject.attachments.length > 0 && (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[140px] overflow-y-auto scrollbar-thin bg-slate-50/50 p-2.5 border border-slate-100 rounded-xl">
+                                                {newProject.attachments.map((file, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between p-2 bg-white border border-slate-200/50 rounded-lg group shadow-sm">
+                                                        <div className="flex items-center gap-2 min-w-0">
+                                                            <div className="text-blue-500 shrink-0">
+                                                                {file.type?.includes('image') ? (
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                                ) : (
+                                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-slate-700 font-bold text-xs truncate max-w-[200px]">{file.name}</span>
+                                                                <span className="text-[10px] text-slate-400 font-medium">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
+                                                            </div>
+                                                        </div>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setNewProject(prev => ({
+                                                                    ...prev,
+                                                                    attachments: prev.attachments.filter((_, i) => i !== idx)
+                                                                }));
+                                                            }}
+                                                            className="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100/50">
-                                <button type="button" onClick={() => { setIsEditModalOpen(false); setSubmitted(false); }} className="flex-1 justify-center px-6 py-2.5 text-slate-800 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-sm">
+                            <div className="px-6 py-5 flex items-center gap-4 shrink-0 border-t border-slate-100 bg-slate-50/50">
+                                <button type="button" onClick={() => { setIsEditModalOpen(false); setSubmitted(false); }} className="flex-1 justify-center px-6 py-2.5 text-slate-700 font-bold bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition-all shadow-sm">
                                     Cancel
                                 </button>
                                 <button 
                                     type="submit"
                                     disabled={isCreating}
-                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
+                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-md shadow-blue-100 disabled:opacity-50"
                                 >
                                     {isCreating ? "Saving..." : "Save Changes"}
                                 </button>
