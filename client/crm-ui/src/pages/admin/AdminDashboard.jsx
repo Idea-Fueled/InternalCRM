@@ -77,11 +77,11 @@ const TaskCompletionGraph = ({ allTasks }) => {
     const maxVal = Math.max(...counts, 4);
     
     const width = 500;
-    const height = 180;
-    const paddingLeft = 40;
-    const paddingRight = 20;
-    const paddingTop = 20;
-    const paddingBottom = 30;
+    const height = 330;
+    const paddingLeft = 35;
+    const paddingRight = 15;
+    const paddingTop = 15;
+    const paddingBottom = 35;
     
     const chartWidth = width - paddingLeft - paddingRight;
     const chartHeight = height - paddingTop - paddingBottom;
@@ -103,7 +103,7 @@ const TaskCompletionGraph = ({ allTasks }) => {
     const areaPath = linePath ? `${linePath} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z` : "";
     
     return (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full flex items-center justify-center">
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
                 <defs>
                     <linearGradient id="emeraldAreaGrad" x1="0" y1="0" x2="0" y2="1">
@@ -137,14 +137,14 @@ const TaskCompletionGraph = ({ allTasks }) => {
                 {/* Points */}
                 {points.map((p, i) => (
                     <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="12" fill="transparent" className="cursor-pointer" onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} />
+                        <circle cx={p.x} cy={p.y} r="16" fill="transparent" className="cursor-pointer" onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} />
                         <circle cx={p.x} cy={p.y} r={hoveredIndex === i ? "6" : "4"} fill="#ffffff" stroke="#10b981" strokeWidth={hoveredIndex === i ? "4" : "2"} className="transition-all duration-200 pointer-events-none" />
                     </g>
                 ))}
                 
                 {/* Labels */}
                 {points.map((p, i) => (
-                    <text key={i} x={p.x} y={height - 8} textAnchor="middle" className={`text-[10px] font-bold transition-all ${hoveredIndex === i ? "fill-emerald-600 font-extrabold" : "fill-slate-400"}`}>{p.label}</text>
+                    <text key={i} x={p.x} y={height - 10} textAnchor="middle" className={`text-[10px] font-bold transition-all ${hoveredIndex === i ? "fill-emerald-600 font-extrabold" : "fill-slate-400"}`}>{p.label}</text>
                 ))}
             </svg>
             
@@ -153,7 +153,7 @@ const TaskCompletionGraph = ({ allTasks }) => {
                     className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800"
                     style={{
                         left: `${(points[hoveredIndex].x / width) * 100}%`,
-                        top: `${(points[hoveredIndex].y / height) * 100 - 24}%`,
+                        top: `${(points[hoveredIndex].y / height) * 100 - 15}%`,
                         transform: "translate(-50%, -100%)",
                     }}
                 >
@@ -222,22 +222,22 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
     const maxVal = Math.max(...createdCounts, ...completedCounts, 4);
     
     const width = 500;
-    const height = 180;
-    const paddingLeft = 40;
-    const paddingRight = 20;
-    const paddingTop = 20;
-    const paddingBottom = 30;
+    const height = 330;
+    const paddingLeft = 35;
+    const paddingRight = 15;
+    const paddingTop = 15;
+    const paddingBottom = 35;
     
     const chartWidth = width - paddingLeft - paddingRight;
     const chartHeight = height - paddingTop - paddingBottom;
     
     const numGroups = 7;
     const groupWidth = chartWidth / numGroups;
-    const barWidth = Math.min(10, groupWidth * 0.3);
-    const gapBetweenBars = 3;
+    const barWidth = 15;
+    const gapBetweenBars = 4;
     
     return (
-        <div className="relative w-full h-full">
+        <div className="relative w-full h-full flex items-center justify-center">
             <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
                 {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
                     const y = height - paddingBottom - ratio * chartHeight;
@@ -269,7 +269,7 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
                                 y={createdY}
                                 width={barWidth}
                                 height={Math.max(2, createdHeight)}
-                                rx="3"
+                                rx="4"
                                 fill={hoveredIdx === i && hoveredType === 'created' ? '#2563eb' : '#3b82f6'}
                                 className="transition-all duration-200 cursor-pointer"
                                 onMouseEnter={() => { setHoveredIdx(i); setHoveredType('created'); }}
@@ -282,7 +282,7 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
                                 y={completedY}
                                 width={barWidth}
                                 height={Math.max(2, completedHeight)}
-                                rx="3"
+                                rx="4"
                                 fill={hoveredIdx === i && hoveredType === 'completed' ? '#059669' : '#10b981'}
                                 className="transition-all duration-200 cursor-pointer"
                                 onMouseEnter={() => { setHoveredIdx(i); setHoveredType('completed'); }}
@@ -291,7 +291,7 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
                             
                             <text
                                 x={groupCenterX}
-                                y={height - 8}
+                                y={height - 10}
                                 textAnchor="middle"
                                 className={`text-[10px] font-bold transition-all ${hoveredIdx === i ? "fill-blue-600 font-extrabold" : "fill-slate-400"}`}
                             >
@@ -340,7 +340,7 @@ const TaskStatusDonut = ({ allTasks }) => {
     
     return (
         <div className="flex flex-col items-center justify-center h-full">
-            <div className="relative w-44 h-44 flex items-center justify-center">
+            <div className="relative w-52 h-52 flex items-center justify-center shrink-0">
                 <svg width="100%" height="100%" viewBox="0 0 120 120" className="transform -rotate-90">
                     <circle cx="60" cy="60" r={r} fill="transparent" stroke="#f1f5f9" strokeWidth={strokeWidth} />
                     {statuses.map((s) => {
@@ -374,22 +374,22 @@ const TaskStatusDonut = ({ allTasks }) => {
                     })}
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-3xl font-black text-slate-800 tracking-tight leading-none">
+                    <span className="text-4xl font-extrabold text-slate-800 tracking-tight leading-none">
                         {hoveredSegment ? statuses.find(s => s.name === hoveredSegment)?.count : total}
                     </span>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
                         {hoveredSegment ? hoveredSegment : "Total Tasks"}
                     </span>
                 </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 w-full">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-5 w-full shrink-0">
                 {statuses.map(s => {
                     const percent = total > 0 ? Math.round((s.count / total) * 100) : 0;
                     return (
                         <div 
                             key={s.name} 
-                            className={`flex items-center justify-between p-1 rounded-lg transition-colors ${hoveredSegment === s.name ? "bg-slate-50" : ""}`}
+                            className={`flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-100/70 bg-slate-50/40 hover:bg-slate-50 cursor-pointer transition-colors ${hoveredSegment === s.name ? "bg-slate-100 border-slate-200" : ""}`}
                             onMouseEnter={() => setHoveredSegment(s.name)}
                             onMouseLeave={() => setHoveredSegment(null)}
                         >
@@ -399,7 +399,7 @@ const TaskStatusDonut = ({ allTasks }) => {
                             </div>
                             <div className="flex items-center gap-1 ml-1 font-mono text-[10px] font-bold text-slate-500 shrink-0">
                                 <span>{s.count}</span>
-                                <span className="text-slate-300 font-normal">({percent}%)</span>
+                                <span className="text-slate-400 font-normal">({percent}%)</span>
                             </div>
                         </div>
                     );
@@ -612,266 +612,276 @@ const AdminDashboard = () => {
                     ) : (
                         <div className="space-y-8">
                             {/* KPIs Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-5">
                                 {kpis.map((kpi, i) => (
-                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex-col items-start gap-3 p-4 h-[105px] cursor-pointer`}>
+                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex-col items-start gap-3 p-4.5 h-[115px] cursor-pointer`}>
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
                                             <kpi.icon className="w-4.5 h-4.5" />
                                         </div>
                                         <div className="flex flex-col justify-center min-w-0 w-full">
-                                            <h4 className="text-xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
+                                            <h4 className="text-2xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
                                             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">{kpi.label}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Analytics and Widgets Grid */}
-                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                                
-                                {/* Left Column: Span 2 */}
-                                <div className="xl:col-span-2 space-y-8">
-                                    {/* Graphs Stack */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <Card className="p-6 flex flex-col h-[280px]">
-                                            <div className="flex items-center justify-between mb-4 shrink-0">
-                                                <div>
-                                                    <h3 className="section-title flex items-center gap-2">
-                                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
-                                                        Task Completion
-                                                    </h3>
-                                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Last 7 Days Trend</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-h-0">
-                                                <TaskCompletionGraph allTasks={allTasks} />
-                                            </div>
-                                        </Card>
-                                        
-                                        <Card className="p-6 flex flex-col h-[280px]">
-                                            <div className="flex items-center justify-between mb-4 shrink-0">
-                                                <div>
-                                                    <h3 className="section-title flex items-center gap-2">
-                                                        <BarChart3 className="w-4 h-4 text-blue-500" />
-                                                        Weekly Productivity
-                                                    </h3>
-                                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Tasks Created vs Completed</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 min-h-0">
-                                                <WeeklyProductivityGraph allTasks={allTasks} />
-                                            </div>
-                                        </Card>
-                                    </div>
-
-                                    {/* Active Projects progress tracker */}
-                                    <Card className="!p-0 flex flex-col">
-                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                            <div>
-                                                <h3 className="section-title flex items-center gap-2">
-                                                    <Briefcase className="w-4.5 h-4.5 text-indigo-500" />
-                                                    Active Projects Leaderboard
-                                                </h3>
-                                                <p className="text-xs text-slate-400 mt-0.5 font-medium">Mathematical completion metrics based on project tasks</p>
-                                            </div>
-                                            <button 
-                                                onClick={() => navigate("/admin/projects")}
-                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
-                                            >
-                                                View Projects
-                                            </button>
-                                        </div>
-                                        <div className="p-6 space-y-6 flex-1">
-                                            {projects.slice(0, 4).map((proj, i) => {
-                                                const projTasks = allTasks.filter(t => {
-                                                    const pid = t.project?._id || t.project;
-                                                    return pid === proj._id;
-                                                });
-                                                const totalCount = projTasks.length;
-                                                const completedCount = projTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
-                                                const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : (proj.status === "Completed" ? 100 : 0);
-                                                const color = progress === 100 ? "bg-emerald-500" : progress > 50 ? "bg-blue-500" : "bg-indigo-500";
-                                                
-                                                return (
-                                                    <div key={proj._id || i} className="group hover:bg-slate-50/40 p-3 rounded-xl transition border border-transparent hover:border-slate-100">
-                                                        <div className="flex justify-between items-center text-sm mb-2.5">
-                                                            <div className="flex items-center gap-2.5">
-                                                                <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150">
-                                                                    {proj.projectName}
-                                                                </span>
-                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                                                                    proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                                                                }`}>
-                                                                    {proj.status || 'Active'}
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500">
-                                                                <span>{completedCount}/{totalCount} tasks</span>
-                                                                <span className="text-slate-300">•</span>
-                                                                <span className="text-slate-700">{progress}%</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                                            <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${progress}%` }}></div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            {projects.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-4">No active projects</div>}
-                                        </div>
-                                    </Card>
-
-                                    {/* Team Performance Workload Grid */}
-                                    <Card className="!p-0 flex flex-col">
-                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                            <div>
-                                                <h3 className="section-title flex items-center gap-2">
-                                                    <Users className="w-4.5 h-4.5 text-blue-500" />
-                                                    Team Workloads & Productivity
-                                                </h3>
-                                                <p className="text-xs text-slate-400 mt-0.5 font-medium">Workloads, active task counts, and performance rankings</p>
-                                            </div>
-                                            <button 
-                                                onClick={() => navigate("/admin/employees")}
-                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
-                                            >
-                                                Manage Team
-                                            </button>
-                                        </div>
-                                        <div className="divide-y divide-slate-100 flex-1">
-                                            {users.filter(u => u.role !== "admin").slice(0, 5).map((member, i) => {
-                                                const memberTasks = allTasks.filter(t => {
-                                                    const uid = t.assignedTo?._id || t.assignedTo;
-                                                    return uid === member._id;
-                                                });
-                                                
-                                                const activeCount = memberTasks.filter(t => !["Completed", "Done"].includes(t.status)).length;
-                                                const completedCount = memberTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
-                                                const totalAssigned = memberTasks.length;
-                                                const completionRate = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
-                                                
-                                                const statusText = activeCount > 3 ? `Busy - ${activeCount} active` : activeCount > 0 ? `${activeCount} active` : "Available";
-                                                const statusColor = activeCount > 3 ? "bg-rose-500" : activeCount > 0 ? "bg-amber-500" : "bg-emerald-500";
-                                                
-                                                return (
-                                                    <div key={member._id || i} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition">
-                                                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                                                            <div className="relative shrink-0">
-                                                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center font-bold text-blue-700 border border-blue-100 uppercase overflow-hidden shadow-sm">
-                                                                    {member.profilePic ? (
-                                                                        <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        member.name?.charAt(0) || "U"
-                                                                    )}
-                                                                </div>
-                                                                <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${statusColor}`}></span>
-                                                            </div>
-                                                            <div className="min-w-0 flex-1 pr-4">
-                                                                <h4 className="text-sm font-bold text-slate-800 truncate">{member.name}</h4>
-                                                                <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 flex-wrap font-medium">
-                                                                    <span className="font-bold text-slate-400 capitalize">{member.role}</span>
-                                                                    <span>•</span>
-                                                                    <span className="text-slate-400 capitalize">{member.department || "Engineering"}</span>
-                                                                    <span>•</span>
-                                                                    <span className={`font-bold ${activeCount > 3 ? 'text-rose-500' : activeCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                                                        {statusText}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-4 shrink-0">
-                                                            <div className="text-right">
-                                                                <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Completion</span>
-                                                                <div className="flex items-center gap-2 mt-0.5">
-                                                                    <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
-                                                                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${completionRate}%` }}></div>
-                                                                    </div>
-                                                                    <span className="text-xs font-bold text-slate-700 font-mono">{completionRate}%</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                            {users.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-4">No team members found</div>}
-                                        </div>
-                                    </Card>
-                                </div>
-
-                                {/* Right Column */}
-                                <div className="space-y-8 flex flex-col">
-                                    {/* Task Status Donut widget */}
-                                    <Card className="p-6 flex flex-col justify-between h-[380px]">
-                                        <div className="shrink-0 mb-4">
+                            {/* Analytics Graphs Row (3 Columns) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <Card className="p-6 flex flex-col h-[420px]">
+                                    <div className="flex items-center justify-between mb-4 shrink-0">
+                                        <div>
                                             <h3 className="section-title flex items-center gap-2">
-                                                <Activity className="w-4 h-4 text-violet-500" />
-                                                Task Distribution
+                                                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                                                Task Completion
                                             </h3>
-                                            <p className="text-xs text-slate-400 mt-0.5 font-medium">Current workload distribution split by statuses</p>
+                                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Last 7 Days Trend</p>
                                         </div>
-                                        <div className="flex-1 min-h-0">
-                                            <TaskStatusDonut allTasks={allTasks} />
+                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 shrink-0">
+                                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                            <span>Completed Trend</span>
                                         </div>
-                                    </Card>
-
-                                    {/* Real-time Timelined Activity Feed */}
-                                    <div className="flex flex-col gap-4 flex-1">
-                                        <h3 className="text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2 px-1">
-                                            <Activity className="w-4.5 h-4.5 text-blue-500 animate-pulse" />
-                                            Real-Time Feed
-                                        </h3>
-                                        <Card className="h-[460px] flex flex-col !p-0 overflow-hidden">
-                                            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
-                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Latest Updates</span>
-                                                <span className="relative flex h-2.5 w-2.5">
-                                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                                                </span>
+                                    </div>
+                                    <div className="flex-1 min-h-0">
+                                        <TaskCompletionGraph allTasks={allTasks} />
+                                    </div>
+                                </Card>
+                                
+                                <Card className="p-6 flex flex-col h-[420px]">
+                                    <div className="flex items-center justify-between mb-4 shrink-0">
+                                        <div>
+                                            <h3 className="section-title flex items-center gap-2">
+                                                <BarChart3 className="w-4 h-4 text-blue-500" />
+                                                Weekly Productivity
+                                            </h3>
+                                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Tasks Created vs Completed</p>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-[10px] font-bold shrink-0">
+                                            <div className="flex items-center gap-1 text-slate-500">
+                                                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                                <span>Created</span>
                                             </div>
-                                            <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5 custom-scrollbar">
-                                                {recentTasks.length === 0 ? (
-                                                    <div className="h-full flex flex-col items-center justify-center py-10 opacity-60">
-                                                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                                                            <Clock className="w-6 h-6 text-slate-400" />
+                                            <div className="flex items-center gap-1 text-slate-500">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                <span>Completed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 min-h-0">
+                                        <WeeklyProductivityGraph allTasks={allTasks} />
+                                    </div>
+                                </Card>
+
+                                <Card className="p-6 flex flex-col h-[420px]">
+                                    <div className="shrink-0 mb-4">
+                                        <h3 className="section-title flex items-center gap-2">
+                                            <Activity className="w-4.5 h-4.5 text-violet-500" />
+                                            Task Distribution
+                                        </h3>
+                                        <p className="text-xs text-slate-400 mt-0.5 font-medium">Current workload distribution split by statuses</p>
+                                    </div>
+                                    <div className="flex-1 min-h-0">
+                                        <TaskStatusDonut allTasks={allTasks} />
+                                    </div>
+                                </Card>
+                            </div>
+
+                            {/* Operations & Activity Row (3 Columns) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                
+                                {/* Active Projects Leaderboard */}
+                                <Card className="!p-0 flex flex-col h-[450px]">
+                                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                                        <div>
+                                            <h3 className="section-title flex items-center gap-2">
+                                                <Briefcase className="w-4.5 h-4.5 text-indigo-500" />
+                                                Active Projects Leaderboard
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-0.5 font-medium">Mathematical completion metrics based on tasks</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => navigate("/admin/projects")}
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition shrink-0"
+                                        >
+                                            View Projects
+                                        </button>
+                                    </div>
+                                    <div className="p-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
+                                        {projects.slice(0, 5).map((proj, i) => {
+                                            const projTasks = allTasks.filter(t => {
+                                                const pid = t.project?._id || t.project;
+                                                return pid === proj._id;
+                                            });
+                                            const totalCount = projTasks.length;
+                                            const completedCount = projTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+                                            const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : (proj.status === "Completed" ? 100 : 0);
+                                            const color = progress === 100 ? "bg-emerald-500" : progress > 50 ? "bg-blue-500" : "bg-indigo-500";
+                                            
+                                            return (
+                                                <div key={proj._id || i} className="group hover:bg-slate-50/40 p-3 rounded-xl transition border border-transparent hover:border-slate-100">
+                                                    <div className="flex justify-between items-center text-sm mb-2.5">
+                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                            <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150 truncate">
+                                                                {proj.projectName}
+                                                            </span>
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
+                                                                proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                                                            }`}>
+                                                                {proj.status || 'Active'}
+                                                            </span>
                                                         </div>
-                                                        <p className="text-sm font-semibold text-slate-500 text-center">No recent activity found</p>
+                                                        <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500 shrink-0">
+                                                            <span>{completedCount}/{totalCount} tasks</span>
+                                                            <span className="text-slate-300">•</span>
+                                                            <span className="text-slate-700">{progress}%</span>
+                                                        </div>
                                                     </div>
-                                                ) : (
-                                                    recentTasks.map((item, i) => (
-                                                        <div key={item._id || i} className="flex gap-4 text-sm relative">
-                                                            {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100 font-bold"></div>}
-                                                            <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase overflow-hidden">
-                                                                {item.sender?.profilePic ? (
-                                                                    <img src={item.sender.profilePic} alt={item.sender.name} className="w-full h-full object-cover" />
+                                                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                        <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${progress}%` }}></div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        {projects.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-10">No active projects</div>}
+                                    </div>
+                                </Card>
+
+                                {/* Team Performance Workload Grid */}
+                                <Card className="!p-0 flex flex-col h-[450px]">
+                                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                                        <div>
+                                            <h3 className="section-title flex items-center gap-2">
+                                                <Users className="w-4.5 h-4.5 text-blue-500" />
+                                                Team Workloads & Productivity
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-0.5 font-medium">Workloads, active tasks, and performance</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => navigate("/admin/employees")}
+                                            className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition shrink-0"
+                                        >
+                                            Manage Team
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
+                                        {users.filter(u => u.role !== "admin").slice(0, 6).map((member, i) => {
+                                            const memberTasks = allTasks.filter(t => {
+                                                const uid = t.assignedTo?._id || t.assignedTo;
+                                                return uid === member._id;
+                                            });
+                                            
+                                            const activeCount = memberTasks.filter(t => !["Completed", "Done"].includes(t.status)).length;
+                                            const completedCount = memberTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+                                            const totalAssigned = memberTasks.length;
+                                            const completionRate = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
+                                            
+                                            const statusText = activeCount > 3 ? `Busy - ${activeCount} active` : activeCount > 0 ? `${activeCount} active` : "Available";
+                                            const statusColor = activeCount > 3 ? "bg-rose-500" : activeCount > 0 ? "bg-amber-500" : "bg-emerald-500";
+                                            
+                                            return (
+                                                <div key={member._id || i} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition">
+                                                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                        <div className="relative shrink-0">
+                                                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center font-bold text-blue-700 border border-blue-100 uppercase overflow-hidden shadow-sm">
+                                                                {member.profilePic ? (
+                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
                                                                 ) : (
-                                                                    item.sender?.name?.charAt(0) || "S"
+                                                                    member.name?.charAt(0) || "U"
                                                                 )}
                                                             </div>
-                                                            <div className="pt-0.5 flex-1 min-w-0">
-                                                                <p className="text-slate-600 leading-snug break-words">
-                                                                    <span className="font-bold text-slate-800">{item.title}</span>: {item.message}
-                                                                </p>
-                                                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(item.createdAt)}</span>
-                                                                    <span className="text-slate-200 text-xs">•</span>
-                                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                                                        item.category === 'status_change' ? 'bg-indigo-50 text-indigo-600' :
-                                                                        item.category === 'creation' ? 'bg-emerald-50 text-emerald-600' :
-                                                                        item.category === 'update' ? 'bg-blue-50 text-blue-600' :
-                                                                        item.category === 'deletion' ? 'bg-rose-50 text-rose-600' :
-                                                                        'bg-slate-100 text-slate-500'
-                                                                    }`}>
-                                                                        {(item.category || "System").replace(/_/g, ' ')}
-                                                                    </span>
-                                                                </div>
+                                                            <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${statusColor}`}></span>
+                                                        </div>
+                                                        <div className="min-w-0 flex-1 pr-4">
+                                                            <h4 className="text-sm font-bold text-slate-800 truncate">{member.name}</h4>
+                                                            <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 flex-wrap font-medium">
+                                                                <span className="font-bold text-slate-400 capitalize">{member.role}</span>
+                                                                <span>•</span>
+                                                                <span className="text-slate-400 capitalize">{member.department || "Engineering"}</span>
+                                                                <span>•</span>
+                                                                <span className={`font-bold ${activeCount > 3 ? 'text-rose-500' : activeCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                                    {statusText}
+                                                                </span>
                                                             </div>
                                                         </div>
-                                                    ))
-                                                )}
-                                            </div>
-                                        </Card>
+                                                    </div>
+                                                    <div className="flex items-center gap-4 shrink-0">
+                                                        <div className="text-right">
+                                                            <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Completion</span>
+                                                            <div className="flex items-center gap-2 mt-0.5">
+                                                                <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                                                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${completionRate}%` }}></div>
+                                                                </div>
+                                                                <span className="text-xs font-bold text-slate-700 font-mono">{completionRate}%</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                        {users.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-10">No team members found</div>}
                                     </div>
-                                </div>
+                                </Card>
+
+                                {/* Real-Time Activity Feed */}
+                                <Card className="!p-0 flex flex-col h-[450px]">
+                                    <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+                                        <div>
+                                            <h3 className="section-title flex items-center gap-2">
+                                                <Clock className="w-4.5 h-4.5 text-emerald-500" />
+                                                Real-Time Activity Feed
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-0.5 font-medium">Live actions across all clients and tasks</p>
+                                        </div>
+                                        <div className="flex items-center gap-1.5 shrink-0">
+                                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Live</span>
+                                            <span className="relative flex h-2.5 w-2.5">
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5 custom-scrollbar max-h-[330px]">
+                                        {recentTasks.length === 0 ? (
+                                            <div className="h-full flex flex-col items-center justify-center py-10 opacity-60">
+                                                <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                                    <Clock className="w-6 h-6 text-slate-400" />
+                                                </div>
+                                                <p className="text-sm font-semibold text-slate-500 text-center">No recent activity found</p>
+                                            </div>
+                                        ) : (
+                                            recentTasks.map((item, i) => (
+                                                <div key={item._id || i} className="flex gap-4 text-sm relative">
+                                                    {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100 font-bold"></div>}
+                                                    <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase overflow-hidden">
+                                                        {item.sender?.profilePic ? (
+                                                            <img src={item.sender.profilePic} alt={item.sender.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            item.sender?.name?.charAt(0) || "S"
+                                                        )}
+                                                    </div>
+                                                    <div className="pt-0.5 flex-1 min-w-0">
+                                                        <p className="text-slate-600 leading-snug break-words">
+                                                            <span className="font-bold text-slate-800">{item.title}</span>: {item.message}
+                                                        </p>
+                                                        <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(item.createdAt)}</span>
+                                                            <span className="text-slate-200 text-xs">•</span>
+                                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                                item.category === 'status_change' ? 'bg-indigo-50 text-indigo-600' :
+                                                                item.category === 'creation' ? 'bg-emerald-50 text-emerald-600' :
+                                                                item.category === 'update' ? 'bg-blue-50 text-blue-600' :
+                                                                item.category === 'deletion' ? 'bg-rose-50 text-rose-600' :
+                                                                'bg-slate-100 text-slate-500'
+                                                            }`}>
+                                                                {(item.category || "System").replace(/_/g, ' ')}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </Card>
                             </div>
                         </div>
                     )}
