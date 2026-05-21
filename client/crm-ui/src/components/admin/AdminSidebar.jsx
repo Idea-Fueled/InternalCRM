@@ -138,7 +138,7 @@ const AdminSidebar = ({ role = "admin" }) => {
                     onClick={() => setIsMobileOpen(false)}
                 />
             )}
-            <div className={`fixed lg:static h-screen z-50 bg-[#0B1121] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0B1121] to-[#040814] text-slate-300 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/60 no-scrollbar ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isMinimized ? 'lg:w-20' : 'w-72'}`}>
+            <div className={`fixed lg:static h-screen z-50 bg-[#0B1121] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0B1121] to-[#040814] text-slate-300 flex flex-col justify-between transition-all duration-300 border-r border-slate-800/60 no-scrollbar ${isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isMinimized ? 'lg:w-20' : 'lg:w-60 w-64'}`}>
 
             <button
                 onClick={toggleSidebar}
@@ -151,23 +151,23 @@ const AdminSidebar = ({ role = "admin" }) => {
             </button>
 
             <div className="p-4 flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
-                <div className={`flex flex-col mb-8 pb-6 border-b border-slate-800/80 transition-all duration-300 ${isMinimized ? 'items-center justify-center' : 'items-start px-4'}`}>
+                <div className={`flex flex-col mb-6 pb-4 border-b border-slate-800/60 transition-all duration-300 ${isMinimized ? 'items-center justify-center' : 'items-start px-3'}`}>
                     <div className="relative flex-shrink-0">
                         <img 
                             src={logoImg} 
                             alt="Idea Fueled" 
-                            className={`transition-all duration-300 ${isMinimized ? 'w-10 h-10 object-cover object-left' : 'w-40 h-auto object-contain'}`} 
+                            className={`transition-all duration-300 ${isMinimized ? 'w-10 h-10 object-cover object-left' : 'w-36 h-auto object-contain'}`} 
                         />
                     </div>
                 </div>
 
-                <nav className="flex flex-col gap-1.5 px-1">
-                    {!isMinimized && <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-2 px-3">Main Menu</div>}
+                <nav className="flex flex-col gap-1 px-1">
+                    {!isMinimized && <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1.5 px-3">Main Menu</div>}
                     {currentConfig.tabs.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}
-                            className={({ isActive }) => `flex items-center gap-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group ${isMinimized ? 'justify-center px-0' : 'px-3'} ${isActive ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30 font-medium' : 'hover:bg-slate-800/50 text-slate-400 hover:text-slate-200'}`}
+                            className={({ isActive }) => `flex items-center gap-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group ${isMinimized ? 'justify-center px-0' : 'px-3'} ${isActive ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30 font-semibold transform scale-[1.01]' : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-100'}`}
                             title={isMinimized ? item.label : ""}
                         >
                             <span className={`transition-colors ${isMinimized ? 'ml-0' : ''}`}>{item.icon}</span>
