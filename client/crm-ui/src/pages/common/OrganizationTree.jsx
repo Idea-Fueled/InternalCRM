@@ -286,7 +286,12 @@ const OrganizationTree = () => {
     const rootNodes = useMemo(() => {
         if (allUsers.length === 0) return [];
 
-        const activeUsers = allUsers.filter(u => u.isActive !== false);
+        let activeUsers = allUsers.filter(u => u.isActive !== false);
+
+        if (selectedDept && selectedDept !== "All") {
+            const lowerDept = String(selectedDept).toLowerCase().trim();
+            activeUsers = activeUsers.filter(u => String(u.department).toLowerCase().trim() === lowerDept);
+        }
 
         // Helper: Check if a user ID reports to a given lead ID
         const reportsTo = (emp, leadId) => {
@@ -358,10 +363,6 @@ const OrganizationTree = () => {
                                 children: deptsMap[deptName]
                             };
                         });
-
-                        if (selectedDept && selectedDept !== "All") {
-                            children = children.filter(c => String(c.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-                        }
                     } else {
                         // In My Team tab: Flat tree structure managed under logged-in Admin
                         let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
@@ -400,11 +401,6 @@ const OrganizationTree = () => {
                 const admins = activeUsers.filter(u => u.role === 'admin' && getIdString(u._id) === getIdString(user?._id));
                 let tls = activeUsers.filter(u => u.role === 'TL');
                 let staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
-                
-                if (selectedDept && selectedDept !== "All") {
-                    tls = tls.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-                    staff = staff.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-                }
 
                 if (admins.length > 0) {
                     return buildTreeFromRoots(admins, tls, staff, false);
@@ -416,10 +412,6 @@ const OrganizationTree = () => {
                 const currentTlObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
                 if (currentTlObj) {
                     let staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, currentTlObj._id));
-                    
-                    if (selectedDept && selectedDept !== "All") {
-                        staff = staff.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-                    }
 
                     return [{
                         ...currentTlObj,
@@ -432,18 +424,10 @@ const OrganizationTree = () => {
                 const currentEmpObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
                 const myLeadIds = (currentEmpObj?.teamLeads || []).map(l => getIdString(typeof l === 'object' ? l._id : l));
                 let myLeads = activeUsers.filter(u => u.role === 'TL' && myLeadIds.includes(getIdString(u._id)));
-                
-                if (selectedDept && selectedDept !== "All") {
-                    myLeads = myLeads.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-                }
 
                 if (myLeads.length > 0) {
                     return myLeads.map(lead => {
                         let staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, lead._id));
-                        
-                        if (selectedDept && selectedDept !== "All") {
-                            staff = staff.filter(u => String(u.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-                        }
 
                         return {
                             ...lead,
@@ -452,10 +436,6 @@ const OrganizationTree = () => {
                     });
                 } else {
                     if (currentEmpObj) {
-                        // Apply department filter to self if self is the only root
-                        if (selectedDept && selectedDept !== "All" && String(currentEmpObj.department).toLowerCase().trim() !== String(selectedDept).toLowerCase().trim()) {
-                            return [];
-                        }
                         return [{ ...currentEmpObj, children: [] }];
                     }
                     return [];
@@ -500,10 +480,6 @@ const OrganizationTree = () => {
                     children: deptsMap[deptName]
                 };
             });
-
-            if (selectedDept && selectedDept !== "All") {
-                deptRoots = deptRoots.filter(c => String(c.department).toLowerCase().trim() === String(selectedDept).toLowerCase().trim());
-            }
 
             return buildTreeFromRoots(deptRoots, tls, staff, true);
         }
