@@ -779,9 +779,6 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                 {colTasks.length}
                                             </span>
                                         </div>
-                                        <button className="text-slate-400 hover:text-slate-600 transition-colors">
-                                            <MoreVertical className="w-4 h-4" />
-                                        </button>
                                     </div>
 
                                     {/* Drop zone hint */}
