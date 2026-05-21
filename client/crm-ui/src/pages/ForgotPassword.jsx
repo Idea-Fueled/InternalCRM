@@ -41,20 +41,22 @@ export default function ForgotPassword() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans p-4 relative overflow-hidden">
+        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-sans p-4 relative overflow-hidden">
             {/* Ambient glows */}
             <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-200/20 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-200/20 rounded-full blur-[100px] pointer-events-none" />
 
+            {/* Logo container */}
+            <div className="flex items-center justify-center mb-8 animate-in fade-in slide-in-from-top-8 duration-700 delay-150 fill-mode-both">
+                <img 
+                    src={logoImgNew} 
+                    alt="Idea Fueled" 
+                    className="h-16 w-auto drop-shadow-sm pointer-events-none select-none" 
+                />
+            </div>
+
             <div className="w-full max-w-md relative z-10 bg-white/70 backdrop-blur-2xl p-10 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.12)] border border-white animate-in fade-in zoom-in-95 duration-500">
-                {/* Logo */}
-                <div className="flex flex-col items-center mb-8">
-                    <img
-                        src={logoImgNew}
-                        alt="Idea Fueled"
-                        className="h-16 w-auto mb-6 hover:scale-105 transition-transform duration-300 drop-shadow-sm cursor-pointer"
-                        onClick={() => navigate("/")}
-                    />
+                <div className="mb-8">
                     {!sent ? (
                         <div className="text-center">
                             <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Forgot your password?</h2>
