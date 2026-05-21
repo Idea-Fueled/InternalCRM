@@ -339,30 +339,7 @@ const OrganizationTree = () => {
                             directStaff = [...directStaff, ...orphanedStaff];
                         }
 
-                        // Group these TLs and staff by department
-                        const deptsMap = {};
-                        const addToDept = (node) => {
-                            const deptName = node.department || "Engineering";
-                            if (!deptsMap[deptName]) {
-                                deptsMap[deptName] = [];
-                            }
-                            deptsMap[deptName].push(node);
-                        };
-
-                        directTLs.forEach(addToDept);
-                        directStaff.forEach(addToDept);
-
-                        // Create virtual department nodes under this Admin
-                        children = Object.keys(deptsMap).map(deptName => {
-                            return {
-                                _id: `dept_${getIdString(root._id)}_${deptName}`,
-                                name: deptName,
-                                role: 'department',
-                                isVirtual: true,
-                                department: deptName,
-                                children: deptsMap[deptName]
-                            };
-                        });
+                        children = [...directTLs, ...directStaff];
                     } else {
                         // In My Team tab: Flat tree structure managed under logged-in Admin
                         let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
@@ -451,37 +428,15 @@ const OrganizationTree = () => {
         if (admins.length > 0) {
             return buildTreeFromRoots(admins, tls, staff, true);
         } else {
-            // Treat departments as root nodes if no Admins exist
-            const deptsMap = {};
-            const addToDept = (node) => {
-                const deptName = node.department || "Engineering";
-                if (!deptsMap[deptName]) {
-                    deptsMap[deptName] = [];
-                }
-                deptsMap[deptName].push(node);
-            };
-
-            tls.forEach(addToDept);
-
+            // Use TLs and orphaned staff as roots if no Admins exist
             const orphanedStaff = staff.filter(s => {
                 return !(s.teamLeads || []).some(leadId =>
                     tls.some(tl => getIdString(tl._id) === getIdString(leadId))
                 );
             });
-            orphanedStaff.forEach(addToDept);
 
-            let deptRoots = Object.keys(deptsMap).map(deptName => {
-                return {
-                    _id: `dept_root_${deptName}`,
-                    name: deptName,
-                    role: 'department',
-                    isVirtual: true,
-                    department: deptName,
-                    children: deptsMap[deptName]
-                };
-            });
-
-            return buildTreeFromRoots(deptRoots, tls, staff, true);
+            const fallbackRoots = [...tls, ...orphanedStaff];
+            return buildTreeFromRoots(fallbackRoots, tls, staff, true);
         }
     }, [allUsers, activeTab, user, selectedDept]);
 
