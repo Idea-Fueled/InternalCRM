@@ -178,7 +178,7 @@ export default function WelcomePage() {
                             </div>
                             <h3 className="text-xl font-bold text-slate-900 mb-2">Account Deactivated</h3>
                             <p className="text-slate-500 text-sm mb-8 leading-relaxed">
-                                Your account has been deactivated or moved to trash. Please contact the management team or your system administrator for further assistance.
+                                Your account has been deactivated. Please contact the management team or your system administrator for further assistance.
                             </p>
                             <button 
                                 onClick={() => setShowDeactivatedModal(false)}
