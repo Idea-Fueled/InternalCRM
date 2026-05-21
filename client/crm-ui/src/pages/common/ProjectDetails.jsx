@@ -86,10 +86,22 @@ const ProjectDetails = () => {
             setLoading(true);
             const res = await projectService.getProjectById(projectId);
             if (res.data.success) {
-                setProject(res.data.project);
-                setTasks(res.data.project.tasks || []);
-                setProjectAttachments(res.data.project.attachments || []);
-                setSelectedMemberIds((res.data.project.teamMembers || []).map(m => m._id));
+                const proj = res.data.project;
+                setProject(proj);
+                setTasks(proj.tasks || []);
+                
+                let attachmentsList = proj.attachments || [];
+                if (attachmentsList.length === 0 && proj.attachment) {
+                    attachmentsList = [{
+                        url: proj.attachment,
+                        filename: proj.attachment.split('/').pop() || "Legacy Attachment",
+                        fileType: proj.attachment.match(/\.(jpeg|jpg|gif|png|webp|avif)$/i) ? "image/png" : "application/octet-stream",
+                        uploadedBy: proj.teamLead || { name: "System" },
+                        createdAt: proj.createdAt || new Date()
+                    }];
+                }
+                setProjectAttachments(attachmentsList);
+                setSelectedMemberIds((proj.teamMembers || []).map(m => m._id));
             }
         } catch (err) {
             console.error("Error loading project details", err);
