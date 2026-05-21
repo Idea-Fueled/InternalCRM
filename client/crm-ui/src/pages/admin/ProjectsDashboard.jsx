@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import usePermission from "../../hooks/usePermission";
+import ProjectDetailsSidebar from "../../components/ProjectDetailsSidebar";
 
 const ProjectsDashboard = () => {
     const { user } = useAuth();
@@ -50,6 +51,7 @@ const ProjectsDashboard = () => {
     const [teamMembersList, setTeamMembersList] = useState([]);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingProject, setEditingProject] = useState(null);
+    const [selectedProjectId, setSelectedProjectId] = useState(null);
 
     const fetchInitialData = async () => {
         try {
@@ -534,7 +536,7 @@ const ProjectsDashboard = () => {
                                     <div 
                                         key={project._id || i} 
                                         onClick={() => {
-                                            navigate(`/projects/${project._id}`);
+                                            setSelectedProjectId(project._id);
                                         }}
                                         className={`group rounded-3xl p-6 flex flex-col gap-5 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
                                     >
@@ -589,7 +591,7 @@ const ProjectsDashboard = () => {
                                 <div 
                                     key={project._id || i} 
                                     onClick={() => {
-                                        navigate(`/projects/${project._id}`);
+                                        setSelectedProjectId(project._id);
                                     }}
                                     className={`group rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
                                 >
@@ -1429,6 +1431,14 @@ const ProjectsDashboard = () => {
                         </div>
                     </div>
                 </div>
+            )}
+            
+            {/* Project Details Sidebar */}
+            {selectedProjectId && (
+                <ProjectDetailsSidebar 
+                    projectId={selectedProjectId} 
+                    onClose={() => setSelectedProjectId(null)} 
+                />
             )}
         </div>
     );

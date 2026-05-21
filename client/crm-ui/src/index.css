@@ -6,8 +6,11 @@
 }
 
 /* Global Typography System */
-body {
+*, *::before, *::after, body, input, button, select, textarea, option {
   font-family: 'Montserrat', sans-serif;
+}
+
+body {
   @apply text-slate-600 antialiased;
 }
 
