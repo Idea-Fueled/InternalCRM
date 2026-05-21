@@ -21,7 +21,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
         const fetchRelations = async () => {
             try {
                 setIsLoadingRelations(true);
-                const res = await userService.getAllUsers({ status: 'active' });
+                const res = await userService.getAllUsers({ status: 'active', orgTree: true });
                 if (res.data?.success && Array.isArray(res.data.data)) {
                     setAllUsers(res.data.data);
                 }
