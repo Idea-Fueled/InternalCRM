@@ -116,7 +116,7 @@ const TeamLeadDashboard = () => {
                             });
                         });
                     });
-                    setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5));
+                    setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 30));
                 }
             } catch (error) {
                 console.error("Failed to fetch team lead dashboard data", error);
@@ -188,9 +188,6 @@ const TeamLeadDashboard = () => {
                                     <FolderKanban className="w-5 h-5 mr-2 text-indigo-500" />
                                     Active Projects
                                 </h3>
-                                <button className="text-slate-400 hover:text-slate-600 transition-colors">
-                                    <MoreVertical className="w-5 h-5" />
-                                </button>
                             </div>
                             <div className="p-6 flex-1">
                                 <div className="space-y-6">
@@ -255,7 +252,7 @@ const TeamLeadDashboard = () => {
                                         <p className="text-sm text-slate-500 font-medium">No recent activity</p>
                                     </div>
                                 ) : (
-                                    <div className="space-y-6">
+                                    <div className="max-h-[250px] overflow-y-auto custom-scrollbar pr-2 space-y-6">
                                         {recentActivity.map((activity, idx) => (
                                             <div key={idx} className="flex gap-4">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
