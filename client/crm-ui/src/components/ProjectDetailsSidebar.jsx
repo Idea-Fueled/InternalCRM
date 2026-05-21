@@ -523,34 +523,21 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                         </p>
                                     </div>
 
-                                    {/* Project Metas Grid */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug">
+                                    {/* Project Metas & Timeline Grid (4 Symmetrical Sections) */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Client Partner */}
+                                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug flex flex-col justify-center">
                                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Client Partner</span>
                                             <span className="text-xs font-bold text-slate-700">{project.clientName || "N/A"}</span>
                                         </div>
-                                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug">
+                                        
+                                        {/* Estimated Tasks */}
+                                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug flex flex-col justify-center">
                                             <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Estimated Tasks</span>
                                             <span className="text-xs font-bold text-slate-700">{project.estimatedTasks || 0} Units</span>
                                         </div>
-                                        <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Target Stack</span>
-                                            <div className="flex flex-wrap gap-1 mt-1">
-                                                {project.techStack && project.techStack.length > 0 ? (
-                                                    project.techStack.map((tech, idx) => (
-                                                        <span key={idx} className="px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded text-[9px] font-bold">
-                                                            {tech}
-                                                        </span>
-                                                    ))
-                                                ) : (
-                                                    <span className="text-[10px] text-slate-400 font-bold">N/A</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
 
-                                    {/* Dates & Timeline quick stats */}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {/* Start Date */}
                                         <div className="flex items-center gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 text-xs">
                                             <Calendar className="w-5 h-5 text-indigo-500 shrink-0" />
                                             <div className="leading-snug">
@@ -558,6 +545,8 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                 <span className="font-bold text-slate-700">{formatDate(project.startDate)}</span>
                                             </div>
                                         </div>
+
+                                        {/* Timeline Limit (End Date) */}
                                         <div className="flex items-center gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 text-xs">
                                             <Clock className="w-5 h-5 text-rose-500 shrink-0" />
                                             <div className="leading-snug">
@@ -752,12 +741,13 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             <td className="px-4 py-3 text-right">
                                                                 <button
                                                                     className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
+                                                                    title="Edit Task workflow / view details"
                                                                     onClick={(e) => {
                                                                         e.stopPropagation();
                                                                         setSelectedTask(task);
                                                                     }}
                                                                 >
-                                                                    <Eye className="w-3.5 h-3.5" />
+                                                                    <Edit3 className="w-3.5 h-3.5" />
                                                                 </button>
                                                             </td>
                                                         </tr>

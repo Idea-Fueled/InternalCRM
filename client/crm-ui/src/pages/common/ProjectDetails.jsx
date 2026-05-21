@@ -564,7 +564,7 @@ const ProjectDetails = () => {
                                 </p>
 
                                 {/* Optional Fields Showcase */}
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                     <div className="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-100">
                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Client Partner</span>
                                         <span className="text-xs font-bold text-slate-700">{project.clientName || "N/A"}</span>
@@ -572,20 +572,6 @@ const ProjectDetails = () => {
                                     <div className="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-100">
                                         <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Estimated Taskload</span>
                                         <span className="text-xs font-bold text-slate-700">{project.estimatedTasks || 0} Units</span>
-                                    </div>
-                                    <div className="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-100">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Target Stack</span>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                            {project.techStack && project.techStack.length > 0 ? (
-                                                project.techStack.map((tech, idx) => (
-                                                    <span key={idx} className="px-1.5 py-0.5 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded text-[9px] font-bold">
-                                                        {tech}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-[10px] text-slate-400 font-bold">N/A</span>
-                                            )}
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -731,12 +717,13 @@ const ProjectDetails = () => {
                                                     <td className="px-6 py-4 text-right">
                                                         <button
                                                             className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
+                                                            title="Edit Task workflow / view details"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setSelectedTask(task);
                                                             }}
                                                         >
-                                                            <Eye className="w-4 h-4" />
+                                                            <Edit3 className="w-4 h-4" />
                                                         </button>
                                                     </td>
                                                 </tr>
