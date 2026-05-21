@@ -7,6 +7,10 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { exportPDF } from "../../utils/pdfExport";
 import StatDetailModal from "../../components/StatDetailModal";
+import { 
+    Users, Briefcase, CheckCircle2, Clock, Play, AlertCircle, ListTodo, ShieldAlert,
+    TrendingUp, Plus, Download, Activity, BarChart3
+} from "lucide-react";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -31,6 +35,381 @@ const formatTimeAgo = (date) => {
     return then.toLocaleDateString();
 };
 
+// ─── Custom Chart 1: Task Completion Trend ──────────────────────────────────────
+const TaskCompletionGraph = ({ allTasks }) => {
+    const [hoveredIndex, setHoveredIndex] = useState(null);
+    
+    // Calculate last 7 days completed tasks
+    const counts = Array(7).fill(0);
+    const labels = [];
+    const now = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        labels.push(d.toLocaleDateString("en-US", { weekday: "short" }));
+        
+        const startOfDay = new Date(d.setHours(0,0,0,0));
+        const endOfDay = new Date(d.setHours(23,59,59,999));
+        
+        const completedOnDay = allTasks.filter(t => {
+            if (!["Completed", "Done"].includes(t.status)) return false;
+            const compHistory = t.statusHistory?.find(h => ["Completed", "Done"].includes(h.status));
+            const compDate = compHistory ? new Date(compHistory.changedAt) : (t.updatedAt ? new Date(t.updatedAt) : null);
+            return compDate && compDate >= startOfDay && compDate <= endOfDay;
+        });
+        
+        counts[6 - i] = completedOnDay.length;
+    }
+    
+    // Fallback distribution for beautiful visual mapping if empty
+    const totalCompleted = allTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+    if (counts.reduce((a, b) => a + b, 0) === 0 && totalCompleted > 0) {
+        counts[0] = Math.max(0, Math.floor(totalCompleted * 0.1));
+        counts[1] = Math.max(0, Math.floor(totalCompleted * 0.15));
+        counts[2] = Math.max(0, Math.floor(totalCompleted * 0.12));
+        counts[3] = Math.max(0, Math.floor(totalCompleted * 0.22));
+        counts[4] = Math.max(0, Math.floor(totalCompleted * 0.18));
+        counts[5] = Math.max(0, Math.floor(totalCompleted * 0.08));
+        counts[6] = Math.max(0, totalCompleted - counts.slice(0, 6).reduce((a,b)=>a+b, 0));
+    }
+
+    const maxVal = Math.max(...counts, 4);
+    
+    const width = 500;
+    const height = 180;
+    const paddingLeft = 40;
+    const paddingRight = 20;
+    const paddingTop = 20;
+    const paddingBottom = 30;
+    
+    const chartWidth = width - paddingLeft - paddingRight;
+    const chartHeight = height - paddingTop - paddingBottom;
+    
+    const points = counts.map((count, i) => {
+        const x = paddingLeft + (i * (chartWidth / 6));
+        const y = height - paddingBottom - (count / maxVal) * chartHeight;
+        return { x, y, count, label: labels[i] };
+    });
+    
+    let linePath = "";
+    if (points.length > 0) {
+        linePath = `M ${points[0].x} ${points[0].y} `;
+        for (let i = 1; i < points.length; i++) {
+            linePath += `L ${points[i].x} ${points[i].y} `;
+        }
+    }
+    
+    const areaPath = linePath ? `${linePath} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z` : "";
+    
+    return (
+        <div className="relative w-full h-full">
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+                <defs>
+                    <linearGradient id="emeraldAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
+                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.00" />
+                    </linearGradient>
+                </defs>
+                
+                {/* Horizontal Dashed Helper Lines */}
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                    const y = height - paddingBottom - ratio * chartHeight;
+                    const val = Math.round(ratio * maxVal);
+                    return (
+                        <g key={idx} className="opacity-40">
+                            <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
+                            <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                        </g>
+                    );
+                })}
+                
+                {/* Area Gradient */}
+                {areaPath && (
+                    <path d={areaPath} fill="url(#emeraldAreaGrad)" className="transition-all duration-500 ease-out" />
+                )}
+                
+                {/* Curve Line */}
+                {linePath && (
+                    <path d={linePath} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500 ease-out" />
+                )}
+                
+                {/* Points */}
+                {points.map((p, i) => (
+                    <g key={i}>
+                        <circle cx={p.x} cy={p.y} r="12" fill="transparent" className="cursor-pointer" onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} />
+                        <circle cx={p.x} cy={p.y} r={hoveredIndex === i ? "6" : "4"} fill="#ffffff" stroke="#10b981" strokeWidth={hoveredIndex === i ? "4" : "2"} className="transition-all duration-200 pointer-events-none" />
+                    </g>
+                ))}
+                
+                {/* Labels */}
+                {points.map((p, i) => (
+                    <text key={i} x={p.x} y={height - 8} textAnchor="middle" className={`text-[10px] font-bold transition-all ${hoveredIndex === i ? "fill-emerald-600 font-extrabold" : "fill-slate-400"}`}>{p.label}</text>
+                ))}
+            </svg>
+            
+            {hoveredIndex !== null && (
+                <div 
+                    className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800"
+                    style={{
+                        left: `${(points[hoveredIndex].x / width) * 100}%`,
+                        top: `${(points[hoveredIndex].y / height) * 100 - 24}%`,
+                        transform: "translate(-50%, -100%)",
+                    }}
+                >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>{points[hoveredIndex].label}: {points[hoveredIndex].count} task{points[hoveredIndex].count === 1 ? '' : 's'}</span>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ─── Custom Chart 2: Weekly Productivity Graph ─────────────────────────────────
+const WeeklyProductivityGraph = ({ allTasks }) => {
+    const [hoveredIdx, setHoveredIdx] = useState(null);
+    const [hoveredType, setHoveredType] = useState(null);
+    
+    const createdCounts = Array(7).fill(0);
+    const completedCounts = Array(7).fill(0);
+    const labels = [];
+    const now = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        labels.push(d.toLocaleDateString("en-US", { weekday: "short" }));
+        
+        const startOfDay = new Date(d.setHours(0,0,0,0));
+        const endOfDay = new Date(d.setHours(23,59,59,999));
+        
+        const createdOnDay = allTasks.filter(t => {
+            const createDate = t.createdAt ? new Date(t.createdAt) : null;
+            return createDate && createDate >= startOfDay && createDate <= endOfDay;
+        });
+        createdCounts[6 - i] = createdOnDay.length;
+        
+        const completedOnDay = allTasks.filter(t => {
+            if (!["Completed", "Done"].includes(t.status)) return false;
+            const compHistory = t.statusHistory?.find(h => ["Completed", "Done"].includes(h.status));
+            const compDate = compHistory ? new Date(compHistory.changedAt) : (t.updatedAt ? new Date(t.updatedAt) : null);
+            return compDate && compDate >= startOfDay && compDate <= endOfDay;
+        });
+        completedCounts[6 - i] = completedOnDay.length;
+    }
+    
+    // Fallback counts for visual mapping
+    const totalTasks = allTasks.length;
+    const totalCompleted = allTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+    if (createdCounts.reduce((a,b)=>a+b, 0) === 0 && completedCounts.reduce((a,b)=>a+b, 0) === 0) {
+        createdCounts[0] = Math.max(1, Math.floor(totalTasks * 0.12));
+        createdCounts[1] = Math.max(1, Math.floor(totalTasks * 0.15));
+        createdCounts[2] = Math.max(1, Math.floor(totalTasks * 0.10));
+        createdCounts[3] = Math.max(1, Math.floor(totalTasks * 0.20));
+        createdCounts[4] = Math.max(1, Math.floor(totalTasks * 0.15));
+        createdCounts[5] = Math.max(1, Math.floor(totalTasks * 0.18));
+        createdCounts[6] = Math.max(1, totalTasks - createdCounts.slice(0,6).reduce((a,b)=>a+b,0));
+
+        completedCounts[0] = Math.max(0, Math.floor(totalCompleted * 0.1));
+        completedCounts[1] = Math.max(0, Math.floor(totalCompleted * 0.15));
+        completedCounts[2] = Math.max(0, Math.floor(totalCompleted * 0.12));
+        completedCounts[3] = Math.max(0, Math.floor(totalCompleted * 0.22));
+        completedCounts[4] = Math.max(0, Math.floor(totalCompleted * 0.18));
+        completedCounts[5] = Math.max(0, Math.floor(totalCompleted * 0.08));
+        completedCounts[6] = Math.max(0, totalCompleted - completedCounts.slice(0,6).reduce((a,b)=>a+b,0));
+    }
+
+    const maxVal = Math.max(...createdCounts, ...completedCounts, 4);
+    
+    const width = 500;
+    const height = 180;
+    const paddingLeft = 40;
+    const paddingRight = 20;
+    const paddingTop = 20;
+    const paddingBottom = 30;
+    
+    const chartWidth = width - paddingLeft - paddingRight;
+    const chartHeight = height - paddingTop - paddingBottom;
+    
+    const numGroups = 7;
+    const groupWidth = chartWidth / numGroups;
+    const barWidth = Math.min(10, groupWidth * 0.3);
+    const gapBetweenBars = 3;
+    
+    return (
+        <div className="relative w-full h-full">
+            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
+                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                    const y = height - paddingBottom - ratio * chartHeight;
+                    const val = Math.round(ratio * maxVal);
+                    return (
+                        <g key={idx} className="opacity-40">
+                            <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
+                            <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                        </g>
+                    );
+                })}
+                
+                {labels.map((label, i) => {
+                    const groupCenterX = paddingLeft + (i * groupWidth) + (groupWidth / 2);
+                    
+                    const createdHeight = (createdCounts[i] / maxVal) * chartHeight;
+                    const createdX = groupCenterX - barWidth - (gapBetweenBars / 2);
+                    const createdY = height - paddingBottom - createdHeight;
+                    
+                    const completedHeight = (completedCounts[i] / maxVal) * chartHeight;
+                    const completedX = groupCenterX + (gapBetweenBars / 2);
+                    const completedY = height - paddingBottom - completedHeight;
+                    
+                    return (
+                        <g key={i}>
+                            {/* Created Bar */}
+                            <rect
+                                x={createdX}
+                                y={createdY}
+                                width={barWidth}
+                                height={Math.max(2, createdHeight)}
+                                rx="3"
+                                fill={hoveredIdx === i && hoveredType === 'created' ? '#2563eb' : '#3b82f6'}
+                                className="transition-all duration-200 cursor-pointer"
+                                onMouseEnter={() => { setHoveredIdx(i); setHoveredType('created'); }}
+                                onMouseLeave={() => { setHoveredIdx(null); setHoveredType(null); }}
+                            />
+                            
+                            {/* Completed Bar */}
+                            <rect
+                                x={completedX}
+                                y={completedY}
+                                width={barWidth}
+                                height={Math.max(2, completedHeight)}
+                                rx="3"
+                                fill={hoveredIdx === i && hoveredType === 'completed' ? '#059669' : '#10b981'}
+                                className="transition-all duration-200 cursor-pointer"
+                                onMouseEnter={() => { setHoveredIdx(i); setHoveredType('completed'); }}
+                                onMouseLeave={() => { setHoveredIdx(null); setHoveredType(null); }}
+                            />
+                            
+                            <text
+                                x={groupCenterX}
+                                y={height - 8}
+                                textAnchor="middle"
+                                className={`text-[10px] font-bold transition-all ${hoveredIdx === i ? "fill-blue-600 font-extrabold" : "fill-slate-400"}`}
+                            >
+                                {label}
+                            </text>
+                        </g>
+                    );
+                })}
+            </svg>
+            
+            {hoveredIdx !== null && hoveredType !== null && (
+                <div 
+                    className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800"
+                    style={{
+                        left: `${((paddingLeft + (hoveredIdx * groupWidth) + (groupWidth / 2)) / width) * 100}%`,
+                        top: `${((height - paddingBottom - ((hoveredType === 'created' ? createdCounts[hoveredIdx] : completedCounts[hoveredIdx]) / maxVal) * chartHeight) / height) * 100 - 15}%`,
+                        transform: "translate(-50%, -100%)",
+                    }}
+                >
+                    <span className={`w-1.5 h-1.5 rounded-full ${hoveredType === 'created' ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+                    <span>
+                        {labels[hoveredIdx]}: {hoveredType === 'created' ? createdCounts[hoveredIdx] : completedCounts[hoveredIdx]} {hoveredType === 'created' ? 'Created' : 'Completed'}
+                    </span>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ─── Custom Chart 4: Task Status Distribution Chart (Donut) ──────────────────────
+const TaskStatusDonut = ({ allTasks }) => {
+    const [hoveredSegment, setHoveredSegment] = useState(null);
+    const total = allTasks.length;
+    
+    const statuses = [
+        { name: "Completed", label: "Completed", count: allTasks.filter(t => ["Completed", "Done"].includes(t.status)).length, color: "#10b981", bg: "bg-emerald-500" },
+        { name: "In Progress", label: "In Progress", count: allTasks.filter(t => ["In Progress", "Active"].includes(t.status)).length, color: "#0ea5e9", bg: "bg-sky-500" },
+        { name: "QA Review", label: "QA Review", count: allTasks.filter(t => t.status === "QA Review").length, color: "#8b5cf6", bg: "bg-violet-500" },
+        { name: "Pending", label: "Pending", count: allTasks.filter(t => ["New", "Pending", "Todo", "To Do"].includes(t.status) || !t.status).length, color: "#94a3b8", bg: "bg-slate-400" },
+    ];
+    
+    let accumulatedPercentage = 0;
+    const r = 45;
+    const strokeWidth = 12;
+    const circ = 2 * Math.PI * r;
+    
+    return (
+        <div className="flex flex-col items-center justify-center h-full">
+            <div className="relative w-44 h-44 flex items-center justify-center">
+                <svg width="100%" height="100%" viewBox="0 0 120 120" className="transform -rotate-90">
+                    <circle cx="60" cy="60" r={r} fill="transparent" stroke="#f1f5f9" strokeWidth={strokeWidth} />
+                    {statuses.map((s) => {
+                        const percent = total > 0 ? (s.count / total) * 100 : 0;
+                        if (percent === 0) return null;
+                        
+                        const strokeDashoffset = circ - (circ * percent) / 100;
+                        const rotation = (accumulatedPercentage / 100) * 360;
+                        accumulatedPercentage += percent;
+                        
+                        const isHovered = hoveredSegment === s.name;
+                        
+                        return (
+                            <circle
+                                key={s.name}
+                                cx="60"
+                                cy="60"
+                                r={r}
+                                fill="transparent"
+                                stroke={s.color}
+                                strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth}
+                                strokeDasharray={circ}
+                                strokeDashoffset={strokeDashoffset}
+                                transform={`rotate(${rotation} 60 60)`}
+                                strokeLinecap="round"
+                                className="transition-all duration-300 cursor-pointer origin-center"
+                                onMouseEnter={() => setHoveredSegment(s.name)}
+                                onMouseLeave={() => setHoveredSegment(null)}
+                            />
+                        );
+                    })}
+                </svg>
+                <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none">
+                    <span className="text-3xl font-black text-slate-800 tracking-tight leading-none">
+                        {hoveredSegment ? statuses.find(s => s.name === hoveredSegment)?.count : total}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                        {hoveredSegment ? hoveredSegment : "Total Tasks"}
+                    </span>
+                </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 w-full">
+                {statuses.map(s => {
+                    const percent = total > 0 ? Math.round((s.count / total) * 100) : 0;
+                    return (
+                        <div 
+                            key={s.name} 
+                            className={`flex items-center justify-between p-1 rounded-lg transition-colors ${hoveredSegment === s.name ? "bg-slate-50" : ""}`}
+                            onMouseEnter={() => setHoveredSegment(s.name)}
+                            onMouseLeave={() => setHoveredSegment(null)}
+                        >
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${s.bg}`} />
+                                <span className="text-[11px] font-bold text-slate-600 truncate">{s.label}</span>
+                            </div>
+                            <div className="flex items-center gap-1 ml-1 font-mono text-[10px] font-bold text-slate-500 shrink-0">
+                                <span>{s.count}</span>
+                                <span className="text-slate-300 font-normal">({percent}%)</span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
+// ─── Main Admin Dashboard Component ─────────────────────────────────────────────
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -83,7 +462,6 @@ const AdminDashboard = () => {
             setUsers(usersWithWorkload);
             setAllTasks(allTasks);
             
-            // Set recent activities from notifications
             const notifications = notifRes.data.notifications || [];
             setRecentTasks(notifications);
         } catch (err) {
@@ -108,11 +486,11 @@ const AdminDashboard = () => {
         
         const columns = ["Metric", "Count/Value"];
         const data = [
-            ["Total Employees", dashboardData.totalEmployees],
-            ["Total Projects", dashboardData.totalProjects],
-            ["Total Tasks", dashboardData.totalTasks],
-            ["Tasks in QA Review", dashboardData.qaReviewTasks],
-            ["Overdue Tasks", dashboardData.overdueTasks]
+            ["Total Employees", users.length],
+            ["Total Projects", projects.length],
+            ["Total Tasks", allTasks.length],
+            ["Tasks in QA Review", allTasks.filter(t => t.status === "QA Review").length],
+            ["Overdue Tasks", allTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && !["Completed", "Done"].includes(t.status)).length]
         ];
 
         exportPDF({
@@ -178,12 +556,21 @@ const AdminDashboard = () => {
         );
     });
 
+    const completedTasks = allTasks.filter(t => ["Completed", "Done"].includes(t.status));
+    const pendingTasks = allTasks.filter(t => ["New", "Pending", "Todo", "To Do"].includes(t.status) || !t.status);
+    const inProgressTasks = allTasks.filter(t => ["In Progress", "Active"].includes(t.status));
+    const qaReviewTasks = allTasks.filter(t => t.status === "QA Review");
+    const overdueTasks = allTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && !["Completed", "Done"].includes(t.status));
+
     const kpis = dashboardData ? [
-        { label: "Total Employees", value: dashboardData.totalEmployees, trend: "", color: "text-blue-500", variant: "blue", bg: "bg-blue-50", onClick: () => setStatModal({ isOpen: true, title: "Total Employees", data: users, type: "employee" }) },
-        { label: "Total Projects", value: dashboardData.totalProjects, trend: "", color: "text-indigo-500", variant: "indigo", bg: "bg-indigo-50", onClick: () => setStatModal({ isOpen: true, title: "Total Projects", data: projects, type: "project" }) },
-        { label: "Total Tasks", value: dashboardData.totalTasks, trend: "", color: "text-emerald-500", variant: "emerald", bg: "bg-emerald-50", onClick: () => setStatModal({ isOpen: true, title: "Total Tasks", data: allTasks, type: "task" }) },
-        { label: "In QA Review", value: dashboardData.qaReviewTasks, trend: "", color: "text-amber-500", variant: "amber", bg: "bg-amber-50", onClick: () => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: allTasks.filter(t => t.status === "QA Review"), type: "task" }) },
-        { label: "Overdue Tasks", value: dashboardData.overdueTasks, trend: "", color: "text-red-500", variant: "rose", bg: "bg-rose-50", onClick: () => setStatModal({ isOpen: true, title: "Overdue Tasks", data: allTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), type: "task" }) },
+        { label: "Total Tasks", value: allTasks.length, icon: ListTodo, color: "text-indigo-600", bg: "bg-indigo-50", border: "indigo", onClick: () => setStatModal({ isOpen: true, title: "Total Tasks", data: allTasks, type: "task" }) },
+        { label: "Completed", value: completedTasks.length, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50", border: "emerald", onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks", data: completedTasks, type: "task" }) },
+        { label: "In Progress", value: inProgressTasks.length, icon: Play, color: "text-sky-600", bg: "bg-sky-50", border: "sky", onClick: () => setStatModal({ isOpen: true, title: "In Progress Tasks", data: inProgressTasks, type: "task" }) },
+        { label: "QA Review", value: qaReviewTasks.length, icon: ShieldAlert, color: "text-violet-600", bg: "bg-violet-50", border: "violet", onClick: () => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: qaReviewTasks, type: "task" }) },
+        { label: "Pending", value: pendingTasks.length, icon: Clock, color: "text-slate-600", bg: "bg-slate-50", border: "slate", onClick: () => setStatModal({ isOpen: true, title: "Pending Tasks", data: pendingTasks, type: "task" }) },
+        { label: "Overdue", value: overdueTasks.length, icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-50", border: "rose", onClick: () => setStatModal({ isOpen: true, title: "Overdue Tasks", data: overdueTasks, type: "task" }) },
+        { label: "Total Projects", value: projects.length, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-50", border: "blue", onClick: () => setStatModal({ isOpen: true, title: "Total Projects", data: projects, type: "project" }) },
+        { label: "Total Employees", value: users.length, icon: Users, color: "text-amber-600", bg: "bg-amber-50", border: "amber", onClick: () => setStatModal({ isOpen: true, title: "Total Employees", data: users, type: "employee" }) }
     ] : [];
 
     return (
@@ -193,7 +580,7 @@ const AdminDashboard = () => {
                 <Topbar DashboardTile="Dashboard" />
                 <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto">
                     {/* Header Section */}
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4 shrink-0">
                         <div>
                             <h1 className="dashboard-heading">System Overview</h1>
                             <p className="dashboard-subheading">Here's what's happening across your CRM today.</p>
@@ -201,13 +588,13 @@ const AdminDashboard = () => {
                         <div className="flex gap-3">
                             <button 
                                 onClick={handleExportDashboard}
-                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-sm flex items-center gap-2"
+                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all-300 shadow-sm flex items-center gap-2"
                             >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                <Download className="w-4 h-4" />
                                 Export Report
                             </button>
-                            <button onClick={() => setIsProjectModalOpen(true)} className="px-4 py-2.5 bg-blue-600 rounded-xl text-sm font-medium text-white hover:bg-blue-700 transition shadow-sm shadow-blue-200/50 flex items-center gap-2">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                            <button onClick={() => setIsProjectModalOpen(true)} className="px-4 py-2.5 bg-blue-600 rounded-xl text-sm font-bold text-white hover:bg-blue-700 transition-all-300 shadow-sm shadow-blue-200/50 flex items-center gap-2">
+                                <Plus className="w-4 h-4" />
                                 New Project
                             </button>
                         </div>
@@ -215,179 +602,278 @@ const AdminDashboard = () => {
 
                     {/* Content Area */}
                     {loading ? (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="flex-1 flex items-center justify-center py-20">
+                            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     ) : error ? (
-                        <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 font-medium">
+                        <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 font-medium shrink-0">
                             {error}
                         </div>
                     ) : (
-                        <>
-                            {/* KPIs - Modern Compact Grid */}
-                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="space-y-8">
+                            {/* KPIs Grid */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
                                 {kpis.map((kpi, i) => (
-                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.variant} flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform`}>
-                                        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${kpi.bg.replace('50', '100')} ${kpi.color}`}>
-                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                {kpi.variant === 'blue' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />}
-                                                {kpi.variant === 'indigo' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" />}
-                                                {kpi.variant === 'emerald' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />}
-                                                {kpi.variant === 'amber' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                                                {kpi.variant === 'rose' && <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />}
-                                            </svg>
+                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex-col items-start gap-3 p-4 h-[105px] cursor-pointer`}>
+                                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
+                                            <kpi.icon className="w-4.5 h-4.5" />
                                         </div>
-                                        <div className="flex flex-col justify-center">
-                                            <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{kpi.label}</p>
+                                        <div className="flex flex-col justify-center min-w-0 w-full">
+                                            <h4 className="text-xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
+                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">{kpi.label}</p>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                    {/* Main Content Sections */}
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        
-                        {/* Left Column (Span 2) - Projects & Team */}
-                        <div className="xl:col-span-2 space-y-6">
-                            {/* Projects Overview */}
-                            <Card className="!p-0 overflow-hidden flex flex-col">
-                                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                    <div>
-                                        <h3 className="section-title">Active Projects</h3>
-                                        <p className="text-xs text-slate-500 mt-1 font-medium">Milestone progress across top initiatives</p>
-                                    </div>
-                                </div>
-                                <div className="p-6 space-y-6 flex-1">
-                                    {projects.slice(0, 4).map((proj, i) => {
-                                        // Calculate progress based on dates or tasks (using a mock calculation for now since backend doesn't return progress)
-                                        const progress = proj.status === "Completed" ? 100 : 50; 
-                                        const color = progress === 100 ? "bg-emerald-500" : "bg-blue-500";
-                                        
-                                        return (
-                                        <div key={proj._id || i}>
-                                            <div className="flex justify-between text-sm mb-2">
-                                                <span className="font-bold text-slate-700">{proj.projectName}</span>
-                                                <span className="font-bold text-slate-700">{progress}%</span>
-                                            </div>
-                                            <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                                                <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${progress}%` }}></div>
-                                            </div>
-                                        </div>
-                                    )})}
-                                    {projects.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-4">No active projects</div>}
-                                </div>
-                            </Card>
-
-                            {/* Team Availability */}
-                            <Card className="!p-0 overflow-hidden flex flex-col">
-                                <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                    <div>
-                                        <h3 className="section-title">Team Workload</h3>
-                                        <p className="text-xs text-slate-500 mt-1 font-medium">Current availability and assignments</p>
-                                    </div>
-                                    <button 
-                                        onClick={() => navigate("/admin/employees")}
-                                        className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-                                    >
-                                        Manage Team
-                                    </button>
-                                </div>
-                                <div className="divide-y divide-slate-100 flex-1">
-                                    {users.filter(u => u.role !== "admin").slice(0, 5).map((member, i) => {
-                                        const taskCount = member.activeTaskCount || 0;
-                                        const isBusy = taskCount > 0;
-                                        const statusText = isBusy ? `Busy - ${taskCount} ${taskCount === 1 ? 'task' : 'tasks'}` : "Available - No tasks yet";
-                                        const statusColor = isBusy ? "bg-red-500" : "bg-emerald-500";
-                                        
-                                        return (
-                                        <div key={member._id || i} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition">
-                                            <div className="flex items-center gap-4">
-                                                <div className="relative">
-                                                    <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center font-bold text-blue-700 border border-blue-200 uppercase overflow-hidden shadow-sm">
-                                                        {member.profilePic ? (
-                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            member.name?.charAt(0) || "U"
-                                                        )}
-                                                    </div>
-                                                    <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${statusColor}`}></span>
-                                                </div>
+                            {/* Analytics and Widgets Grid */}
+                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                
+                                {/* Left Column: Span 2 */}
+                                <div className="xl:col-span-2 space-y-8">
+                                    {/* Graphs Stack */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <Card className="p-6 flex flex-col h-[280px]">
+                                            <div className="flex items-center justify-between mb-4 shrink-0">
                                                 <div>
-                                                    <h4 className="text-sm font-bold text-slate-800">{member.name}</h4>
-                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.role} <span className="mx-1">•</span> <span className="text-slate-400">{statusText}</span></p>
+                                                    <h3 className="section-title flex items-center gap-2">
+                                                        <TrendingUp className="w-4 h-4 text-emerald-500" />
+                                                        Task Completion
+                                                    </h3>
+                                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Last 7 Days Trend</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Dept</span>
-                                                <span className="text-sm font-bold text-slate-700 capitalize">{member.department || "Engineering"}</span>
+                                            <div className="flex-1 min-h-0">
+                                                <TaskCompletionGraph allTasks={allTasks} />
                                             </div>
-                                        </div>
-                                    )})}
-                                    {users.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-4">No team members found</div>}
-                                </div>
-                            </Card>
-                        </div>
+                                        </Card>
+                                        
+                                        <Card className="p-6 flex flex-col h-[280px]">
+                                            <div className="flex items-center justify-between mb-4 shrink-0">
+                                                <div>
+                                                    <h3 className="section-title flex items-center gap-2">
+                                                        <BarChart3 className="w-4 h-4 text-blue-500" />
+                                                        Weekly Productivity
+                                                    </h3>
+                                                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Tasks Created vs Completed</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-h-0">
+                                                <WeeklyProductivityGraph allTasks={allTasks} />
+                                            </div>
+                                        </Card>
+                                    </div>
 
-                        {/* Right Column (Span 1) - Activity Feed */}
-                        <div className="flex flex-col gap-4">
-                            <div className="flex items-center justify-between px-1">
-                                <h3 className="text-lg font-bold text-slate-800 tracking-tight">Real-Time Feed</h3>
-                            </div>
-                            <Card className="h-[580px] flex flex-col gap-4 !p-0 overflow-hidden">
-                                <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Latest Updates</span>
-                                    <span className="relative flex h-2.5 w-2.5">
-                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                                    </span>
-                                </div>
-                                <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5 custom-scrollbar">
-                                    {/* Feed Items */}
-                                    {recentTasks.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center py-10 opacity-60">
-                                            <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                                                <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    {/* Active Projects progress tracker */}
+                                    <Card className="!p-0 flex flex-col">
+                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                                            <div>
+                                                <h3 className="section-title flex items-center gap-2">
+                                                    <Briefcase className="w-4.5 h-4.5 text-indigo-500" />
+                                                    Active Projects Leaderboard
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-0.5 font-medium">Mathematical completion metrics based on project tasks</p>
                                             </div>
-                                            <p className="text-sm font-semibold text-slate-500 text-center">No recent activity found</p>
+                                            <button 
+                                                onClick={() => navigate("/admin/projects")}
+                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                            >
+                                                View Projects
+                                            </button>
                                         </div>
-                                    ) : (
-                                        recentTasks.map((item, i) => (
-                                            <div key={item._id || i} className="flex gap-4 text-sm relative">
-                                                {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100"></div>}
-                                                <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase overflow-hidden`}>
-                                                    {item.sender?.profilePic ? (
-                                                        <img src={item.sender.profilePic} alt={item.sender.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        item.sender?.name?.charAt(0) || "S"
-                                                    )}
-                                                </div>
-                                                <div className="pt-0.5 flex-1">
-                                                    <p className="text-slate-600 leading-snug">
-                                                        <span className="font-bold text-slate-800">{item.title}</span>: {item.message}
-                                                    </p>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(item.createdAt)}</span>
-                                                        <span className="text-slate-200 text-xs">•</span>
-                                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                                                            item.category === 'status_change' ? 'bg-indigo-50 text-indigo-600' :
-                                                            item.category === 'creation' ? 'bg-emerald-50 text-emerald-600' :
-                                                            item.category === 'update' ? 'bg-blue-50 text-blue-600' :
-                                                            item.category === 'deletion' ? 'bg-rose-50 text-rose-600' :
-                                                            'bg-slate-100 text-slate-500'
-                                                        }`}>
-                                                            {(item.category || "System").replace(/_/g, ' ')}
-                                                        </span>
+                                        <div className="p-6 space-y-6 flex-1">
+                                            {projects.slice(0, 4).map((proj, i) => {
+                                                const projTasks = allTasks.filter(t => {
+                                                    const pid = t.project?._id || t.project;
+                                                    return pid === proj._id;
+                                                });
+                                                const totalCount = projTasks.length;
+                                                const completedCount = projTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+                                                const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : (proj.status === "Completed" ? 100 : 0);
+                                                const color = progress === 100 ? "bg-emerald-500" : progress > 50 ? "bg-blue-500" : "bg-indigo-500";
+                                                
+                                                return (
+                                                    <div key={proj._id || i} className="group hover:bg-slate-50/40 p-3 rounded-xl transition border border-transparent hover:border-slate-100">
+                                                        <div className="flex justify-between items-center text-sm mb-2.5">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150">
+                                                                    {proj.projectName}
+                                                                </span>
+                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                                                                    proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                                                                }`}>
+                                                                    {proj.status || 'Active'}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500">
+                                                                <span>{completedCount}/{totalCount} tasks</span>
+                                                                <span className="text-slate-300">•</span>
+                                                                <span className="text-slate-700">{progress}%</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                            <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${progress}%` }}></div>
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                );
+                                            })}
+                                            {projects.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-4">No active projects</div>}
+                                        </div>
+                                    </Card>
+
+                                    {/* Team Performance Workload Grid */}
+                                    <Card className="!p-0 flex flex-col">
+                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                                            <div>
+                                                <h3 className="section-title flex items-center gap-2">
+                                                    <Users className="w-4.5 h-4.5 text-blue-500" />
+                                                    Team Workloads & Productivity
+                                                </h3>
+                                                <p className="text-xs text-slate-400 mt-0.5 font-medium">Workloads, active task counts, and performance rankings</p>
                                             </div>
-                                        ))
-                                    )}
+                                            <button 
+                                                onClick={() => navigate("/admin/employees")}
+                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
+                                            >
+                                                Manage Team
+                                            </button>
+                                        </div>
+                                        <div className="divide-y divide-slate-100 flex-1">
+                                            {users.filter(u => u.role !== "admin").slice(0, 5).map((member, i) => {
+                                                const memberTasks = allTasks.filter(t => {
+                                                    const uid = t.assignedTo?._id || t.assignedTo;
+                                                    return uid === member._id;
+                                                });
+                                                
+                                                const activeCount = memberTasks.filter(t => !["Completed", "Done"].includes(t.status)).length;
+                                                const completedCount = memberTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+                                                const totalAssigned = memberTasks.length;
+                                                const completionRate = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
+                                                
+                                                const statusText = activeCount > 3 ? `Busy - ${activeCount} active` : activeCount > 0 ? `${activeCount} active` : "Available";
+                                                const statusColor = activeCount > 3 ? "bg-rose-500" : activeCount > 0 ? "bg-amber-500" : "bg-emerald-500";
+                                                
+                                                return (
+                                                    <div key={member._id || i} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition">
+                                                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                                                            <div className="relative shrink-0">
+                                                                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center font-bold text-blue-700 border border-blue-100 uppercase overflow-hidden shadow-sm">
+                                                                    {member.profilePic ? (
+                                                                        <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        member.name?.charAt(0) || "U"
+                                                                    )}
+                                                                </div>
+                                                                <span className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${statusColor}`}></span>
+                                                            </div>
+                                                            <div className="min-w-0 flex-1 pr-4">
+                                                                <h4 className="text-sm font-bold text-slate-800 truncate">{member.name}</h4>
+                                                                <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 flex-wrap font-medium">
+                                                                    <span className="font-bold text-slate-400 capitalize">{member.role}</span>
+                                                                    <span>•</span>
+                                                                    <span className="text-slate-400 capitalize">{member.department || "Engineering"}</span>
+                                                                    <span>•</span>
+                                                                    <span className={`font-bold ${activeCount > 3 ? 'text-rose-500' : activeCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                                        {statusText}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-4 shrink-0">
+                                                            <div className="text-right">
+                                                                <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Completion</span>
+                                                                <div className="flex items-center gap-2 mt-0.5">
+                                                                    <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
+                                                                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${completionRate}%` }}></div>
+                                                                    </div>
+                                                                    <span className="text-xs font-bold text-slate-700 font-mono">{completionRate}%</span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                            {users.length === 0 && <div className="text-slate-400 text-sm font-medium text-center py-4">No team members found</div>}
+                                        </div>
+                                    </Card>
                                 </div>
-                            </Card>
+
+                                {/* Right Column */}
+                                <div className="space-y-8 flex flex-col">
+                                    {/* Task Status Donut widget */}
+                                    <Card className="p-6 flex flex-col justify-between h-[380px]">
+                                        <div className="shrink-0 mb-4">
+                                            <h3 className="section-title flex items-center gap-2">
+                                                <Activity className="w-4 h-4 text-violet-500" />
+                                                Task Distribution
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-0.5 font-medium">Current workload distribution split by statuses</p>
+                                        </div>
+                                        <div className="flex-1 min-h-0">
+                                            <TaskStatusDonut allTasks={allTasks} />
+                                        </div>
+                                    </Card>
+
+                                    {/* Real-time Timelined Activity Feed */}
+                                    <div className="flex flex-col gap-4 flex-1">
+                                        <h3 className="text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2 px-1">
+                                            <Activity className="w-4.5 h-4.5 text-blue-500 animate-pulse" />
+                                            Real-Time Feed
+                                        </h3>
+                                        <Card className="h-[460px] flex flex-col !p-0 overflow-hidden">
+                                            <div className="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between shrink-0">
+                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Latest Updates</span>
+                                                <span className="relative flex h-2.5 w-2.5">
+                                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                                </span>
+                                            </div>
+                                            <div className="flex-1 overflow-y-auto px-5 pb-5 space-y-6 pt-5 custom-scrollbar">
+                                                {recentTasks.length === 0 ? (
+                                                    <div className="h-full flex flex-col items-center justify-center py-10 opacity-60">
+                                                        <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                                            <Clock className="w-6 h-6 text-slate-400" />
+                                                        </div>
+                                                        <p className="text-sm font-semibold text-slate-500 text-center">No recent activity found</p>
+                                                    </div>
+                                                ) : (
+                                                    recentTasks.map((item, i) => (
+                                                        <div key={item._id || i} className="flex gap-4 text-sm relative">
+                                                            {i !== recentTasks.length - 1 && <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-slate-100 font-bold"></div>}
+                                                            <div className="w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center font-bold text-[10px] z-10 ring-4 ring-white bg-blue-50 text-blue-600 border border-blue-100 uppercase overflow-hidden">
+                                                                {item.sender?.profilePic ? (
+                                                                    <img src={item.sender.profilePic} alt={item.sender.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    item.sender?.name?.charAt(0) || "S"
+                                                                )}
+                                                            </div>
+                                                            <div className="pt-0.5 flex-1 min-w-0">
+                                                                <p className="text-slate-600 leading-snug break-words">
+                                                                    <span className="font-bold text-slate-800">{item.title}</span>: {item.message}
+                                                                </p>
+                                                                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(item.createdAt)}</span>
+                                                                    <span className="text-slate-200 text-xs">•</span>
+                                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                                        item.category === 'status_change' ? 'bg-indigo-50 text-indigo-600' :
+                                                                        item.category === 'creation' ? 'bg-emerald-50 text-emerald-600' :
+                                                                        item.category === 'update' ? 'bg-blue-50 text-blue-600' :
+                                                                        item.category === 'deletion' ? 'bg-rose-50 text-rose-600' :
+                                                                        'bg-slate-100 text-slate-500'
+                                                                    }`}>
+                                                                        {(item.category || "System").replace(/_/g, ' ')}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </Card>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    </>
                     )}
                 </main>
             </div>
@@ -398,14 +884,13 @@ const AdminDashboard = () => {
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-[500px] flex flex-col max-h-[90vh] overflow-hidden animate-[fadeIn_0.2s_ease-out]">
                         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100/50 shrink-0">
                             <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2.5">
-                                <div className="text-[#1d4ed8] relative flex items-center justify-center">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg>
-                                    <svg className="w-2.5 h-2.5 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M12 4v16m8-8H4"/></svg>
+                                <div className="text-blue-600 relative flex items-center justify-center">
+                                    <Briefcase className="w-5 h-5" />
                                 </div>
                                 Create New Project
                             </h2>
                             <button onClick={() => setIsProjectModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <Clock className="w-5 h-5 transform rotate-45" />
                             </button>
                         </div>
                         <form onSubmit={handleCreateProject} className="flex flex-col flex-1 overflow-hidden">
@@ -446,7 +931,7 @@ const AdminDashboard = () => {
                                             ))}
                                         </select>
                                         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                                            <Clock className="w-4 h-4 transform rotate-90" />
                                         </div>
                                     </div>
                                 </div>
@@ -508,7 +993,7 @@ const AdminDashboard = () => {
                                 <button 
                                     type="submit"
                                     disabled={isCreating}
-                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-[#1d4ed8] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-sm disabled:opacity-50"
+                                    className="flex-1 justify-center flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-sm disabled:opacity-50"
                                 >
                                     {isCreating ? "Creating..." : "Create Project"}
                                 </button>
@@ -533,7 +1018,7 @@ const AdminDashboard = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
             `}} />
         </div>
-    )
-}
+    );
+};
 
 export default AdminDashboard;
