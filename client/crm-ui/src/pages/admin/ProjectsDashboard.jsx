@@ -692,18 +692,7 @@ const ProjectsDashboard = () => {
                                     {/* Right: Action */}
                                     <div className="w-full xl:w-[20%] flex items-center justify-end border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
                                         <div className="flex items-center gap-2">
-                                            {project.attachment && (
-                                                <a
-                                                    href={project.attachment}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                    title="View Attachment"
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                                </a>
-                                            )}
+
                                             {(can('projects.update') || can('projects.delete')) && (
                                                 <>
                                                     {can('projects.update') && (
@@ -746,11 +735,7 @@ const ProjectsDashboard = () => {
                     </div>
                     )}
                     
-                    {/* Informational Tip */}
-                    <div className="flex items-center justify-center gap-2 mt-8 text-slate-400 text-sm font-medium">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Tip: Click anywhere on a project row to instantly open its detailed Kanban board.
-                    </div>
+
 
                 </main>
             </div>
