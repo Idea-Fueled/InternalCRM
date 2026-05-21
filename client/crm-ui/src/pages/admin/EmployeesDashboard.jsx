@@ -97,6 +97,7 @@ const EmployeesDashboard = () => {
     });
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
+    const [showAddEmployeePwd, setShowAddEmployeePwd] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
     const [teamLeads, setTeamLeads] = useState([]);
     const [departments, setDepartments] = useState([]);
@@ -758,13 +759,22 @@ const EmployeesDashboard = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-bold text-slate-700">Password (Optional)</label>
-                                    <input 
-                                        type="password" 
-                                        value={newEmployee.password}
-                                        onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
-                                        placeholder="Leave blank to send setup email"
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all placeholder:text-slate-300" 
-                                    />
+                                    <div className="relative">
+                                        <input 
+                                            type={showAddEmployeePwd ? "text" : "password"} 
+                                            value={newEmployee.password}
+                                            onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
+                                            placeholder="Leave blank to send setup email"
+                                            className="w-full px-3 py-2 pr-10 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all placeholder:text-slate-300" 
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddEmployeePwd(!showAddEmployeePwd)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                                        >
+                                            {showAddEmployeePwd ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                     <p className="text-slate-400 text-[10px] font-medium leading-normal mt-0.5">
                                         If left blank, the employee will receive a welcome email with a secure link to set up their password.
                                     </p>

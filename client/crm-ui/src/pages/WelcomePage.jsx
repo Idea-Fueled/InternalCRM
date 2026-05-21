@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import logoImgNew from "../assets/IF-black.png";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ShieldAlert, X, Mail, Lock } from "lucide-react";
+import { ShieldAlert, X, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { authService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
 
@@ -15,6 +15,7 @@ export default function WelcomePage() {
     });
     const [loading, setLoading] = useState(false);
     const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         if (user && !authLoading) {
@@ -116,15 +117,22 @@ export default function WelcomePage() {
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 name="password"
                                 required
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className={`w-full pl-11 pr-5 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm text-sm
+                                className={`w-full pl-11 pr-12 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm text-sm
                                     ${submitted && !formData.password ? 'border-red-500 bg-red-50/30' : 'border-slate-200/80 bg-slate-50/50'}`}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
                         </div>
                         {submitted && !formData.password && (
                             <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Password is required!</p>
