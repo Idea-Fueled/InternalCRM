@@ -531,9 +531,6 @@ const OrganizationTree = () => {
                         <div className="flex-1 min-w-0">
                             <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 font-bold">Department</span>
                             <h6 className="text-sm font-black text-slate-800 truncate leading-tight mt-0.5">{node.department || "General"}</h6>
-                            <p className="text-[11px] text-slate-500 font-semibold truncate leading-normal mt-0.5">
-                                {node.children?.length || 0} Member{(node.children?.length !== 1) ? 's' : ''}
-                            </p>
                         </div>
                     </div>
 
