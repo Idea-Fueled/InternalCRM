@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 
@@ -35,8 +35,37 @@ const formatTimeAgo = (date) => {
     return then.toLocaleDateString();
 };
 
+// Hook to dynamically monitor container width and height
+const useResize = (ref) => {
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+    
+    useEffect(() => {
+        const element = ref.current;
+        if (!element) return;
+        
+        const resizeObserver = new ResizeObserver((entries) => {
+            if (!entries || entries.length === 0) return;
+            const { width, height } = entries[0].contentRect;
+            setDimensions({ width, height });
+        });
+        
+        resizeObserver.observe(element);
+        
+        return () => {
+            if (element) {
+                resizeObserver.unobserve(element);
+            }
+            resizeObserver.disconnect();
+        };
+    }, [ref]);
+    
+    return dimensions;
+};
+
 // ─── Custom Chart 1: Task Completion Trend ──────────────────────────────────────
 const TaskCompletionGraph = ({ allTasks }) => {
+    const containerRef = useRef(null);
+    const { width, height } = useResize(containerRef);
     const [hoveredIndex, setHoveredIndex] = useState(null);
     
     // Calculate last 7 days completed tasks
@@ -76,89 +105,100 @@ const TaskCompletionGraph = ({ allTasks }) => {
 
     const maxVal = Math.max(...counts, 4);
     
-    const width = 500;
-    const height = 330;
-    const paddingLeft = 35;
-    const paddingRight = 15;
-    const paddingTop = 15;
-    const paddingBottom = 35;
+    // Symmetrical fluid scaling
+    const activeWidth = width || 320;
+    const activeHeight = height || 250;
     
-    const chartWidth = width - paddingLeft - paddingRight;
-    const chartHeight = height - paddingTop - paddingBottom;
+    const paddingLeft = 32;
+    const paddingRight = 12;
+    const paddingTop = 15;
+    const paddingBottom = 30;
+    
+    const chartWidth = Math.max(100, activeWidth - paddingLeft - paddingRight);
+    const chartHeight = Math.max(100, activeHeight - paddingTop - paddingBottom);
     
     const points = counts.map((count, i) => {
         const x = paddingLeft + (i * (chartWidth / 6));
-        const y = height - paddingBottom - (count / maxVal) * chartHeight;
+        const y = activeHeight - paddingBottom - (count / maxVal) * chartHeight;
         return { x, y, count, label: labels[i] };
     });
     
+    // Smooth Bezier Curve spline drawing
     let linePath = "";
     if (points.length > 0) {
-        linePath = `M ${points[0].x} ${points[0].y} `;
-        for (let i = 1; i < points.length; i++) {
-            linePath += `L ${points[i].x} ${points[i].y} `;
+        linePath = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 0; i < points.length - 1; i++) {
+            const p0 = points[i];
+            const p1 = points[i + 1];
+            const cp1x = p0.x + (p1.x - p0.x) / 3;
+            const cp1y = p0.y;
+            const cp2x = p0.x + 2 * (p1.x - p0.x) / 3;
+            const cp2y = p1.y;
+            linePath += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
         }
     }
     
-    const areaPath = linePath ? `${linePath} L ${points[points.length - 1].x} ${height - paddingBottom} L ${points[0].x} ${height - paddingBottom} Z` : "";
+    const areaPath = linePath ? `${linePath} L ${points[points.length - 1].x} ${activeHeight - paddingBottom} L ${points[0].x} ${activeHeight - paddingBottom} Z` : "";
     
     return (
-        <div className="relative w-full h-full flex items-center justify-center">
-            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
-                <defs>
-                    <linearGradient id="emeraldAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10b981" stopOpacity="0.25" />
-                        <stop offset="100%" stopColor="#10b981" stopOpacity="0.00" />
-                    </linearGradient>
-                </defs>
-                
-                {/* Horizontal Dashed Helper Lines */}
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-                    const y = height - paddingBottom - ratio * chartHeight;
-                    const val = Math.round(ratio * maxVal);
-                    return (
-                        <g key={idx} className="opacity-40">
-                            <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
-                            <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+        <div ref={containerRef} className="w-full h-full relative min-h-[220px]">
+            {width > 0 && (
+                <svg width={activeWidth} height={activeHeight} viewBox={`0 0 ${activeWidth} ${activeHeight}`} className="overflow-visible select-none">
+                    <defs>
+                        <linearGradient id="emeraldAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity="0.2" />
+                            <stop offset="100%" stopColor="#10b981" stopOpacity="0.00" />
+                        </linearGradient>
+                    </defs>
+                    
+                    {/* Horizontal Dashed Helper Lines */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                        const y = activeHeight - paddingBottom - ratio * chartHeight;
+                        const val = Math.round(ratio * maxVal);
+                        return (
+                            <g key={idx} className="opacity-40">
+                                <line x1={paddingLeft} y1={y} x2={activeWidth - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
+                                <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                            </g>
+                        );
+                    })}
+                    
+                    {/* Area Gradient */}
+                    {areaPath && (
+                        <path d={areaPath} fill="url(#emeraldAreaGrad)" className="transition-all duration-500 ease-out" />
+                    )}
+                    
+                    {/* Curve Line */}
+                    {linePath && (
+                        <path d={linePath} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500 ease-out" />
+                    )}
+                    
+                    {/* Points */}
+                    {points.map((p, i) => (
+                        <g key={i}>
+                            <circle cx={p.x} cy={p.y} r="16" fill="transparent" className="cursor-pointer" onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} />
+                            <circle cx={p.x} cy={p.y} r={hoveredIndex === i ? "6" : "4"} fill="#ffffff" stroke="#10b981" strokeWidth={hoveredIndex === i ? "4" : "2.5"} className="transition-all duration-200 pointer-events-none" />
                         </g>
-                    );
-                })}
-                
-                {/* Area Gradient */}
-                {areaPath && (
-                    <path d={areaPath} fill="url(#emeraldAreaGrad)" className="transition-all duration-500 ease-out" />
-                )}
-                
-                {/* Curve Line */}
-                {linePath && (
-                    <path d={linePath} fill="none" stroke="#10b981" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-500 ease-out" />
-                )}
-                
-                {/* Points */}
-                {points.map((p, i) => (
-                    <g key={i}>
-                        <circle cx={p.x} cy={p.y} r="16" fill="transparent" className="cursor-pointer" onMouseEnter={() => setHoveredIndex(i)} onMouseLeave={() => setHoveredIndex(null)} />
-                        <circle cx={p.x} cy={p.y} r={hoveredIndex === i ? "6" : "4"} fill="#ffffff" stroke="#10b981" strokeWidth={hoveredIndex === i ? "4" : "2"} className="transition-all duration-200 pointer-events-none" />
-                    </g>
-                ))}
-                
-                {/* Labels */}
-                {points.map((p, i) => (
-                    <text key={i} x={p.x} y={height - 10} textAnchor="middle" className={`text-[10px] font-bold transition-all ${hoveredIndex === i ? "fill-emerald-600 font-extrabold" : "fill-slate-400"}`}>{p.label}</text>
-                ))}
-            </svg>
+                    ))}
+                    
+                    {/* Labels */}
+                    {points.map((p, i) => (
+                        <text key={i} x={p.x} y={activeHeight - 8} textAnchor="middle" className={`text-[10px] font-bold transition-all ${hoveredIndex === i ? "fill-emerald-600 font-extrabold" : "fill-slate-400"}`}>{p.label}</text>
+                    ))}
+                </svg>
+            )}
             
-            {hoveredIndex !== null && (
+            {hoveredIndex !== null && width > 0 && (
                 <div 
-                    className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800"
+                    className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800 animate-[fadeIn_0.15s_ease-out]"
                     style={{
-                        left: `${(points[hoveredIndex].x / width) * 100}%`,
-                        top: `${(points[hoveredIndex].y / height) * 100 - 15}%`,
+                        left: `${(points[hoveredIndex].x / activeWidth) * 100}%`,
+                        top: `${(points[hoveredIndex].y / activeHeight) * 100 - 10}%`,
                         transform: "translate(-50%, -100%)",
                     }}
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>{points[hoveredIndex].label}: {points[hoveredIndex].count} task{points[hoveredIndex].count === 1 ? '' : 's'}</span>
+                    <span>{points[hoveredIndex].label}: {points[hoveredIndex].count} completed</span>
                 </div>
             )}
         </div>
@@ -167,6 +207,8 @@ const TaskCompletionGraph = ({ allTasks }) => {
 
 // ─── Custom Chart 2: Weekly Productivity Graph ─────────────────────────────────
 const WeeklyProductivityGraph = ({ allTasks }) => {
+    const containerRef = useRef(null);
+    const { width, height } = useResize(containerRef);
     const [hoveredIdx, setHoveredIdx] = useState(null);
     const [hoveredType, setHoveredType] = useState(null);
     
@@ -221,93 +263,124 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
 
     const maxVal = Math.max(...createdCounts, ...completedCounts, 4);
     
-    const width = 500;
-    const height = 330;
-    const paddingLeft = 35;
-    const paddingRight = 15;
-    const paddingTop = 15;
-    const paddingBottom = 35;
+    // Symmetrical fluid scaling
+    const activeWidth = width || 320;
+    const activeHeight = height || 250;
     
-    const chartWidth = width - paddingLeft - paddingRight;
-    const chartHeight = height - paddingTop - paddingBottom;
+    const paddingLeft = 32;
+    const paddingRight = 12;
+    const paddingTop = 15;
+    const paddingBottom = 30;
+    
+    const chartWidth = Math.max(100, activeWidth - paddingLeft - paddingRight);
+    const chartHeight = Math.max(100, activeHeight - paddingTop - paddingBottom);
     
     const numGroups = 7;
     const groupWidth = chartWidth / numGroups;
-    const barWidth = 15;
-    const gapBetweenBars = 4;
+    
+    // Calculate bar sizes proportionally to avoid clipping or overlap
+    const barWidth = Math.max(6, Math.min(16, groupWidth * 0.25));
+    const gapBetweenBars = Math.max(2, Math.min(6, groupWidth * 0.08));
     
     return (
-        <div className="relative w-full h-full flex items-center justify-center">
-            <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full overflow-visible">
-                {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-                    const y = height - paddingBottom - ratio * chartHeight;
-                    const val = Math.round(ratio * maxVal);
-                    return (
-                        <g key={idx} className="opacity-40">
-                            <line x1={paddingLeft} y1={y} x2={width - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
-                            <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
-                        </g>
-                    );
-                })}
-                
-                {labels.map((label, i) => {
-                    const groupCenterX = paddingLeft + (i * groupWidth) + (groupWidth / 2);
+        <div ref={containerRef} className="w-full h-full relative min-h-[220px]">
+            {width > 0 && (
+                <svg width={activeWidth} height={activeHeight} viewBox={`0 0 ${activeWidth} ${activeHeight}`} className="overflow-visible select-none">
+                    <defs>
+                        <linearGradient id="createdGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#60a5fa" />
+                            <stop offset="100%" stopColor="#2563eb" />
+                        </linearGradient>
+                        <linearGradient id="completedGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#34d399" />
+                            <stop offset="100%" stopColor="#059669" />
+                        </linearGradient>
+                        <linearGradient id="createdHoverGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#93c5fd" />
+                            <stop offset="100%" stopColor="#1d4ed8" />
+                        </linearGradient>
+                        <linearGradient id="completedHoverGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#6ee7b7" />
+                            <stop offset="100%" stopColor="#047857" />
+                        </linearGradient>
+                    </defs>
+
+                    {/* Y-Axis Horizontal Helper Lines */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                        const y = activeHeight - paddingBottom - ratio * chartHeight;
+                        const val = Math.round(ratio * maxVal);
+                        return (
+                            <g key={idx} className="opacity-40">
+                                <line x1={paddingLeft} y1={y} x2={activeWidth - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
+                                <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                            </g>
+                        );
+                    })}
                     
-                    const createdHeight = (createdCounts[i] / maxVal) * chartHeight;
-                    const createdX = groupCenterX - barWidth - (gapBetweenBars / 2);
-                    const createdY = height - paddingBottom - createdHeight;
-                    
-                    const completedHeight = (completedCounts[i] / maxVal) * chartHeight;
-                    const completedX = groupCenterX + (gapBetweenBars / 2);
-                    const completedY = height - paddingBottom - completedHeight;
-                    
-                    return (
-                        <g key={i}>
-                            {/* Created Bar */}
-                            <rect
-                                x={createdX}
-                                y={createdY}
-                                width={barWidth}
-                                height={Math.max(2, createdHeight)}
-                                rx="4"
-                                fill={hoveredIdx === i && hoveredType === 'created' ? '#2563eb' : '#3b82f6'}
-                                className="transition-all duration-200 cursor-pointer"
-                                onMouseEnter={() => { setHoveredIdx(i); setHoveredType('created'); }}
-                                onMouseLeave={() => { setHoveredIdx(null); setHoveredType(null); }}
-                            />
-                            
-                            {/* Completed Bar */}
-                            <rect
-                                x={completedX}
-                                y={completedY}
-                                width={barWidth}
-                                height={Math.max(2, completedHeight)}
-                                rx="4"
-                                fill={hoveredIdx === i && hoveredType === 'completed' ? '#059669' : '#10b981'}
-                                className="transition-all duration-200 cursor-pointer"
-                                onMouseEnter={() => { setHoveredIdx(i); setHoveredType('completed'); }}
-                                onMouseLeave={() => { setHoveredIdx(null); setHoveredType(null); }}
-                            />
-                            
-                            <text
-                                x={groupCenterX}
-                                y={height - 10}
-                                textAnchor="middle"
-                                className={`text-[10px] font-bold transition-all ${hoveredIdx === i ? "fill-blue-600 font-extrabold" : "fill-slate-400"}`}
-                            >
-                                {label}
-                            </text>
-                        </g>
-                    );
-                })}
-            </svg>
+                    {labels.map((label, i) => {
+                        const groupCenterX = paddingLeft + (i * groupWidth) + (groupWidth / 2);
+                        
+                        const createdHeight = (createdCounts[i] / maxVal) * chartHeight;
+                        const createdX = groupCenterX - barWidth - (gapBetweenBars / 2);
+                        const createdY = activeHeight - paddingBottom - createdHeight;
+                        
+                        const completedHeight = (completedCounts[i] / maxVal) * chartHeight;
+                        const completedX = groupCenterX + (gapBetweenBars / 2);
+                        const completedY = activeHeight - paddingBottom - completedHeight;
+                        
+                        const isCreatedHovered = hoveredIdx === i && hoveredType === 'created';
+                        const isCompletedHovered = hoveredIdx === i && hoveredType === 'completed';
+                        
+                        return (
+                            <g key={i}>
+                                {/* Created Bar */}
+                                <rect
+                                    x={createdX}
+                                    y={createdY}
+                                    width={barWidth}
+                                    height={Math.max(2, createdHeight)}
+                                    rx="3"
+                                    fill={isCreatedHovered ? "url(#createdHoverGrad)" : "url(#createdGrad)"}
+                                    className="transition-all duration-200 cursor-pointer"
+                                    onMouseEnter={() => { setHoveredIdx(i); setHoveredType('created'); }}
+                                    onMouseLeave={() => { setHoveredIdx(null); setHoveredType(null); }}
+                                />
+                                
+                                {/* Completed Bar */}
+                                <rect
+                                    x={completedX}
+                                    y={completedY}
+                                    width={barWidth}
+                                    height={Math.max(2, completedHeight)}
+                                    rx="3"
+                                    fill={isCompletedHovered ? "url(#completedHoverGrad)" : "url(#completedGrad)"}
+                                    className="transition-all duration-200 cursor-pointer"
+                                    onMouseEnter={() => { setHoveredIdx(i); setHoveredType('completed'); }}
+                                    onMouseLeave={() => { setHoveredIdx(null); setHoveredType(null); }}
+                                />
+                                
+                                {/* X-Axis Labels */}
+                                <text
+                                    x={groupCenterX}
+                                    y={activeHeight - 8}
+                                    textAnchor="middle"
+                                    className={`text-[10px] font-bold transition-all ${hoveredIdx === i ? "fill-blue-600 font-extrabold" : "fill-slate-400"}`}
+                                >
+                                    {label}
+                                </text>
+                            </g>
+                        );
+                    })}
+                </svg>
+            )}
             
-            {hoveredIdx !== null && hoveredType !== null && (
+            {/* Tooltip */}
+            {hoveredIdx !== null && hoveredType !== null && width > 0 && (
                 <div 
-                    className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800"
+                    className="absolute bg-slate-950/90 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg pointer-events-none transition-all duration-150 flex items-center gap-1.5 border border-slate-800 animate-[fadeIn_0.15s_ease-out]"
                     style={{
-                        left: `${((paddingLeft + (hoveredIdx * groupWidth) + (groupWidth / 2)) / width) * 100}%`,
-                        top: `${((height - paddingBottom - ((hoveredType === 'created' ? createdCounts[hoveredIdx] : completedCounts[hoveredIdx]) / maxVal) * chartHeight) / height) * 100 - 15}%`,
+                        left: `${((paddingLeft + (hoveredIdx * groupWidth) + (groupWidth / 2)) / activeWidth) * 100}%`,
+                        top: `${((activeHeight - paddingBottom - ((hoveredType === 'created' ? createdCounts[hoveredIdx] : completedCounts[hoveredIdx]) / maxVal) * chartHeight) / activeHeight) * 100 - 10}%`,
                         transform: "translate(-50%, -100%)",
                     }}
                 >
@@ -323,6 +396,8 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
 
 // ─── Custom Chart 4: Task Status Distribution Chart (Donut) ──────────────────────
 const TaskStatusDonut = ({ allTasks }) => {
+    const containerRef = useRef(null);
+    const { width, height } = useResize(containerRef);
     const [hoveredSegment, setHoveredSegment] = useState(null);
     const total = allTasks.length;
     
@@ -334,77 +409,87 @@ const TaskStatusDonut = ({ allTasks }) => {
     ];
     
     let accumulatedPercentage = 0;
-    const r = 45;
-    const strokeWidth = 12;
+    const r = 38;
+    const strokeWidth = 10;
     const circ = 2 * Math.PI * r;
     
+    // Determine layout mode based on measured width
+    const isWideMode = width >= 380;
+    
     return (
-        <div className="flex flex-col items-center justify-center h-full">
-            <div className="relative w-52 h-52 flex items-center justify-center shrink-0">
-                <svg width="100%" height="100%" viewBox="0 0 120 120" className="transform -rotate-90">
-                    <circle cx="60" cy="60" r={r} fill="transparent" stroke="#f1f5f9" strokeWidth={strokeWidth} />
-                    {statuses.map((s) => {
-                        const percent = total > 0 ? (s.count / total) * 100 : 0;
-                        if (percent === 0) return null;
-                        
-                        const strokeDashoffset = circ - (circ * percent) / 100;
-                        const rotation = (accumulatedPercentage / 100) * 360;
-                        accumulatedPercentage += percent;
-                        
-                        const isHovered = hoveredSegment === s.name;
-                        
-                        return (
-                            <circle
-                                key={s.name}
-                                cx="60"
-                                cy="60"
-                                r={r}
-                                fill="transparent"
-                                stroke={s.color}
-                                strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth}
-                                strokeDasharray={circ}
-                                strokeDashoffset={strokeDashoffset}
-                                transform={`rotate(${rotation} 60 60)`}
-                                strokeLinecap="round"
-                                className="transition-all duration-300 cursor-pointer origin-center"
-                                onMouseEnter={() => setHoveredSegment(s.name)}
-                                onMouseLeave={() => setHoveredSegment(null)}
-                            />
-                        );
-                    })}
-                </svg>
-                <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-4xl font-extrabold text-slate-800 tracking-tight leading-none">
-                        {hoveredSegment ? statuses.find(s => s.name === hoveredSegment)?.count : total}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
-                        {hoveredSegment ? hoveredSegment : "Total Tasks"}
-                    </span>
-                </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-5 w-full shrink-0">
-                {statuses.map(s => {
-                    const percent = total > 0 ? Math.round((s.count / total) * 100) : 0;
-                    return (
-                        <div 
-                            key={s.name} 
-                            className={`flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-100/70 bg-slate-50/40 hover:bg-slate-50 cursor-pointer transition-colors ${hoveredSegment === s.name ? "bg-slate-100 border-slate-200" : ""}`}
-                            onMouseEnter={() => setHoveredSegment(s.name)}
-                            onMouseLeave={() => setHoveredSegment(null)}
-                        >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                                <span className={`w-2 h-2 rounded-full shrink-0 ${s.bg}`} />
-                                <span className="text-[11px] font-bold text-slate-600 truncate">{s.label}</span>
-                            </div>
-                            <div className="flex items-center gap-1 ml-1 font-mono text-[10px] font-bold text-slate-500 shrink-0">
-                                <span>{s.count}</span>
-                                <span className="text-slate-400 font-normal">({percent}%)</span>
-                            </div>
+        <div ref={containerRef} className="w-full h-full flex flex-col justify-center select-none">
+            {width > 0 && (
+                <div className={`flex ${isWideMode ? 'flex-row items-center justify-around gap-6' : 'flex-col items-center justify-center'} h-full`}>
+                    {/* Donut Circle Container */}
+                    <div className="relative w-44 h-44 flex items-center justify-center shrink-0">
+                        <svg width="100%" height="100%" viewBox="0 0 100 100" className="transform -rotate-90">
+                            <circle cx="50" cy="50" r={r} fill="transparent" stroke="#f1f5f9" strokeWidth={strokeWidth} />
+                            {statuses.map((s) => {
+                                const percent = total > 0 ? (s.count / total) * 100 : 0;
+                                if (percent === 0) return null;
+                                
+                                const strokeDashoffset = circ - (circ * percent) / 100;
+                                const rotation = (accumulatedPercentage / 100) * 360;
+                                accumulatedPercentage += percent;
+                                
+                                const isHovered = hoveredSegment === s.name;
+                                
+                                return (
+                                    <circle
+                                        key={s.name}
+                                        cx="50"
+                                        cy="50"
+                                        r={r}
+                                        fill="transparent"
+                                        stroke={s.color}
+                                        strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth}
+                                        strokeDasharray={circ}
+                                        strokeDashoffset={strokeDashoffset}
+                                        transform={`rotate(${rotation} 50 50)`}
+                                        strokeLinecap="round"
+                                        className="transition-all duration-300 cursor-pointer origin-center"
+                                        onMouseEnter={() => setHoveredSegment(s.name)}
+                                        onMouseLeave={() => setHoveredSegment(null)}
+                                    />
+                                );
+                            })}
+                        </svg>
+                        <div className="absolute flex flex-col items-center justify-center text-center pointer-events-none">
+                            <span className="text-3xl font-extrabold text-slate-800 tracking-tight leading-none">
+                                {hoveredSegment ? statuses.find(s => s.name === hoveredSegment)?.count : total}
+                            </span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
+                                {hoveredSegment ? hoveredSegment : "Total Tasks"}
+                            </span>
                         </div>
-                    );
-                })}
-            </div>
+                    </div>
+                    
+                    {/* Legends */}
+                    <div className={`grid ${isWideMode ? 'grid-cols-1 w-[45%]' : 'grid-cols-2 w-full mt-4'} gap-2`}>
+                        {statuses.map(s => {
+                            const percent = total > 0 ? Math.round((s.count / total) * 100) : 0;
+                            const isSegmentHovered = hoveredSegment === s.name;
+                            return (
+                                <div 
+                                    key={s.name} 
+                                    className={`flex items-center justify-between px-3 py-1.5 rounded-xl border border-slate-100/70 bg-slate-50/40 hover:bg-slate-50 cursor-pointer transition-all duration-150 ${isSegmentHovered ? "bg-slate-100 border-slate-200 translate-x-1" : ""}`}
+                                    onMouseEnter={() => setHoveredSegment(s.name)}
+                                    onMouseLeave={() => setHoveredSegment(null)}
+                                >
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <span className={`w-2 h-2 rounded-full shrink-0 ${s.bg}`} />
+                                        <span className="text-[11px] font-bold text-slate-600 truncate">{s.label}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1 ml-1 font-mono text-[10px] font-bold text-slate-500 shrink-0">
+                                        <span>{s.count}</span>
+                                        <span className="text-slate-400 font-normal">({percent}%)</span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -612,9 +697,9 @@ const AdminDashboard = () => {
                     ) : (
                         <div className="space-y-8">
                             {/* KPIs Grid */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-5">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-8 gap-4 sm:gap-5">
                                 {kpis.map((kpi, i) => (
-                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex-col items-start gap-3 p-4.5 h-[115px] cursor-pointer`}>
+                                    <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}>
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
                                             <kpi.icon className="w-4.5 h-4.5" />
                                         </div>
@@ -627,7 +712,7 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Analytics Graphs Row (3 Columns) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                 <Card className="p-6 flex flex-col h-[420px]">
                                     <div className="flex items-center justify-between mb-4 shrink-0">
                                         <div>
@@ -672,7 +757,7 @@ const AdminDashboard = () => {
                                     </div>
                                 </Card>
 
-                                <Card className="p-6 flex flex-col h-[420px]">
+                                <Card className="p-6 flex flex-col h-[420px] lg:col-span-2 xl:col-span-1">
                                     <div className="shrink-0 mb-4">
                                         <h3 className="section-title flex items-center gap-2">
                                             <Activity className="w-4.5 h-4.5 text-violet-500" />
@@ -687,7 +772,7 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Operations & Activity Row (3 Columns) */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                 
                                 {/* Active Projects Leaderboard */}
                                 <Card className="!p-0 flex flex-col h-[450px]">
@@ -823,7 +908,7 @@ const AdminDashboard = () => {
                                 </Card>
 
                                 {/* Real-Time Activity Feed */}
-                                <Card className="!p-0 flex flex-col h-[450px]">
+                                <Card className="!p-0 flex flex-col h-[450px] lg:col-span-2 xl:col-span-1">
                                     <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
