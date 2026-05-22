@@ -395,8 +395,7 @@ const TaskStatusDonut = ({ allTasks }) => {
                                 const percent = total > 0 ? (s.count / total) * 100 : 0;
                                 if (percent === 0) return null;
                                 
-                                const strokeDashoffset = circ - (circ * percent) / 100;
-                                const rotation = (accumulatedPercentage / 100) * 360;
+                                const segmentOffset = -((circ * accumulatedPercentage) / 100);
                                 accumulatedPercentage += percent;
                                 
                                 const isHovered = hoveredSegment === s.name;
@@ -410,9 +409,8 @@ const TaskStatusDonut = ({ allTasks }) => {
                                         fill="transparent"
                                         stroke={s.color}
                                         strokeWidth={isHovered ? strokeWidth + 2 : strokeWidth}
-                                        strokeDasharray={circ}
-                                        strokeDashoffset={strokeDashoffset}
-                                        transform={`rotate(${rotation} 50 50)`}
+                                        strokeDasharray={`${(circ * percent) / 100} ${circ}`}
+                                        strokeDashoffset={segmentOffset}
                                         strokeLinecap="round"
                                         className="transition-all duration-300 cursor-pointer origin-center"
                                         onMouseEnter={() => setHoveredSegment(s.name)}
