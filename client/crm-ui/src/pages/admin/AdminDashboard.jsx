@@ -146,7 +146,7 @@ const TaskCompletionGraph = ({ allTasks }) => {
                         return (
                             <g key={idx} className="opacity-40">
                                 <line x1={paddingLeft} y1={y} x2={activeWidth - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
-                                <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                                <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[11px] font-extrabold fill-slate-500 font-mono">{val}</text>
                             </g>
                         );
                     })}
@@ -171,7 +171,7 @@ const TaskCompletionGraph = ({ allTasks }) => {
                     
                     {/* Labels */}
                     {points.map((p, i) => (
-                        <text key={i} x={p.x} y={activeHeight - 8} textAnchor="middle" className={`text-[10px] font-bold transition-all ${hoveredIndex === i ? "fill-emerald-600 font-extrabold" : "fill-slate-400"}`}>{p.label}</text>
+                        <text key={i} x={p.x} y={activeHeight - 8} textAnchor="middle" className={`text-[11px] font-extrabold transition-all ${hoveredIndex === i ? "fill-emerald-600" : "fill-slate-500"}`}>{p.label}</text>
                     ))}
                 </svg>
             )}
@@ -279,7 +279,7 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
                         return (
                             <g key={idx} className="opacity-40">
                                 <line x1={paddingLeft} y1={y} x2={activeWidth - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
-                                <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                                <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[11px] font-extrabold fill-slate-500 font-mono">{val}</text>
                             </g>
                         );
                     })}
@@ -331,7 +331,7 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
                                     x={groupCenterX}
                                     y={activeHeight - 8}
                                     textAnchor="middle"
-                                    className={`text-[10px] font-bold transition-all ${hoveredIdx === i ? "fill-blue-600 font-extrabold" : "fill-slate-400"}`}
+                                    className={`text-[11px] font-extrabold transition-all ${hoveredIdx === i ? "fill-blue-600" : "fill-slate-500"}`}
                                 >
                                     {label}
                                 </text>
@@ -423,7 +423,7 @@ const TaskStatusDonut = ({ allTasks }) => {
                             <span className="text-3xl font-extrabold text-slate-800 tracking-tight leading-none">
                                 {hoveredSegment ? statuses.find(s => s.name === hoveredSegment)?.count : total}
                             </span>
-                            <span className="text-[10px] font-semibold text-slate-400 mt-1.5">
+                            <span className="text-[11px] font-extrabold text-slate-500 mt-1">
                                 {hoveredSegment ? hoveredSegment : "Total Tasks"}
                             </span>
                         </div>
@@ -443,11 +443,11 @@ const TaskStatusDonut = ({ allTasks }) => {
                                 >
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <span className={`w-2 h-2 rounded-full shrink-0 ${s.bg}`} />
-                                        <span className="text-[11px] font-bold text-slate-600 truncate">{s.label}</span>
+                                        <span className="text-xs font-extrabold text-slate-700 truncate">{s.label}</span>
                                     </div>
-                                    <div className="flex items-center gap-1 ml-1 font-mono text-[10px] font-bold text-slate-500 shrink-0">
+                                    <div className="flex items-center gap-1 ml-1 font-mono text-[11px] font-extrabold text-slate-600 shrink-0">
                                         <span>{s.count}</span>
-                                        <span className="text-slate-400 font-normal">({percent}%)</span>
+                                        <span className="text-slate-500 font-extrabold">({percent}%)</span>
                                     </div>
                                 </div>
                             );
@@ -584,7 +584,7 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
                             return (
                                 <g key={idx} className="opacity-40">
                                     <line x1={paddingLeft} y1={y} x2={activeWidth - paddingRight} y2={y} stroke="#cbd5e1" strokeWidth="1" strokeDasharray="4 4" />
-                                    <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[10px] font-bold fill-slate-400 font-mono">{val}</text>
+                                    <text x={paddingLeft - 8} y={y + 4} textAnchor="end" className="text-[11px] font-extrabold fill-slate-500 font-mono">{val}</text>
                                 </g>
                             );
                         })}
@@ -657,7 +657,7 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
                                 x={p.x} 
                                 y={activeHeight - 8} 
                                 textAnchor="middle" 
-                                className={`text-[10px] font-bold transition-all ${hoveredDayIndex === i ? "fill-slate-700 font-extrabold" : "fill-slate-400"}`}
+                                className={`text-[11px] font-extrabold transition-all ${hoveredDayIndex === i ? "fill-slate-700" : "fill-slate-500"}`}
                             >
                                 {p.label}
                             </text>
@@ -707,9 +707,9 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
                                         <img src={trend.employee.profilePic} alt="" className="w-full h-full object-cover" />
                                     ) : initials}
                                 </div>
-                                <span className={`text-[10px] font-bold text-slate-700 truncate ${colors.text}`}>{trend.employee.name?.split(" ")[0]}</span>
+                                <span className={`text-[11px] font-extrabold truncate ${colors.text}`}>{trend.employee.name?.split(" ")[0]}</span>
                             </div>
-                            <span className="text-[9px] font-bold text-slate-400 mt-0.5">{trend.total} completed</span>
+                            <span className="text-[10px] font-extrabold text-slate-500 mt-0.5">{trend.total} completed</span>
                         </div>
                     );
                 })}
@@ -828,12 +828,21 @@ const DepartmentProductivityGraph = ({ allTasks, users, projects, departments, s
                             </div>
 
                             {/* Department Specific Stats & Workloads */}
-                            <div className="w-40 sm:w-52 text-right shrink-0 flex items-center justify-end gap-2.5 font-mono text-[10px] font-bold text-slate-500">
-                                <span className={`${theme.text}`}>{s.completed} completed</span>
-                                <span className="text-slate-300 font-normal">•</span>
-                                <span className="text-slate-600">{s.workload} active</span>
-                                <span className="text-slate-300 font-normal">•</span>
-                                <span className="text-slate-400">{s.projects} {s.projects === 1 ? 'proj' : 'projs'}</span>
+                            <div className="w-[195px] sm:w-[235px] shrink-0 flex items-center justify-end font-sans text-xs font-bold text-slate-500">
+                                <div className="w-[66px] sm:w-[82px] text-right">
+                                    <span className={`${theme.text} text-xs font-black`}>{s.completed}</span>
+                                    <span className="text-slate-500 text-[10px] font-bold ml-1">completed</span>
+                                </div>
+                                <span className="text-slate-300 font-bold px-1 sm:px-1.5">•</span>
+                                <div className="w-[50px] sm:w-[62px] text-right">
+                                    <span className="text-slate-700 text-xs font-black">{s.workload}</span>
+                                    <span className="text-slate-500 text-[10px] font-bold ml-1">active</span>
+                                </div>
+                                <span className="text-slate-300 font-bold px-1 sm:px-1.5">•</span>
+                                <div className="w-[46px] sm:w-[56px] text-right">
+                                    <span className="text-slate-600 text-xs font-black">{s.projects}</span>
+                                    <span className="text-slate-500 text-[10px] font-bold ml-1">{s.projects === 1 ? 'proj' : 'projs'}</span>
+                                </div>
                             </div>
                         </div>
                     );
@@ -841,7 +850,7 @@ const DepartmentProductivityGraph = ({ allTasks, users, projects, departments, s
             </div>
 
             {/* General Department metrics header footer for premium presentation */}
-            <div className="mt-4 pt-3 border-t border-slate-100/70 flex justify-between text-[9px] uppercase tracking-wider font-extrabold text-slate-400 shrink-0">
+            <div className="mt-4 pt-3 border-t border-slate-100/70 flex justify-between text-[10px] uppercase tracking-wider font-extrabold text-slate-500 shrink-0">
                 <span>Operational Unit</span>
                 <span>Production Metrics Matrix</span>
             </div>
