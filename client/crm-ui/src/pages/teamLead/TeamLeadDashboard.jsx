@@ -44,7 +44,6 @@ const TeamLeadDashboard = () => {
     const [loading, setLoading] = useState(true);
     
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
-    const [selectedProjectFilter, setSelectedProjectFilter] = useState("All");
 
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return "N/A";
@@ -225,66 +224,67 @@ const TeamLeadDashboard = () => {
         {
             title: "Team Members",
             value: stats.totalTeamMembers,
-            subtitle: "Dev & QA staff",
             icon: Users,
-            color: "text-blue-600 border-blue-100 bg-gradient-to-tr from-blue-50 to-white",
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+            border: "blue",
             onClick: () => setStatModal({ isOpen: true, title: "Team Members", data: teamMembers, type: "employee" })
         },
         {
             title: "Active Projects",
             value: stats.activeProjects,
-            subtitle: "In active flight",
             icon: FolderKanban,
-            color: "text-indigo-600 border-indigo-100 bg-gradient-to-tr from-indigo-50 to-white",
+            color: "text-indigo-600",
+            bg: "bg-indigo-50",
+            border: "indigo",
             onClick: () => setStatModal({ isOpen: true, title: "Active Projects", data: projects, type: "project" })
         },
         {
             title: "Pending Tasks",
             value: stats.pendingTasks,
-            subtitle: "Active workspace",
             icon: ListTodo,
-            color: "text-sky-600 border-sky-100 bg-gradient-to-tr from-sky-50 to-white",
+            color: "text-sky-600",
+            bg: "bg-sky-50",
+            border: "sky",
             onClick: () => setStatModal({ isOpen: true, title: "Pending Tasks Queue", data: allTasks.filter(t => t.status !== "Completed" && t.status !== "Done" && t.status !== "QA Review"), type: "task" })
         },
         {
             title: "Completed Tasks",
             value: stats.completedTasks,
-            subtitle: "Fully delivered",
             icon: CheckCircle2,
-            color: "text-emerald-600 border-emerald-100 bg-gradient-to-tr from-emerald-50 to-white",
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
+            border: "emerald",
             onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks", data: allTasks.filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })
         },
         {
             title: "QA Review Tasks",
             value: stats.qaReviewTasks,
-            subtitle: "Pending validation",
             icon: Clock,
-            color: "text-amber-600 border-amber-100 bg-gradient-to-tr from-amber-50 to-white",
+            color: "text-amber-600",
+            bg: "bg-amber-50",
+            border: "amber",
             onClick: () => setStatModal({ isOpen: true, title: "Awaiting QA Reviews", data: pendingQAReviews, type: "task" })
         },
         {
             title: "Overdue Tasks",
             value: stats.overdueTasks,
-            subtitle: "Action required",
             icon: AlertCircle,
-            color: "text-rose-600 border-rose-100 bg-gradient-to-tr from-rose-50 to-white",
+            color: "text-rose-600",
+            bg: "bg-rose-50",
+            border: "rose",
             onClick: () => setStatModal({ isOpen: true, title: "Overdue Backlog List", data: overdueTasksList, type: "task" })
         },
         {
             title: "Productivity",
             value: `${stats.teamProductivity}%`,
-            subtitle: "Completion rate",
             icon: TrendingUp,
-            color: "text-violet-600 border-violet-100 bg-gradient-to-tr from-violet-50 to-white",
+            color: "text-violet-600",
+            bg: "bg-violet-50",
+            border: "violet",
             onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks (Productivity Log)", data: allTasks.filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })
         }
     ];
-
-    // Filtered data based on project filter selector
-    const filteredTasksByProject = allTasks.filter(t => {
-        if (selectedProjectFilter === "All") return true;
-        return t.project?._id === selectedProjectFilter || (typeof t.project === 'string' && t.project === selectedProjectFilter);
-    });
 
     // Calculate QA Bottleneck by Project
     const getQABottlenecks = () => {
@@ -322,38 +322,23 @@ const TeamLeadDashboard = () => {
                             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Overview</h1>
                             <p className="text-slate-500 text-sm font-semibold mt-1">Operational analytics and workload distribution overview.</p>
                         </div>
-                        <div className="flex items-center gap-3 shrink-0">
-                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Focus Project:</label>
-                            <div className="relative">
-                                <select 
-                                    value={selectedProjectFilter} 
-                                    onChange={(e) => setSelectedProjectFilter(e.target.value)}
-                                    className="pl-4 pr-10 py-2 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer appearance-none shadow-sm"
-                                >
-                                    <option value="All">All Workspace Projects</option>
-                                    {projects.map(p => (
-                                        <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronRight className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 rotate-90 pointer-events-none" />
-                            </div>
-                        </div>
                     </div>
 
-                    {/* KPI Metrics Strip */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 animate-in fade-in duration-700 delay-100 fill-mode-both">
+                    {/* KPI Metrics Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
                         {kpiWidgets.map((kpi, idx) => (
                             <div 
                                 key={idx} 
                                 onClick={kpi.onClick}
-                                className={`flex flex-col p-4 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.03] transition-all duration-300 relative group overflow-hidden ${kpi.color}`}
+                                className={`premium-stat-card ${kpi.border} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-700 transition-colors">{kpi.title}</span>
-                                    <kpi.icon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-all" />
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
+                                    <kpi.icon className="w-4.5 h-4.5" />
                                 </div>
-                                <div className="text-2xl font-black text-slate-900 mt-1 leading-none">{kpi.value}</div>
-                                <span className="text-[10px] text-slate-400 font-medium mt-1 leading-tight group-hover:text-slate-500 transition-colors">{kpi.subtitle}</span>
+                                <div className="flex flex-col justify-center min-w-0 w-full">
+                                    <h4 className="text-2xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
+                                    <p className="text-[10px] font-semibold text-slate-400 truncate">{kpi.title}</p>
+                                </div>
                             </div>
                         ))}
                     </div>
