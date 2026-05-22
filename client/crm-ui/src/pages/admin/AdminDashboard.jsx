@@ -1109,7 +1109,7 @@ const AdminDashboard = () => {
                     ) : (
                         <div className="space-y-8">
                             {/* KPIs Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-8 gap-4 sm:gap-5">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-8 gap-6">
                                 {kpis.map((kpi, i) => (
                                     <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}>
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
@@ -1124,7 +1124,7 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Analytics Graphs Row (3 Columns) */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                                 <Card className="p-6 flex flex-col h-[420px]">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                                         <div>
@@ -1207,7 +1207,7 @@ const AdminDashboard = () => {
                                     </div>
                                 </Card>
 
-                                <Card className="p-6 flex flex-col h-[420px] lg:col-span-2 xl:col-span-1">
+                                <Card className="p-6 flex flex-col h-[420px] lg:col-span-2 2xl:col-span-1">
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
@@ -1308,7 +1308,7 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Operations & Activity Row (3 Columns) */}
-                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
                                 
                                 {/* Active Projects Leaderboard */}
                                 <Card className="!p-0 flex flex-col h-[450px]">
@@ -1444,7 +1444,7 @@ const AdminDashboard = () => {
                                 </Card>
 
                                 {/* Real-Time Activity Feed */}
-                                <Card className="!p-0 flex flex-col h-[450px] lg:col-span-2 xl:col-span-1">
+                                <Card className="!p-0 flex flex-col h-[450px] lg:col-span-2 2xl:col-span-1">
                                     <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
