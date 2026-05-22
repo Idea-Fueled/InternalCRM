@@ -274,34 +274,9 @@ const TeamLeadDashboard = () => {
             bg: "bg-rose-50",
             border: "rose",
             onClick: () => setStatModal({ isOpen: true, title: "Overdue Backlog List", data: overdueTasksList, type: "task" })
-        },
-        {
-            title: "Productivity",
-            value: `${stats.teamProductivity}%`,
-            icon: TrendingUp,
-            color: "text-violet-600",
-            bg: "bg-violet-50",
-            border: "violet",
-            spanClass: "col-span-2 2xl:col-span-1",
-            onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks (Productivity Log)", data: allTasks.filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })
         }
     ];
 
-    // Calculate QA Bottleneck by Project
-    const getQABottlenecks = () => {
-        const counts = {};
-        projects.forEach(p => { counts[p.name] = 0; });
-        allTasks.forEach(t => {
-            if (t.status === "QA Review") {
-                const name = t.project?.projectName || "Unassigned";
-                counts[name] = (counts[name] || 0) + 1;
-            }
-        });
-        return Object.entries(counts).map(([projectName, count]) => ({ projectName, count }));
-    };
-
-    const qaBottlenecks = getQABottlenecks();
-    const maxQABottlenecks = Math.max(...qaBottlenecks.map(b => b.count), 1);
 
     // Overdue tasks groupings
     const overdueGroupHigh = overdueTasksList.filter(t => t.priority === "High" || t.priority === "Critical").length;
@@ -326,12 +301,12 @@ const TeamLeadDashboard = () => {
                     </div>
 
                     {/* KPI Metrics Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-7 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
                         {kpiWidgets.map((kpi, idx) => (
                             <div 
                                 key={idx} 
                                 onClick={kpi.onClick}
-                                className={`premium-stat-card ${kpi.border} ${kpi.spanClass || 'col-span-1'} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}
+                                className={`premium-stat-card ${kpi.border} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}
                             >
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
                                     <kpi.icon className="w-4.5 h-4.5" />
@@ -344,8 +319,8 @@ const TeamLeadDashboard = () => {
                         ))}
                     </div>
 
-                    {/* Visual Analytics Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-700 delay-200 fill-mode-both">
+                    {/* Visual Analytics Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-700 delay-200 fill-mode-both">
                         
                         {/* Task Progress donut */}
                         <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
@@ -507,39 +482,6 @@ const TeamLeadDashboard = () => {
                                 </Link>
                             </div>
                         </div>
-
-                    </div>
-
-                    {/* Bottlenecks and Overdue Timeline Row */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-700 delay-300 fill-mode-both">
-                        
-                        {/* QA Bottleneck vertical columns */}
-                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow">
-                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-6">
-                                <Clock className="w-4 h-4 text-amber-500" />
-                                QA Review Bottleneck Graph
-                            </h3>
-                            <div className="flex items-end justify-between gap-4 h-36 px-4 py-2 border-b border-slate-100">
-                                {qaBottlenecks.slice(0, 5).map((bot, idx) => {
-                                    const hPct = (bot.count / maxQABottlenecks) * 100;
-                                    return (
-                                        <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer">
-                                            <div className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity mb-1 select-none">
-                                                {bot.count} in QA
-                                            </div>
-                                            <div className="w-full bg-slate-50 rounded-t-lg h-full max-h-[85%] flex items-end overflow-hidden">
-                                                <div 
-                                                    className="w-full bg-gradient-to-t from-amber-500 to-orange-400 group-hover:from-amber-600 group-hover:to-orange-500 rounded-t-lg transition-all"
-                                                    style={{ height: `${hPct > 0 ? hPct : 8}%` }}
-                                                />
-                                            </div>
-                                            <span className="text-[10px] font-bold text-slate-400 mt-2 truncate w-full text-center select-none">{bot.projectName}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
                         {/* Overdue Tasks Timeline priority card */}
                         <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
                             <div>
@@ -794,26 +736,25 @@ const TeamLeadDashboard = () => {
                                     <Bell className="w-4 h-4 text-violet-500" />
                                     Workspace Notifications
                                 </h3>
-                                <div className="space-y-3.5 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+                                <div className="space-y-4 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
                                     {notifications.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center text-center py-10 text-slate-400">
                                             <Bell className="w-8 h-8 text-slate-200 mb-2" />
-                                            <p className="text-xs font-semibold">No new system alerts or triggers</p>
+                                            <p className="text-xs font-semibold">No new alerts</p>
                                         </div>
                                     ) : (
                                         notifications.map((notif) => (
-                                            <div 
-                                                key={notif.id} 
-                                                className={`p-3 rounded-2xl border text-xs leading-relaxed relative overflow-hidden ${
-                                                    notif.type === 'danger' ? 'bg-red-50/50 border-red-100 text-red-800' : 
-                                                    notif.type === 'warning' ? 'bg-amber-50/50 border-amber-100 text-amber-800' : 'bg-blue-50/50 border-blue-100 text-blue-800'
-                                                }`}
-                                            >
-                                                <div className="flex justify-between items-start gap-2 mb-1">
-                                                    <span className="font-bold uppercase tracking-wider text-[9px]">{notif.title}</span>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{notif.time}</span>
+                                            <div key={notif.id} className="flex items-start gap-3 py-2 border-b border-slate-100/50 last:border-0">
+                                                <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                                                    notif.type === 'danger' ? 'bg-rose-500 animate-pulse' : 
+                                                    notif.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+                                                }`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-semibold text-slate-700 leading-normal">
+                                                        {notif.message}
+                                                    </p>
+                                                    <span className="text-[10px] text-slate-400 font-medium mt-0.5 block">{notif.time}</span>
                                                 </div>
-                                                <p className="font-medium text-[11px] text-slate-600">{notif.message}</p>
                                             </div>
                                         ))
                                     )}
