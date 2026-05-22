@@ -282,6 +282,7 @@ const TeamLeadDashboard = () => {
             color: "text-violet-600",
             bg: "bg-violet-50",
             border: "violet",
+            spanClass: "col-span-2 2xl:col-span-1",
             onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks (Productivity Log)", data: allTasks.filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })
         }
     ];
@@ -325,12 +326,12 @@ const TeamLeadDashboard = () => {
                     </div>
 
                     {/* KPI Metrics Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-7 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
                         {kpiWidgets.map((kpi, idx) => (
                             <div 
                                 key={idx} 
                                 onClick={kpi.onClick}
-                                className={`premium-stat-card ${kpi.border} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}
+                                className={`premium-stat-card ${kpi.border} ${kpi.spanClass || 'col-span-1'} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}
                             >
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
                                     <kpi.icon className="w-4.5 h-4.5" />
