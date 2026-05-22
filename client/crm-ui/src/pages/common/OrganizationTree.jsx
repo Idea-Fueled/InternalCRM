@@ -4,7 +4,7 @@ import {
     User, Landmark, MoreVertical, 
     Eye, UserCheck, Users
 } from "lucide-react";
-import { userService, projectService, taskService } from "../../api/services";
+import { userService, projectService, taskService, departmentService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
@@ -46,6 +46,7 @@ const OrganizationTree = () => {
     const [allUsers, setAllUsers] = useState([]);
     const [projects, setProjects] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [dbDepartments, setDbDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // UI Interaction States
@@ -96,10 +97,11 @@ const OrganizationTree = () => {
             try {
                 setLoading(true);
                 // Parallel fetching for high performance
-                const [usersRes, projectsRes, tasksRes] = await Promise.all([
+                const [usersRes, projectsRes, tasksRes, deptRes] = await Promise.all([
                     userService.getAllUsers({ status: 'active', orgTree: true }),
                     projectService.getAllProjects(),
-                    taskService.getAllTasks()
+                    taskService.getAllTasks(),
+                    departmentService.getAllDepartments()
                 ]);
 
                 if (usersRes.data?.success && Array.isArray(usersRes.data.data)) {
@@ -114,6 +116,9 @@ const OrganizationTree = () => {
                     setTasks(tasksRes.data);
                 } else if (tasksRes.data?.data) {
                     setTasks(tasksRes.data.data);
+                }
+                if (deptRes && deptRes.data?.success) {
+                    setDbDepartments(deptRes.data.departments || []);
                 }
             } catch (err) {
                 console.error("Failed to load organizational hierarchy matrix:", err);
@@ -182,14 +187,17 @@ const OrganizationTree = () => {
         return set;
     }, [currentUserObj, allUsers]);
 
-    // Dynamic list of unique departments from fetched users
+    // Dynamic list of unique departments from fetched users and database
     const uniqueDepartments = useMemo(() => {
-        if (allUsers.length === 0) return [];
-        const depts = allUsers
+        const userDepts = allUsers
             .map(u => u.department)
             .filter(d => d && typeof d === 'string' && d.trim() !== "");
-        return ["All", ...Array.from(new Set(depts))];
-    }, [allUsers]);
+        const dbDepts = dbDepartments.map(d => d.name);
+        
+        // Merge to guarantee full list representation without duplicates
+        const combined = Array.from(new Set([...dbDepts, ...userDepts])).sort();
+        return ["All", ...combined];
+    }, [allUsers, dbDepartments]);
 
     // Calculate dynamic manager name
     const getManagerName = (node) => {

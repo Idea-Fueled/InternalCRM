@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 
-import { dashboardService, projectService, userService, taskService, notificationService } from "../../api/services";
+import { dashboardService, projectService, userService, taskService, notificationService, departmentService } from "../../api/services";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { exportPDF } from "../../utils/pdfExport";
@@ -768,15 +768,36 @@ const EmployeePerformanceGraph = ({ allTasks, users }) => {
 };
 
 // ─── Custom Chart 6: Department Productivity Analytics ───────────────────────────
-const DepartmentProductivityGraph = ({ allTasks, users, projects }) => {
-    const depts = ["Engineering", "Sales", "Marketing", "HR", "QA"];
+const DepartmentProductivityGraph = ({ allTasks, users, projects, departments }) => {
+    const depts = departments && departments.length > 0 ? departments.map(d => d.name) : ["Engineering", "Sales", "Marketing", "HR", "QA"];
     
-    const deptThemes = {
-        "Engineering": { bar: "bg-blue-500", text: "text-blue-600", dot: "bg-blue-500", track: "bg-blue-50" },
-        "Sales": { bar: "bg-violet-500", text: "text-violet-600", dot: "bg-violet-500", track: "bg-violet-50" },
-        "Marketing": { bar: "bg-emerald-500", text: "text-emerald-600", dot: "bg-emerald-500", track: "bg-emerald-50" },
-        "HR": { bar: "bg-amber-500", text: "text-amber-600", dot: "bg-amber-500", track: "bg-amber-50" },
-        "QA": { bar: "bg-rose-500", text: "text-rose-600", dot: "bg-rose-500", track: "bg-rose-50" }
+    const getDeptTheme = (deptName) => {
+        const predefined = {
+            "Engineering": { bar: "bg-blue-500", text: "text-blue-600", dot: "bg-blue-500", track: "bg-blue-50" },
+            "Sales": { bar: "bg-violet-500", text: "text-violet-600", dot: "bg-violet-500", track: "bg-violet-50" },
+            "Marketing": { bar: "bg-emerald-500", text: "text-emerald-600", dot: "bg-emerald-500", track: "bg-emerald-50" },
+            "HR": { bar: "bg-amber-500", text: "text-amber-600", dot: "bg-amber-500", track: "bg-amber-50" },
+            "QA": { bar: "bg-rose-500", text: "text-rose-600", dot: "bg-rose-500", track: "bg-rose-50" }
+        };
+        
+        if (predefined[deptName]) return predefined[deptName];
+        
+        // Stable dynamic theme fallbacks for custom department names
+        const fallbacks = [
+            { bar: "bg-indigo-500", text: "text-indigo-600", dot: "bg-indigo-500", track: "bg-indigo-50" },
+            { bar: "bg-cyan-500", text: "text-cyan-600", dot: "bg-cyan-500", track: "bg-cyan-50" },
+            { bar: "bg-teal-500", text: "text-teal-600", dot: "bg-teal-500", track: "bg-teal-50" },
+            { bar: "bg-fuchsia-500", text: "text-fuchsia-600", dot: "bg-fuchsia-500", track: "bg-fuchsia-50" },
+            { bar: "bg-sky-500", text: "text-sky-600", dot: "bg-sky-500", track: "bg-sky-50" }
+        ];
+        
+        let hash = 0;
+        const str = String(deptName);
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const idx = Math.abs(hash) % fallbacks.length;
+        return fallbacks[idx];
     };
 
     // Calculate dynamic stats from actual CRM database records
@@ -827,7 +848,11 @@ const DepartmentProductivityGraph = ({ allTasks, users, projects }) => {
             "QA": { completed: 16, workload: 2, projects: 3 }
         };
         stats.forEach((s) => {
-            const mock = fallbacks[s.name];
+            const mock = fallbacks[s.name] || {
+                completed: 5 + (s.name.length % 7),
+                workload: 1 + (s.name.length % 4),
+                projects: 1 + (s.name.length % 3)
+            };
             s.completed = mock.completed;
             s.workload = mock.workload;
             s.projects = mock.projects;
@@ -839,9 +864,9 @@ const DepartmentProductivityGraph = ({ allTasks, users, projects }) => {
 
     return (
         <div className="w-full h-full flex flex-col justify-between py-1 select-none">
-            <div className="space-y-5.5 flex-1 flex flex-col justify-around">
+            <div className="space-y-5.5 flex-1 flex flex-col justify-around animate-fade-in">
                 {stats.map((s) => {
-                    const theme = deptThemes[s.name] || deptThemes["Engineering"];
+                    const theme = getDeptTheme(s.name);
                     const percent = Math.min(100, Math.round((s.completed / maxCompleted) * 100));
                     
                     return (
@@ -849,7 +874,7 @@ const DepartmentProductivityGraph = ({ allTasks, users, projects }) => {
                             {/* Department Name Tag */}
                             <div className="w-24 sm:w-28 shrink-0 flex items-center gap-2">
                                 <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${theme.dot} shadow-sm`} />
-                                <span className="text-xs font-bold text-slate-700 tracking-tight">{s.name}</span>
+                                <span className="text-xs font-bold text-slate-700 tracking-tight truncate">{s.name}</span>
                             </div>
 
                             {/* Horizontal Progress Bar */}
@@ -891,6 +916,7 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [recentTasks, setRecentTasks] = useState([]);
     const [allTasks, setAllTasks] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -910,16 +936,21 @@ const AdminDashboard = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [dashRes, projRes, userRes, taskRes, notifRes] = await Promise.all([
+            const [dashRes, projRes, userRes, taskRes, notifRes, deptRes] = await Promise.all([
                 dashboardService.getAdminDashboard(),
                 projectService.getAllProjects(),
                 userService.getAllUsers(),
                 taskService.getAllTasks(),
-                notificationService.getMyNotifications()
+                notificationService.getMyNotifications(),
+                departmentService.getAllDepartments()
             ]);
             
             setDashboardData(dashRes.data.data);
             setProjects(projRes.data.projects || []);
+            
+            if (deptRes.data?.success) {
+                setDepartments(deptRes.data.departments || []);
+            }
             
             const allUsers = userRes.data.data || [];
             const allTasks = taskRes.data.tasks || [];
@@ -1187,7 +1218,7 @@ const AdminDashboard = () => {
                                         </div>
                                     </div>
                                     <div className="flex-1 min-h-0">
-                                        <DepartmentProductivityGraph allTasks={allTasks} users={users} projects={projects} />
+                                        <DepartmentProductivityGraph allTasks={allTasks} users={users} projects={projects} departments={departments} />
                                     </div>
                                 </Card>
                             </div>

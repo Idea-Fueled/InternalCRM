@@ -781,7 +781,7 @@ const EmployeesDashboard = () => {
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-bold text-slate-700">Department</label>
-                                    <select 
+                                                                    <select 
                                         value={newEmployee.department}
                                         onChange={(e) => setNewEmployee({...newEmployee, department: e.target.value})}
                                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
@@ -790,6 +790,9 @@ const EmployeesDashboard = () => {
                                         {departments.map(dept => (
                                             <option key={dept._id} value={dept.name}>{dept.name}</option>
                                         ))}
+                                        {newEmployee.department && !departments.some(d => d.name === newEmployee.department) && (
+                                            <option value={newEmployee.department}>{newEmployee.department} (Inactive/Legacy)</option>
+                                        )}
                                     </select>
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2">
@@ -1135,6 +1138,9 @@ const EmployeesDashboard = () => {
                                         {departments.map(dept => (
                                             <option key={dept._id} value={dept.name}>{dept.name}</option>
                                         ))}
+                                        {newEmployee.department && !departments.some(d => d.name === newEmployee.department) && (
+                                            <option value={newEmployee.department}>{newEmployee.department} (Inactive/Legacy)</option>
+                                        )}
                                     </select>
                                 </div>
                                 {newEmployee.role !== 'admin' && (
