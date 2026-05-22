@@ -163,7 +163,7 @@ const NotificationDropdown = ({ role }) => {
                                     <Bell className="w-8 h-8 text-slate-200" />
                                 </div>
                                 <p className="text-sm font-medium text-slate-400">Your inbox is empty</p>
-                                <p className="text-[11px] text-slate-300 mt-1 uppercase tracking-widest font-black">All caught up!</p>
+                                <p className="text-[11px] text-slate-300 mt-1 font-semibold">All caught up!</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-slate-50">
@@ -189,7 +189,7 @@ const NotificationDropdown = ({ role }) => {
                                                 </div>
                                                 <div className="flex-1 min-w-0 pr-6">
                                                     <div className="flex items-center justify-between mb-1.5">
-                                                        <span className={`text-[10px] font-black uppercase tracking-wider ${
+                                                        <span className={`text-[10px] font-semibold ${
                                                             isApprove ? 'text-emerald-600' :
                                                             isReject ? 'text-rose-600' :
                                                             'text-blue-600'
@@ -228,7 +228,7 @@ const NotificationDropdown = ({ role }) => {
                                 setIsOpen(false);
                                 navigate(`/${role === 'teamLead' ? 'teamLead' : role}/audit-logs`);
                             }}
-                            className="text-[11px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-widest transition"
+                            className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition"
                         >
                             Activity Center
                         </button>

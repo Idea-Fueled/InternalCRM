@@ -180,7 +180,7 @@ const DeveloperDashboard = () => {
                                 <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
                                     <button 
                                         onClick={() => setProjectFilter('All')}
-                                        className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${projectFilter === 'All' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${projectFilter === 'All' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                     >
                                         All
                                     </button>
@@ -188,7 +188,7 @@ const DeveloperDashboard = () => {
                                         <button 
                                             key={proj}
                                             onClick={() => setProjectFilter(proj)}
-                                            className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider rounded-lg transition-all ${projectFilter === proj ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${projectFilter === proj ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                                         >
                                             {proj}
                                         </button>
@@ -225,7 +225,7 @@ const DeveloperDashboard = () => {
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{displayStats.totalAssigned}</h4>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Tasks</p>
+                                <p className="text-[10px] font-semibold text-slate-400">Total tasks</p>
                             </div>
                         </div>
                         <div onClick={() => setStatModal({ isOpen: true, title: "New Tasks", data: filteredTasks.filter(t => t.status === 'New'), type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
@@ -234,7 +234,7 @@ const DeveloperDashboard = () => {
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{displayStats.tasksNew}</h4>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New</p>
+                                <p className="text-[10px] font-semibold text-slate-400">New</p>
                             </div>
                         </div>
                         <div onClick={() => setStatModal({ isOpen: true, title: "Tasks In Progress", data: filteredTasks.filter(t => t.status === 'In Progress'), type: "task" })} className="premium-stat-card blue flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
@@ -243,7 +243,7 @@ const DeveloperDashboard = () => {
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-blue-700 leading-none mb-1">{displayStats.tasksInProgress}</h4>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">In Progress</p>
+                                <p className="text-[10px] font-semibold text-blue-400">In progress</p>
                             </div>
                         </div>
                         <div onClick={() => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: filteredTasks.filter(t => t.status === 'QA Review'), type: "task" })} className="premium-stat-card indigo flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
@@ -252,7 +252,7 @@ const DeveloperDashboard = () => {
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-indigo-700 leading-none mb-1">{displayStats.tasksQA}</h4>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">QA Review</p>
+                                <p className="text-[10px] font-semibold text-indigo-400">QA review</p>
                             </div>
                         </div>
                         <div onClick={() => setStatModal({ isOpen: true, title: "Overdue Tasks", data: displayStats.overdueTasks, type: "task" })} className="premium-stat-card rose flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
@@ -261,7 +261,7 @@ const DeveloperDashboard = () => {
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-rose-600 leading-none mb-1">{displayStats.overdueTasks.length}</h4>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Overdue</p>
+                                <p className="text-[10px] font-semibold text-rose-400">Overdue</p>
                             </div>
                         </div>
                     </div>
@@ -322,10 +322,10 @@ const DeveloperDashboard = () => {
                                             >
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-3 mb-1.5">
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                                                        <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
                                                             {task.project}
                                                         </span>
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${STATUS_COLORS[task.status]}`}>
+                                                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${STATUS_COLORS[task.status]}`}>
                                                             {task.status}
                                                         </span>
                                                     </div>
@@ -354,7 +354,7 @@ const DeveloperDashboard = () => {
                             {/* Task Details Preview */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-fit mb-8 relative z-10">
                                 <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                    <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                                         Task Details
                                     </h2>
@@ -379,7 +379,7 @@ const DeveloperDashboard = () => {
 
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Developer</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">Developer</p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
                                                         {selectedTask.assignedTo?.profilePic ? (
@@ -392,7 +392,7 @@ const DeveloperDashboard = () => {
                                                 </div>
                                             </div>
                                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">QA Reviewer</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">QA reviewer</p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
                                                         {selectedTask.assignedQA?.profilePic ? (
@@ -408,7 +408,7 @@ const DeveloperDashboard = () => {
 
                                         <div className="space-y-6">
                                             <div>
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center">
+                                                <h4 className="text-xs font-semibold text-slate-400 mb-2 flex items-center">
                                                     <FileText className="w-3.5 h-3.5 mr-1.5" /> Description
                                                 </h4>
                                                 <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
@@ -418,8 +418,8 @@ const DeveloperDashboard = () => {
 
                                             {selectedTask.qaNotes && (
                                                 <div>
-                                                    <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2 flex items-center">
-                                                        <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> QA Feedback
+                                                    <h4 className="text-xs font-semibold text-indigo-400 mb-2 flex items-center">
+                                                        <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> QA feedback
                                                     </h4>
                                                     <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-800 leading-relaxed">
                                                         {selectedTask.qaNotes}
@@ -428,7 +428,7 @@ const DeveloperDashboard = () => {
                                             )}
 
                                             <div>
-                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Task Updates</h4>
+                                                <h4 className="text-xs font-semibold text-slate-400 mb-3">Task updates</h4>
                                                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                                     {selectedTask.updates.map(update => (
                                                         <div key={update.id} className="flex items-start gap-3 pb-3 border-b border-slate-50 last:border-0">
@@ -442,7 +442,7 @@ const DeveloperDashboard = () => {
                                                                 <div className="flex items-center gap-2 flex-wrap">
                                                                     <p className="text-sm font-bold text-slate-700">{update.status}</p>
                                                                     {!update.notes && <p className="text-sm text-slate-400 font-medium">— No notes</p>}
-                                                                    <span className="text-[10px] font-bold text-blue-500 ml-auto bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">by {update.changedBy?.name || 'System'}</span>
+                                                                    <span className="text-[10px] font-semibold text-blue-500 ml-auto bg-blue-50 px-2 py-0.5 rounded">by {update.changedBy?.name || 'System'}</span>
                                                                 </div>
                                                                 {update.notes && (
                                                                     <div className={`mt-1.5 p-3 rounded-xl text-sm leading-relaxed ${
@@ -494,7 +494,7 @@ const DeveloperDashboard = () => {
                                                                         )}
                                                                     </div>
                                                                 )}
-                                                                <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-tight">{update.time}</p>
+                                                                <p className="text-[10px] font-semibold text-slate-400 mt-2">{update.time}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -504,12 +504,12 @@ const DeveloperDashboard = () => {
                                                 </div>
                                             </div>
                                         </div>
-
+ 
                                         <div className="mt-8 pt-5 border-t border-slate-100">
                                             {['QA Review', 'Completed', 'Done'].includes(selectedTask.status) ? (
                                                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                                                    <p className="text-xs text-amber-700 font-bold uppercase tracking-wider mb-1 flex items-center justify-center">
-                                                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Action Restricted
+                                                    <p className="text-xs text-amber-700 font-bold mb-1 flex items-center justify-center">
+                                                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Action restricted
                                                     </p>
                                                     <p className="text-[11px] text-amber-600 font-medium">
                                                         Status is currently <span className="font-bold underline">{selectedTask.status}</span>. 
@@ -545,7 +545,7 @@ const DeveloperDashboard = () => {
                             {/* Global Recent Activity */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm">
                                 <div className="p-5 border-b border-slate-100 bg-slate-50/50">
-                                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center">
+                                    <h2 className="text-sm font-bold text-slate-800 flex items-center">
                                         <Activity className="w-4 h-4 mr-2 text-indigo-500" />
                                         Recent Notifications
                                     </h2>
@@ -557,7 +557,7 @@ const DeveloperDashboard = () => {
                                                 <div className="p-2 bg-slate-50 rounded-xl shrink-0">{activity.icon}</div>
                                                 <div>
                                                     <p className="text-sm text-slate-700 font-medium leading-tight">{activity.text}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">{activity.time}</p>
+                                                    <p className="text-[10px] font-semibold text-slate-400 mt-1">{activity.time}</p>
                                                 </div>
                                             </div>
                                         ))}

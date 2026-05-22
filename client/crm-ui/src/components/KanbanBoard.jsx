@@ -328,7 +328,7 @@ const TimelineEntry = ({ entry, idx }) => {
                                 {isRestricted ? 'Restricted' : (entry.changedBy?.name || 'Unknown')}
                             </span>
                             {entry.changedBy?.role && !isRestricted && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase tracking-wider">
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 capitalize">
                                     {entry.changedBy.role}
                                 </span>
                             )}
@@ -363,7 +363,7 @@ const TimelineEntry = ({ entry, idx }) => {
                     {/* Notes */}
                     {entry.notes && (
                         <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                            <p className="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1.5">
                                 <MessageSquare className="w-3.5 h-3.5" /> Notes
                             </p>
                             <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
@@ -375,7 +375,7 @@ const TimelineEntry = ({ entry, idx }) => {
                     {/* Rich Attachments */}
                     {hasAttachments && (
                         <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <p className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
                                 <Paperclip className="w-3.5 h-3.5" /> Attachments ({entry.attachments.length})
                             </p>
                             <div className="space-y-2">
@@ -389,7 +389,7 @@ const TimelineEntry = ({ entry, idx }) => {
                     {/* Legacy single attachment URL */}
                     {hasLegacyAttachment && !hasAttachments && (
                         <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <p className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5">
                                 <Paperclip className="w-3.5 h-3.5" /> Attachment
                             </p>
                             <ScreenshotLinkCard url={entry.attachment} />
@@ -399,7 +399,7 @@ const TimelineEntry = ({ entry, idx }) => {
                     {/* Screenshot Links */}
                     {hasLinks && (
                         <div>
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                            <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
                                 <Link2 className="w-3.5 h-3.5" /> Screenshot / Reference Links ({entry.screenshotLinks.length})
                             </p>
                             <div className="space-y-2">
@@ -728,7 +728,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
             {/* Project Filter Bar */}
             {!loading && projectOptions.length > 0 && (
                 <div className="flex items-center gap-2 mb-4 flex-wrap shrink-0">
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mr-1">Project:</span>
+                    <span className="text-xs font-bold text-slate-500 mr-1">Project:</span>
                     <button
                         onClick={() => setProjectFilter('All')}
                         className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
@@ -806,7 +806,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                     <div className="flex justify-between items-start mb-2.5">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setProjectFilter(getProject(task)); }}
-                                                            className="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[60%] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
+                                                            className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[60%] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
                                                         >{getProject(task)}</button>
                                                         <div className="flex gap-1.5 shrink-0">
                                                             {overdue && (
@@ -999,10 +999,10 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                         {/* Drawer Header */}
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider ${PRIORITY_COLORS[selectedTask.priority] || PRIORITY_COLORS['Medium']}`}>
+                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-md ${PRIORITY_COLORS[selectedTask.priority] || PRIORITY_COLORS['Medium']}`}>
                                     {selectedTask.priority || 'Medium'} Priority
                                 </span>
-                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                                <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                                     {getProject(selectedTask)}
                                 </span>
                             </div>
@@ -1023,7 +1023,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                     { label: 'Due Date', value: getEndDate(selectedTask),        cls: isOverdue(selectedTask) ? 'text-rose-600 font-bold' : 'text-slate-700 font-bold' },
                                 ].map(item => (
                                     <div key={item.label} className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{item.label}</p>
+                                        <p className="text-xs font-semibold text-slate-400 mb-1">{item.label}</p>
                                         <p className={`text-sm ${item.cls}`}>{item.value}</p>
                                     </div>
                                 ))}

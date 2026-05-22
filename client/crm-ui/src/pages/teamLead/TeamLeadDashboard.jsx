@@ -172,7 +172,7 @@ const TeamLeadDashboard = () => {
                                     </div>
                                     <div className="flex flex-col justify-center">
                                         <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
-                                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{kpi.title}</p>
+                                        <p className="text-[10px] font-medium text-slate-500">{kpi.title}</p>
                                     </div>
                                 </div>
                             );
@@ -287,7 +287,7 @@ const TeamLeadDashboard = () => {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500">
+                                    <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-semibold text-slate-500">
                                         <th className="px-6 py-4 font-medium">Member</th>
                                         <th className="px-6 py-4 font-medium">Status</th>
                                         <th className="px-6 py-4 font-medium">Tasks</th>

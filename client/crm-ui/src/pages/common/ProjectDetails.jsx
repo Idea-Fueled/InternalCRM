@@ -528,7 +528,7 @@ const ProjectDetails = () => {
 
                                 <div className="flex flex-col items-end shrink-0 md:text-right">
                                     <div className="text-3xl font-black text-indigo-600">{progressPercent}%</div>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Project Completion</span>
+                                    <span className="text-[10px] font-semibold text-slate-400 mt-1">Project Completion</span>
                                 </div>
                             </div>
 
@@ -540,7 +540,7 @@ const ProjectDetails = () => {
                                         style={{ width: `${progressPercent}%` }}
                                     ></div>
                                 </div>
-                                <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                <div className="flex justify-between text-[10px] font-semibold text-slate-400">
                                     <span>Tasks: {completedTasks} / {totalTasks} Completed</span>
                                     <span>{totalTasks - completedTasks} Remaining</span>
                                 </div>
@@ -557,7 +557,7 @@ const ProjectDetails = () => {
                             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 space-y-4">
                                 <div className="flex items-center justify-between pb-3 border-b border-slate-50">
                                     <h3 className="section-title">Overview & Strategy</h3>
-                                    <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2 py-0.5 rounded">Specs</span>
+                                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Specs</span>
                                 </div>
                                 <p className="text-sm text-slate-600 leading-relaxed font-semibold">
                                     {project.description || "No project overview parameters defined yet."}
@@ -566,11 +566,11 @@ const ProjectDetails = () => {
                                 {/* Optional Fields Showcase */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                                     <div className="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-100">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Client Partner</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block mb-1">Client Partner</span>
                                         <span className="text-xs font-bold text-slate-700">{project.clientName || "N/A"}</span>
                                     </div>
                                     <div className="bg-slate-50/50 p-3.5 rounded-2xl border border-slate-100">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Estimated Taskload</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block mb-1">Estimated Taskload</span>
                                         <span className="text-xs font-bold text-slate-700">{project.estimatedTasks || 0} Units</span>
                                     </div>
                                 </div>
@@ -601,7 +601,7 @@ const ProjectDetails = () => {
                                 {/* Filters Panel */}
                                 <div className="px-6 py-3.5 bg-white border-b border-slate-50 flex flex-wrap items-center gap-3">
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status:</span>
+                                        <span className="text-[10px] font-semibold text-slate-400">Status:</span>
                                         <select
                                             value={taskFilterStatus}
                                             onChange={(e) => setTaskFilterStatus(e.target.value)}
@@ -615,7 +615,7 @@ const ProjectDetails = () => {
                                         </select>
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority:</span>
+                                        <span className="text-[10px] font-semibold text-slate-400">Priority:</span>
                                         <select
                                             value={taskFilterPriority}
                                             onChange={(e) => setTaskFilterPriority(e.target.value)}
@@ -633,7 +633,7 @@ const ProjectDetails = () => {
                                 {/* Tasks Table */}
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
-                                        <thead className="bg-slate-50/20 border-b border-slate-50 text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                                        <thead className="bg-slate-50/20 border-b border-slate-50 text-[10px] text-slate-400 font-semibold">
                                             <tr>
                                                 <th className="px-6 py-3">Task Parameter</th>
                                                 <th className="px-6 py-3">Assignees</th>
@@ -673,13 +673,13 @@ const ProjectDetails = () => {
                                                                 </div>
                                                                 <div className="flex flex-col leading-tight">
                                                                     <span className="text-[11px] font-bold text-slate-700">{task.assignedTo?.name || "Unassigned"}</span>
-                                                                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Developer</span>
+                                                                    <span className="text-[8px] font-bold text-slate-400">Developer</span>
                                                                 </div>
                                                             </div>
                                                             {/* QA */}
                                                             {task.assignedQA && (
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="w-5 h-5 rounded bg-indigo-50 flex items-center justify-center text-[9px] font-black text-indigo-600 border border-indigo-100 overflow-hidden shrink-0">
+                                                                    <div className="w-5 h-5 rounded bg-indigo-50 flex items-center justify-center text-[9px] font-bold text-indigo-600 border border-indigo-100 overflow-hidden shrink-0">
                                                                         {task.assignedQA.profilePic ? (
                                                                             <img src={task.assignedQA.profilePic} alt="" className="w-full h-full object-cover" />
                                                                         ) : (
@@ -688,14 +688,14 @@ const ProjectDetails = () => {
                                                                     </div>
                                                                     <div className="flex flex-col leading-tight">
                                                                         <span className="text-[11px] font-bold text-slate-700">{task.assignedQA.name}</span>
-                                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">QA Reviewer</span>
+                                                                        <span className="text-[8px] font-bold text-slate-400">QA Reviewer</span>
                                                                     </div>
                                                                 </div>
                                                             )}
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                                                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                                                             task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
                                                             task.priority === "High" ? "bg-orange-50 text-orange-600 border border-orange-100" :
                                                             task.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
@@ -705,7 +705,7 @@ const ProjectDetails = () => {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4">
-                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-semibold ${
                                                             task.status === "Completed" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
                                                             task.status === "QA Review" ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
                                                             task.status === "In Progress" ? "bg-blue-50 text-blue-600 border border-blue-100" :
@@ -799,7 +799,7 @@ const ProjectDetails = () => {
                                                         <span className="text-xs font-black text-slate-700 truncate max-w-[150px] md:max-w-[200px]" title={file.filename}>
                                                             {file.filename}
                                                         </span>
-                                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tight">
+                                                        <span className="text-[9px] font-semibold text-slate-400">
                                                             By {file.uploadedBy?.name || "System"} • {formatDate(file.createdAt)}
                                                         </span>
                                                     </div>
@@ -850,15 +850,15 @@ const ProjectDetails = () => {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-xs font-black text-slate-800">{note.author?.name || "System User"}</span>
-                                                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase tracking-tight ${
+                                                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-semibold ${
                                                             note.author?.role === "admin" ? "bg-rose-50 text-rose-600 border border-rose-100" :
-                                                            note.author?.role === "TL" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                            note.author?.role === "TL" ? "bg-amber-50 text-amber-600 border border-amber-100" :
                                                             "bg-blue-50 text-blue-600 border border-blue-100"
                                                         }`}>
                                                             {note.author?.role === "TL" ? "Team Lead" : note.author?.role || "Member"}
                                                         </span>
                                                     </div>
-                                                    <span className="text-[9px] font-black text-slate-400">{formatDate(note.createdAt)}</span>
+                                                    <span className="text-[9px] font-bold text-slate-400">{formatDate(note.createdAt)}</span>
                                                 </div>
                                                 <p className="text-xs font-semibold text-slate-600 leading-relaxed">
                                                     {note.text}
@@ -905,18 +905,18 @@ const ProjectDetails = () => {
 
                             {/* PROJECT STATS / QUICK METRICS */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 space-y-4">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-50">Taskload Distribution</h3>
+                                <h3 className="text-xs font-bold text-slate-400 pb-2 border-b border-slate-50">Taskload Distribution</h3>
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-slate-50/50 rounded-2xl p-3.5 border border-slate-100 text-center">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase block mb-1">In Progress</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block mb-1">In Progress</span>
                                         <span className="text-xl font-black text-blue-600">{inProgressTasks}</span>
                                     </div>
                                     <div className="bg-slate-50/50 rounded-2xl p-3.5 border border-slate-100 text-center">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase block mb-1">QA Review</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block mb-1">QA Review</span>
                                         <span className="text-xl font-black text-indigo-600">{qaReviewTasks}</span>
                                     </div>
                                     <div className="bg-slate-50/50 rounded-2xl p-3.5 border border-slate-100 text-center col-span-2">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase block mb-1">Completed / Sprint Done</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block mb-1">Completed / Sprint Done</span>
                                         <span className="text-xl font-black text-emerald-600">{completedTasks}</span>
                                     </div>
                                 </div>
@@ -926,8 +926,8 @@ const ProjectDetails = () => {
                             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 space-y-4">
                                 <div className="flex items-center justify-between pb-3 border-b border-slate-50">
                                     <div>
-                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Project Team</h3>
-                                        <span className="text-[8px] font-black text-slate-400 uppercase">Assigned parameters</span>
+                                        <h3 className="text-xs font-bold text-slate-400">Project Team</h3>
+                                        <span className="text-[9px] font-semibold text-slate-400">Assigned parameters</span>
                                     </div>
                                     {isAuthorizedToManage && (
                                         <button
@@ -943,7 +943,7 @@ const ProjectDetails = () => {
                                 <div className="space-y-4">
                                     {/* Team Lead */}
                                     <div className="space-y-2">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Team Lead</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block">Team Lead</span>
                                         <div className="flex items-center gap-3 bg-slate-50/80 p-3 rounded-2xl border border-slate-100">
                                             <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-black text-xs shadow-sm overflow-hidden shrink-0">
                                                 {project.teamLead?.profilePic ? (
@@ -954,7 +954,7 @@ const ProjectDetails = () => {
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="text-xs font-black text-slate-800 truncate">{project.teamLead?.name || "N/A"}</span>
-                                                <span className="text-[9px] font-black text-slate-400 uppercase">Project Manager / TL</span>
+                                                <span className="text-[9px] font-semibold text-slate-400">Project Manager / TL</span>
                                             </div>
                                         </div>
                                     </div>
@@ -962,7 +962,7 @@ const ProjectDetails = () => {
                                     {/* Developers & QA list */}
                                     <div className="space-y-2">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Team Members</span>
+                                            <span className="text-[10px] font-semibold text-slate-400 block">Team Members</span>
                                             <span className="bg-slate-100 text-slate-600 px-1.5 py-0.2 rounded text-[9px] font-black">{project.teamMembers?.length || 0}</span>
                                         </div>
 
@@ -982,7 +982,7 @@ const ProjectDetails = () => {
                                                             <span className="text-[9px] font-bold text-slate-400 truncate">{m.email}</span>
                                                         </div>
                                                     </div>
-                                                    <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase shrink-0 ${
+                                                    <span className={`px-1.5 py-0.2 rounded text-[8px] font-semibold shrink-0 ${
                                                         m.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
                                                     }`}>
                                                         {m.role === "qa" ? "QA" : "Dev"}
@@ -1001,7 +1001,7 @@ const ProjectDetails = () => {
 
                             {/* SECTION 7: ACTIVITY TIMELINE */}
                             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200/60 space-y-4">
-                                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest pb-2 border-b border-slate-50">Sprint Activity Feed</h3>
+                                <h3 className="text-xs font-bold text-slate-400 pb-2 border-b border-slate-50">Sprint Activity Feed</h3>
 
                                 <div className="max-h-[400px] overflow-y-auto pr-2 pl-6 scrollbar-thin py-2">
                                     <div className="relative border-l-2 border-slate-100 pl-4 space-y-6">
@@ -1066,7 +1066,7 @@ const ProjectDetails = () => {
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
                                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Manage Team Members</h3>
-                                <span className="text-[10px] font-black text-slate-400 uppercase">Select project taskforce</span>
+                                <span className="text-[10px] font-semibold text-slate-400">Select project taskforce</span>
                             </div>
                             <button
                                 onClick={() => setIsMemberModalOpen(false)}
@@ -1121,7 +1121,7 @@ const ProjectDetails = () => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase ${
+                                                <span className={`px-1.5 py-0.2 rounded text-[8px] font-semibold ${
                                                     member.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
                                                 }`}>
                                                     {member.role === "qa" ? "QA" : "Dev"}
@@ -1168,7 +1168,7 @@ const ProjectDetails = () => {
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
                                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Create Sprint Task</h3>
-                                <span className="text-[10px] font-black text-slate-400 uppercase">Initialize new project workflow task</span>
+                                <span className="text-[10px] font-semibold text-slate-400">Initialize new project workflow task</span>
                             </div>
                             <button
                                 type="button"
@@ -1182,7 +1182,7 @@ const ProjectDetails = () => {
                         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin">
                             {/* Task Name */}
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Task Name *</label>
+                                <label className="text-[10px] font-semibold text-slate-400">Task Name *</label>
                                 <input
                                     type="text"
                                     required
@@ -1195,7 +1195,7 @@ const ProjectDetails = () => {
 
                             {/* Task Description */}
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</label>
+                                <label className="text-[10px] font-semibold text-slate-400">Description</label>
                                 <textarea
                                     rows="3"
                                     placeholder="Detailed task guidelines..."
@@ -1207,7 +1207,7 @@ const ProjectDetails = () => {
 
                             {/* Assignee Developer (filtered from project members) */}
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign Developer</label>
+                                <label className="text-[10px] font-semibold text-slate-400">Assign Developer</label>
                                 <select
                                     value={newTask.assignedTo}
                                     onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
@@ -1225,7 +1225,7 @@ const ProjectDetails = () => {
 
                             {/* Assign QA Reviewer (filtered from project members) */}
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Assign QA Reviewer</label>
+                                <label className="text-[10px] font-semibold text-slate-400">Assign QA Reviewer</label>
                                 <select
                                     value={newTask.assignedQA}
                                     onChange={(e) => setNewTask({ ...newTask, assignedQA: e.target.value })}
@@ -1244,7 +1244,7 @@ const ProjectDetails = () => {
                             {/* Grid for Priority, Start & End Dates */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Priority</label>
+                                    <label className="text-[10px] font-semibold text-slate-400">Priority</label>
                                     <select
                                         value={newTask.priority}
                                         onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
@@ -1257,7 +1257,7 @@ const ProjectDetails = () => {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Start Date</label>
+                                    <label className="text-[10px] font-semibold text-slate-400">Start Date</label>
                                     <input
                                         type="date"
                                         required
@@ -1267,7 +1267,7 @@ const ProjectDetails = () => {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">End Date</label>
+                                    <label className="text-[10px] font-semibold text-slate-400">End Date</label>
                                     <input
                                         type="date"
                                         required
@@ -1308,7 +1308,7 @@ const ProjectDetails = () => {
                         <div className="p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
                             <div className="space-y-1 max-w-[80%]">
                                 <div className="flex flex-wrap gap-2 items-center">
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                                         selectedTask.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100 animate-pulse" :
                                         selectedTask.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :
                                         selectedTask.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
@@ -1316,7 +1316,7 @@ const ProjectDetails = () => {
                                     }`}>
                                         {selectedTask.priority} Priority
                                     </span>
-                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                                         selectedTask.status === "Completed" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
                                         selectedTask.status === "QA Review" ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
                                         selectedTask.status === "In Progress" ? "bg-blue-50 text-blue-600 border border-blue-100" :
@@ -1343,7 +1343,7 @@ const ProjectDetails = () => {
                                 <div className="md:col-span-2 space-y-6">
                                     {/* Description */}
                                     <div className="space-y-1.5 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Task Outline</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block">Task Outline</span>
                                         <p className="text-xs text-slate-600 font-semibold leading-relaxed">
                                             {selectedTask.description || "No task outline descriptions provided."}
                                         </p>
@@ -1351,7 +1351,7 @@ const ProjectDetails = () => {
 
                                     {/* Task Status History / notes (masked automatically by backend if unauthorized) */}
                                     <div className="space-y-4">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block pb-1.5 border-b border-slate-50">Workflow Progress Logs</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block pb-1.5 border-b border-slate-50">Workflow Progress Logs</span>
                                         <div className="relative border-l-2 border-slate-100 pl-4 space-y-4 py-1">
                                             {(selectedTask.statusHistory || []).map((h, idx) => (
                                                 <div key={idx} className="relative space-y-1 text-xs">
@@ -1394,22 +1394,22 @@ const ProjectDetails = () => {
                                 {/* Right Side: Assignees & Timeline */}
                                 <div className="space-y-4">
                                     <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
-                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block pb-1 border-b border-slate-100">Details</span>
+                                        <span className="text-[10px] font-semibold text-slate-400 block pb-1 border-b border-slate-100">Details</span>
                                         
                                         <div>
-                                            <span className="text-[9px] font-black text-slate-400 uppercase block">Developer Assignee</span>
+                                            <span className="text-[9px] font-semibold text-slate-400 block">Developer Assignee</span>
                                             <span className="text-xs font-bold text-slate-700">{selectedTask.assignedTo?.name || "Unassigned"}</span>
                                         </div>
                                         <div>
-                                            <span className="text-[9px] font-black text-slate-400 uppercase block">QA reviewer</span>
+                                            <span className="text-[9px] font-semibold text-slate-400 block">QA reviewer</span>
                                             <span className="text-xs font-bold text-slate-700">{selectedTask.assignedQA?.name || "Unassigned"}</span>
                                         </div>
                                         <div>
-                                            <span className="text-[9px] font-black text-slate-400 uppercase block">Start Date</span>
+                                            <span className="text-[9px] font-semibold text-slate-400 block">Start Date</span>
                                             <span className="text-xs font-bold text-slate-700">{formatDate(selectedTask.startDate)}</span>
                                         </div>
                                         <div>
-                                            <span className="text-[9px] font-black text-slate-400 uppercase block text-rose-600">Timeline Limit</span>
+                                            <span className="text-[9px] font-semibold text-rose-600 block">Timeline Limit</span>
                                             <span className="text-xs font-bold text-rose-600">{formatDate(selectedTask.endDate)}</span>
                                         </div>
                                     </div>
@@ -1432,7 +1432,7 @@ const ProjectDetails = () => {
                                                     setTransitionAttachments([]);
                                                     setIsTransitionModalOpen(true);
                                                 }}
-                                                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition duration-300 shadow-md shadow-blue-200 cursor-pointer"
+                                                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition duration-300 shadow-md shadow-blue-200 cursor-pointer"
                                             >
                                                 Transition Workflow State
                                             </button>
@@ -1455,7 +1455,7 @@ const ProjectDetails = () => {
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
                                 <h3 className="text-lg font-black text-slate-900 tracking-tight">Transition State</h3>
-                                <span className="text-[10px] font-black text-slate-400 uppercase">Change sprint workflow status</span>
+                                <span className="text-[10px] font-semibold text-slate-400">Change sprint workflow status</span>
                             </div>
                             <button
                                 type="button"
@@ -1469,13 +1469,13 @@ const ProjectDetails = () => {
                         <div className="space-y-4">
                             {/* Current Status display */}
                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100/50 flex justify-between text-xs">
-                                <span className="font-bold text-slate-400 uppercase text-[9px]">Current State</span>
-                                <span className="font-black text-slate-700 uppercase">{selectedTask.status}</span>
+                                <span className="font-bold text-slate-400 text-[10px]">Current State</span>
+                                <span className="font-semibold text-slate-700">{selectedTask.status}</span>
                             </div>
 
                             {/* Select Status Dropdown (Check role bounds) */}
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Select Target State *</label>
+                                <label className="text-[10px] font-semibold text-slate-400">Select Target State *</label>
                                 <select
                                     required
                                     value={transitionStatus}
@@ -1514,7 +1514,7 @@ const ProjectDetails = () => {
 
                             {/* Transition Comment (Required if rejecting / adding details) */}
                             <div className="space-y-1">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Transition Notes / QA Comments</label>
+                                <label className="text-[10px] font-semibold text-slate-400">Transition Notes / QA Comments</label>
                                 <textarea
                                     rows="3"
                                     value={transitionNotes}
@@ -1526,7 +1526,7 @@ const ProjectDetails = () => {
 
                             {/* Transition Multi-Files uploads */}
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Upload Files / Screenshots</label>
+                                <label className="text-[10px] font-semibold text-slate-400 block">Upload Files / Screenshots</label>
                                 <input
                                     type="file"
                                     multiple

@@ -395,7 +395,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                     </p>
                     <button
                         onClick={onClose}
-                        className="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300 shadow-lg shadow-rose-200 cursor-pointer"
+                        className="px-6 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all duration-300 shadow-lg shadow-rose-200 cursor-pointer"
                     >
                         Dismiss Sidebar
                     </button>
@@ -432,12 +432,12 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                     {loading && !project ? (
                         <div className="flex items-center gap-3">
                             <div className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Syncing details...</span>
+                            <span className="text-xs font-semibold text-slate-400">Syncing details...</span>
                         </div>
                     ) : project ? (
                         <div className="flex-1 mr-4 space-y-2">
                             <div className="flex flex-wrap gap-2 items-center">
-                                <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                                <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
                                     project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                                     project.status === "Active" ? "bg-blue-50 text-blue-600 border-blue-100" :
                                     project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
@@ -446,11 +446,11 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 }`}>
                                     {project.status || "Active"}
                                 </span>
-                                <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border ${
+                                <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
                                     project.priority === "Critical" ? "bg-rose-50 text-rose-600 border-rose-100 animate-pulse" :
                                     project.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :
                                     project.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                    "bg-slate-50 text-slate-500 border-slate-100"
+                                    "bg-slate-50 text-slate-550 border-slate-100"
                                 }`}>
                                     {project.priority || "Medium"} Priority
                                 </span>
@@ -507,7 +507,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="h-full flex items-center justify-center">
                             <div className="flex flex-col items-center gap-2">
                                 <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Syncing CRM Workspace...</span>
+                                <span className="text-[10px] font-semibold text-slate-400">Syncing CRM workspace...</span>
                             </div>
                         </div>
                     ) : project ? (
@@ -517,7 +517,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 <div className="space-y-6">
                                     {/* Strategy Overview */}
                                     <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-100/60 space-y-2">
-                                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Overview & Strategy</h3>
+                                        <h3 className="text-xs font-bold text-slate-400">Overview & Strategy</h3>
                                         <p className="text-xs text-slate-600 font-semibold leading-relaxed whitespace-pre-line">
                                             {project.description || "No project overview parameters defined yet."}
                                         </p>
@@ -527,13 +527,13 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {/* Client Partner */}
                                         <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug flex flex-col justify-center">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Client Partner</span>
+                                            <span className="text-[10px] font-semibold text-slate-400 block mb-1">Client Partner</span>
                                             <span className="text-xs font-bold text-slate-700">{project.clientName || "N/A"}</span>
                                         </div>
                                         
                                         {/* Estimated Tasks */}
                                         <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 leading-snug flex flex-col justify-center">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block mb-1">Estimated Tasks</span>
+                                            <span className="text-[10px] font-semibold text-slate-400 block mb-1">Estimated Tasks</span>
                                             <span className="text-xs font-bold text-slate-700">{project.estimatedTasks || 0} Units</span>
                                         </div>
 
@@ -541,7 +541,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                         <div className="flex items-center gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 text-xs">
                                             <Calendar className="w-5 h-5 text-indigo-500 shrink-0" />
                                             <div className="leading-snug">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Start Date</span>
+                                                <span className="text-[10px] font-semibold text-slate-400 block">Start Date</span>
                                                 <span className="font-bold text-slate-700">{formatDate(project.startDate)}</span>
                                             </div>
                                         </div>
@@ -550,7 +550,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                         <div className="flex items-center gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100/60 text-xs">
                                             <Clock className="w-5 h-5 text-rose-500 shrink-0" />
                                             <div className="leading-snug">
-                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block text-rose-600">Timeline Limit (End Date)</span>
+                                                <span className="font-semibold text-rose-600 text-[10px] block">Timeline Limit (End Date)</span>
                                                 <span className="font-bold text-rose-600">{formatDate(project.endDate)}</span>
                                             </div>
                                         </div>
@@ -559,7 +559,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     {/* Project Team Section */}
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Project Team</h4>
+                                            <h4 className="text-xs font-bold text-slate-400">Project Team</h4>
                                             {isAuthorizedToManage && (
                                                 <button
                                                     onClick={() => setIsMemberModalOpen(true)}
@@ -573,7 +573,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                                         {/* Team Lead */}
                                         <div className="space-y-2">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Team Lead</span>
+                                            <span className="text-[10px] font-semibold text-slate-400 block">Team Lead</span>
                                             <div className="flex items-center gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-100">
                                                 <div className="w-8 h-8 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-black text-xs shadow-sm overflow-hidden shrink-0">
                                                     {project.teamLead?.profilePic ? (
@@ -584,14 +584,14 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
                                                     <span className="text-xs font-black text-slate-800 truncate">{project.teamLead?.name || "N/A"}</span>
-                                                    <span className="text-[9px] font-black text-slate-400 uppercase">Project Manager / TL</span>
+                                                    <span className="text-[10px] font-semibold text-slate-400">Project manager / TL</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Assigned Developers & QAs */}
                                         <div className="space-y-2">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Taskforce Members ({project.teamMembers?.length || 0})</span>
+                                            <span className="text-[10px] font-semibold text-slate-400 block">Taskforce members ({project.teamMembers?.length || 0})</span>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                 {(project.teamMembers || []).map((m) => (
                                                     <div key={m._id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-100 transition cursor-default">
@@ -608,7 +608,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                 <span className="text-[9px] font-bold text-slate-400 truncate">{m.email}</span>
                                                             </div>
                                                         </div>
-                                                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase shrink-0 ${
+                                                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-semibold shrink-0 ${
                                                             m.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
                                                         }`}>
                                                             {m.role === "qa" ? "QA" : "Dev"}
@@ -631,7 +631,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 <div className="space-y-6">
                                     {/* Task workspace header */}
                                     <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Project Sprint Sprints ({filteredTasks.length})</h4>
+                                        <h4 className="text-xs font-bold text-slate-400">Project sprint sprints ({filteredTasks.length})</h4>
                                         {isAuthorizedToManage && (
                                             <button
                                                 onClick={() => setIsTaskModalOpen(true)}
@@ -646,7 +646,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     {/* Mini Filters panel */}
                                     <div className="flex flex-wrap items-center gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-100/50">
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Status:</span>
+                                            <span className="text-[10px] font-semibold text-slate-400">Status:</span>
                                             <select
                                                 value={taskFilterStatus}
                                                 onChange={(e) => setTaskFilterStatus(e.target.value)}
@@ -660,7 +660,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                             </select>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Priority:</span>
+                                            <span className="text-[10px] font-semibold text-slate-400">Priority:</span>
                                             <select
                                                 value={taskFilterPriority}
                                                 onChange={(e) => setTaskFilterPriority(e.target.value)}
@@ -679,7 +679,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     <div className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
-                                                <thead className="bg-slate-50 border-b border-slate-100 text-[9px] uppercase tracking-wider text-slate-400 font-black">
+                                                <thead className="bg-slate-50 border-b border-slate-100 text-[9px] text-slate-400 font-semibold">
                                                     <tr>
                                                         <th className="px-4 py-2.5">Task Summary</th>
                                                         <th className="px-4 py-2.5">Workflow</th>
@@ -706,7 +706,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             </td>
                                                             <td className="px-4 py-3">
                                                                 <div className="flex flex-col gap-1 items-start">
-                                                                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                                                                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                                                         task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
                                                                         task.priority === "High" ? "bg-orange-50 text-orange-600 border border-orange-100" :
                                                                         task.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
@@ -714,7 +714,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     }`}>
                                                                         {task.priority}
                                                                     </span>
-                                                                    <span className={`px-1.5 py-0.2 rounded-lg text-[8px] font-black uppercase tracking-wider ${
+                                                                    <span className={`px-1.5 py-0.2 rounded-lg text-[8px] font-semibold ${
                                                                         task.status === "Completed" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
                                                                         task.status === "QA Review" ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
                                                                         task.status === "In Progress" ? "bg-blue-50 text-blue-600 border border-blue-100" :
@@ -727,12 +727,12 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             <td className="px-4 py-3">
                                                                 <div className="flex flex-col gap-1">
                                                                     <div className="flex items-center gap-1.5">
-                                                                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight w-7 shrink-0">Dev:</span>
+                                                                        <span className="text-[8px] font-bold text-slate-400 w-7 shrink-0">Dev:</span>
                                                                         <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px]">{task.assignedTo?.name || "Unassigned"}</span>
                                                                     </div>
                                                                     {task.assignedQA && (
                                                                         <div className="flex items-center gap-1.5">
-                                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight w-7 shrink-0">QA:</span>
+                                                                            <span className="text-[8px] font-bold text-slate-400 w-7 shrink-0">QA:</span>
                                                                             <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px]">{task.assignedQA.name}</span>
                                                                         </div>
                                                                     )}
@@ -776,7 +776,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     {/* Document Repository Section */}
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Project Documents</h4>
+                                            <h4 className="text-xs font-bold text-slate-400">Project Documents</h4>
                                             <div>
                                                 <input
                                                     type="file"
@@ -825,7 +825,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                 <span className="text-xs font-black text-slate-700 truncate max-w-[120px]" title={file.filename}>
                                                                     {file.filename}
                                                                 </span>
-                                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-tight truncate">
+                                                                <span className="text-[8px] font-semibold text-slate-400 truncate">
                                                                     By {file.uploadedBy?.name || "System"}
                                                                 </span>
                                                             </div>
@@ -854,7 +854,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     {/* Discussion Comments Thread */}
                                     <div className="space-y-4">
                                         <div className="pb-2 border-b border-slate-100">
-                                            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Discussion Notes</h4>
+                                            <h4 className="text-xs font-bold text-slate-400">Discussion Notes</h4>
                                         </div>
 
                                         {/* Comments Feed */}
@@ -872,7 +872,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-1.5">
                                                                 <span className="text-xs font-black text-slate-800">{note.author?.name || "System User"}</span>
-                                                                <span className={`px-1.5 py-0.2 rounded text-[7px] font-black uppercase tracking-tight ${
+                                                                <span className={`px-1.5 py-0.2 rounded text-[7px] font-semibold ${
                                                                     note.author?.role === "admin" ? "bg-rose-50 text-rose-600 border border-rose-100" :
                                                                     note.author?.role === "TL" ? "bg-amber-50 text-amber-600 border-amber-100" :
                                                                     "bg-blue-50 text-blue-600 border border-blue-100"
@@ -925,7 +925,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                             {activeTab === "activity" && (
                                 <div className="space-y-6">
                                     <div className="pb-2 border-b border-slate-100">
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Sprint Activity Feed</h4>
+                                        <h4 className="text-xs font-bold text-slate-400">Sprint Activity Feed</h4>
                                     </div>
 
                                     <div className="pr-2 pl-4 py-2 max-h-[500px] overflow-y-auto scrollbar-thin">
@@ -991,7 +991,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
                                 <h3 className="text-base font-bold text-slate-900 tracking-tight">Manage Team Members</h3>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase">Select project taskforce</span>
+                                <span className="text-[9px] font-semibold text-slate-400">Select project taskforce</span>
                             </div>
                             <button
                                 onClick={() => setIsMemberModalOpen(false)}
@@ -1046,7 +1046,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <span className={`px-1.5 py-0.2 rounded text-[7px] font-black uppercase ${
+                                                <span className={`px-1.5 py-0.2 rounded text-[7px] font-bold ${
                                                     member.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
                                                 }`}>
                                                     {member.role === "qa" ? "QA" : "Dev"}
@@ -1093,7 +1093,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
                                 <h3 className="text-base font-bold text-slate-900 tracking-tight">Create Sprint Task</h3>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase">Initialize new project workflow task</span>
+                                <span className="text-[9px] font-semibold text-slate-400">Initialize new project workflow task</span>
                             </div>
                             <button
                                 type="button"
@@ -1107,7 +1107,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1 scrollbar-thin">
                             {/* Task Name */}
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Task Name *</label>
+                                <label className="text-[9px] font-semibold text-slate-400">Task Name *</label>
                                 <input
                                     type="text"
                                     required
@@ -1120,7 +1120,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                             {/* Task Description */}
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Description</label>
+                                <label className="text-[9px] font-semibold text-slate-400">Description</label>
                                 <textarea
                                     rows="2"
                                     placeholder="Detailed task guidelines..."
@@ -1132,7 +1132,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                             {/* Assignee Developer */}
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Assign Developer</label>
+                                <label className="text-[9px] font-semibold text-slate-400">Assign Developer</label>
                                 <select
                                     value={newTask.assignedTo}
                                     onChange={(e) => setNewTask({ ...newTask, assignedTo: e.target.value })}
@@ -1150,7 +1150,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                             {/* Assign QA Reviewer */}
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Assign QA Reviewer</label>
+                                <label className="text-[9px] font-semibold text-slate-400">Assign QA Reviewer</label>
                                 <select
                                     value={newTask.assignedQA}
                                     onChange={(e) => setNewTask({ ...newTask, assignedQA: e.target.value })}
@@ -1169,7 +1169,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                             {/* Grid for Priority, Start & End Dates */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Priority</label>
+                                    <label className="text-[9px] font-semibold text-slate-400">Priority</label>
                                     <select
                                         value={newTask.priority}
                                         onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
@@ -1182,7 +1182,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     </select>
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Start Date</label>
+                                    <label className="text-[9px] font-semibold text-slate-400">Start Date</label>
                                     <input
                                         type="date"
                                         required
@@ -1192,7 +1192,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     />
                                 </div>
                                 <div className="space-y-1">
-                                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">End Date</label>
+                                    <label className="text-[9px] font-semibold text-slate-400">End Date</label>
                                     <input
                                         type="date"
                                         required
@@ -1233,7 +1233,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
                             <div className="space-y-1 max-w-[80%]">
                                 <div className="flex flex-wrap gap-1.5 items-center">
-                                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase ${
+                                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                         selectedTask.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100 animate-pulse" :
                                         selectedTask.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :
                                         selectedTask.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
@@ -1241,7 +1241,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     }`}>
                                         {selectedTask.priority} Priority
                                     </span>
-                                    <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                    <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                         selectedTask.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
                                         selectedTask.status === "QA Review" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
                                         selectedTask.status === "In Progress" ? "bg-blue-50 text-blue-600 border-blue-100" :
@@ -1266,7 +1266,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 {/* Left side */}
                                 <div className="md:col-span-2 space-y-5">
                                     <div className="space-y-1 bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Task Outline</span>
+                                        <span className="text-[9px] font-semibold text-slate-400 block">Task Outline</span>
                                         <p className="text-xs text-slate-650 font-semibold leading-relaxed">
                                             {selectedTask.description || "No task outline descriptions provided."}
                                         </p>
@@ -1274,7 +1274,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                                     {/* Workflow Logs */}
                                     <div className="space-y-3">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block pb-1 border-b border-slate-50">Workflow Progress Logs</span>
+                                        <span className="text-[9px] font-semibold text-slate-400 block pb-1 border-b border-slate-50">Workflow Progress Logs</span>
                                         <div className="relative border-l border-slate-150 pl-3.5 space-y-3 py-1 text-xs">
                                             {(selectedTask.statusHistory || []).map((h, idx) => (
                                                 <div key={idx} className="relative space-y-1">
@@ -1315,22 +1315,22 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 {/* Right side */}
                                 <div className="space-y-4">
                                     <div className="space-y-2.5 bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-xs">
-                                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block pb-1 border-b border-slate-100">Details</span>
+                                        <span className="text-[9px] font-semibold text-slate-400 block pb-1 border-b border-slate-100">Details</span>
                                         
                                         <div>
-                                            <span className="text-[8px] font-black text-slate-400 uppercase block">Developer</span>
+                                            <span className="text-[8px] font-semibold text-slate-400 block">Developer</span>
                                             <span className="font-bold text-slate-700">{selectedTask.assignedTo?.name || "Unassigned"}</span>
                                         </div>
                                         <div>
-                                            <span className="text-[8px] font-black text-slate-400 uppercase block">QA Reviewer</span>
+                                            <span className="text-[8px] font-semibold text-slate-400 block">QA Reviewer</span>
                                             <span className="font-bold text-slate-700">{selectedTask.assignedQA?.name || "Unassigned"}</span>
                                         </div>
                                         <div>
-                                            <span className="text-[8px] font-black text-slate-400 uppercase block">Start Date</span>
+                                            <span className="text-[8px] font-semibold text-slate-400 block">Start Date</span>
                                             <span className="font-bold text-slate-700">{formatDate(selectedTask.startDate)}</span>
                                         </div>
                                         <div>
-                                            <span className="text-[8px] font-black text-slate-400 uppercase block text-rose-600">Timeline Limit</span>
+                                            <span className="text-[8px] font-semibold text-rose-600 block">Timeline Limit</span>
                                             <span className="font-bold text-rose-600">{formatDate(selectedTask.endDate)}</span>
                                         </div>
                                     </div>
@@ -1351,7 +1351,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                     setTransitionAttachments([]);
                                                     setIsTransitionModalOpen(true);
                                                 }}
-                                                className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition duration-300 shadow-md shadow-blue-200 cursor-pointer"
+                                                className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition duration-300 shadow-md shadow-blue-200 cursor-pointer"
                                             >
                                                 Transition State
                                             </button>
@@ -1374,7 +1374,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                             <div>
                                 <h3 className="text-base font-bold text-slate-900 tracking-tight">Transition State</h3>
-                                <span className="text-[9px] font-bold text-slate-400 uppercase">Change sprint workflow status</span>
+                                <span className="text-[9px] font-semibold text-slate-400">Change sprint workflow status</span>
                             </div>
                             <button
                                 type="button"
@@ -1388,13 +1388,13 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         <div className="space-y-3.5">
                             {/* Current Status */}
                             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100/50 flex justify-between text-xs">
-                                <span className="font-bold text-slate-400 uppercase text-[9px]">Current State</span>
-                                <span className="font-black text-slate-700 uppercase">{selectedTask.status}</span>
+                                <span className="font-bold text-slate-400 text-[10px]">Current State</span>
+                                <span className="font-semibold text-slate-700">{selectedTask.status}</span>
                             </div>
 
                             {/* Select Status */}
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Select Target State *</label>
+                                <label className="text-[9px] font-semibold text-slate-400">Select Target State *</label>
                                 <select
                                     required
                                     value={transitionStatus}
@@ -1427,7 +1427,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                             {/* Transition Comment */}
                             <div className="space-y-1">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Transition Notes / QA Comments</label>
+                                <label className="text-[9px] font-semibold text-slate-400">Transition Notes / QA Comments</label>
                                 <textarea
                                     rows="2"
                                     value={transitionNotes}
@@ -1439,7 +1439,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
 
                             {/* Transition attachments */}
                             <div className="space-y-2">
-                                <label className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Upload Files / Screenshots</label>
+                                <label className="text-[9px] font-semibold text-slate-400 block">Upload Files / Screenshots</label>
                                 <input
                                     type="file"
                                     multiple

@@ -232,7 +232,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <Mail className="w-4 h-4" />
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Email Address</p>
+                                <p className="text-[10px] font-bold text-slate-400 mb-0.5">Email Address</p>
                                 <p className="text-sm font-semibold text-slate-700 truncate">{user?.email || "N/A"}</p>
                             </div>
                         </div>
@@ -242,7 +242,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <Briefcase className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Department</p>
+                                <p className="text-[10px] font-bold text-slate-400 mb-0.5">Department</p>
                                 <p className="text-sm font-semibold text-slate-700">{user?.department || "Engineering"}</p>
                             </div>
                         </div>
@@ -252,7 +252,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <Calendar className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Joined CRM</p>
+                                <p className="text-[10px] font-bold text-slate-400 mb-0.5">Joined CRM</p>
                                 <p className="text-sm font-semibold text-slate-700">
                                     {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' }) : "N/A"}
                                 </p>
@@ -274,7 +274,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 {/* 1. Reporting Manager Block (Developers, QAs, Team Leads only) */}
                                 {userRole !== 'admin' && (
                                     <div>
-                                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                                        <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                                             <UserCheck className="w-4 h-4 text-blue-500" />
                                             Reporting Manager
                                         </h4>
@@ -291,7 +291,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
-                                                                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">Corporate Administrator</p>
+                                                                <p className="text-[10px] font-bold text-blue-600">Corporate Administrator</p>
                                                             </div>
                                                         </div>
                                                     ))
@@ -312,7 +312,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
-                                                                <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wide">Team Lead / Reporting Manager</p>
+                                                                <p className="text-[10px] font-bold text-purple-600">Team Lead / Reporting Manager</p>
                                                             </div>
                                                         </div>
                                                     ))
@@ -328,7 +328,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
 
                                 {/* 2. Reporting Team / Teammates Block */}
                                 <div>
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                                    <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                                         <Users className="w-4 h-4 text-indigo-500" />
                                         {userRole === 'admin' ? "Active Team Leads" : userRole === 'TL' ? "Reporting Team Members" : "My Teammates"}
                                     </h4>
@@ -347,7 +347,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-700">{member.name}</span>
                                                         </div>
-                                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
                                                             {formatRole(member.role)}
                                                         </span>
                                                     </div>
@@ -371,7 +371,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-700">{member.name}</span>
                                                         </div>
-                                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
                                                             {formatRole(member.role)}
                                                         </span>
                                                     </div>
@@ -395,7 +395,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-700">{member.name}</span>
                                                         </div>
-                                                        <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
                                                             {formatRole(member.role)}
                                                         </span>
                                                     </div>

@@ -331,10 +331,10 @@ const QADashboard = () => {
                         {/* KPI Section */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                             {[
-                                { label: 'PENDING', value: displayStats.pendingReviewTasks?.length || displayStats.pendingReviewTasks, data: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Pending QA Reviews' },
-                                { label: 'COMPLETED', value: displayStats.completedTasks?.length || displayStats.completedTasks, data: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400', title: 'Completed Tasks' },
-                                { label: 'OVERDUE', value: displayStats.overdueTasks?.length || displayStats.overdueTasks, data: displayStats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Overdue QA Tasks' },
-                                { label: 'REJECTED', value: displayStats.doneTasks?.length || displayStats.doneTasks, data: displayStats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400', title: 'Rejected Tasks' },
+                                { label: 'Pending', value: displayStats.pendingReviewTasks?.length || displayStats.pendingReviewTasks, data: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Pending QA Reviews' },
+                                { label: 'Completed', value: displayStats.completedTasks?.length || displayStats.completedTasks, data: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400', title: 'Completed Tasks' },
+                                { label: 'Overdue', value: displayStats.overdueTasks?.length || displayStats.overdueTasks, data: displayStats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Overdue QA Tasks' },
+                                { label: 'Rejected', value: displayStats.doneTasks?.length || displayStats.doneTasks, data: displayStats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400', title: 'Rejected Tasks' },
                             ].map((stat, i) => (
                                 <div key={i} onClick={() => Array.isArray(stat.data) && setStatModal({ isOpen: true, title: stat.title, data: stat.data, type: "task" })} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-6 cursor-pointer hover:scale-[1.02] transition-transform`}>
                                     <div className={`w-12 h-12 ${stat.iconBg} rounded-full flex items-center justify-center ${stat.iconColor} shadow-sm border border-slate-100`}>
@@ -342,7 +342,7 @@ const QADashboard = () => {
                                     </div>
                                     <div>
                                         <p className={`text-2xl font-black ${stat.color} leading-none mb-1.5`}>{stat.value}</p>
-                                        <p className={`text-[10px] font-black ${stat.labelColor} uppercase tracking-widest`}>{stat.label}</p>
+                                        <p className={`text-[10px] font-semibold ${stat.labelColor}`}>{stat.label}</p>
                                     </div>
                                 </div>
                             ))}
@@ -393,7 +393,7 @@ const QADashboard = () => {
                                                     <div className="fixed inset-0 z-40" onClick={() => setIsFilterDropdownOpen(false)} />
                                                     <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
                                                         <div className="px-4 py-2 border-b border-slate-50">
-                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter by Project</p>
+                                                            <p className="text-[10px] font-bold text-slate-400">Filter by Project</p>
                                                         </div>
                                                         <div className="max-h-64 overflow-y-auto custom-scrollbar">
                                                             <button
@@ -438,7 +438,7 @@ const QADashboard = () => {
                                         >
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
+                                                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
                                                         {task.project?.projectName || task.project?.name || "No Project"}
                                                     </span>
                                                     <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
@@ -462,7 +462,7 @@ const QADashboard = () => {
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="text-[10px] font-bold text-slate-700 leading-tight">{task.assignedTo?.name || "Unassigned"}</span>
-                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Developer</span>
+                                                            <span className="text-[8px] font-medium text-slate-400">Developer</span>
                                                         </div>
                                                     </div>
                                                     <div className="flex items-center gap-2">
@@ -475,7 +475,7 @@ const QADashboard = () => {
                                                         </div>
                                                         <div className="flex flex-col">
                                                             <span className="text-[10px] font-bold text-slate-700 leading-tight">{task.assignedQA?.name || "Not Assigned"}</span>
-                                                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">QA Reviewer</span>
+                                                            <span className="text-[8px] font-medium text-slate-400">QA Reviewer</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -550,7 +550,7 @@ const QADashboard = () => {
                                                             </p>
                                                         </div>
                                                     )}
-                                                    <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">
+                                                    <p className="text-[10px] font-medium text-slate-400 mt-1">
                                                         {getTimeAgo(activity.timestamp)}
                                                     </p>
                                                 </div>
@@ -576,7 +576,7 @@ const QADashboard = () => {
                             
                             <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                                 <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider bg-amber-100 text-amber-700 flex items-center">
+                                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-amber-100 text-amber-700 flex items-center">
                                         <Clock className="w-3 h-3 mr-1" /> Pending Review
                                     </span>
                                 </div>
@@ -587,10 +587,10 @@ const QADashboard = () => {
 
                             <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                                 <div className="flex gap-2 mb-3">
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${PRIORITY_COLORS[selectedTask.priority] || PRIORITY_COLORS['Medium']}`}>
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[selectedTask.priority] || PRIORITY_COLORS['Medium']}`}>
                                         {selectedTask.priority || 'Medium'} Priority
                                     </span>
-                                    <span className="text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                                    <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200">
                                         {selectedTask.project?.projectName || selectedTask.project?.name || "No Project"}
                                     </span>
                                 </div>
@@ -599,7 +599,7 @@ const QADashboard = () => {
 
                                 <div className="grid grid-cols-2 gap-4 mb-8">
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Developer</p>
+                                        <p className="text-[10px] font-bold text-slate-400 mb-2">Developer</p>
                                         <div className="flex items-center gap-2">
                                             <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
                                                 {selectedTask.assignedTo?.profilePic ? (
@@ -612,7 +612,7 @@ const QADashboard = () => {
                                         </div>
                                     </div>
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">QA Reviewer</p>
+                                        <p className="text-[10px] font-bold text-slate-400 mb-2">QA Reviewer</p>
                                         <div className="flex items-center gap-2">
                                             <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
                                                 {selectedTask.assignedQA?.profilePic ? (
@@ -626,7 +626,7 @@ const QADashboard = () => {
                                     </div>
                                 </div>
                                     <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Due Date</p>
+                                        <p className="text-xs font-semibold text-slate-400 mb-1">Due Date</p>
                                         <span className="text-sm font-bold text-slate-700">{selectedTask.endDate ? new Date(selectedTask.endDate).toLocaleDateString() : "N/A"}</span>
                                     </div>
 
@@ -648,7 +648,7 @@ const QADashboard = () => {
                                             {selectedTask.statusHistory.slice().reverse().map((h, i) => (
                                                 <div key={i} className="border-l-2 border-slate-100 pl-4 py-1">
                                                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                         <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase">{h.status}</span>
+                                                         <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded capitalize">{h.status}</span>
                                                          <span className="text-[10px] text-slate-400 font-bold">{new Date(h.changedAt).toLocaleString()}</span>
                                                          <span className="text-[10px] text-slate-300">•</span>
                                                          <span className="text-[10px] text-indigo-500 font-bold">by {h.changedBy?.name || 'System'}</span>
@@ -743,7 +743,7 @@ const QADashboard = () => {
 
                             <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                    <label className="block text-xs font-bold text-slate-400 mb-2">
                                         {actionType === 'Approve' ? 'Approval Note' : 'Reason for Rejection'}
                                     </label>
                                     <textarea 
@@ -756,7 +756,7 @@ const QADashboard = () => {
 
                                 {/* Drag-and-Drop Attachment Zone */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                    <label className="block text-xs font-bold text-slate-400 mb-2">
                                         Upload Attachments (Optional)
                                     </label>
                                     <div
@@ -810,7 +810,7 @@ const QADashboard = () => {
                                                         </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-xs font-semibold text-slate-700 truncate">{f.filename}</p>
-                                                            <p className="text-[9px] text-slate-400 uppercase tracking-wider">{meta.badge}</p>
+                                                            <p className="text-[9px] text-slate-400">{meta.badge}</p>
                                                         </div>
                                                         <button
                                                             type="button"
@@ -831,7 +831,7 @@ const QADashboard = () => {
 
                                 {/* Reference / Screenshot Link Manager */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                    <label className="block text-xs font-bold text-slate-400 mb-2">
                                         Reference / Screenshot Links (Optional)
                                     </label>
                                     <div className="flex gap-2">
@@ -875,7 +875,7 @@ const QADashboard = () => {
                                                             <p className="text-xs font-semibold text-indigo-600 truncate hover:underline cursor-pointer">
                                                                 <a href={url} target="_blank" rel="noopener noreferrer">{short}</a>
                                                             </p>
-                                                            <p className="text-[9px] text-slate-400 uppercase tracking-wider">{meta.label}</p>
+                                                            <p className="text-[9px] text-slate-400">{meta.label}</p>
                                                         </div>
                                                         <button
                                                             type="button"

@@ -581,7 +581,7 @@ const OrganizationTree = () => {
                                 </button>
                             </div>
                             <p className="text-[11px] text-slate-500 font-semibold truncate leading-normal">{formatRole(node.role)}</p>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider mt-1.5 border ${getDeptColor(node.department).bg} ${getDeptColor(node.department).text} ${getDeptColor(node.department).border}`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-semibold mt-1.5 border ${getDeptColor(node.department).bg} ${getDeptColor(node.department).text} ${getDeptColor(node.department).border}`}>
                                 {node.department || "Engineering"}
                             </span>
                         </div>
@@ -707,7 +707,7 @@ const OrganizationTree = () => {
 
                             {/* Premium Department Dropdown */}
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-black text-slate-400 uppercase tracking-wider hidden md:inline">Department Filter</span>
+                                <span className="text-xs font-semibold text-slate-400 hidden md:inline">Department Filter</span>
                                 <div className="relative">
                                     <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-600 pointer-events-none" />
                                     <select

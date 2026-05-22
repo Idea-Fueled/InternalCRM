@@ -458,7 +458,7 @@ const TaskStatusDonut = ({ allTasks }) => {
                             <span className="text-3xl font-extrabold text-slate-800 tracking-tight leading-none">
                                 {hoveredSegment ? statuses.find(s => s.name === hoveredSegment)?.count : total}
                             </span>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">
+                            <span className="text-[10px] font-semibold text-slate-400 mt-1.5">
                                 {hoveredSegment ? hoveredSegment : "Total Tasks"}
                             </span>
                         </div>
@@ -705,7 +705,7 @@ const AdminDashboard = () => {
                                         </div>
                                         <div className="flex flex-col justify-center min-w-0 w-full">
                                             <h4 className="text-2xl font-extrabold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">{kpi.label}</p>
+                                            <p className="text-[10px] font-semibold text-slate-400 truncate">{kpi.label}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -720,7 +720,7 @@ const AdminDashboard = () => {
                                                 <TrendingUp className="w-4 h-4 text-emerald-500" />
                                                 Task Completion
                                             </h3>
-                                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Last 7 Days Trend</p>
+                                            <p className="text-xs font-medium text-slate-400 mt-0.5">Last 7 days trend</p>
                                         </div>
                                         <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 shrink-0">
                                             <span className="w-2 h-2 rounded-full bg-emerald-500" />
@@ -739,7 +739,7 @@ const AdminDashboard = () => {
                                                 <BarChart3 className="w-4 h-4 text-blue-500" />
                                                 Weekly Productivity
                                             </h3>
-                                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Tasks Created vs Completed</p>
+                                            <p className="text-xs font-medium text-slate-400 mt-0.5">Tasks created vs completed</p>
                                         </div>
                                         <div className="flex items-center gap-3 text-[10px] font-bold shrink-0">
                                             <div className="flex items-center gap-1 text-slate-500">
@@ -809,7 +809,7 @@ const AdminDashboard = () => {
                                                             <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150 truncate">
                                                                 {proj.projectName}
                                                             </span>
-                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
                                                                 proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
                                                             }`}>
                                                                 {proj.status || 'Active'}
@@ -891,7 +891,7 @@ const AdminDashboard = () => {
                                                     </div>
                                                     <div className="flex items-center gap-4 shrink-0">
                                                         <div className="text-right">
-                                                            <span className="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Completion</span>
+                                                            <span className="block text-[9px] font-semibold text-slate-400">Completion</span>
                                                             <div className="flex items-center gap-2 mt-0.5">
                                                                 <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden hidden sm:block">
                                                                     <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${completionRate}%` }}></div>
@@ -918,7 +918,7 @@ const AdminDashboard = () => {
                                             <p className="text-xs text-slate-400 mt-0.5 font-medium">Live actions across all clients and tasks</p>
                                         </div>
                                         <div className="flex items-center gap-1.5 shrink-0">
-                                            <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Live</span>
+                                            <span className="text-[10px] font-bold text-slate-400">Live</span>
                                             <span className="relative flex h-2.5 w-2.5">
                                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -951,7 +951,7 @@ const AdminDashboard = () => {
                                                         <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{formatTimeAgo(item.createdAt)}</span>
                                                             <span className="text-slate-200 text-xs">•</span>
-                                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                                                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded capitalize ${
                                                                 item.category === 'status_change' ? 'bg-indigo-50 text-indigo-600' :
                                                                 item.category === 'creation' ? 'bg-emerald-50 text-emerald-600' :
                                                                 item.category === 'update' ? 'bg-blue-50 text-blue-600' :
