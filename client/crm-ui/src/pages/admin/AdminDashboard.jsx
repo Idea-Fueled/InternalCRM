@@ -182,7 +182,7 @@ const TaskCompletionGraph = ({ allTasks }) => {
                     style={{
                         left: `${(points[hoveredIndex].x / activeWidth) * 100}%`,
                         top: `${(points[hoveredIndex].y / activeHeight) * 100 - 10}%`,
-                        transform: hoveredIndex === 0 ? "translate(-20%, -100%)" : hoveredIndex === 6 ? "translate(-80%, -100%)" : "translate(-50%, -100%)",
+                        transform: `translate(-${(points[hoveredIndex].x / activeWidth) * 100}%, -100%)`,
                     }}
                 >
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -348,7 +348,7 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
                     style={{
                         left: `${((paddingLeft + (hoveredIdx * groupWidth) + (groupWidth / 2)) / activeWidth) * 100}%`,
                         top: `${((activeHeight - paddingBottom - ((hoveredType === 'created' ? createdCounts[hoveredIdx] : completedCounts[hoveredIdx]) / maxVal) * chartHeight) / activeHeight) * 100 - 10}%`,
-                        transform: hoveredIdx === 0 ? "translate(-20%, -100%)" : hoveredIdx === 6 ? "translate(-80%, -100%)" : "translate(-50%, -100%)",
+                        transform: `translate(-${((paddingLeft + (hoveredIdx * groupWidth) + (groupWidth / 2)) / activeWidth) * 100}%, -100%)`,
                     }}
                 >
                     <span className={`w-1.5 h-1.5 rounded-full ${hoveredType === 'created' ? 'bg-blue-400' : 'bg-emerald-400'}`} />
@@ -672,7 +672,7 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
                         style={{
                             left: `${(trendPoints[0][hoveredDayIndex].x / activeWidth) * 100}%`,
                             top: `10%`,
-                            transform: hoveredDayIndex === 0 ? "translateX(-15%)" : hoveredDayIndex === 6 ? "translateX(-85%)" : "translateX(-50%)",
+                            transform: `translateX(-${(trendPoints[0][hoveredDayIndex].x / activeWidth) * 100}%)`,
                         }}
                     >
                         <div className="border-b border-slate-800 pb-1 flex justify-between items-center text-[10px] text-slate-400 uppercase font-bold tracking-wider">
