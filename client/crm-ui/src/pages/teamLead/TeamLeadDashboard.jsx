@@ -301,7 +301,7 @@ const TeamLeadDashboard = () => {
                     </div>
 
                     {/* KPI Metrics Grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
+                    <div className="grid grid-cols-2 md:grid-cols-3 2xl:grid-cols-6 gap-6 animate-in fade-in duration-700 delay-100 fill-mode-both">
                         {kpiWidgets.map((kpi, idx) => (
                             <div 
                                 key={idx} 
