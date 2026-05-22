@@ -90,18 +90,6 @@ const TaskCompletionGraph = ({ allTasks }) => {
         
         counts[6 - i] = completedOnDay.length;
     }
-    
-    // Fallback distribution for beautiful visual mapping if empty
-    const totalCompleted = allTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
-    if (counts.reduce((a, b) => a + b, 0) === 0 && totalCompleted > 0) {
-        counts[0] = Math.max(0, Math.floor(totalCompleted * 0.1));
-        counts[1] = Math.max(0, Math.floor(totalCompleted * 0.15));
-        counts[2] = Math.max(0, Math.floor(totalCompleted * 0.12));
-        counts[3] = Math.max(0, Math.floor(totalCompleted * 0.22));
-        counts[4] = Math.max(0, Math.floor(totalCompleted * 0.18));
-        counts[5] = Math.max(0, Math.floor(totalCompleted * 0.08));
-        counts[6] = Math.max(0, totalCompleted - counts.slice(0, 6).reduce((a,b)=>a+b, 0));
-    }
 
     const maxVal = Math.max(...counts, 4);
     
@@ -238,27 +226,6 @@ const WeeklyProductivityGraph = ({ allTasks }) => {
             return compDate && compDate >= startOfDay && compDate <= endOfDay;
         });
         completedCounts[6 - i] = completedOnDay.length;
-    }
-    
-    // Fallback counts for visual mapping
-    const totalTasks = allTasks.length;
-    const totalCompleted = allTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
-    if (createdCounts.reduce((a,b)=>a+b, 0) === 0 && completedCounts.reduce((a,b)=>a+b, 0) === 0) {
-        createdCounts[0] = Math.max(1, Math.floor(totalTasks * 0.12));
-        createdCounts[1] = Math.max(1, Math.floor(totalTasks * 0.15));
-        createdCounts[2] = Math.max(1, Math.floor(totalTasks * 0.10));
-        createdCounts[3] = Math.max(1, Math.floor(totalTasks * 0.20));
-        createdCounts[4] = Math.max(1, Math.floor(totalTasks * 0.15));
-        createdCounts[5] = Math.max(1, Math.floor(totalTasks * 0.18));
-        createdCounts[6] = Math.max(1, totalTasks - createdCounts.slice(0,6).reduce((a,b)=>a+b,0));
-
-        completedCounts[0] = Math.max(0, Math.floor(totalCompleted * 0.1));
-        completedCounts[1] = Math.max(0, Math.floor(totalCompleted * 0.15));
-        completedCounts[2] = Math.max(0, Math.floor(totalCompleted * 0.12));
-        completedCounts[3] = Math.max(0, Math.floor(totalCompleted * 0.22));
-        completedCounts[4] = Math.max(0, Math.floor(totalCompleted * 0.18));
-        completedCounts[5] = Math.max(0, Math.floor(totalCompleted * 0.08));
-        completedCounts[6] = Math.max(0, totalCompleted - completedCounts.slice(0,6).reduce((a,b)=>a+b,0));
     }
 
     const maxVal = Math.max(...createdCounts, ...completedCounts, 4);
@@ -513,20 +480,19 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
         })
         .sort((a, b) => b.completedCount - a.completedCount);
         
-    // Take top 3. If there are fewer than 3, fill with available or mock identities for beautiful presentation
-    const topEmployees = [...employeesPerformance.slice(0, 3)];
-    while (topEmployees.length < 3) {
-        const dummyNames = ["Sarah Connor", "Alex Mercer", "Diana Prince"];
-        const dummyRoles = ["developer", "developer", "qa"];
-        const dummyDepts = selectedDept === "All" ? ["Engineering", "Engineering", "QA"] : [selectedDept, selectedDept, selectedDept];
-        const idx = topEmployees.length;
-        topEmployees.push({
-            _id: `mock-user-${idx}`,
-            name: dummyNames[idx],
-            role: dummyRoles[idx],
-            department: dummyDepts[idx],
-            completedCount: 0
-        });
+    // Take top 3.
+    const topEmployees = employeesPerformance.slice(0, 3);
+
+    if (topEmployees.length === 0) {
+        return (
+            <div ref={containerRef} className="w-full h-full flex flex-col items-center justify-center text-center p-4">
+                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-2 border border-slate-100">
+                    <Users className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold text-slate-600">No Employee Performance Data</span>
+                <span className="text-[10px] text-slate-400 mt-1">There are no employees or completed tasks in this department.</span>
+            </div>
+        );
     }
 
     const labels = [];
@@ -566,19 +532,6 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
             counts[6 - i] = completedOnDay.length;
         }
         
-        // Beautiful fallback trend if database is dry for a clean premium SaaS appearance
-        const sum = counts.reduce((a, b) => a + b, 0);
-        if (sum === 0) {
-            const patterns = [
-                [2, 4, 3, 5, 2, 4, 6], // Employee 1 baseline
-                [1, 3, 2, 4, 5, 3, 4], // Employee 2 baseline
-                [3, 2, 4, 3, 2, 5, 3]  // Employee 3 baseline
-            ];
-            const pattern = patterns[empIdx];
-            for (let i = 0; i < 7; i++) {
-                counts[i] = pattern[i];
-            }
-        }
         return { employee: emp, counts, total: counts.reduce((a, b) => a + b, 0) };
     });
 
@@ -838,28 +791,16 @@ const DepartmentProductivityGraph = ({ allTasks, users, projects, departments, s
         };
     });
 
-    // Sum completed tasks across database to see if we have actual data
-    const totalCompleted = stats.reduce((sum, s) => sum + s.completed, 0);
-    
-    // Inject beautiful, high-fidelity mock data if database is fresh/empty
-    if (totalCompleted === 0) {
-        const fallbacks = {
-            "Engineering": { completed: 18, workload: 6, projects: 4 },
-            "Sales": { completed: 12, workload: 3, projects: 2 },
-            "Marketing": { completed: 14, workload: 4, projects: 3 },
-            "HR": { completed: 8, workload: 1, projects: 1 },
-            "QA": { completed: 16, workload: 2, projects: 3 }
-        };
-        stats.forEach((s) => {
-            const mock = fallbacks[s.name] || {
-                completed: 5 + (s.name.length % 7),
-                workload: 1 + (s.name.length % 4),
-                projects: 1 + (s.name.length % 3)
-            };
-            s.completed = mock.completed;
-            s.workload = mock.workload;
-            s.projects = mock.projects;
-        });
+    if (stats.length === 0) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center text-center p-4">
+                <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-2 border border-slate-100">
+                    <BarChart3 className="w-5 h-5" />
+                </div>
+                <span className="text-xs font-bold text-slate-600">No Department Data</span>
+                <span className="text-[10px] text-slate-400 mt-1">There are no departments found in the system.</span>
+            </div>
+        );
     }
 
     // Determine the max completed tasks value for horizontal scale ratio representation
