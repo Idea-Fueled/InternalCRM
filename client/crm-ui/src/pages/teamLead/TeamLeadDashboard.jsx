@@ -8,11 +8,16 @@ import {
   Clock, 
   FolderKanban, 
   ListTodo, 
-  MoreVertical, 
   TrendingUp, 
   Users, 
   AlertCircle,
-  Activity
+  Activity,
+  Calendar,
+  Bell,
+  ArrowRight,
+  AlertTriangle,
+  Percent,
+  ChevronRight
 } from 'lucide-react';
 import StatDetailModal from '../../components/StatDetailModal';
 
@@ -22,35 +27,45 @@ const TeamLeadDashboard = () => {
         totalTeamTasks: 0,
         activeProjects: 0,
         qaReviewTasks: 0,
-        overdueTasks: 0
+        overdueTasks: 0,
+        totalTeamMembers: 0,
+        completedTasks: 0,
+        pendingTasks: 0,
+        teamProductivity: 0
     });
     const [teamMembers, setTeamMembers] = useState([]);
     const [projects, setProjects] = useState([]);
     const [allTasks, setAllTasks] = useState([]);
     const [recentActivity, setRecentActivity] = useState([]);
+    const [pendingQAReviews, setPendingQAReviews] = useState([]);
+    const [overdueTasksList, setOverdueTasksList] = useState([]);
+    const [upcomingDeadlines, setUpcomingDeadlines] = useState([]);
+    const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
-    
+    const [selectedProjectFilter, setSelectedProjectFilter] = useState("All");
+
     const getTimeAgo = (timestamp) => {
         if (!timestamp) return "N/A";
         const seconds = Math.floor((new Date() - timestamp) / 1000);
         let interval = seconds / 31536000;
-        if (interval > 1) return Math.floor(interval) + " years ago";
+        if (interval > 1) return Math.floor(interval) + "y ago";
         interval = seconds / 2592000;
-        if (interval > 1) return Math.floor(interval) + " months ago";
+        if (interval > 1) return Math.floor(interval) + "mo ago";
         interval = seconds / 86400;
-        if (interval > 1) return Math.floor(interval) + " days ago";
+        if (interval > 1) return Math.floor(interval) + "d ago";
         interval = seconds / 3600;
-        if (interval > 1) return Math.floor(interval) + " hours ago";
+        if (interval > 1) return Math.floor(interval) + "h ago";
         interval = seconds / 60;
-        if (interval > 1) return Math.floor(interval) + " minutes ago";
+        if (interval > 1) return Math.floor(interval) + "m ago";
         return "Just now";
     };
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
+                setLoading(true);
                 const [dashRes, projRes, usersRes, tasksRes] = await Promise.all([
                     dashboardService.getTeamLeadDashboard(),
                     projectService.getAllProjects(),
@@ -58,26 +73,28 @@ const TeamLeadDashboard = () => {
                     taskService.getAllTasks()
                 ]);
 
-                if (dashRes.data?.success) {
-                    setStats(dashRes.data.data);
+                let allTasksFetched = [];
+                if (tasksRes.data?.success) {
+                    allTasksFetched = tasksRes.data.tasks || [];
+                    setAllTasks(allTasksFetched);
                 }
 
+                let mappedProjects = [];
                 if (projRes.data?.success) {
-                    const mappedProjects = (projRes.data.projects || []).map(p => ({
+                    mappedProjects = (projRes.data.projects || []).map(p => ({
                         ...p,
                         id: p._id,
                         name: p.projectName
                     }));
-                    setProjects(mappedProjects.slice(0, 3)); // Top 3 projects
+                    setProjects(mappedProjects);
                 }
 
-                if (usersRes.data?.success && tasksRes.data?.success) {
+                let computedMembers = [];
+                if (usersRes.data?.success) {
                     const allUsers = usersRes.data.data || [];
-                    const allTasksFetched = tasksRes.data.tasks || [];
+                    const teamUsers = allUsers.filter(u => u.role === "developer" || u.role === "qa");
                     
-                    setAllTasks(allTasksFetched);
-
-                    const computedMembers = allUsers.map((u, i) => {
+                    computedMembers = teamUsers.map((u, i) => {
                         const userTasks = allTasksFetched.filter(t => t.assignedTo?._id === u._id);
                         const completed = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
                         const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
@@ -91,6 +108,7 @@ const TeamLeadDashboard = () => {
                             id: u._id,
                             name: u.name,
                             role: u.role,
+                            email: u.email,
                             initial: u.name?.substring(0, 2).toUpperCase() || "U",
                             total,
                             completed,
@@ -101,25 +119,97 @@ const TeamLeadDashboard = () => {
                             profilePic: u.profilePic
                         };
                     });
-                    setTeamMembers(computedMembers.slice(0, 4)); // Top 4 members
+                    setTeamMembers(computedMembers);
+                }
 
-                    // Compute Recent Activity
-                    const activities = [];
-                    allTasksFetched.forEach(t => {
-                        (t.statusHistory || []).forEach(h => {
-                            activities.push({
-                                id: h._id,
-                                type: h.status,
-                                task: t.taskName,
-                                user: h.changedBy?.name || "Someone",
-                                timestamp: new Date(h.changedAt).getTime()
-                            });
+                // Compute KPI States
+                const totalTasksCount = allTasksFetched.length;
+                const completedTasksCount = allTasksFetched.filter(t => t.status === "Completed" || t.status === "Done").length;
+                const qaTasksCount = allTasksFetched.filter(t => t.status === "QA Review").length;
+                const overdueTasksCount = allTasksFetched.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
+                const pendingTasksCount = totalTasksCount - completedTasksCount - qaTasksCount;
+                const productivity = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
+
+                setStats({
+                    totalTeamTasks: totalTasksCount,
+                    activeProjects: mappedProjects.filter(p => p.status === "Active" || !p.status).length,
+                    qaReviewTasks: qaTasksCount,
+                    overdueTasks: overdueTasksCount,
+                    totalTeamMembers: computedMembers.length,
+                    completedTasks: completedTasksCount,
+                    pendingTasks: pendingTasksCount,
+                    teamProductivity: productivity
+                });
+
+                // Set Functional Sub-lists
+                const qaList = allTasksFetched.filter(t => t.status === "QA Review");
+                setPendingQAReviews(qaList);
+
+                const overdueList = allTasksFetched.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done");
+                setOverdueTasksList(overdueList);
+
+                // Upcoming deadlines (next 4 days)
+                const now = new Date();
+                const limitDate = new Date();
+                limitDate.setDate(now.getDate() + 4);
+                const upcoming = allTasksFetched.filter(t => 
+                    t.status !== "Completed" && 
+                    t.status !== "Done" && 
+                    t.endDate && 
+                    new Date(t.endDate) >= now && 
+                    new Date(t.endDate) <= limitDate
+                ).sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
+                setUpcomingDeadlines(upcoming);
+
+                // Compute Live Activity Log
+                const activities = [];
+                allTasksFetched.forEach(t => {
+                    (t.statusHistory || []).forEach(h => {
+                        activities.push({
+                            id: h._id,
+                            type: h.status,
+                            task: t.taskName,
+                            user: h.changedBy?.name || "Someone",
+                            timestamp: new Date(h.changedAt).getTime()
                         });
                     });
-                    setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 30));
+                });
+                setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 15));
+
+                // Compute Dynamic Notifications List
+                const notifs = [];
+                if (overdueTasksCount > 0) {
+                    notifs.push({
+                        id: 'notif-overdue',
+                        type: 'danger',
+                        title: 'Overdue Backlog Threat',
+                        message: `${overdueTasksCount} sprint tasks are past their deadline. Immediate re-assignment required.`,
+                        time: 'Just now'
+                    });
                 }
+                if (qaTasksCount > 0) {
+                    notifs.push({
+                        id: 'notif-qa',
+                        type: 'warning',
+                        title: 'QA Review Bottleneck',
+                        message: `${qaTasksCount} task(s) are awaiting verification. Deploy developers for QA.`,
+                        time: '12m ago'
+                    });
+                }
+                // Add task assignment events
+                allTasksFetched.slice(0, 3).forEach((t, index) => {
+                    notifs.push({
+                        id: `notif-assign-${index}`,
+                        type: 'info',
+                        title: 'Workload Allocated',
+                        message: `"${t.taskName}" assigned to ${t.assignedTo?.name || 'Unassigned Developer'}.`,
+                        time: t.updatedAt ? getTimeAgo(new Date(t.updatedAt).getTime()) : `${index + 1 * 15}m ago`
+                    });
+                });
+                setNotifications(notifs.slice(0, 4));
+
             } catch (error) {
-                console.error("Failed to fetch team lead dashboard data", error);
+                console.error("Failed to fetch Team Lead Dashboard records", error);
                 if (error.response?.status === 401) {
                     navigate("/");
                 }
@@ -128,245 +218,721 @@ const TeamLeadDashboard = () => {
             }
         };
         fetchDashboardData();
-    }, []);
+    }, [navigate]);
 
-    const kpis = [
-      { title: "Team Tasks", value: stats.totalTeamTasks, icon: ListTodo, color: "text-blue-600", bg: "bg-blue-100/50", onClick: () => setStatModal({ isOpen: true, title: "Team Tasks", data: allTasks, type: "task" }) },
-      { title: "Active Projects", value: stats.activeProjects, icon: FolderKanban, color: "text-indigo-600", bg: "bg-indigo-100/50", onClick: () => setStatModal({ isOpen: true, title: "Active Projects", data: projects, type: "project" }) },
-      { title: "QA Review Tasks", value: stats.qaReviewTasks, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-100/50", onClick: () => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: allTasks.filter(t => t.status === "QA Review"), type: "task" }) },
-      { title: "Overdue Tasks", value: stats.overdueTasks, icon: AlertCircle, color: "text-rose-600", bg: "bg-rose-100/50", onClick: () => setStatModal({ isOpen: true, title: "Overdue Tasks", data: allTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done"), type: "task" }) },
+    // KPI configurations
+    const kpiWidgets = [
+        {
+            title: "Team Members",
+            value: stats.totalTeamMembers,
+            subtitle: "Dev & QA staff",
+            icon: Users,
+            color: "text-blue-600 border-blue-100 bg-gradient-to-tr from-blue-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Team Members", data: teamMembers, type: "employee" })
+        },
+        {
+            title: "Active Projects",
+            value: stats.activeProjects,
+            subtitle: "In active flight",
+            icon: FolderKanban,
+            color: "text-indigo-600 border-indigo-100 bg-gradient-to-tr from-indigo-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Active Projects", data: projects, type: "project" })
+        },
+        {
+            title: "Pending Tasks",
+            value: stats.pendingTasks,
+            subtitle: "Active workspace",
+            icon: ListTodo,
+            color: "text-sky-600 border-sky-100 bg-gradient-to-tr from-sky-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Pending Tasks Queue", data: allTasks.filter(t => t.status !== "Completed" && t.status !== "Done" && t.status !== "QA Review"), type: "task" })
+        },
+        {
+            title: "Completed Tasks",
+            value: stats.completedTasks,
+            subtitle: "Fully delivered",
+            icon: CheckCircle2,
+            color: "text-emerald-600 border-emerald-100 bg-gradient-to-tr from-emerald-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks", data: allTasks.filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })
+        },
+        {
+            title: "QA Review Tasks",
+            value: stats.qaReviewTasks,
+            subtitle: "Pending validation",
+            icon: Clock,
+            color: "text-amber-600 border-amber-100 bg-gradient-to-tr from-amber-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Awaiting QA Reviews", data: pendingQAReviews, type: "task" })
+        },
+        {
+            title: "Overdue Tasks",
+            value: stats.overdueTasks,
+            subtitle: "Action required",
+            icon: AlertCircle,
+            color: "text-rose-600 border-rose-100 bg-gradient-to-tr from-rose-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Overdue Backlog List", data: overdueTasksList, type: "task" })
+        },
+        {
+            title: "Productivity",
+            value: `${stats.teamProductivity}%`,
+            subtitle: "Completion rate",
+            icon: TrendingUp,
+            color: "text-violet-600 border-violet-100 bg-gradient-to-tr from-violet-50 to-white",
+            onClick: () => setStatModal({ isOpen: true, title: "Completed Tasks (Productivity Log)", data: allTasks.filter(t => t.status === "Completed" || t.status === "Done"), type: "task" })
+        }
     ];
 
+    // Filtered data based on project filter selector
+    const filteredTasksByProject = allTasks.filter(t => {
+        if (selectedProjectFilter === "All") return true;
+        return t.project?._id === selectedProjectFilter || (typeof t.project === 'string' && t.project === selectedProjectFilter);
+    });
+
+    // Calculate QA Bottleneck by Project
+    const getQABottlenecks = () => {
+        const counts = {};
+        projects.forEach(p => { counts[p.name] = 0; });
+        allTasks.forEach(t => {
+            if (t.status === "QA Review") {
+                const name = t.project?.projectName || "Unassigned";
+                counts[name] = (counts[name] || 0) + 1;
+            }
+        });
+        return Object.entries(counts).map(([projectName, count]) => ({ projectName, count }));
+    };
+
+    const qaBottlenecks = getQABottlenecks();
+    const maxQABottlenecks = Math.max(...qaBottlenecks.map(b => b.count), 1);
+
+    // Overdue tasks groupings
+    const overdueGroupHigh = overdueTasksList.filter(t => t.priority === "High" || t.priority === "Critical").length;
+    const overdueGroupMed = overdueTasksList.filter(t => t.priority === "Normal").length;
+    const overdueGroupLow = overdueTasksList.filter(t => t.priority === "Low" || !t.priority).length;
+
     return (
-        <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
+        <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800 selection:bg-blue-200 selection:text-blue-900">
             <AdminSidebar role="teamLead" />
 
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                <Topbar DashboardTile="Team Lead Dashboard" role="teamLead" />
+                <Topbar DashboardTile="Team Lead Workspace" role="teamLead" />
                 
                 <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
-                    {/* Header */}
-                    <div className="flex items-center justify-between">
+                    
+                    {/* Header Controls */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-500">
                         <div>
-                            <h1 className="dashboard-heading">Overview</h1>
-                            <p className="dashboard-subheading">Here's what's happening with your team today.</p>
+                            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Overview</h1>
+                            <p className="text-slate-500 text-sm font-semibold mt-1">Operational analytics and workload distribution overview.</p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Focus Project:</label>
+                            <div className="relative">
+                                <select 
+                                    value={selectedProjectFilter} 
+                                    onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                                    className="pl-4 pr-10 py-2 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl text-sm outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all cursor-pointer appearance-none shadow-sm"
+                                >
+                                    <option value="All">All Workspace Projects</option>
+                                    {projects.map(p => (
+                                        <option key={p.id} value={p.id}>{p.name}</option>
+                                    ))}
+                                </select>
+                                <ChevronRight className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 rotate-90 pointer-events-none" />
+                            </div>
                         </div>
                     </div>
 
-                    {/* KPI Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {kpis.map((kpi, idx) => {
-                            const variants = {
-                                'bg-blue-100/50': 'blue',
-                                'bg-indigo-100/50': 'indigo',
-                                'bg-emerald-100/50': 'emerald',
-                                'bg-amber-100/50': 'amber',
-                                'bg-rose-100/50': 'rose'
-                            };
-                            const variant = variants[kpi.bg] || 'slate';
-                            
-                            return (
-                                <div key={idx} onClick={kpi.onClick} className={`premium-stat-card ${variant} flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform`}>
-                                    <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${kpi.bg.replace('100/50', '200')} ${kpi.color}`}>
-                                        <kpi.icon className="w-5 h-5" />
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{kpi.value}</h4>
-                                        <p className="text-[10px] font-medium text-slate-500">{kpi.title}</p>
-                                    </div>
+                    {/* KPI Metrics Strip */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 animate-in fade-in duration-700 delay-100 fill-mode-both">
+                        {kpiWidgets.map((kpi, idx) => (
+                            <div 
+                                key={idx} 
+                                onClick={kpi.onClick}
+                                className={`flex flex-col p-4 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:scale-[1.03] transition-all duration-300 relative group overflow-hidden ${kpi.color}`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-slate-700 transition-colors">{kpi.title}</span>
+                                    <kpi.icon className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-all" />
                                 </div>
-                            );
-                        })}
+                                <div className="text-2xl font-black text-slate-900 mt-1 leading-none">{kpi.value}</div>
+                                <span className="text-[10px] text-slate-400 font-medium mt-1 leading-tight group-hover:text-slate-500 transition-colors">{kpi.subtitle}</span>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Middle Section: Projects and Activity */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Projects Overview */}
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm lg:col-span-2 flex flex-col">
-                            <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                                <h3 className="section-title flex items-center">
-                                    <FolderKanban className="w-5 h-5 mr-2 text-indigo-500" />
-                                    Active Projects
+                    {/* Visual Analytics Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in duration-700 delay-200 fill-mode-both">
+                        
+                        {/* Task Progress donut */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <ListTodo className="w-4 h-4 text-blue-500" />
+                                    Team Task Progress
                                 </h3>
+                                <div className="flex items-center justify-center py-4 relative">
+                                    {/* SVG Donut */}
+                                    <svg className="w-40 h-40 transform -rotate-90" viewBox="0 0 120 120">
+                                        <circle cx="60" cy="60" r="50" fill="transparent" stroke="#f1f5f9" strokeWidth="12" />
+                                        {stats.totalTeamTasks > 0 ? (
+                                            <>
+                                                {/* Completed */}
+                                                <circle 
+                                                    cx="60" cy="60" r="50" fill="transparent" 
+                                                    stroke="#10b981" strokeWidth="12" 
+                                                    strokeDasharray={`${(stats.completedTasks / stats.totalTeamTasks) * 314.16} 314.16`}
+                                                    strokeDashoffset="0"
+                                                    className="transition-all duration-1000"
+                                                />
+                                                {/* QA Review */}
+                                                <circle 
+                                                    cx="60" cy="60" r="50" fill="transparent" 
+                                                    stroke="#f59e0b" strokeWidth="12" 
+                                                    strokeDasharray={`${(stats.qaReviewTasks / stats.totalTeamTasks) * 314.16} 314.16`}
+                                                    strokeDashoffset={`-${(stats.completedTasks / stats.totalTeamTasks) * 314.16}`}
+                                                    className="transition-all duration-1000"
+                                                />
+                                                {/* Pending */}
+                                                <circle 
+                                                    cx="60" cy="60" r="50" fill="transparent" 
+                                                    stroke="#3b82f6" strokeWidth="12" 
+                                                    strokeDasharray={`${(stats.pendingTasks / stats.totalTeamTasks) * 314.16} 314.16`}
+                                                    strokeDashoffset={`-${((stats.completedTasks + stats.qaReviewTasks) / stats.totalTeamTasks) * 314.16}`}
+                                                    className="transition-all duration-1000"
+                                                />
+                                            </>
+                                        ) : (
+                                            <circle cx="60" cy="60" r="50" fill="transparent" stroke="#cbd5e1" strokeWidth="12" />
+                                        )}
+                                    </svg>
+                                    <div className="absolute flex flex-col items-center justify-center text-center">
+                                        <span className="text-3xl font-black text-slate-800 leading-none">{stats.totalTeamTasks}</span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Total Tasks</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="p-6 flex-1">
-                                <div className="space-y-6">
-                                    {projects.length === 0 && !loading && (
-                                        <div className="text-center py-6 text-slate-500 text-sm">No active projects</div>
-                                    )}
-                                    {projects.map(project => {
-                                        // Calculate mock progress based on dates or just default to 0
-                                        const progress = 0;
-                                        return (
-                                            <div key={project._id} className="group cursor-pointer">
-                                                <div className="flex justify-between items-center mb-2">
-                                                    <div>
-                                                        <h4 className="font-medium text-slate-800 group-hover:text-blue-600 transition-colors">{project.name}</h4>
-                                                        <p className="text-xs text-slate-500 mt-0.5">{project.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'} — {project.endDate ? new Date(project.endDate).toLocaleDateString() : 'N/A'}</p>
+                            <div className="grid grid-cols-3 gap-2 border-t border-slate-50 pt-4 mt-2">
+                                <div className="text-center">
+                                    <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                        <span className="text-xs font-bold text-slate-700">{stats.completedTasks}</span>
+                                    </div>
+                                    <span className="text-[10px] font-medium text-slate-400">Done</span>
+                                </div>
+                                <div className="text-center">
+                                    <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                                        <span className="text-xs font-bold text-slate-700">{stats.qaReviewTasks}</span>
+                                    </div>
+                                    <span className="text-[10px] font-medium text-slate-400">In QA</span>
+                                </div>
+                                <div className="text-center">
+                                    <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                        <span className="text-xs font-bold text-slate-700">{stats.pendingTasks}</span>
+                                    </div>
+                                    <span className="text-[10px] font-medium text-slate-400">Todo</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Team Member Workload Chart */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <Users className="w-4 h-4 text-indigo-500" />
+                                    Team Performance Stack
+                                </h3>
+                                <div className="space-y-4 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                                    {teamMembers.slice(0, 4).map((dev, idx) => (
+                                        <div key={idx} className="flex flex-col">
+                                            <div className="flex items-center justify-between text-xs mb-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center font-bold text-[10px] text-indigo-600 uppercase overflow-hidden shrink-0">
+                                                        {dev.profilePic ? <img src={dev.profilePic} alt={dev.name} className="w-full h-full object-cover" /> : dev.initial}
                                                     </div>
-                                                    <div className="text-right">
-                                                        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${project.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
-                                                            {project.status || 'Active'}
-                                                        </span>
-                                                    </div>
+                                                    <span className="font-bold text-slate-700">{dev.name}</span>
                                                 </div>
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
-                                                        {(() => {
-                                                            const totalTasks = project.tasks?.length || 0;
-                                                            const completedTasks = project.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
-                                                            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-                                                            return (
-                                                                <div 
-                                                                    className={`h-full rounded-full transition-all duration-1000 ${progress > 50 ? 'bg-indigo-500' : 'bg-blue-500'}`}
-                                                                    style={{ width: `${progress}%` }}
-                                                                />
-                                                            );
-                                                        })()}
-                                                    </div>
-                                                    <span className="text-sm font-semibold text-slate-600 w-10">
-                                                        {project.tasks?.length > 0 
-                                                            ? Math.round((project.tasks.filter(t => t.status === "Completed" || t.status === "Done").length / project.tasks.length) * 100) 
-                                                            : 0}%
+                                                <span className="text-slate-500 font-semibold">{dev.completed}/{dev.total} Completed</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                                                    <div 
+                                                        className="bg-emerald-500 h-full rounded-l-full transition-all"
+                                                        style={{ width: `${dev.total > 0 ? (dev.completed / dev.total) * 100 : 0}%` }}
+                                                    />
+                                                    <div 
+                                                        className="bg-blue-400 h-full rounded-r-full transition-all"
+                                                        style={{ width: `${dev.total > 0 ? ((dev.total - dev.completed) / dev.total) * 100 : 0}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-xs font-bold text-slate-600 w-8 text-right">
+                                                    {dev.total > 0 ? Math.round((dev.completed / dev.total) * 100) : 0}%
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex justify-end pt-3 mt-2 border-t border-slate-50">
+                                <Link to="/teamLead/team" className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 group">
+                                    Allocate Team Staff <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* Project Progress Tracker */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <FolderKanban className="w-4 h-4 text-indigo-500" />
+                                    Project Progress Overview
+                                </h3>
+                                <div className="space-y-4 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                                    {projects.slice(0, 3).map((project, idx) => {
+                                        const total = project.tasks?.length || 0;
+                                        const completed = project.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
+                                        const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+                                        const barColor = pct > 75 ? 'bg-emerald-500' : pct > 40 ? 'bg-indigo-500' : 'bg-amber-500';
+
+                                        return (
+                                            <div key={idx} className="flex flex-col">
+                                                <div className="flex justify-between items-center text-xs mb-1.5">
+                                                    <span className="font-bold text-slate-700 truncate max-w-[160px]">{project.name}</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                        {completed}/{total} Tasks
                                                     </span>
                                                 </div>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                        <div 
+                                                            className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
+                                                            style={{ width: `${pct}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className="text-xs font-bold text-slate-600 w-8 text-right">{pct}%</span>
+                                                </div>
                                             </div>
-                                        )
+                                        );
                                     })}
                                 </div>
                             </div>
+                            <div className="flex justify-end pt-3 mt-2 border-t border-slate-50">
+                                <Link to="/teamLead/projects" className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 group">
+                                    Track Milestones <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
+                            </div>
                         </div>
 
-                        {/* Recent Activity */}
-                        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-                            <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                                <h3 className="section-title flex items-center">
-                                    <Activity className="w-5 h-5 mr-2 text-blue-500" />
-                                    Recent Activity
-                                </h3>
+                    </div>
+
+                    {/* Bottlenecks and Overdue Timeline Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-700 delay-300 fill-mode-both">
+                        
+                        {/* QA Bottleneck vertical columns */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow">
+                            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-6">
+                                <Clock className="w-4 h-4 text-amber-500" />
+                                QA Review Bottleneck Graph
+                            </h3>
+                            <div className="flex items-end justify-between gap-4 h-36 px-4 py-2 border-b border-slate-100">
+                                {qaBottlenecks.slice(0, 5).map((bot, idx) => {
+                                    const hPct = (bot.count / maxQABottlenecks) * 100;
+                                    return (
+                                        <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer">
+                                            <div className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity mb-1 select-none">
+                                                {bot.count} in QA
+                                            </div>
+                                            <div className="w-full bg-slate-50 rounded-t-lg h-full max-h-[85%] flex items-end overflow-hidden">
+                                                <div 
+                                                    className="w-full bg-gradient-to-t from-amber-500 to-orange-400 group-hover:from-amber-600 group-hover:to-orange-500 rounded-t-lg transition-all"
+                                                    style={{ height: `${hPct > 0 ? hPct : 8}%` }}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-400 mt-2 truncate w-full text-center select-none">{bot.projectName}</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            <div className="p-6 flex-1 flex flex-col">
-                                {recentActivity.length === 0 ? (
-                                    <div className="flex-1 flex flex-col items-center justify-center text-center">
-                                        <Activity className="w-10 h-10 text-slate-200 mb-3" />
-                                        <p className="text-sm text-slate-500 font-medium">No recent activity</p>
+                        </div>
+
+                        {/* Overdue Tasks Timeline priority card */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <AlertCircle className="w-4 h-4 text-rose-500" />
+                                    Overdue Tasks Timeline & Risk Factor
+                                </h3>
+                                <p className="text-slate-500 text-xs font-semibold mb-4 leading-relaxed">
+                                    Overdue tasks pose delivery blockers. Grouped below by assigned task urgency metrics:
+                                </p>
+                                <div className="space-y-4">
+                                    {/* High Urgency */}
+                                    <div className="flex items-center justify-between p-3.5 bg-red-50/50 border border-red-100 rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                                                <AlertTriangle className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-bold text-slate-700">Critical / High Severity</h4>
+                                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Overdue sprint backlog blocks</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-lg font-black text-red-600">{overdueGroupHigh}</span>
                                     </div>
-                                ) : (
-                                    <div className="max-h-[250px] overflow-y-auto custom-scrollbar pr-2 space-y-6">
-                                        {recentActivity.map((activity, idx) => (
-                                            <div key={idx} className="flex gap-4">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                                                    activity.type === 'Completed' ? 'bg-emerald-100 text-emerald-600' : 
-                                                    activity.type === 'QA Review' ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'
+
+                                    {/* Medium Urgency */}
+                                    <div className="flex items-center justify-between p-3.5 bg-amber-50/50 border border-amber-100 rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                                                <Clock className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-bold text-slate-700">Normal Priority</h4>
+                                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Secondary sprint components</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-lg font-black text-amber-600">{overdueGroupMed}</span>
+                                    </div>
+
+                                    {/* Low Urgency */}
+                                    <div className="flex items-center justify-between p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
+                                                <Calendar className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-xs font-bold text-slate-700">Low Priority</h4>
+                                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Flexible backlog items</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-lg font-black text-slate-600">{overdueGroupLow}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* Functional Columns Grid */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in fade-in duration-700 delay-400 fill-mode-both">
+                        
+                        {/* Column 1: Team Members Table */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm xl:col-span-2 flex flex-col justify-between hover:shadow-md transition-shadow overflow-hidden">
+                            <div>
+                                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                                    <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-blue-500" />
+                                        Team Members Overview
+                                    </h3>
+                                    <Link to="/teamLead/team" className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 group">
+                                        Performance Panel <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                                    </Link>
+                                </div>
+                                <div className="overflow-x-auto scrollbar-thin">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-3 font-bold">Staff Member</th>
+                                                <th className="px-6 py-3 font-bold">Workload Status</th>
+                                                <th className="px-6 py-3 font-bold text-center">Metrics</th>
+                                                <th className="px-6 py-3 font-bold">Load Indicator</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {teamMembers.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4" className="px-6 py-8 text-center text-slate-400 text-sm font-medium">
+                                                        No active developers or QAs configured
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                teamMembers.map((member) => (
+                                                    <tr key={member.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-8 h-8 rounded-xl ${member.color} text-white flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden`}>
+                                                                    {member.profilePic ? (
+                                                                        <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        member.initial
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{member.name}</p>
+                                                                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5 capitalize">{member.role}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
+                                                                member.status === 'Free' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
+                                                            }`}>
+                                                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                                                    member.status === 'Free' ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                }`}></span>
+                                                                {member.status}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <div className="inline-flex items-baseline gap-1 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg">
+                                                                <span className="text-slate-800">{member.completed}</span>
+                                                                <span className="text-slate-400">/{member.total}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                                    <div 
+                                                                        className={`h-full rounded-full ${
+                                                                            member.workload > 80 ? 'bg-rose-500' : 
+                                                                            member.workload > 50 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                                        }`}
+                                                                        style={{ width: `${member.workload}%` }}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-[10px] font-bold text-slate-500">{member.workload}%</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Recent Activity Log column */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6 flex flex-col justify-between hover:shadow-md transition-shadow">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <Activity className="w-4 h-4 text-blue-500" />
+                                    Recent Team Activity
+                                </h3>
+                                <div className="space-y-4 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
+                                    {recentActivity.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center text-center py-12 text-slate-400">
+                                            <Activity className="w-8 h-8 text-slate-200 mb-2" />
+                                            <p className="text-xs font-semibold">No recent work activity logged</p>
+                                        </div>
+                                    ) : (
+                                        recentActivity.map((activity, idx) => (
+                                            <div key={idx} className="flex gap-3 relative pb-1">
+                                                {idx !== recentActivity.length - 1 && (
+                                                    <div className="absolute left-3.5 top-8 bottom-0 w-0.5 bg-slate-100" />
+                                                )}
+                                                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border shadow-sm ${
+                                                    activity.type === 'Completed' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
+                                                    activity.type === 'QA Review' ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-blue-50 border-blue-100 text-blue-600'
                                                 }`}>
-                                                    <Activity className="w-4 h-4" />
+                                                    <Activity className="w-3.5 h-3.5" />
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-sm text-slate-800">
-                                                        <span className="font-bold">{activity.user}</span> moved <span className="font-semibold text-blue-600">{activity.task}</span> to <span className="font-bold">{activity.type}</span>
+                                                    <p className="text-xs text-slate-700 leading-normal">
+                                                        <span className="font-bold text-slate-800">{activity.user}</span> updated <span className="font-semibold text-slate-900">"{activity.task}"</span> to <span className="font-bold uppercase tracking-wider text-[9px] px-1.5 py-0.5 rounded bg-slate-50 border border-slate-100">{activity.type}</span>
                                                     </p>
-                                                    <p className="text-[10px] font-bold text-slate-400 mt-0.5">{getTimeAgo(activity.timestamp)}</p>
+                                                    <span className="text-[9px] font-bold text-slate-400 mt-1 block uppercase tracking-wider">{getTimeAgo(activity.timestamp)}</span>
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                        ))
+                                    )}
+                                </div>
                             </div>
                         </div>
+
                     </div>
 
-                    {/* Team Members */}
-                    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                            <h3 className="section-title flex items-center">
-                                <Users className="w-5 h-5 mr-2 text-blue-600" />
-                                Team Performance
-                            </h3>
-                            <Link to="/teamLead/team" className="text-sm font-medium text-blue-600 hover:text-blue-700">View All</Link>
+                    {/* Operational Rows Strip */}
+                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 animate-in fade-in duration-700 delay-500 fill-mode-both">
+                        
+                        {/* Pending QA reviews */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow xl:col-span-2 overflow-hidden flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <Clock className="w-4 h-4 text-amber-500" />
+                                    Pending QA Reviews Queue ({pendingQAReviews.length})
+                                </h3>
+                                <div className="overflow-x-auto scrollbar-thin">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-2.5 font-bold">Task Name</th>
+                                                <th className="px-6 py-2.5 font-bold">Assigned Staff</th>
+                                                <th className="px-6 py-2.5 font-bold text-center">Urgency</th>
+                                                <th className="px-6 py-2.5 font-bold">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-xs">
+                                            {pendingQAReviews.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4" className="px-6 py-8 text-center text-slate-400 font-medium">
+                                                        QA Review Queue is fully empty and cleared!
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                pendingQAReviews.map((task) => (
+                                                    <tr key={task._id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-6 py-3 font-semibold text-slate-800 max-w-[200px] truncate">
+                                                            {task.taskName}
+                                                        </td>
+                                                        <td className="px-6 py-3 text-slate-500 font-medium">
+                                                            {task.assignedTo?.name || 'Unassigned'}
+                                                        </td>
+                                                        <td className="px-6 py-3 text-center">
+                                                            <span className={`inline-block px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider ${
+                                                                task.priority === 'High' || task.priority === 'Critical' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                                            }`}>
+                                                                {task.priority || 'Normal'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-6 py-3">
+                                                            <button 
+                                                                onClick={() => navigate('/teamLead/tasks')}
+                                                                className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-0.5 cursor-pointer"
+                                                            >
+                                                                Review <ChevronRight className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-semibold text-slate-500">
-                                        <th className="px-6 py-4 font-medium">Member</th>
-                                        <th className="px-6 py-4 font-medium">Status</th>
-                                        <th className="px-6 py-4 font-medium">Tasks</th>
-                                        <th className="px-6 py-4 font-medium">Workload</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {teamMembers.length === 0 && !loading && (
-                                        <tr>
-                                            <td colSpan="4" className="px-6 py-8 text-center text-slate-500 text-sm font-medium">
-                                                No team members found
-                                            </td>
-                                        </tr>
+
+                        {/* Recent System Notifications Feed */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <Bell className="w-4 h-4 text-violet-500" />
+                                    Workspace Notifications
+                                </h3>
+                                <div className="space-y-3.5 max-h-[280px] overflow-y-auto custom-scrollbar pr-1">
+                                    {notifications.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center text-center py-10 text-slate-400">
+                                            <Bell className="w-8 h-8 text-slate-200 mb-2" />
+                                            <p className="text-xs font-semibold">No new system alerts or triggers</p>
+                                        </div>
+                                    ) : (
+                                        notifications.map((notif) => (
+                                            <div 
+                                                key={notif.id} 
+                                                className={`p-3 rounded-2xl border text-xs leading-relaxed relative overflow-hidden ${
+                                                    notif.type === 'danger' ? 'bg-red-50/50 border-red-100 text-red-800' : 
+                                                    notif.type === 'warning' ? 'bg-amber-50/50 border-amber-100 text-amber-800' : 'bg-blue-50/50 border-blue-100 text-blue-800'
+                                                }`}
+                                            >
+                                                <div className="flex justify-between items-start gap-2 mb-1">
+                                                    <span className="font-bold uppercase tracking-wider text-[9px]">{notif.title}</span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{notif.time}</span>
+                                                </div>
+                                                <p className="font-medium text-[11px] text-slate-600">{notif.message}</p>
+                                            </div>
+                                        ))
                                     )}
-                                    {teamMembers.map(member => (
-                                        <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-xl ${member.color} text-white flex items-center justify-center font-bold shadow-sm overflow-hidden`}>
-                                                        {member.profilePic ? (
-                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            member.initial
-                                                        )}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-semibold text-slate-800">{member.name}</p>
-                                                        <p className="text-xs text-slate-500">{member.role}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${
-                                                    member.status === 'Free' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-                                                }`}>
-                                                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                                                        member.status === 'Free' ? 'bg-emerald-500' : 'bg-amber-500'
-                                                    }`}></span>
-                                                    {member.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex flex-col gap-1 text-sm">
-                                                    <div className="flex items-center justify-between w-32">
-                                                        <span className="text-slate-500">Total:</span>
-                                                        <span className="font-semibold text-slate-700">{member.total}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between w-32">
-                                                        <span className="text-emerald-500">Completed:</span>
-                                                        <span className="font-semibold text-slate-700">{member.completed}</span>
-                                                    </div>
-                                                    <div className="flex items-center justify-between w-32">
-                                                        <span className="text-rose-500">Overdue:</span>
-                                                        <span className="font-semibold text-slate-700">{member.overdue}</span>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden w-24">
-                                                        <div 
-                                                            className={`h-full rounded-full ${
-                                                                member.workload > 80 ? 'bg-amber-500' : 
-                                                                member.workload > 50 ? 'bg-blue-500' : 'bg-emerald-500'
-                                                            }`}
-                                                            style={{ width: `${member.workload}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-medium text-slate-600">{member.workload}%</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
+
+                    {/* Overdue Task Items & Upcoming deadlines alerts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-in fade-in duration-700 delay-500 fill-mode-both">
+                        
+                        {/* Overdue queue detail */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <AlertCircle className="w-4 h-4 text-rose-500" />
+                                    Critical Overdue Tasks ({overdueTasksList.length})
+                                </h3>
+                                <div className="overflow-x-auto scrollbar-thin">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-2.5 font-bold">Delayed Task</th>
+                                                <th className="px-6 py-2.5 font-bold">Assignee</th>
+                                                <th className="px-6 py-2.5 font-bold">Expired Due Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-xs">
+                                            {overdueTasksList.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="3" className="px-6 py-8 text-center text-slate-400 font-medium">
+                                                        No overdue sprint tasks detected.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                overdueTasksList.slice(0, 5).map((task) => (
+                                                    <tr key={task._id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-6 py-3 font-semibold text-slate-800 truncate max-w-[180px]">
+                                                            {task.taskName}
+                                                        </td>
+                                                        <td className="px-6 py-3 text-slate-500 font-semibold">
+                                                            {task.assignedTo?.name || 'Unassigned'}
+                                                        </td>
+                                                        <td className="px-6 py-3 text-rose-600 font-bold">
+                                                            {task.endDate ? new Date(task.endDate).toLocaleDateString() : 'N/A'}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Upcoming deadlines queue */}
+                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
+                                    <Calendar className="w-4 h-4 text-emerald-500" />
+                                    Upcoming Deadlines (Next 96 Hours)
+                                </h3>
+                                <div className="overflow-x-auto scrollbar-thin">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-2.5 font-bold">Upcoming Task</th>
+                                                <th className="px-6 py-2.5 font-bold">Assignee</th>
+                                                <th className="px-6 py-2.5 font-bold">Target Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-xs">
+                                            {upcomingDeadlines.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="3" className="px-6 py-8 text-center text-slate-400 font-medium">
+                                                        No upcoming deadlines in the next 96 hours.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                upcomingDeadlines.slice(0, 5).map((task) => (
+                                                    <tr key={task._id} className="hover:bg-slate-50/50 transition-colors">
+                                                        <td className="px-6 py-3 font-semibold text-slate-800 truncate max-w-[180px]">
+                                                            {task.taskName}
+                                                        </td>
+                                                        <td className="px-6 py-3 text-slate-500 font-semibold">
+                                                            {task.assignedTo?.name || 'Unassigned'}
+                                                        </td>
+                                                        <td className="px-6 py-3 text-slate-800 font-bold">
+                                                            {task.endDate ? new Date(task.endDate).toLocaleDateString() : 'N/A'}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
                 </main>
                 
+                {/* Embedded global styling for clean scrollbars */}
                 <style dangerouslySetInnerHTML={{__html: `
                     .custom-scrollbar::-webkit-scrollbar {
                         width: 4px;
@@ -393,7 +959,7 @@ const TeamLeadDashboard = () => {
                 type={statModal.type} 
             />
         </div>
-    )
-}
+    );
+};
 
 export default TeamLeadDashboard;
