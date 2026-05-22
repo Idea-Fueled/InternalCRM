@@ -144,7 +144,7 @@ const TeamLeadDashboard = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="Team Lead Dashboard" role="teamLead" />
                 
-                <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div>

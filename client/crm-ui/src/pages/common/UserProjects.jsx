@@ -156,7 +156,7 @@ const UserProjects = ({ role = "developer" }) => {
                 <div className="flex-1 flex flex-col h-screen overflow-hidden">
                     <Topbar DashboardTile="Project Details" />
                     
-                    <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-thin">
+                    <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scrollbar-thin">
                         <button 
                             onClick={() => setSelectedProject(null)}
                             className="flex items-center gap-2 text-slate-500 hover:text-blue-600 font-semibold transition group mb-2"
@@ -420,7 +420,7 @@ const UserProjects = ({ role = "developer" }) => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="My Projects" />
                 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 scrollbar-thin">
+                <main className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scrollbar-thin">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="dashboard-heading">Assigned Projects</h1>

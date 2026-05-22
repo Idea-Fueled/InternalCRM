@@ -326,10 +326,10 @@ const QADashboard = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
                 <Topbar DashboardTile="QA Dashboard" role="qa" />
                 
-                <main className="flex-1 p-6 lg:p-8 overflow-y-auto custom-scrollbar">
+                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
                         
                         {/* KPI Section */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {[
                                 { label: 'Pending', value: displayStats.pendingReviewTasks?.length || displayStats.pendingReviewTasks, data: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Pending QA Reviews' },
                                 { label: 'Completed', value: displayStats.completedTasks?.length || displayStats.completedTasks, data: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400', title: 'Completed Tasks' },
@@ -348,7 +348,7 @@ const QADashboard = () => {
                             ))}
                         </div>
 
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                             {/* Main List Section */}
                             <div className="xl:col-span-2 space-y-6">
                                 <div className="flex items-center justify-between bg-white/50 p-4 rounded-2xl mb-2">

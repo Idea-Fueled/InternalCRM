@@ -126,15 +126,15 @@ const DeveloperTasks = () => {
             <div className="flex-1 flex flex-col h-screen relative overflow-hidden">
                 <Topbar DashboardTile="My Tasks" role="developer" />
                 
-                <main className="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar">
+                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
                     {/* Header */}
-                    <div className="mb-8">
+                    <div>
                         <h1 className="dashboard-heading">Assigned Tasks</h1>
                         <p className="dashboard-subheading">Manage and track the progress of all your active assignments.</p>
                     </div>
 
                     {/* Filters Section */}
-                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 mb-6">
+                    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
                             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input 

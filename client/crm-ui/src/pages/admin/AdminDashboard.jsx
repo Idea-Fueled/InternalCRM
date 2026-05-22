@@ -1084,7 +1084,7 @@ const AdminDashboard = () => {
             <AdminSidebar />
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="Dashboard" />
-                <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto">
+                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto">
                     {/* Header Section */}
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-4 shrink-0">
                         <div>
@@ -1116,7 +1116,7 @@ const AdminDashboard = () => {
                             {error}
                         </div>
                     ) : (
-                        <div className="space-y-8">
+                        <div className="space-y-6">
                             {/* KPIs Grid */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-8 gap-6">
                                 {kpis.map((kpi, i) => (

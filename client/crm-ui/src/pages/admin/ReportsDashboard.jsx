@@ -223,7 +223,7 @@ const ReportsDashboard = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="Reports" />
                 
-                <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto">
+                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto">
                     
                     {/* Header Section */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">

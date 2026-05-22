@@ -685,7 +685,7 @@ const OrganizationTree = () => {
                 <Topbar DashboardTile="Organization Matrix" role={currentRole} />
 
                 {/* Custom Scrollable Body */}
-                <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin">
+                <div className="flex-1 overflow-y-auto p-6 md:p-8 scrollbar-thin">
                     <div className="max-w-7xl mx-auto space-y-6">
 
                         {/* Navigation Actions Panel */}

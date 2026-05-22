@@ -167,10 +167,10 @@ const DeveloperDashboard = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
                 <Topbar DashboardTile="My Workspace" role="developer" />
 
-                <main className="flex-1 p-6 md:p-8 overflow-y-auto custom-scrollbar">
+                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
 
                     {/* Header */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h1 className="dashboard-heading">Welcome back, {user?.name || 'Developer'}!</h1>
                             <p className="dashboard-subheading">Here is a summary of your assigned tasks and current workload.</p>
@@ -218,7 +218,7 @@ const DeveloperDashboard = () => {
                     ) : (
                     <>
                     {/* KPI Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                         <div onClick={() => setStatModal({ isOpen: true, title: "Total Tasks", data: filteredTasks, type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
                                 <ClipboardList className="w-5 h-5" />
@@ -266,9 +266,9 @@ const DeveloperDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         {/* Left Column: Tasks List & Deadlines */}
-                        <div className="lg:col-span-2 space-y-8">
+                        <div className="lg:col-span-2 space-y-6">
 
                             {/* Upcoming / Overdue Deadlines Highlight */}
                             {displayStats.overdueTasks.length > 0 && (
@@ -349,7 +349,7 @@ const DeveloperDashboard = () => {
                         </div>
 
                         {/* Right Column: Task Details & Activity */}
-                        <div className="space-y-8">
+                        <div className="space-y-6">
 
                             {/* Task Details Preview */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-fit mb-8 relative z-10">
