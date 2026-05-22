@@ -633,13 +633,13 @@ const ProjectDetails = () => {
                                 {/* Tasks Table */}
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
-                                        <thead className="bg-slate-50/20 border-b border-slate-50 text-[10px] text-slate-400 font-semibold">
+                                        <thead className="bg-slate-50 border-b border-slate-100 text-[10px] text-slate-700 font-bold uppercase tracking-wider">
                                             <tr>
-                                                <th className="px-6 py-3">Task Parameter</th>
-                                                <th className="px-6 py-3">Assignees</th>
-                                                <th className="px-6 py-3">Priority</th>
-                                                <th className="px-6 py-3">Workflow State</th>
-                                                <th className="px-6 py-3 text-right">Actions</th>
+                                                <th className="px-6 py-3 w-[32%]">Task Parameter</th>
+                                                <th className="px-6 py-3 w-[28%]">Assignees</th>
+                                                <th className="px-6 py-3 w-[15%]">Priority</th>
+                                                <th className="px-6 py-3 w-[17%]">Workflow State</th>
+                                                <th className="px-6 py-3 w-[8%] text-center">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50 bg-white">
@@ -651,11 +651,11 @@ const ProjectDetails = () => {
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="space-y-1 max-w-[200px] md:max-w-xs">
-                                                            <p className="text-sm font-black text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
+                                                            <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
                                                                 {task.taskName}
                                                             </p>
-                                                            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-                                                                <Calendar className="w-3 h-3 text-slate-300" />
+                                                            <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1.5 mt-0.5">
+                                                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                                 Due: {formatDate(task.endDate)}
                                                             </span>
                                                         </div>
@@ -673,7 +673,7 @@ const ProjectDetails = () => {
                                                                 </div>
                                                                 <div className="flex flex-col leading-tight">
                                                                     <span className="text-[11px] font-bold text-slate-700">{task.assignedTo?.name || "Unassigned"}</span>
-                                                                    <span className="text-[8px] font-bold text-slate-400">Developer</span>
+                                                                    <span className="text-[8px] font-bold text-slate-500">Developer</span>
                                                                 </div>
                                                             </div>
                                                             {/* QA */}
@@ -688,7 +688,7 @@ const ProjectDetails = () => {
                                                                     </div>
                                                                     <div className="flex flex-col leading-tight">
                                                                         <span className="text-[11px] font-bold text-slate-700">{task.assignedQA.name}</span>
-                                                                        <span className="text-[8px] font-bold text-slate-400">QA Reviewer</span>
+                                                                        <span className="text-[8px] font-bold text-slate-500">QA Reviewer</span>
                                                                     </div>
                                                                 </div>
                                                             )}
@@ -698,7 +698,7 @@ const ProjectDetails = () => {
                                                         <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                                                             task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
                                                             task.priority === "High" ? "bg-orange-50 text-orange-600 border border-orange-100" :
-                                                            task.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                                            task.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
                                                             "bg-slate-50 text-slate-500 border border-slate-100"
                                                         }`}>
                                                             {task.priority}
@@ -714,7 +714,7 @@ const ProjectDetails = () => {
                                                             {task.status}
                                                         </span>
                                                     </td>
-                                                    <td className="px-6 py-4 text-right">
+                                                    <td className="px-6 py-4 text-center">
                                                         <button
                                                             className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
                                                             title="Edit Task workflow / view details"

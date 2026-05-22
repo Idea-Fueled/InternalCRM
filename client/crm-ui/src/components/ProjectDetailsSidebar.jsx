@@ -679,12 +679,12 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     <div className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left">
-                                                <thead className="bg-slate-50 border-b border-slate-100 text-[9px] text-slate-400 font-semibold">
+                                                <thead className="bg-slate-50 border-b border-slate-100 text-[10px] text-slate-700 font-bold uppercase tracking-wider">
                                                     <tr>
-                                                        <th className="px-4 py-2.5">Task Summary</th>
-                                                        <th className="px-4 py-2.5">Workflow</th>
-                                                        <th className="px-4 py-2.5">Assignees</th>
-                                                        <th className="px-4 py-2.5 text-right">Action</th>
+                                                        <th className="px-6 py-3 w-[32%]">Task Summary</th>
+                                                        <th className="px-6 py-3 w-[24%]">Workflow</th>
+                                                        <th className="px-6 py-3 w-[32%]">Assignees</th>
+                                                        <th className="px-6 py-3 w-[12%] text-center">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -694,17 +694,18 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             onClick={() => setSelectedTask(task)}
                                                             className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
                                                         >
-                                                            <td className="px-4 py-3">
+                                                            <td className="px-6 py-3.5">
                                                                 <div className="leading-snug max-w-[200px] truncate">
-                                                                    <p className="text-xs font-black text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
+                                                                    <p className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
                                                                         {task.taskName}
                                                                     </p>
-                                                                    <span className="text-[9px] font-bold text-slate-400 block mt-0.5">
+                                                                    <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1 mt-1">
+                                                                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                                         Due: {formatDate(task.endDate)}
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3">
+                                                            <td className="px-6 py-3.5">
                                                                 <div className="flex flex-col gap-1 items-start">
                                                                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                                                         task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
@@ -724,21 +725,21 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3">
-                                                                <div className="flex flex-col gap-1">
+                                                            <td className="px-6 py-3.5">
+                                                                <div className="flex flex-col gap-1.5">
                                                                     <div className="flex items-center gap-1.5">
-                                                                        <span className="text-[8px] font-bold text-slate-400 w-7 shrink-0">Dev:</span>
-                                                                        <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px]">{task.assignedTo?.name || "Unassigned"}</span>
+                                                                        <span className="text-[9px] font-bold text-slate-500 w-7 shrink-0">Dev:</span>
+                                                                        <span className="text-xs font-bold text-slate-800 truncate max-w-[100px]">{task.assignedTo?.name || "Unassigned"}</span>
                                                                     </div>
                                                                     {task.assignedQA && (
                                                                         <div className="flex items-center gap-1.5">
-                                                                            <span className="text-[8px] font-bold text-slate-400 w-7 shrink-0">QA:</span>
-                                                                            <span className="text-[10px] font-bold text-slate-700 truncate max-w-[80px]">{task.assignedQA.name}</span>
+                                                                            <span className="text-[9px] font-bold text-slate-500 w-7 shrink-0">QA:</span>
+                                                                            <span className="text-xs font-bold text-slate-800 truncate max-w-[100px]">{task.assignedQA.name}</span>
                                                                         </div>
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-4 py-3 text-right">
+                                                            <td className="px-6 py-3.5 text-center">
                                                                 <button
                                                                     className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
                                                                     title="Edit Task workflow / view details"
@@ -754,7 +755,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                     ))}
                                                     {filteredTasks.length === 0 && (
                                                         <tr>
-                                                            <td colSpan="4" className="px-4 py-8 text-center bg-slate-50/20">
+                                                            <td colSpan="4" className="px-6 py-8 text-center bg-slate-50/20">
                                                                 <div className="flex flex-col items-center justify-center py-2">
                                                                     <LayoutList className="w-6 h-6 text-slate-300 mb-2" />
                                                                     <h4 className="text-xs font-bold text-slate-800">No sprint tasks found</h4>

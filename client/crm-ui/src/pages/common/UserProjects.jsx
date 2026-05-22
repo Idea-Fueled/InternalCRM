@@ -256,12 +256,12 @@ const UserProjects = ({ role = "developer" }) => {
                                     </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
-                                            <thead className="bg-white border-b border-slate-100 text-[11px] uppercase tracking-wider text-slate-400 font-bold">
+                                            <thead className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-700 font-bold">
                                                 <tr>
-                                                    <th className="px-6 py-4">Task Name</th>
-                                                    <th className="px-6 py-4">Timeline</th>
-                                                    <th className="px-6 py-4">Assignee</th>
-                                                    <th className="px-6 py-4 text-right">Status</th>
+                                                    <th className="px-6 py-4 w-[35%]">Task Name</th>
+                                                    <th className="px-6 py-4 w-[25%]">Timeline</th>
+                                                    <th className="px-6 py-4 w-[30%]">Assignee</th>
+                                                    <th className="px-6 py-4 w-[10%] text-center">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50 bg-white">
@@ -271,8 +271,8 @@ const UserProjects = ({ role = "developer" }) => {
                                                             <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{task.taskName}</p>
                                                         </td>
                                                         <td className="px-6 py-4">
-                                                            <div className="flex items-center text-xs text-slate-500 font-bold">
-                                                                <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
+                                                            <div className="flex items-center text-xs text-slate-600 font-bold">
+                                                                <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400 shrink-0" />
                                                                 {formatDate(task.startDate)} — {formatDate(task.endDate)}
                                                             </div>
                                                         </td>
@@ -289,7 +289,7 @@ const UserProjects = ({ role = "developer" }) => {
                                                                     </div>
                                                                     <div className="flex flex-col">
                                                                         <span className="text-xs font-bold text-slate-700 leading-tight">{task.assignedTo?.name || "Unassigned"}</span>
-                                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Developer</span>
+                                                                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">Developer</span>
                                                                     </div>
                                                                 </div>
                                                                 {/* QA */}
@@ -304,13 +304,13 @@ const UserProjects = ({ role = "developer" }) => {
                                                                         </div>
                                                                         <div className="flex flex-col">
                                                                             <span className="text-xs font-bold text-slate-700 leading-tight">{task.assignedQA.name}</span>
-                                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">QA Reviewer</span>
+                                                                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tight">QA Reviewer</span>
                                                                         </div>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         </td>
-                                                        <td className="px-6 py-4 text-right">
+                                                        <td className="px-6 py-4 text-center">
                                                             <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${
                                                                 task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
                                                                 task.status === 'Overdue' ? 'bg-rose-50 text-rose-600 border border-rose-100' :
