@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 
@@ -495,7 +495,7 @@ const TaskStatusDonut = ({ allTasks }) => {
 };
 
 // ─── Custom Chart 5: Employee Performance Analytics ─────────────────────────────
-const EmployeePerformanceGraph = ({ allTasks, users }) => {
+const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => {
     const containerRef = useRef(null);
     const { width, height } = useResize(containerRef);
     const [hoveredDayIndex, setHoveredDayIndex] = useState(null);
@@ -518,7 +518,7 @@ const EmployeePerformanceGraph = ({ allTasks, users }) => {
     while (topEmployees.length < 3) {
         const dummyNames = ["Sarah Connor", "Alex Mercer", "Diana Prince"];
         const dummyRoles = ["developer", "developer", "qa"];
-        const dummyDepts = ["Engineering", "Engineering", "QA"];
+        const dummyDepts = selectedDept === "All" ? ["Engineering", "Engineering", "QA"] : [selectedDept, selectedDept, selectedDept];
         const idx = topEmployees.length;
         topEmployees.push({
             _id: `mock-user-${idx}`,
@@ -768,8 +768,11 @@ const EmployeePerformanceGraph = ({ allTasks, users }) => {
 };
 
 // ─── Custom Chart 6: Department Productivity Analytics ───────────────────────────
-const DepartmentProductivityGraph = ({ allTasks, users, projects, departments }) => {
-    const depts = departments && departments.length > 0 ? departments.map(d => d.name) : ["Engineering", "Sales", "Marketing", "HR", "QA"];
+const DepartmentProductivityGraph = ({ allTasks, users, projects, departments, selectedDept = "All" }) => {
+    let depts = departments && departments.length > 0 ? departments.map(d => d.name) : ["Engineering", "Sales", "Marketing", "HR", "QA"];
+    if (selectedDept !== "All") {
+        depts = depts.filter(d => d.toLowerCase() === selectedDept.toLowerCase());
+    }
     
     const getDeptTheme = (deptName) => {
         const predefined = {
@@ -920,6 +923,12 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [taskCompletionDept, setTaskCompletionDept] = useState("All");
+    const [weeklyProductivityDept, setWeeklyProductivityDept] = useState("All");
+    const [taskDistributionDept, setTaskDistributionDept] = useState("All");
+    const [employeePerformanceDept, setEmployeePerformanceDept] = useState("All");
+    const [deptProductivityDept, setDeptProductivityDept] = useState("All");
+
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
     
     const [newProject, setNewProject] = useState({
@@ -1060,6 +1069,51 @@ const AdminDashboard = () => {
         );
     });
 
+    // Filtered data for Task Completion Card
+    const filteredTasksForCompletion = useMemo(() => {
+        if (taskCompletionDept === "All") return allTasks;
+        return allTasks.filter(t => {
+            const uid = t.assignedTo?._id || t.assignedTo;
+            const user = users.find(u => u._id === uid);
+            return user && (user.department || "Engineering").toLowerCase() === taskCompletionDept.toLowerCase();
+        });
+    }, [allTasks, users, taskCompletionDept]);
+
+    // Filtered data for Weekly Productivity Card
+    const filteredTasksForWeekly = useMemo(() => {
+        if (weeklyProductivityDept === "All") return allTasks;
+        return allTasks.filter(t => {
+            const uid = t.assignedTo?._id || t.assignedTo;
+            const user = users.find(u => u._id === uid);
+            return user && (user.department || "Engineering").toLowerCase() === weeklyProductivityDept.toLowerCase();
+        });
+    }, [allTasks, users, weeklyProductivityDept]);
+
+    // Filtered data for Task Distribution Card (Donut)
+    const filteredTasksForDistribution = useMemo(() => {
+        if (taskDistributionDept === "All") return allTasks;
+        return allTasks.filter(t => {
+            const uid = t.assignedTo?._id || t.assignedTo;
+            const user = users.find(u => u._id === uid);
+            return user && (user.department || "Engineering").toLowerCase() === taskDistributionDept.toLowerCase();
+        });
+    }, [allTasks, users, taskDistributionDept]);
+
+    // Filtered data for Employee Performance Card
+    const filteredUsersForPerformance = useMemo(() => {
+        if (employeePerformanceDept === "All") return users;
+        return users.filter(u => (u.department || "Engineering").toLowerCase() === employeePerformanceDept.toLowerCase());
+    }, [users, employeePerformanceDept]);
+
+    const filteredTasksForPerformance = useMemo(() => {
+        if (employeePerformanceDept === "All") return allTasks;
+        return allTasks.filter(t => {
+            const uid = t.assignedTo?._id || t.assignedTo;
+            const user = users.find(u => u._id === uid);
+            return user && (user.department || "Engineering").toLowerCase() === employeePerformanceDept.toLowerCase();
+        });
+    }, [allTasks, users, employeePerformanceDept]);
+
     const completedTasks = allTasks.filter(t => ["Completed", "Done"].includes(t.status));
     const pendingTasks = allTasks.filter(t => ["New", "Pending", "Todo", "To Do"].includes(t.status) || !t.status);
     const inProgressTasks = allTasks.filter(t => ["In Progress", "Active"].includes(t.status));
@@ -1133,7 +1187,7 @@ const AdminDashboard = () => {
                             {/* Analytics Graphs Row (3 Columns) */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                 <Card className="p-6 flex flex-col h-[420px]">
-                                    <div className="flex items-center justify-between mb-4 shrink-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
                                                 <TrendingUp className="w-4 h-4 text-emerald-500" />
@@ -1141,18 +1195,37 @@ const AdminDashboard = () => {
                                             </h3>
                                             <p className="text-xs font-medium text-slate-400 mt-0.5">Last 7 days trend</p>
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 shrink-0">
-                                            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                            <span>Completed Trend</span>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                <span>Completed Trend</span>
+                                            </div>
+                                            <div className="relative shrink-0">
+                                                <select
+                                                    value={taskCompletionDept}
+                                                    onChange={(e) => setTaskCompletionDept(e.target.value)}
+                                                    className="pl-3 pr-7 py-1 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 hover:border-slate-300 text-slate-500 font-extrabold text-[10px] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 cursor-pointer appearance-none shadow-sm select-none"
+                                                >
+                                                    <option value="All">All Departments</option>
+                                                    {departments.map(dept => (
+                                                        <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                    <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex-1 min-h-0">
-                                        <TaskCompletionGraph allTasks={allTasks} />
+                                        <TaskCompletionGraph allTasks={filteredTasksForCompletion} />
                                     </div>
                                 </Card>
                                 
                                 <Card className="p-6 flex flex-col h-[420px]">
-                                    <div className="flex items-center justify-between mb-4 shrink-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
                                                 <BarChart3 className="w-4 h-4 text-blue-500" />
@@ -1160,32 +1233,70 @@ const AdminDashboard = () => {
                                             </h3>
                                             <p className="text-xs font-medium text-slate-400 mt-0.5">Tasks created vs completed</p>
                                         </div>
-                                        <div className="flex items-center gap-3 text-[10px] font-bold shrink-0">
-                                            <div className="flex items-center gap-1 text-slate-500">
-                                                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                                <span>Created</span>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            <div className="flex items-center gap-3 text-[10px] font-bold">
+                                                <div className="flex items-center gap-1 text-slate-500">
+                                                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                                    <span>Created</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 text-slate-500">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                    <span>Completed</span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-1 text-slate-500">
-                                                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                                                <span>Completed</span>
+                                            <div className="relative shrink-0">
+                                                <select
+                                                    value={weeklyProductivityDept}
+                                                    onChange={(e) => setWeeklyProductivityDept(e.target.value)}
+                                                    className="pl-3 pr-7 py-1 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 hover:border-slate-300 text-slate-500 font-extrabold text-[10px] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 cursor-pointer appearance-none shadow-sm select-none"
+                                                >
+                                                    <option value="All">All Departments</option>
+                                                    {departments.map(dept => (
+                                                        <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                                    ))}
+                                                </select>
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                    <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                    </svg>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex-1 min-h-0">
-                                        <WeeklyProductivityGraph allTasks={allTasks} />
+                                        <WeeklyProductivityGraph allTasks={filteredTasksForWeekly} />
                                     </div>
                                 </Card>
 
                                 <Card className="p-6 flex flex-col h-[420px] lg:col-span-2 xl:col-span-1">
-                                    <div className="shrink-0 mb-4">
-                                        <h3 className="section-title flex items-center gap-2">
-                                            <Activity className="w-4.5 h-4.5 text-violet-500" />
-                                            Task Distribution
-                                        </h3>
-                                        <p className="text-xs text-slate-400 mt-0.5 font-medium">Current workload distribution split by statuses</p>
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
+                                        <div>
+                                            <h3 className="section-title flex items-center gap-2">
+                                                <Activity className="w-4.5 h-4.5 text-violet-500" />
+                                                Task Distribution
+                                            </h3>
+                                            <p className="text-xs text-slate-400 mt-0.5 font-medium">Current workload distribution split by statuses</p>
+                                        </div>
+                                        <div className="relative shrink-0">
+                                            <select
+                                                value={taskDistributionDept}
+                                                onChange={(e) => setTaskDistributionDept(e.target.value)}
+                                                className="pl-3 pr-7 py-1 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 hover:border-slate-300 text-slate-500 font-extrabold text-[10px] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 cursor-pointer appearance-none shadow-sm select-none"
+                                            >
+                                                <option value="All">All Departments</option>
+                                                {departments.map(dept => (
+                                                    <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-h-0">
-                                        <TaskStatusDonut allTasks={allTasks} />
+                                        <TaskStatusDonut allTasks={filteredTasksForDistribution} />
                                     </div>
                                 </Card>
                             </div>
@@ -1193,7 +1304,7 @@ const AdminDashboard = () => {
                             {/* Premium Analytics Row (2 Columns) */}
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                 <Card className="p-6 flex flex-col h-[450px]">
-                                    <div className="flex items-center justify-between mb-4 shrink-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
                                                 <TrendingUp className="w-4 h-4 text-indigo-500" />
@@ -1201,14 +1312,31 @@ const AdminDashboard = () => {
                                             </h3>
                                             <p className="text-xs font-medium text-slate-400 mt-0.5">Individual task completion trends for top performers</p>
                                         </div>
+                                        <div className="relative shrink-0">
+                                            <select
+                                                value={employeePerformanceDept}
+                                                onChange={(e) => setEmployeePerformanceDept(e.target.value)}
+                                                className="pl-3 pr-7 py-1 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 hover:border-slate-300 text-slate-500 font-extrabold text-[10px] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 cursor-pointer appearance-none shadow-sm select-none"
+                                            >
+                                                <option value="All">All Departments</option>
+                                                {departments.map(dept => (
+                                                    <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-h-0">
-                                        <EmployeePerformanceGraph allTasks={allTasks} users={users} />
+                                        <EmployeePerformanceGraph allTasks={filteredTasksForPerformance} users={filteredUsersForPerformance} selectedDept={employeePerformanceDept} />
                                     </div>
                                 </Card>
 
                                 <Card className="p-6 flex flex-col h-[450px]">
-                                    <div className="flex items-center justify-between mb-4 shrink-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
                                         <div>
                                             <h3 className="section-title flex items-center gap-2">
                                                 <BarChart3 className="w-4 h-4 text-emerald-500" />
@@ -1216,9 +1344,26 @@ const AdminDashboard = () => {
                                             </h3>
                                             <p className="text-xs font-medium text-slate-400 mt-0.5">Workload and output metrics grouped by department</p>
                                         </div>
+                                        <div className="relative shrink-0">
+                                            <select
+                                                value={deptProductivityDept}
+                                                onChange={(e) => setDeptProductivityDept(e.target.value)}
+                                                className="pl-3 pr-7 py-1 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 hover:border-slate-300 text-slate-500 font-extrabold text-[10px] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-200 cursor-pointer appearance-none shadow-sm select-none"
+                                            >
+                                                <option value="All">All Departments</option>
+                                                {departments.map(dept => (
+                                                    <option key={dept._id} value={dept.name}>{dept.name}</option>
+                                                ))}
+                                            </select>
+                                            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className="flex-1 min-h-0">
-                                        <DepartmentProductivityGraph allTasks={allTasks} users={users} projects={projects} departments={departments} />
+                                        <DepartmentProductivityGraph allTasks={allTasks} users={users} projects={projects} departments={departments} selectedDept={deptProductivityDept} />
                                     </div>
                                 </Card>
                             </div>
