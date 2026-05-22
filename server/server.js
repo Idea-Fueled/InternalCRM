@@ -10,6 +10,7 @@ import dashboardRoutes from "./routes/dashboard.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import departmentRoutes from "./routes/department.route.js";
 import passwordRoutes from "./routes/password.route.js";
+import searchRoutes from "./routes/search.route.js";
 
 const app = express();
 
@@ -152,6 +153,7 @@ app.use("/dashboard", dashboardRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/departments", departmentRoutes);
 app.use("/auth", passwordRoutes);
+app.use("/search", searchRoutes);
 
 // Centralized Express Error Handling Middleware
 app.use((err, req, res, next) => {

@@ -80,3 +80,8 @@ export const authService = {
     forgotPassword: (email) => axiosInstance.post('/auth/forgot-password', { email }),
     resetPassword: (token, password) => axiosInstance.post('/auth/reset-password', { token, password }),
 };
+
+// Search Services
+export const searchService = {
+    globalSearch: (query) => axiosInstance.get('/search', { params: { query } }),
+};
