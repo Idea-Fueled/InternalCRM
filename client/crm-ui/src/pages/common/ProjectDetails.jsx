@@ -31,6 +31,7 @@ const ProjectDetails = () => {
     // Modals & Dynamic UI States
     const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
     const [isTransitionModalOpen, setIsTransitionModalOpen] = useState(false);
 
@@ -216,8 +217,22 @@ const ProjectDetails = () => {
 
     // ─── Task Management Methods ───────────────────────────────────────────────
 
-    // Create New Task inside project
-    const handleCreateTask = async (e) => {
+    const handleCloseTaskModal = () => {
+        setIsTaskModalOpen(false);
+        setEditingTask(null);
+        setNewTask({
+            taskName: "",
+            description: "",
+            assignedTo: "",
+            assignedQA: "",
+            priority: "Medium",
+            startDate: new Date().toISOString().split("T")[0],
+            endDate: ""
+        });
+    };
+
+    // Create or Update Task inside project
+    const handleSubmitTaskForm = async (e) => {
         e.preventDefault();
         if (!newTask.taskName.trim()) {
             toast.error("Task Name is required");
@@ -226,28 +241,28 @@ const ProjectDetails = () => {
 
         try {
             setTaskSubmitting(true);
-            const payload = {
-                ...newTask,
-                project: projectId
-            };
-            const res = await taskService.createTask(payload);
-            if (res.data.success) {
-                toast.success(`Task "${newTask.taskName}" created successfully!`);
-                setIsTaskModalOpen(false);
-                setNewTask({
-                    taskName: "",
-                    description: "",
-                    assignedTo: "",
-                    assignedQA: "",
-                    priority: "Medium",
-                    startDate: new Date().toISOString().split("T")[0],
-                    endDate: ""
-                });
-                loadProject();
+            if (editingTask) {
+                const res = await taskService.updateTask(editingTask._id, newTask);
+                if (res.data.success) {
+                    toast.success(`Task "${newTask.taskName}" updated successfully!`);
+                    handleCloseTaskModal();
+                    loadProject();
+                }
+            } else {
+                const payload = {
+                    ...newTask,
+                    project: projectId
+                };
+                const res = await taskService.createTask(payload);
+                if (res.data.success) {
+                    toast.success(`Task "${newTask.taskName}" created successfully!`);
+                    handleCloseTaskModal();
+                    loadProject();
+                }
             }
         } catch (err) {
-            console.error("Failed to create task", err);
-            toast.error(err.response?.data?.message || "Failed to create task");
+            console.error(editingTask ? "Failed to update task" : "Failed to create task", err);
+            toast.error(err.response?.data?.message || (editingTask ? "Failed to update task" : "Failed to create task"));
         } finally {
             setTaskSubmitting(false);
         }
@@ -589,7 +604,19 @@ const ProjectDetails = () => {
 
                                     {isAuthorizedToManage && (
                                         <button
-                                            onClick={() => setIsTaskModalOpen(true)}
+                                            onClick={() => {
+                                                setEditingTask(null);
+                                                setNewTask({
+                                                    taskName: "",
+                                                    description: "",
+                                                    assignedTo: "",
+                                                    assignedQA: "",
+                                                    priority: "Medium",
+                                                    startDate: new Date().toISOString().split("T")[0],
+                                                    endDate: ""
+                                                });
+                                                setIsTaskModalOpen(true);
+                                            }}
                                             className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-md shadow-blue-200 transition duration-300 flex items-center gap-1.5 cursor-pointer"
                                         >
                                             <Plus className="w-4 h-4" />
@@ -717,10 +744,20 @@ const ProjectDetails = () => {
                                                     <td className="px-6 py-4 text-center">
                                                         <button
                                                             className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
-                                                            title="Edit Task workflow / view details"
+                                                            title="Edit Task parameters"
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                setSelectedTask(task);
+                                                                setEditingTask(task);
+                                                                setNewTask({
+                                                                    taskName: task.taskName,
+                                                                    description: task.description || "",
+                                                                    assignedTo: task.assignedTo?._id || task.assignedTo || "",
+                                                                    assignedQA: task.assignedQA?._id || task.assignedQA || "",
+                                                                    priority: task.priority || "Medium",
+                                                                    startDate: task.startDate ? task.startDate.split("T")[0] : new Date().toISOString().split("T")[0],
+                                                                    endDate: task.endDate ? task.endDate.split("T")[0] : ""
+                                                                });
+                                                                setIsTaskModalOpen(true);
                                                             }}
                                                         >
                                                             <Edit3 className="w-4 h-4" />
@@ -1162,17 +1199,19 @@ const ProjectDetails = () => {
             {isTaskModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
                     <form
-                        onSubmit={handleCreateTask}
+                        onSubmit={handleSubmitTaskForm}
                         className="bg-white rounded-3xl p-6 md:p-8 max-w-lg w-full border border-slate-200 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200"
                     >
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
-                                <h3 className="text-lg font-black text-slate-900 tracking-tight">Create Sprint Task</h3>
-                                <span className="text-[10px] font-semibold text-slate-400">Initialize new project workflow task</span>
+                                <h3 className="text-lg font-black text-slate-900 tracking-tight">{editingTask ? "Edit Sprint Task" : "Create Sprint Task"}</h3>
+                                <span className="text-[10px] font-semibold text-slate-400">
+                                    {editingTask ? "Update sprint task parameters" : "Initialize new project workflow task"}
+                                </span>
                             </div>
                             <button
                                 type="button"
-                                onClick={() => setIsTaskModalOpen(false)}
+                                onClick={handleCloseTaskModal}
                                 className="p-2 bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition"
                             >
                                 <X className="w-4 h-4" />
@@ -1283,7 +1322,7 @@ const ProjectDetails = () => {
                         <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                             <button
                                 type="button"
-                                onClick={() => setIsTaskModalOpen(false)}
+                                onClick={handleCloseTaskModal}
                                 className="px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-500 rounded-xl text-xs font-black border border-slate-100 transition"
                             >
                                 Cancel
@@ -1293,7 +1332,7 @@ const ProjectDetails = () => {
                                 disabled={taskSubmitting}
                                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-md shadow-blue-200 transition disabled:opacity-50"
                             >
-                                {taskSubmitting ? "Creating..." : "Create Task"}
+                                {taskSubmitting ? (editingTask ? "Updating..." : "Creating...") : (editingTask ? "Save Changes" : "Create Task")}
                             </button>
                         </div>
                     </form>
