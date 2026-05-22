@@ -84,7 +84,7 @@ export default function WelcomePage() {
             {/* Login Card */}
             <div className="w-full max-w-[440px] space-y-8 relative z-10 bg-white/70 backdrop-blur-2xl p-6 sm:p-10 rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.08)] border border-white animate-in fade-in zoom-in-95 duration-700 delay-300 fill-mode-both">
                 <div className="text-center">
-                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Welcome back</h2>
+                    <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Access Your Workspace</h2>
                     <p className="text-slate-500 mt-1.5 text-sm font-medium">Sign in to access your dashboard.</p>
                 </div>
 
@@ -110,10 +110,7 @@ export default function WelcomePage() {
                     </div>
 
                     <div className="space-y-2">
-                        <div className="flex items-center justify-between ml-1">
-                            <label className="text-sm font-semibold text-slate-700">Password</label>
-                            <button type="button" onClick={() => navigate('/forgot-password')} className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors">Forgot Password?</button>
-                        </div>
+                        <label className="block text-sm font-semibold text-slate-700 ml-1">Password</label>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                             <input
@@ -137,6 +134,15 @@ export default function WelcomePage() {
                         {submitted && !formData.password && (
                             <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Password is required!</p>
                         )}
+                        <div className="flex justify-end pt-1">
+                            <button 
+                                type="button" 
+                                onClick={() => navigate('/forgot-password')} 
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                                Forgot Password?
+                            </button>
+                        </div>
                     </div>
 
                     <button
