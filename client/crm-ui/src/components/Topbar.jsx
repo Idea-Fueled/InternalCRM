@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import ProfileModal from "./ProfileModal";
 import NotificationDropdown from "./NotificationDropdown";
+import GlobalSearchModal from "./GlobalSearchModal";
+import { Search } from "lucide-react";
 
 const Topbar = ({ DashboardTile, role = "admin" }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
     
     // Fallback display values if user context isn't ready
     const displayName = user?.name || (role === "teamLead" ? "Team Lead" : role === "developer" ? "Developer" : role === "qa" ? "QA" : "Admin");
@@ -17,6 +20,13 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
     const toggleMobileSidebar = () => {
         document.dispatchEvent(new CustomEvent('toggleMobileSidebar'));
     };
+
+    // Listen for global open-global-search event (from Ctrl+K)
+    useEffect(() => {
+        const handleOpenSearch = () => setIsSearchOpen(true);
+        window.addEventListener("open-global-search", handleOpenSearch);
+        return () => window.removeEventListener("open-global-search", handleOpenSearch);
+    }, []);
 
     return (
         <>
@@ -39,6 +49,29 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
+                    {/* ─── Search Trigger Bar ───────────────────────── */}
+                    <button
+                        id="global-search-trigger"
+                        onClick={() => setIsSearchOpen(true)}
+                        className="hidden sm:flex items-center gap-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl px-3.5 py-2 transition-all duration-200 group cursor-pointer"
+                    >
+                        <Search className="w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                        <span className="text-[13px] text-slate-400 group-hover:text-slate-500 font-medium transition-colors whitespace-nowrap">
+                            Search CRM...
+                        </span>
+                        <kbd className="text-[10px] font-bold text-slate-400 bg-white border border-slate-200 rounded-md px-1.5 py-0.5 ml-2 shadow-sm group-hover:border-blue-200 transition-colors">
+                            ⌘K
+                        </kbd>
+                    </button>
+
+                    {/* Mobile search icon */}
+                    <button
+                        onClick={() => setIsSearchOpen(true)}
+                        className="sm:hidden p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                        <Search className="w-5 h-5" />
+                    </button>
+
                     <NotificationDropdown role={role} />
 
                     <div 
@@ -68,6 +101,11 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
                 displayName={displayName}
                 displayRole={displayRole}
                 initial={initial}
+            />
+
+            <GlobalSearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
             />
         </>
     );
