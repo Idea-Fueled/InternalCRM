@@ -349,15 +349,15 @@ const EmployeeDashboard = () => {
                     {/* SVG Analytics Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Donut Graph Card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-[340px]">
                             <div className="mb-4">
                                 <h3 className="text-base font-bold text-slate-800">Productivity Distribution</h3>
                                 <p className="text-xs text-slate-500">Breakdown of tasks assigned to you by status.</p>
                             </div>
 
-                            <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+                            <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2 flex-1">
                                 {/* SVG Donut */}
-                                <div className="relative w-[180px] h-[180px] shrink-0">
+                                <div className="relative w-[190px] h-[190px] shrink-0">
                                     <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90">
                                         {/* Background gray circle */}
                                         <circle 
@@ -416,8 +416,8 @@ const EmployeeDashboard = () => {
                         </div>
 
                         {/* Weekly Created vs Completed Bar Graph Card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
-                            <div className="mb-4 flex items-center justify-between">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-[340px]">
+                            <div className="mb-2 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-base font-bold text-slate-800">Weekly Productivity</h3>
                                     <p className="text-xs text-slate-500">Created vs. completed tasks in the last 7 days.</p>
@@ -435,8 +435,8 @@ const EmployeeDashboard = () => {
                             </div>
 
                             {/* Dynamic SVG Bar Chart */}
-                            <div className="relative w-full h-[180px] py-1">
-                                <svg className="w-full h-full" viewBox="0 0 420 180">
+                            <div className="relative w-full h-[230px] py-1 flex-1 flex items-center justify-center">
+                                <svg className="w-full h-full max-h-[220px]" viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
                                     {/* Definitions for gradients */}
                                     <defs>
                                         <linearGradient id="createdGrad" x1="0" y1="0" x2="0" y2="1">
@@ -451,23 +451,23 @@ const EmployeeDashboard = () => {
 
                                     {/* Grid Lines */}
                                     {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
-                                        const y = 10 + ratio * 130;
+                                        const y = 15 + ratio * 160;
                                         const labelVal = (maxWeeklyValue - (ratio * maxWeeklyValue)).toFixed(0);
                                         return (
                                             <g key={idx}>
                                                 <line 
-                                                    x1="30" 
+                                                    x1="35" 
                                                     y1={y} 
-                                                    x2="410" 
+                                                    x2="480" 
                                                     y2={y} 
                                                     stroke="#f1f5f9" 
-                                                    strokeWidth="1" 
+                                                    strokeWidth="1.5" 
                                                 />
                                                 <text 
-                                                    x="10" 
-                                                    y={y + 3} 
+                                                    x="15" 
+                                                    y={y + 3.5} 
                                                     fill="#94a3b8" 
-                                                    fontSize="9" 
+                                                    fontSize="10" 
                                                     fontWeight="bold" 
                                                     textAnchor="middle"
                                                 >
@@ -479,17 +479,17 @@ const EmployeeDashboard = () => {
 
                                     {/* Bars */}
                                     {weeklyData.dayNames.map((day, idx) => {
-                                        const xGroup = 45 + idx * 52;
+                                        const xGroup = 55 + idx * 62;
                                         
                                         const createdVal = weeklyData.createdCounts[idx];
                                         const completedVal = weeklyData.completedCounts[idx];
                                         
-                                        // Scale heights: max height of chart is 130px (y from 10 to 140)
-                                        const createdHeight = (createdVal / maxWeeklyValue) * 130;
-                                        const completedHeight = (completedVal / maxWeeklyValue) * 130;
+                                        // Scale heights: max height of chart is 160px (y from 15 to 175)
+                                        const createdHeight = (createdVal / maxWeeklyValue) * 160;
+                                        const completedHeight = (completedVal / maxWeeklyValue) * 160;
                                         
-                                        const yCreated = 140 - createdHeight;
-                                        const yCompleted = 140 - completedHeight;
+                                        const yCreated = 175 - createdHeight;
+                                        const yCompleted = 175 - completedHeight;
 
                                         return (
                                             <g key={idx} className="group">
@@ -497,22 +497,22 @@ const EmployeeDashboard = () => {
                                                 <rect
                                                     x={xGroup}
                                                     y={yCreated}
-                                                    width="12"
+                                                    width="16"
                                                     height={Math.max(createdHeight, 0)}
-                                                    rx="3"
+                                                    rx="4"
                                                     fill="url(#createdGrad)"
                                                     className="transition-all duration-300 hover:opacity-90"
                                                 />
                                                 {/* Tooltip or Value label on hover for Created */}
                                                 {createdVal > 0 && (
                                                     <text
-                                                        x={xGroup + 6}
-                                                        y={yCreated - 4}
+                                                        x={xGroup + 8}
+                                                        y={yCreated - 5}
                                                         fill="#3b82f6"
-                                                        fontSize="8"
+                                                        fontSize="9.5"
                                                         fontWeight="black"
                                                         textAnchor="middle"
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 animate-bounce"
                                                     >
                                                         {createdVal}
                                                     </text>
@@ -520,24 +520,24 @@ const EmployeeDashboard = () => {
 
                                                 {/* Completed Bar */}
                                                 <rect
-                                                    x={xGroup + 15}
+                                                    x={xGroup + 20}
                                                     y={yCompleted}
-                                                    width="12"
+                                                    width="16"
                                                     height={Math.max(completedHeight, 0)}
-                                                    rx="3"
+                                                    rx="4"
                                                     fill="url(#completedGrad)"
                                                     className="transition-all duration-300 hover:opacity-90"
                                                 />
                                                 {/* Tooltip or Value label on hover for Completed */}
                                                 {completedVal > 0 && (
                                                     <text
-                                                        x={xGroup + 21}
-                                                        y={yCompleted - 4}
+                                                        x={xGroup + 28}
+                                                        y={yCompleted - 5}
                                                         fill="#10b981"
-                                                        fontSize="8"
+                                                        fontSize="9.5"
                                                         fontWeight="black"
                                                         textAnchor="middle"
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 animate-bounce"
                                                     >
                                                         {completedVal}
                                                     </text>
@@ -545,10 +545,10 @@ const EmployeeDashboard = () => {
 
                                                 {/* Day of Week Label */}
                                                 <text
-                                                    x={xGroup + 13}
-                                                    y="158"
+                                                    x={xGroup + 18}
+                                                    y="196"
                                                     fill="#64748b"
-                                                    fontSize="9"
+                                                    fontSize="10"
                                                     fontWeight="bold"
                                                     textAnchor="middle"
                                                 >
@@ -560,10 +560,10 @@ const EmployeeDashboard = () => {
                                     
                                     {/* Bottom Axis Line */}
                                     <line 
-                                        x1="30" 
-                                        y1="140" 
-                                        x2="410" 
-                                        y2="140" 
+                                        x1="35" 
+                                        y1="175" 
+                                        x2="480" 
+                                        y2="175" 
                                         stroke="#cbd5e1" 
                                         strokeWidth="1.5" 
                                     />
