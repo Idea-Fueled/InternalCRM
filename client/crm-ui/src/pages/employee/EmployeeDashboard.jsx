@@ -416,7 +416,7 @@ const EmployeeDashboard = () => {
                                                     fill="transparent"
                                                     className="transition-all duration-300 ease-out cursor-pointer"
                                                     style={{
-                                                        opacity: isAnyHovered && !isHovered ? 0.45 : 1,
+                                                        opacity: isAnyHovered && !isHovered ? 0.8 : 1,
                                                         filter: isHovered ? 'drop-shadow(0px 2px 6px rgba(0,0,0,0.15))' : 'none'
                                                     }}
                                                     onMouseEnter={() => setHoveredSlice(slice.label)}
@@ -452,7 +452,7 @@ const EmployeeDashboard = () => {
                                                 onMouseEnter={() => setHoveredSlice(item.label)}
                                                 onMouseLeave={() => setHoveredSlice(null)}
                                                 style={{
-                                                    opacity: isAnyHovered && !isHovered ? 0.5 : 1,
+                                                    opacity: isAnyHovered && !isHovered ? 0.8 : 1,
                                                     transition: 'all 0.2s'
                                                 }}
                                             >
