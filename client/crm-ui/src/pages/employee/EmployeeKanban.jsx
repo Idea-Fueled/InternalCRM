@@ -6,7 +6,7 @@ import { taskService } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
 import { Search, Filter } from 'lucide-react';
 
-const DeveloperKanban = () => {
+const EmployeeKanban = () => {
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -30,10 +30,10 @@ const DeveloperKanban = () => {
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
-            <AdminSidebar role="developer" />
+            <AdminSidebar role="employee" />
 
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                <Topbar DashboardTile="Kanban Board" role="developer" />
+                <Topbar DashboardTile="Kanban Board" role="employee" />
 
                 <main className="flex-1 p-6 md:p-8 flex flex-col overflow-hidden">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 shrink-0">
@@ -51,7 +51,7 @@ const DeveloperKanban = () => {
                         </div>
                     </div>
 
-                    <KanbanBoard tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} loading={loading} role="developer" />
+                    <KanbanBoard tasks={tasks} setTasks={setTasks} searchQuery={searchQuery} loading={loading} role="employee" />
                 </main>
 
                 <style dangerouslySetInnerHTML={{ __html: `.custom-scrollbar::-webkit-scrollbar{width:4px;height:4px}.custom-scrollbar::-webkit-scrollbar-track{background:transparent}.custom-scrollbar::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:4px}.custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#94a3b8}` }} />
@@ -60,4 +60,4 @@ const DeveloperKanban = () => {
     );
 };
 
-export default DeveloperKanban;
+export default EmployeeKanban;

@@ -506,9 +506,9 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
             toast.error('You do not have permission to update tasks');
             return;
         }
-        if (role === 'developer' && ['QA Review', 'Completed', 'Done'].includes(colId)) {
+        if ((role === 'developer' || role === 'employee') && ['QA Review', 'Completed', 'Done'].includes(colId)) {
             e.preventDefault();
-            toast.error(`Tasks in ${colId} are locked for Developers`);
+            toast.error(`Tasks in ${colId} are locked for Employees`);
             return;
         }
         if (role === 'qa' && colId !== 'QA Review') {
@@ -529,8 +529,8 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         setDragOverCol(null);
         if (!dragTaskId.current || dragFromCol.current === targetColId) return;
         if (!can('tasks.update')) { toast.error('You do not have permission to update tasks'); return; }
-        if (role === 'developer' && !['In Progress', 'QA Review'].includes(targetColId)) {
-            toast.error('Developers can only move tasks to In Progress or QA Review'); return;
+        if ((role === 'developer' || role === 'employee') && !['In Progress', 'QA Review'].includes(targetColId)) {
+            toast.error('Employees can only move tasks to In Progress or QA Review'); return;
         }
         if (role === 'qa' && !['Completed', 'In Progress'].includes(targetColId)) {
             toast.error('QAs can only move tasks to Completed or In Progress (Reject)'); return;
@@ -794,7 +794,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                             const overdue  = isOverdue(task);
                                             const hist     = getHistory(task);
                                             const richCount = countRichHistory(task);
-                                            const isLocked = role === 'developer' && ['QA Review', 'Completed', 'Done'].includes(col.id);
+                                            const isLocked = (role === 'developer' || role === 'employee') && ['QA Review', 'Completed', 'Done'].includes(col.id);
                                             return (
                                                 <div
                                                     key={getTaskId(task)}
@@ -1139,7 +1139,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5">Assignee</label>
                                         <select value={editTaskData.assignedTo} onChange={e => setEditTaskData({...editTaskData, assignedTo: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer">
                                             <option value="">Unassigned</option>
-                                            {projectMembers.filter(m => m.role === 'developer').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                            {projectMembers.filter(m => !['admin', 'TL', 'qa'].includes(m.role)).map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
                                         </select>
                                     </div>
                                     <div>

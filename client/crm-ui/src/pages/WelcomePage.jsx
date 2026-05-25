@@ -20,13 +20,13 @@ export default function WelcomePage() {
     useEffect(() => {
         if (user && !authLoading) {
             console.log("Redirecting user based on role:", user.role);
-            const roleRoutes = {
-                admin: "/admin/dashboard",
-                TL: "/teamlead/dashboard",
-                developer: "/developer/dashboard",
-                qa: "/qa/dashboard"
-            };
-            const target = roleRoutes[user.role] || "/admin/dashboard";
+            const isEmployeeRole = !["admin", "TL", "qa"].includes(user.role);
+            let target = "/admin/dashboard";
+            if (user.role === "admin") target = "/admin/dashboard";
+            else if (user.role === "TL") target = "/teamlead/dashboard";
+            else if (user.role === "qa") target = "/qa/dashboard";
+            else if (isEmployeeRole) target = "/employee/dashboard";
+            
             navigate(target, { replace: true });
         }
     }, [user, authLoading, navigate]);

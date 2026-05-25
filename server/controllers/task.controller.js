@@ -177,7 +177,7 @@ export const createTask = async (req, res) => {
                 message: `You have been assigned to ${populatedTask.taskName}`,
                 type: "task",
                 category: "assignment",
-                link: `/developer/tasks?taskId=${populatedTask._id}`
+                link: `/employee/my-tasks?taskId=${populatedTask._id}`
             });
         }
         // Notify QA if assigned
@@ -428,11 +428,12 @@ export const updateTaskStatus = async (req, res) => {
 
         // Enforce Workflow Rules
         const role = req.user.role;
-        if (role === "developer") {
+        const isEmployeeRole = !["admin", "TL", "qa"].includes(role);
+        if (isEmployeeRole) {
             if (!["In Progress", "QA Review"].includes(status)) {
                 return res.status(403).json({
                     success: false,
-                    message: "Developers can only move tasks to 'In Progress' or 'QA Review'"
+                    message: "Employees can only move tasks to 'In Progress' or 'QA Review'"
                 });
             }
         } else if (role === "qa") {

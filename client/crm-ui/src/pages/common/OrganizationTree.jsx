@@ -385,7 +385,7 @@ const OrganizationTree = () => {
             if (roleLower === 'admin') {
                 const admins = activeUsers.filter(u => u.role === 'admin' && getIdString(u._id) === getIdString(user?._id));
                 let tls = activeUsers.filter(u => u.role === 'TL');
-                let staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+                let staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL');
 
                 if (admins.length > 0) {
                     return buildTreeFromRoots(admins, tls, staff, false);
@@ -396,7 +396,7 @@ const OrganizationTree = () => {
             } else if (roleLower === 'tl') {
                 const currentTlObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
                 if (currentTlObj) {
-                    let staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, currentTlObj._id));
+                    let staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL' && reportsTo(u, currentTlObj._id));
 
                     return [{
                         ...currentTlObj,
@@ -412,7 +412,7 @@ const OrganizationTree = () => {
 
                 if (myLeads.length > 0) {
                     return myLeads.map(lead => {
-                        let staff = activeUsers.filter(u => (u.role === 'developer' || u.role === 'qa') && reportsTo(u, lead._id));
+                        let staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL' && reportsTo(u, lead._id));
 
                         return {
                             ...lead,
@@ -431,7 +431,7 @@ const OrganizationTree = () => {
         // Top of the Organization tab: Show full hierarchy with department-wise visual separation
         const admins = activeUsers.filter(u => u.role === 'admin');
         const tls = activeUsers.filter(u => u.role === 'TL');
-        const staff = activeUsers.filter(u => u.role === 'developer' || u.role === 'qa');
+        const staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL');
 
         if (admins.length > 0) {
             return buildTreeFromRoots(admins, tls, staff, true);

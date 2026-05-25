@@ -63,8 +63,19 @@ export const isAdminOrTL = (req, res, next) => {
     next();
 }
 
+export const isEmployee = (req, res, next) => {
+    if (["admin", "TL", "qa"].includes(req.user.role)) {
+        return res.status(403).json({
+            message: "Access denied - Employee only"
+        })
+    }
+
+    next();
+}
+
 export const isDeveloper = (req, res, next) => {
-    if (req.user.role !== "developer") {
+    // Treat any custom employee role as developer for legacy checks
+    if (req.user.role !== "developer" && ["admin", "TL", "qa"].includes(req.user.role)) {
         return res.status(403).json({
             message: "Access denied - Developer only"
         })

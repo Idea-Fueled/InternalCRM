@@ -86,15 +86,34 @@ const EmployeesDashboard = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
     const [isDepartmentsModalOpen, setIsDepartmentsModalOpen] = useState(false);
+    const [roleSelectValue, setRoleSelectValue] = useState("custom");
+    const [customRoleText, setCustomRoleText] = useState("");
+
     const [newEmployee, setNewEmployee] = useState({
         name: "",
         email: "",
         password: "",
-        role: "developer",
+        role: "Web Developer",
         department: "Engineering",
         teamLeads: [],
         permissions: DEFAULT_ROLE_PERMISSIONS['developer']
     });
+
+    const openAddEmployeeModal = () => {
+        setRoleSelectValue("custom");
+        setCustomRoleText("");
+        setNewEmployee({
+            name: "",
+            email: "",
+            password: "",
+            role: "Web Developer",
+            department: "Engineering",
+            teamLeads: [],
+            permissions: DEFAULT_ROLE_PERMISSIONS['developer'],
+            profilePic: null
+        });
+        setIsAddEmployeeModalOpen(true);
+    };
     const [isCreating, setIsCreating] = useState(false);
     const [submitted, setSubmitted] = useState(false);
     const [showAddEmployeePwd, setShowAddEmployeePwd] = useState(false);
@@ -214,7 +233,7 @@ const EmployeesDashboard = () => {
         e.preventDefault();
         setSubmitted(true);
 
-        if (!newEmployee.name || !newEmployee.email) {
+        if (!newEmployee.name || !newEmployee.email || (roleSelectValue === "custom" && !customRoleText.trim())) {
             return;
         }
 
@@ -264,6 +283,11 @@ const EmployeesDashboard = () => {
     const handleEditEmployee = (emp, e) => {
         if (e) e.stopPropagation();
         setEditingEmployee(emp.raw);
+        
+        const isSystemRole = ["admin", "TL", "qa"].includes(emp.role);
+        setRoleSelectValue(isSystemRole ? emp.role : "custom");
+        setCustomRoleText(isSystemRole ? "" : emp.role);
+
         setNewEmployee({
             name: emp.name,
             email: emp.email,
@@ -281,7 +305,7 @@ const EmployeesDashboard = () => {
         if (!editingEmployee) return;
         setSubmitted(true);
 
-        if (!newEmployee.name || !newEmployee.email) {
+        if (!newEmployee.name || !newEmployee.email || (roleSelectValue === "custom" && !customRoleText.trim())) {
             return;
         }
 
@@ -418,7 +442,9 @@ const EmployeesDashboard = () => {
     const filteredEmployees = employees.filter(e => {
         const matchesSearch = e.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                              e.email?.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesRole = roleFilter === "All Roles" || e.role === roleFilter;
+        const matchesRole = roleFilter === "All Roles" || 
+                            (roleFilter === "employee" && !["admin", "TL", "qa"].includes(e.role)) ||
+                            e.role === roleFilter;
         return matchesSearch && matchesRole;
     });
 
@@ -466,7 +492,7 @@ const EmployeesDashboard = () => {
                                 Departments
                             </button>
                             {can('users.create') && (
-                                <button onClick={() => setIsAddEmployeeModalOpen(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
+                                <button onClick={openAddEmployeeModal} className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition shadow-sm shadow-blue-200 text-sm">
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
                                     Add Employee
                                 </button>
@@ -516,7 +542,7 @@ const EmployeesDashboard = () => {
                             >
                                 <option value="All Roles">Filter: All Roles</option>
                                 <option value="admin">Admin</option>
-                                <option value="developer">Developer</option>
+                                <option value="employee">Employee Roles</option>
                                 <option value="qa">QA</option>
                                 <option value="TL">Team Lead</option>
                             </select>
@@ -737,26 +763,58 @@ const EmployeesDashboard = () => {
                                         <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Email is required!</p>
                                     )}
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-bold text-slate-700">Role</label>
+                                <div className="space-y-1.5 md:col-span-1">
+                                    <label className="block text-sm font-bold text-slate-700">System Role</label>
                                     <select 
-                                        value={newEmployee.role}
+                                        value={roleSelectValue}
                                         onChange={(e) => {
-                                            const role = e.target.value;
-                                            setNewEmployee({
-                                                ...newEmployee, 
-                                                role, 
-                                                permissions: DEFAULT_ROLE_PERMISSIONS[role] || []
-                                            });
+                                            const val = e.target.value;
+                                            setRoleSelectValue(val);
+                                            if (val !== "custom") {
+                                                setNewEmployee({
+                                                    ...newEmployee, 
+                                                    role: val, 
+                                                    permissions: DEFAULT_ROLE_PERMISSIONS[val] || []
+                                                });
+                                            } else {
+                                                setNewEmployee({
+                                                    ...newEmployee, 
+                                                    role: customRoleText || "Web Developer", 
+                                                    permissions: DEFAULT_ROLE_PERMISSIONS['developer']
+                                                });
+                                            }
                                         }}
                                         className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
                                     >
-                                        <option value="developer">Developer</option>
+                                        <option value="custom">Custom Employee Role...</option>
+                                        <option value="admin">Admin</option>
                                         <option value="TL">Team Lead</option>
                                         <option value="qa">QA</option>
-                                        <option value="admin">Admin</option>
                                     </select>
                                 </div>
+                                {roleSelectValue === "custom" && (
+                                    <div className="space-y-1.5 md:col-span-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <label className="block text-sm font-bold text-slate-700">Custom Role Title *</label>
+                                        <input 
+                                            type="text" 
+                                            required
+                                            value={customRoleText}
+                                            placeholder="e.g. Web Developer, Graphic Designer"
+                                            onChange={(e) => {
+                                                const txt = e.target.value;
+                                                setCustomRoleText(txt);
+                                                setNewEmployee({
+                                                    ...newEmployee,
+                                                    role: txt
+                                                });
+                                            }}
+                                            className={`w-full px-3 py-2 bg-white border ${submitted && !customRoleText ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all`} 
+                                        />
+                                        {submitted && !customRoleText && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">Custom Role Title is required!</p>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-bold text-slate-700">Password (Optional)</label>
                                     <div className="relative">
@@ -1075,17 +1133,26 @@ const EmployeesDashboard = () => {
                                         <p className="text-red-500 text-[11px] font-semibold mt-1 animate-in fade-in slide-in-from-top-1">Email is required!</p>
                                     )}
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-bold text-slate-700">Role</label>
+                                <div className="space-y-1.5 md:col-span-1">
+                                    <label className="block text-sm font-bold text-slate-700">System Role</label>
                                     <select 
-                                        value={newEmployee.role}
+                                        value={roleSelectValue}
                                         onChange={(e) => {
-                                            const role = e.target.value;
-                                            setNewEmployee({
-                                                ...newEmployee, 
-                                                role, 
-                                                permissions: DEFAULT_ROLE_PERMISSIONS[role] || []
-                                            });
+                                            const val = e.target.value;
+                                            setRoleSelectValue(val);
+                                            if (val !== "custom") {
+                                                setNewEmployee({
+                                                    ...newEmployee, 
+                                                    role: val, 
+                                                    permissions: DEFAULT_ROLE_PERMISSIONS[val] || []
+                                                });
+                                            } else {
+                                                setNewEmployee({
+                                                    ...newEmployee, 
+                                                    role: customRoleText || "Web Developer", 
+                                                    permissions: DEFAULT_ROLE_PERMISSIONS['developer']
+                                                });
+                                            }
                                         }}
                                         disabled={user?._id === editingEmployee?._id}
                                         className={`w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none text-sm transition-all ${
@@ -1094,12 +1161,40 @@ const EmployeesDashboard = () => {
                                             : 'bg-white cursor-pointer focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500'
                                         }`}
                                     >
-                                        <option value="developer">Developer</option>
+                                        <option value="custom">Custom Employee Role...</option>
+                                        <option value="admin">Admin</option>
                                         <option value="TL">Team Lead</option>
                                         <option value="qa">QA</option>
-                                        <option value="admin">Admin</option>
                                     </select>
                                 </div>
+                                {roleSelectValue === "custom" && (
+                                    <div className="space-y-1.5 md:col-span-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <label className="block text-sm font-bold text-slate-700">Custom Role Title *</label>
+                                        <input 
+                                            type="text" 
+                                            required
+                                            value={customRoleText}
+                                            placeholder="e.g. Web Developer, Graphic Designer"
+                                            disabled={user?._id === editingEmployee?._id}
+                                            onChange={(e) => {
+                                                const txt = e.target.value;
+                                                setCustomRoleText(txt);
+                                                setNewEmployee({
+                                                    ...newEmployee,
+                                                    role: txt
+                                                });
+                                            }}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:outline-none text-sm transition-all ${
+                                                user?._id === editingEmployee?._id 
+                                                ? 'bg-slate-50 cursor-not-allowed text-slate-500 border-slate-200' 
+                                                : `bg-white ${submitted && !customRoleText ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`
+                                            }`} 
+                                        />
+                                        {submitted && !customRoleText && (
+                                            <p className="text-red-500 text-[11px] font-semibold mt-1">Custom Role Title is required!</p>
+                                        )}
+                                    </div>
+                                )}
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-bold text-slate-700">Password</label>
                                     <button

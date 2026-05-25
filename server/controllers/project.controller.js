@@ -126,7 +126,7 @@ export const createProject = async (req, res, next) => {
             const members = await User.find({ _id: { $in: parsedTeamMembers } });
             for (const member of members) {
                 if (member._id.toString() !== req.user._id.toString() && member._id.toString() !== teamLead.toString()) {
-                    const roleLabel = member.role === 'qa' ? 'QA' : 'Developer';
+                    const roleLabel = member.role === 'qa' ? 'QA' : (member.role || 'Employee');
                     await createNotification({
                         recipient: member._id,
                         sender: req.user._id,
@@ -162,7 +162,7 @@ export const getAllProjects = async (req, res, next) => {
         // Role-based filtering
         if (role === "TL") {
             query.teamLead = _id;
-        } else if (role === "developer" || role === "qa") {
+        } else if (role !== "admin") {
             query.teamMembers = _id;
         }
         // Admins see all projects (no additional filter)

@@ -12,8 +12,6 @@ import {
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
 
-// RECENT_ACTIVITY will be handled by state
-
 const STATUS_COLORS = {
     'New': 'bg-slate-100 text-slate-700 border-slate-200',
     'In Progress': 'bg-blue-100 text-blue-700 border-blue-200',
@@ -22,7 +20,7 @@ const STATUS_COLORS = {
     'Done': 'bg-emerald-500 text-white border-emerald-600',
 };
 
-const DeveloperDashboard = () => {
+const EmployeeDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [tasks, setTasks] = useState([]);
@@ -38,7 +36,7 @@ const DeveloperDashboard = () => {
         try {
             setLoading(true);
             const [dashRes, tasksRes] = await Promise.all([
-                dashboardService.getDeveloperDashboard(),
+                dashboardService.getEmployeeDashboard(),
                 taskService.getTasksByUser(user._id)
             ]);
             
@@ -55,12 +53,14 @@ const DeveloperDashboard = () => {
                 qaNotes: t.qaNotes || null,
                 assignedTo: t.assignedTo,
                 assignedQA: t.assignedQA,
+                createdAt: t.createdAt,
                 updates: (t.statusHistory || []).map(h => ({
                     id: h._id,
                     type: h.status === 'QA Review' ? 'qa' : 'status',
                     status: h.status,
                     notes: h.notes,
                     time: new Date(h.changedAt).toLocaleString(),
+                    changedAt: h.changedAt,
                     changedBy: h.changedBy,
                     attachments: h.attachments || [],
                     screenshotLinks: h.screenshotLinks || [],
@@ -86,8 +86,6 @@ const DeveloperDashboard = () => {
             });
             
             setRecentActivity(activities.sort((a, b) => b.timestamp - a.timestamp).slice(0, 5));
-            
-            if (formattedTasks.length > 0) setSelectedTask(formattedTasks[0]);
             
         } catch (err) {
             console.error("Dashboard fetch error:", err);
@@ -135,7 +133,7 @@ const DeveloperDashboard = () => {
             t.endDate
         ]);
         exportPDF({
-            title: `My Assigned Tasks - ${user?.name || 'Developer'} ${projectFilter !== 'All' ? `(${projectFilter})` : ''}`,
+            title: `My Assigned Tasks - ${user?.name || 'Employee'} (${user?.role || 'Employee'}) ${projectFilter !== 'All' ? `(${projectFilter})` : ''}`,
             filename: `my_tasks_${new Date().getTime()}.pdf`,
             columns,
             data
@@ -156,24 +154,106 @@ const DeveloperDashboard = () => {
             tasksNew: baseTasks.filter(t => t.status === 'New').length,
             tasksInProgress: baseTasks.filter(t => t.status === 'In Progress').length,
             tasksQA: baseTasks.filter(t => t.status === 'QA Review').length,
+            tasksCompleted: baseTasks.filter(t => ['Completed', 'Done'].includes(t.status)).length,
             overdueTasks: baseTasks.filter(t => new Date(t.endDate) < new Date() && !['Completed', 'Done'].includes(t.status))
         };
     }, [filteredTasks]);
 
+    // Donut chart calculations
+    const donutData = useMemo(() => {
+        const total = displayStats.totalAssigned;
+        const counts = [
+            { label: 'New', count: displayStats.tasksNew, color: '#94a3b8', hoverColor: '#64748b' },
+            { label: 'In Progress', count: displayStats.tasksInProgress, color: '#3b82f6', hoverColor: '#2563eb' },
+            { label: 'QA Review', count: displayStats.tasksQA, color: '#6366f1', hoverColor: '#4f46e5' },
+            { label: 'Completed', count: displayStats.tasksCompleted, color: '#10b981', hoverColor: '#059669' }
+        ];
+
+        const circumference = 2 * Math.PI * 50; // ~314.159
+        let currentCircumference = 0;
+
+        return counts.map(item => {
+            const percentage = total === 0 ? 0 : (item.count / total);
+            const strokeLength = percentage * circumference;
+            const strokeOffset = circumference - currentCircumference;
+            currentCircumference += strokeLength;
+
+            return {
+                ...item,
+                percentage: (percentage * 100).toFixed(0),
+                strokeDasharray: `${strokeLength} ${circumference}`,
+                strokeDashoffset: strokeOffset
+            };
+        });
+    }, [displayStats]);
+
+    // Weekly created vs completed data calculation
+    const weeklyData = useMemo(() => {
+        const dayNames = [];
+        const createdCounts = [];
+        const completedCounts = [];
+        
+        // Generate last 7 days starting from 6 days ago
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            dayNames.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+            createdCounts.push(0);
+            completedCounts.push(0);
+        }
+
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            days.push(d.toDateString());
+        }
+        
+        tasks.forEach(task => {
+            const createdDate = task.createdAt ? new Date(task.createdAt).toDateString() : null;
+            if (createdDate) {
+                const idx = days.indexOf(createdDate);
+                if (idx !== -1) {
+                    createdCounts[idx]++;
+                }
+            }
+            
+            const completionUpdates = task.updates.filter(u => ['Completed', 'Done'].includes(u.status));
+            completionUpdates.forEach(update => {
+                const compDate = update.changedAt ? new Date(update.changedAt).toDateString() : (update.time ? new Date(update.time).toDateString() : null);
+                if (compDate) {
+                    const idx = days.indexOf(compDate);
+                    if (idx !== -1) {
+                        completedCounts[idx]++;
+                    }
+                }
+            });
+        });
+
+        return { dayNames, createdCounts, completedCounts };
+    }, [tasks]);
+
+    // Max count for scaling the vertical bars
+    const maxWeeklyValue = useMemo(() => {
+        const allValues = [...weeklyData.createdCounts, ...weeklyData.completedCounts];
+        const max = Math.max(...allValues, 2); // Default to at least 2 for scaling
+        return Math.ceil(max / 2) * 2; // Round to next even number
+    }, [weeklyData]);
+
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
-            <AdminSidebar role="developer" />
+            <AdminSidebar role="employee" />
 
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                <Topbar DashboardTile="My Workspace" role="developer" />
+                <Topbar DashboardTile="My Workspace" role="employee" />
 
                 <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
 
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
-                            <h1 className="dashboard-heading">Welcome back, {user?.name || 'Developer'}!</h1>
-                            <p className="dashboard-subheading">Here is a summary of your assigned tasks and current workload.</p>
+                            <h1 className="dashboard-heading">Welcome back, {user?.name || 'Employee'}!</h1>
+                            <p className="dashboard-subheading">Here is your customized portal as a <span className="font-bold text-blue-600">{user?.role || 'Employee'}</span>.</p>
                         </div>
                         <div className="flex items-center gap-3">
                             {projectOptions.length > 0 && (
@@ -198,7 +278,7 @@ const DeveloperDashboard = () => {
                             {filteredTasks.length > 0 && (
                                 <button 
                                     onClick={handleExportTasks}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm cursor-pointer"
                                 >
                                     <Download className="w-4 h-4" />
                                     Download Tasks
@@ -208,8 +288,8 @@ const DeveloperDashboard = () => {
                     </div>
 
                     {loading ? (
-                        <div className="flex justify-center py-10">
-                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="flex justify-center py-20">
+                            <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                     ) : error ? (
                         <div className="p-4 bg-red-50 text-red-600 rounded-xl border border-red-100 font-medium">
@@ -219,49 +299,275 @@ const DeveloperDashboard = () => {
                     <>
                     {/* KPI Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-                        <div onClick={() => setStatModal({ isOpen: true, title: "Total Tasks", data: filteredTasks, type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Total Tasks", data: filteredTasks, type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-all">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
                                 <ClipboardList className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{displayStats.totalAssigned}</h4>
-                                <p className="text-[10px] font-semibold text-slate-400">Total tasks</p>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total Tasks</p>
                             </div>
                         </div>
-                        <div onClick={() => setStatModal({ isOpen: true, title: "New Tasks", data: filteredTasks.filter(t => t.status === 'New'), type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "New Tasks", data: filteredTasks.filter(t => t.status === 'New'), type: "task" })} className="premium-stat-card slate flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-all">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-slate-100 text-slate-500">
                                 <Clock className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-slate-800 leading-none mb-1">{displayStats.tasksNew}</h4>
-                                <p className="text-[10px] font-semibold text-slate-400">New</p>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">New</p>
                             </div>
                         </div>
-                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks In Progress", data: filteredTasks.filter(t => t.status === 'In Progress'), type: "task" })} className="premium-stat-card blue flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks In Progress", data: filteredTasks.filter(t => t.status === 'In Progress'), type: "task" })} className="premium-stat-card blue flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-all">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-blue-100 text-blue-600">
                                 <PlayCircle className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-blue-700 leading-none mb-1">{displayStats.tasksInProgress}</h4>
-                                <p className="text-[10px] font-semibold text-blue-400">In progress</p>
+                                <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider">In progress</p>
                             </div>
                         </div>
-                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: filteredTasks.filter(t => t.status === 'QA Review'), type: "task" })} className="premium-stat-card indigo flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Tasks in QA Review", data: filteredTasks.filter(t => t.status === 'QA Review'), type: "task" })} className="premium-stat-card indigo flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-all">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-indigo-100 text-indigo-600">
                                 <ShieldCheck className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-indigo-700 leading-none mb-1">{displayStats.tasksQA}</h4>
-                                <p className="text-[10px] font-semibold text-indigo-400">QA review</p>
+                                <p className="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider">QA Review</p>
                             </div>
                         </div>
-                        <div onClick={() => setStatModal({ isOpen: true, title: "Overdue Tasks", data: displayStats.overdueTasks, type: "task" })} className="premium-stat-card rose flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-transform">
+                        <div onClick={() => setStatModal({ isOpen: true, title: "Overdue Tasks", data: displayStats.overdueTasks, type: "task" })} className="premium-stat-card rose flex-row items-center gap-4 p-4 h-[90px] cursor-pointer hover:scale-[1.02] transition-all">
                             <div className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 bg-rose-100 text-rose-600">
                                 <AlertCircle className="w-5 h-5" />
                             </div>
                             <div className="flex flex-col justify-center">
                                 <h4 className="text-2xl font-bold tracking-tight text-rose-600 leading-none mb-1">{displayStats.overdueTasks.length}</h4>
-                                <p className="text-[10px] font-semibold text-rose-400">Overdue</p>
+                                <p className="text-[10px] font-semibold text-rose-400 uppercase tracking-wider">Overdue</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SVG Analytics Charts Section */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Donut Graph Card */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+                            <div className="mb-4">
+                                <h3 className="text-base font-bold text-slate-800">Productivity Distribution</h3>
+                                <p className="text-xs text-slate-500">Breakdown of tasks assigned to you by status.</p>
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
+                                {/* SVG Donut */}
+                                <div className="relative w-[180px] h-[180px] shrink-0">
+                                    <svg viewBox="0 0 120 120" className="w-full h-full transform -rotate-90">
+                                        {/* Background gray circle */}
+                                        <circle 
+                                            cx="60" 
+                                            cy="60" 
+                                            r="50" 
+                                            stroke="#e2e8f0" 
+                                            strokeWidth="10" 
+                                            fill="transparent" 
+                                        />
+                                        
+                                        {/* Slices */}
+                                        {displayStats.totalAssigned > 0 && donutData.map((slice, i) => (
+                                            slice.count > 0 && (
+                                                <circle
+                                                    key={i}
+                                                    cx="60"
+                                                    cy="60"
+                                                    r="50"
+                                                    stroke={slice.color}
+                                                    strokeWidth="10"
+                                                    strokeDasharray={slice.strokeDasharray}
+                                                    strokeDashoffset={slice.strokeDashoffset}
+                                                    strokeLinecap="round"
+                                                    fill="transparent"
+                                                    className="transition-all duration-500 ease-out hover:stroke-[12px] cursor-pointer"
+                                                    title={`${slice.label}: ${slice.count}`}
+                                                />
+                                            )
+                                        ))}
+                                    </svg>
+                                    
+                                    {/* Middle Text Overlay */}
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                        <span className="text-3xl font-black text-slate-800 leading-none">{displayStats.totalAssigned}</span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Tasks</span>
+                                    </div>
+                                </div>
+
+                                {/* Custom Legend */}
+                                <div className="flex flex-col gap-3.5 w-full sm:max-w-[200px]">
+                                    {donutData.map((item, idx) => (
+                                        <div key={idx} className="flex items-center justify-between group cursor-pointer">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-3.5 h-3.5 rounded-md transition-transform group-hover:scale-110" style={{ backgroundColor: item.color }} />
+                                                <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">{item.label}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <span className="text-xs font-bold text-slate-800">{item.count}</span>
+                                                <span className="text-[10px] font-medium text-slate-400">({item.percentage}%)</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Weekly Created vs Completed Bar Graph Card */}
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+                            <div className="mb-4 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-base font-bold text-slate-800">Weekly Productivity</h3>
+                                    <p className="text-xs text-slate-500">Created vs. completed tasks in the last 7 days.</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Created</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Dynamic SVG Bar Chart */}
+                            <div className="relative w-full h-[180px] py-1">
+                                <svg className="w-full h-full" viewBox="0 0 420 180">
+                                    {/* Definitions for gradients */}
+                                    <defs>
+                                        <linearGradient id="createdGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#60a5fa" />
+                                            <stop offset="100%" stopColor="#3b82f6" />
+                                        </linearGradient>
+                                        <linearGradient id="completedGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stopColor="#34d399" />
+                                            <stop offset="100%" stopColor="#10b981" />
+                                        </linearGradient>
+                                    </defs>
+
+                                    {/* Grid Lines */}
+                                    {[0, 0.25, 0.5, 0.75, 1].map((ratio, idx) => {
+                                        const y = 10 + ratio * 130;
+                                        const labelVal = (maxWeeklyValue - (ratio * maxWeeklyValue)).toFixed(0);
+                                        return (
+                                            <g key={idx}>
+                                                <line 
+                                                    x1="30" 
+                                                    y1={y} 
+                                                    x2="410" 
+                                                    y2={y} 
+                                                    stroke="#f1f5f9" 
+                                                    strokeWidth="1" 
+                                                />
+                                                <text 
+                                                    x="10" 
+                                                    y={y + 3} 
+                                                    fill="#94a3b8" 
+                                                    fontSize="9" 
+                                                    fontWeight="bold" 
+                                                    textAnchor="middle"
+                                                >
+                                                    {labelVal}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
+
+                                    {/* Bars */}
+                                    {weeklyData.dayNames.map((day, idx) => {
+                                        const xGroup = 45 + idx * 52;
+                                        
+                                        const createdVal = weeklyData.createdCounts[idx];
+                                        const completedVal = weeklyData.completedCounts[idx];
+                                        
+                                        // Scale heights: max height of chart is 130px (y from 10 to 140)
+                                        const createdHeight = (createdVal / maxWeeklyValue) * 130;
+                                        const completedHeight = (completedVal / maxWeeklyValue) * 130;
+                                        
+                                        const yCreated = 140 - createdHeight;
+                                        const yCompleted = 140 - completedHeight;
+
+                                        return (
+                                            <g key={idx} className="group">
+                                                {/* Created Bar */}
+                                                <rect
+                                                    x={xGroup}
+                                                    y={yCreated}
+                                                    width="12"
+                                                    height={Math.max(createdHeight, 0)}
+                                                    rx="3"
+                                                    fill="url(#createdGrad)"
+                                                    className="transition-all duration-300 hover:opacity-90"
+                                                />
+                                                {/* Tooltip or Value label on hover for Created */}
+                                                {createdVal > 0 && (
+                                                    <text
+                                                        x={xGroup + 6}
+                                                        y={yCreated - 4}
+                                                        fill="#3b82f6"
+                                                        fontSize="8"
+                                                        fontWeight="black"
+                                                        textAnchor="middle"
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                    >
+                                                        {createdVal}
+                                                    </text>
+                                                )}
+
+                                                {/* Completed Bar */}
+                                                <rect
+                                                    x={xGroup + 15}
+                                                    y={yCompleted}
+                                                    width="12"
+                                                    height={Math.max(completedHeight, 0)}
+                                                    rx="3"
+                                                    fill="url(#completedGrad)"
+                                                    className="transition-all duration-300 hover:opacity-90"
+                                                />
+                                                {/* Tooltip or Value label on hover for Completed */}
+                                                {completedVal > 0 && (
+                                                    <text
+                                                        x={xGroup + 21}
+                                                        y={yCompleted - 4}
+                                                        fill="#10b981"
+                                                        fontSize="8"
+                                                        fontWeight="black"
+                                                        textAnchor="middle"
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                    >
+                                                        {completedVal}
+                                                    </text>
+                                                )}
+
+                                                {/* Day of Week Label */}
+                                                <text
+                                                    x={xGroup + 13}
+                                                    y="158"
+                                                    fill="#64748b"
+                                                    fontSize="9"
+                                                    fontWeight="bold"
+                                                    textAnchor="middle"
+                                                >
+                                                    {day}
+                                                </text>
+                                            </g>
+                                        );
+                                    })}
+                                    
+                                    {/* Bottom Axis Line */}
+                                    <line 
+                                        x1="30" 
+                                        y1="140" 
+                                        x2="410" 
+                                        y2="140" 
+                                        stroke="#cbd5e1" 
+                                        strokeWidth="1.5" 
+                                    />
+                                </svg>
                             </div>
                         </div>
                     </div>
@@ -286,7 +592,7 @@ const DeveloperDashboard = () => {
                                                 </div>
                                                 <button
                                                     onClick={() => setSelectedTask(task)}
-                                                    className="px-3 py-1.5 bg-rose-100 text-rose-700 text-xs font-bold rounded-lg hover:bg-rose-200 transition-colors"
+                                                    className="px-3 py-1.5 bg-rose-100 text-rose-700 text-xs font-bold rounded-lg hover:bg-rose-200 transition-colors cursor-pointer"
                                                 >
                                                     View
                                                 </button>
@@ -379,7 +685,7 @@ const DeveloperDashboard = () => {
 
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">Developer</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">Employee</p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
                                                         {selectedTask.assignedTo?.profilePic ? (
@@ -392,7 +698,7 @@ const DeveloperDashboard = () => {
                                                 </div>
                                             </div>
                                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">QA reviewer</p>
+                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">QA Reviewer</p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
                                                         {selectedTask.assignedQA?.profilePic ? (
@@ -419,7 +725,7 @@ const DeveloperDashboard = () => {
                                             {selectedTask.qaNotes && (
                                                 <div>
                                                     <h4 className="text-xs font-semibold text-indigo-400 mb-2 flex items-center">
-                                                        <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> QA feedback
+                                                        <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> QA Feedback
                                                     </h4>
                                                     <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-sm text-indigo-800 leading-relaxed">
                                                         {selectedTask.qaNotes}
@@ -428,7 +734,7 @@ const DeveloperDashboard = () => {
                                             )}
 
                                             <div>
-                                                <h4 className="text-xs font-semibold text-slate-400 mb-3">Task updates</h4>
+                                                <h4 className="text-xs font-semibold text-slate-400 mb-3">Task Updates</h4>
                                                 <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                                                     {selectedTask.updates.map(update => (
                                                         <div key={update.id} className="flex items-start gap-3 pb-3 border-b border-slate-50 last:border-0">
@@ -509,7 +815,7 @@ const DeveloperDashboard = () => {
                                             {['QA Review', 'Completed', 'Done'].includes(selectedTask.status) ? (
                                                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
                                                     <p className="text-xs text-amber-700 font-bold mb-1 flex items-center justify-center">
-                                                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Action restricted
+                                                        <AlertTriangle className="w-3.5 h-3.5 mr-1.5" /> Action Restricted
                                                     </p>
                                                     <p className="text-[11px] text-amber-600 font-medium">
                                                         Status is currently <span className="font-bold underline">{selectedTask.status}</span>. 
@@ -519,14 +825,14 @@ const DeveloperDashboard = () => {
                                             ) : (
                                                 <div className="flex gap-3">
                                                     <button 
-                                                        onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
-                                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm text-sm"
+                                                        onClick={() => navigate(`/employee/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
+                                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm text-sm cursor-pointer"
                                                     >
                                                         Update Status
                                                     </button>
                                                     <button 
-                                                        onClick={() => navigate(`/developer/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
-                                                        className="px-4 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm"
+                                                        onClick={() => navigate(`/employee/kanban?project=${encodeURIComponent(selectedTask.project)}`)}
+                                                        className="px-4 py-2.5 bg-slate-100 text-slate-600 font-semibold rounded-xl hover:bg-slate-200 transition-colors text-sm cursor-pointer"
                                                     >
                                                         Add Comment
                                                     </button>
@@ -596,4 +902,4 @@ const DeveloperDashboard = () => {
     );
 };
 
-export default DeveloperDashboard;
+export default EmployeeDashboard;

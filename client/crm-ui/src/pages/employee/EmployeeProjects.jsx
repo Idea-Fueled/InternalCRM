@@ -1,8 +1,8 @@
 import React from 'react';
 import ProjectsDashboard from '../admin/ProjectsDashboard';
 
-const DeveloperProjects = () => {
+const EmployeeProjects = () => {
     return <ProjectsDashboard />;
 };
 
-export default DeveloperProjects;
+export default EmployeeProjects;

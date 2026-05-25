@@ -77,22 +77,26 @@ export const getTeamLeadDashboard = async (req, res) => {
     }
 };
 
-// Developer Dashboard
-export const getDeveloperDashboard = async (req, res) => {
+// Employee Dashboard
+export const getEmployeeDashboard = async (req, res) => {
     try {
-        const developerId = req.user._id;
+        const employeeId = req.user._id;
         const currentDate = new Date();
 
         const [
             totalAssignedTasks,
             inProgressTasks,
             qaReviewTasks,
+            completedTasks,
+            pendingTasks,
             overdueTasks
         ] = await Promise.all([
-            Task.countDocuments({ assignedTo: developerId, isDeleted: false }),
-            Task.countDocuments({ assignedTo: developerId, status: "In Progress", isDeleted: false }),
-            Task.countDocuments({ assignedTo: developerId, status: "QA Review", isDeleted: false }),
-            Task.countDocuments({ assignedTo: developerId, endDate: { $lt: currentDate }, status: { $nin: ["Completed", "Done"] }, isDeleted: false })
+            Task.countDocuments({ assignedTo: employeeId, isDeleted: false }),
+            Task.countDocuments({ assignedTo: employeeId, status: "In Progress", isDeleted: false }),
+            Task.countDocuments({ assignedTo: employeeId, status: "QA Review", isDeleted: false }),
+            Task.countDocuments({ assignedTo: employeeId, status: { $in: ["Completed", "Done"] }, isDeleted: false }),
+            Task.countDocuments({ assignedTo: employeeId, status: { $in: ["New", "Pending", "Todo", "To Do"] }, isDeleted: false }),
+            Task.countDocuments({ assignedTo: employeeId, endDate: { $lt: currentDate }, status: { $nin: ["Completed", "Done"] }, isDeleted: false })
         ]);
 
         return res.status(200).json({
@@ -101,6 +105,8 @@ export const getDeveloperDashboard = async (req, res) => {
                 totalAssignedTasks,
                 inProgressTasks,
                 qaReviewTasks,
+                completedTasks,
+                pendingTasks,
                 overdueTasks
             }
         });

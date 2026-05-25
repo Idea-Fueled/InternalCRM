@@ -5,6 +5,7 @@ export const dashboardService = {
     getAdminDashboard: () => axiosInstance.get('/dashboard/admin'),
     getTeamLeadDashboard: () => axiosInstance.get('/dashboard/teamlead'),
     getDeveloperDashboard: () => axiosInstance.get('/dashboard/developer'),
+    getEmployeeDashboard: () => axiosInstance.get('/dashboard/employee'),
     getQADashboard: () => axiosInstance.get('/dashboard/qa'),
 };
 

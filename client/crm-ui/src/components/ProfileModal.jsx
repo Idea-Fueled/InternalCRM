@@ -132,7 +132,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
 
     const teammates = allUsers.filter(u => 
         getIdString(u._id) !== getIdString(user?._id) && 
-        (u.role === 'developer' || u.role === 'qa') &&
+        !['admin', 'TL'].includes(u.role) &&
         (u.teamLeads || []).map(tl => getIdString(tl)).some(tlId => myTeamLeadIds.includes(tlId))
     );
 
@@ -383,7 +383,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                             )
                                         )}
 
-                                        {(userRole === 'developer' || userRole === 'qa') && (
+                                        {userRole !== 'admin' && userRole !== 'TL' && (
                                             teammates.length > 0 ? (
                                                 teammates.map(member => (
                                                     <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">

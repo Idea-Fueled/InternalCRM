@@ -14,10 +14,10 @@ import TeamLeadDashboard from "./pages/teamLead/TeamLeadDashboard";
 import TeamLeadProjects from "./pages/teamLead/TeamLeadProjects";
 import TeamLeadKanban from "./pages/teamLead/TeamLeadKanban";
 import TeamLeadTeam from "./pages/teamLead/TeamLeadTeam";
-import DeveloperDashboard from "./pages/developer/DeveloperDashboard";
-import DeveloperTasks from "./pages/developer/DeveloperTasks";
-import DeveloperKanban from "./pages/developer/DeveloperKanban";
-import DeveloperProjects from "./pages/developer/DeveloperProjects";
+import EmployeeDashboard from "./pages/employee/EmployeeDashboard";
+import EmployeeTasks from "./pages/employee/EmployeeTasks";
+import EmployeeKanban from "./pages/employee/EmployeeKanban";
+import EmployeeProjects from "./pages/employee/EmployeeProjects";
 import QADashboard from "./pages/qa/QADashboard";
 import QAReviews from "./pages/qa/QAReviews";
 import QAKanban from "./pages/qa/QAKanban";
@@ -50,7 +50,7 @@ const App = () => {
       },
       {
         path: "/projects/:projectId",
-        element: <ProtectedRoute allowedRoles={["admin", "TL", "developer", "qa"]}><ProjectDetails /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["admin", "TL", "employee", "qa"]}><ProjectDetails /></ProtectedRoute>
       },
       // Admin Routes
       {
@@ -110,30 +110,30 @@ const App = () => {
         path: "/teamLead/organization-tree",
         element: <ProtectedRoute allowedRoles={["TL", "admin"]}><OrganizationTree /></ProtectedRoute>
       },
-      // Developer Routes
+      // Employee Routes
       {
-        path: "/developer/dashboard",
-        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperDashboard /></ProtectedRoute>
+        path: "/employee/dashboard",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><EmployeeDashboard /></ProtectedRoute>
       },
       {
-        path: "/developer/my-tasks",
-        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperTasks /></ProtectedRoute>
+        path: "/employee/my-tasks",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><EmployeeTasks /></ProtectedRoute>
       },
       {
-        path: "/developer/kanban",
-        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperKanban /></ProtectedRoute>
+        path: "/employee/kanban",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><EmployeeKanban /></ProtectedRoute>
       },
       {
-        path: "/developer/projects",
-        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><DeveloperProjects /></ProtectedRoute>
+        path: "/employee/projects",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><EmployeeProjects /></ProtectedRoute>
       },
       {
-        path: "/developer/audit-logs",
-        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><AuditLogs /></ProtectedRoute>
+        path: "/employee/audit-logs",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><AuditLogs /></ProtectedRoute>
       },
       {
-        path: "/developer/organization-tree",
-        element: <ProtectedRoute allowedRoles={["developer", "admin"]}><OrganizationTree /></ProtectedRoute>
+        path: "/employee/organization-tree",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><OrganizationTree /></ProtectedRoute>
       },
       // QA Routes
       {

@@ -27,7 +27,7 @@ const PRIORITY_COLORS = {
   'Critical': 'bg-rose-100 text-rose-700'
 };
 
-const DeveloperTasks = () => {
+const EmployeeTasks = () => {
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -121,10 +121,10 @@ const DeveloperTasks = () => {
 
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
-            <AdminSidebar role="developer" />
+            <AdminSidebar role="employee" />
 
             <div className="flex-1 flex flex-col h-screen relative overflow-hidden">
-                <Topbar DashboardTile="My Tasks" role="developer" />
+                <Topbar DashboardTile="My Tasks" role="employee" />
                 
                 <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
                     {/* Header */}
@@ -239,13 +239,13 @@ const DeveloperTasks = () => {
                 {/* Overlay for Drawer */}
                 {isDrawerOpen && (
                     <div 
-                        className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm z-40 transition-opacity" 
+                        className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 transition-opacity" 
                         onClick={handleCloseDrawer}
                     ></div>
                 )}
 
                 {/* Task Detail Drawer */}
-                <div className={`absolute top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out border-l border-slate-200 flex flex-col ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                     {selectedTask && (
                         <>
                             {/* Drawer Header */}
@@ -255,7 +255,7 @@ const DeveloperTasks = () => {
                                 </h2>
                                 <button 
                                     onClick={handleCloseDrawer}
-                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -287,9 +287,9 @@ const DeveloperTasks = () => {
                                         )}
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 gap-4 mt-4">
                                         <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Developer</p>
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Employee</p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
                                                     {selectedTask.assignedTo?.profilePic ? (
@@ -437,25 +437,25 @@ const DeveloperTasks = () => {
                                         <div className="flex items-center justify-between p-1 bg-slate-200/50 rounded-xl">
                                             <button 
                                                 onClick={() => handleStatusUpdate('New')}
-                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'New' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${selectedTask.status === 'New' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
                                             >
                                                 New
                                             </button>
                                             <button 
                                                 onClick={() => handleStatusUpdate('In Progress')}
-                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'In Progress' ? 'bg-blue-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${selectedTask.status === 'In Progress' ? 'bg-blue-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
                                             >
                                                 In Progress
                                             </button>
                                             <button 
                                                 onClick={() => handleStatusUpdate('QA Review')}
-                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all ${selectedTask.status === 'QA Review' ? 'bg-indigo-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                                                className={`flex-1 py-2 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${selectedTask.status === 'QA Review' ? 'bg-indigo-500 shadow-sm text-white' : 'text-slate-500 hover:text-slate-700'}`}
                                             >
                                                 QA Review
                                             </button>
                                         </div>
                                         <p className="text-[10px] text-center text-slate-400 mt-3 font-medium uppercase tracking-tight">
-                                            Tasks cannot be moved beyond QA Review by Developers.
+                                            Tasks cannot be moved beyond QA Review by Employees.
                                         </p>
                                     </>
                                 )}
@@ -475,4 +475,4 @@ const DeveloperTasks = () => {
     );
 };
 
-export default DeveloperTasks;
+export default EmployeeTasks;

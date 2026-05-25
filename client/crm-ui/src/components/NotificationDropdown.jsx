@@ -226,7 +226,9 @@ const NotificationDropdown = ({ role }) => {
                         <button 
                             onClick={() => {
                                 setIsOpen(false);
-                                navigate(`/${role === 'teamLead' ? 'teamLead' : role}/audit-logs`);
+                                const isEmployeeRole = !['admin', 'TL', 'qa'].includes(role);
+                                const routePrefix = role === 'admin' ? 'admin' : (role === 'teamLead' || role === 'TL' ? 'teamLead' : (role === 'qa' ? 'qa' : 'employee'));
+                                navigate(`/${routePrefix}/audit-logs`);
                             }}
                             className="text-[11px] font-semibold text-slate-400 hover:text-slate-600 transition"
                         >

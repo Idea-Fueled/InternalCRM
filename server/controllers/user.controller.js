@@ -60,7 +60,7 @@ export const registerUser = async (req, res, next) => {
         if (rawPerms) {
             permissions = Array.isArray(rawPerms) ? rawPerms : String(rawPerms).split(',').map(p => p.trim()).filter(Boolean);
         } else {
-            permissions = DEFAULT_ROLE_PERMISSIONS[role] || [];
+            permissions = DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS['developer'];
         }
 
         const user = new User({
@@ -239,8 +239,8 @@ export const getAllUsers = async (req, res) => {
                         { _id: _id }
                     ]
                 };
-            } else if (userRole === 'developer' || userRole === 'qa') {
-                // Scope Developer and QA to their respective teams (same as TLs)
+            } else if (userRole !== 'admin') {
+                // Scope Employee (e.g. developer, qa, or any dynamic role) to their respective teams (same as TLs)
                 const leads = req.user.teamLeads || [];
                 query = {
                     ...query,

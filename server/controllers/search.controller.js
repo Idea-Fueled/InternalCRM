@@ -59,7 +59,7 @@ export const globalSearch = async (req, res) => {
             .limit(10)
             .lean();
 
-        } else if (role === "developer" || role === "qa") {
+        } else if (role !== "admin" && role !== "TL") {
             // Dev/QA: find projects they belong to, then find users in those projects
             const myProjects = await Project.find({
                 isDeleted: false,
@@ -105,7 +105,7 @@ export const globalSearch = async (req, res) => {
 
         if (role === "TL") {
             projectQuery.teamLead = _id;
-        } else if (role === "developer" || role === "qa") {
+        } else if (role !== "admin") {
             projectQuery.teamMembers = _id;
         }
         // Admin: no additional filter
@@ -137,19 +137,6 @@ export const globalSearch = async (req, res) => {
             const ledProjectIds = ledProjects.map(p => p._id);
             taskFilter.project = { $in: ledProjectIds };
 
-        } else if (role === "developer") {
-            // Developer: tasks assigned to them OR in their projects
-            const devProjects = await Project.find({
-                teamMembers: _id,
-                isDeleted: false
-            }).select("_id").lean();
-            const devProjectIds = devProjects.map(p => p._id);
-
-            taskFilter.$or = [
-                { assignedTo: _id },
-                { project: { $in: devProjectIds } }
-            ];
-
         } else if (role === "qa") {
             // QA: tasks assigned to them as QA, OR in QA Review status in their projects
             const qaProjects = await Project.find({
@@ -161,6 +148,19 @@ export const globalSearch = async (req, res) => {
             taskFilter.$or = [
                 { assignedQA: _id },
                 { project: { $in: qaProjectIds } }
+            ];
+
+        } else if (role !== "admin" && role !== "TL") {
+            // Employee: tasks assigned to them OR in their projects
+            const devProjects = await Project.find({
+                teamMembers: _id,
+                isDeleted: false
+            }).select("_id").lean();
+            const devProjectIds = devProjects.map(p => p._id);
+
+            taskFilter.$or = [
+                { assignedTo: _id },
+                { project: { $in: devProjectIds } }
             ];
         }
 
