@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { projectService, taskService, userService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
 import AdminSidebar from "../../components/admin/AdminSidebar";
@@ -14,6 +14,7 @@ import {
 const ProjectDetails = () => {
     const { projectId } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
 
     // Core States
@@ -117,6 +118,16 @@ const ProjectDetails = () => {
             loadProject();
         }
     }, [projectId]);
+
+    useEffect(() => {
+        const taskIdParam = searchParams.get("taskId");
+        if (taskIdParam && tasks.length > 0) {
+            const taskToSelect = tasks.find(t => t._id === taskIdParam || t.id === taskIdParam);
+            if (taskToSelect) {
+                setSelectedTask(taskToSelect);
+            }
+        }
+    }, [searchParams, tasks]);
 
     // Load Eligible Members for project editing
     useEffect(() => {

@@ -10,7 +10,7 @@ import {
     AlertTriangle,
     MessageSquare,
     ChevronRight,
-    Trash2,
+    X,
     Check
 } from 'lucide-react';
 
@@ -52,7 +52,7 @@ const NotificationDropdown = ({ role }) => {
 
     useEffect(() => {
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 30000); // Refresh every 30s
+        const interval = setInterval(fetchNotifications, 10000); // Refresh every 10s
         return () => clearInterval(interval);
     }, [user]);
 
@@ -174,7 +174,8 @@ const NotificationDropdown = ({ role }) => {
                                     return (
                                         <div 
                                             key={n._id} 
-                                            className={`group p-4 hover:bg-slate-50 transition-all relative ${!n.isRead ? 'bg-blue-50/30' : ''}`}
+                                            onClick={() => handleNotificationClick(n)}
+                                            className={`group p-4 hover:bg-slate-50/80 active:bg-slate-100 transition-all relative cursor-pointer ${!n.isRead ? 'bg-blue-50/30' : ''}`}
                                         >
                                             <div className="flex gap-4">
                                                 <div className={`shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-105 ${
@@ -187,7 +188,7 @@ const NotificationDropdown = ({ role }) => {
                                                      n.type === 'project' ? <MessageSquare className="w-6 h-6" /> :
                                                      <Clock className="w-6 h-6" />}
                                                 </div>
-                                                <div className="flex-1 min-w-0 pr-6">
+                                                <div className="flex-1 min-w-0 pr-8">
                                                     <div className="flex items-center justify-between mb-1.5">
                                                         <span className={`text-[10px] font-semibold ${
                                                             isApprove ? 'text-emerald-600' :
@@ -207,9 +208,10 @@ const NotificationDropdown = ({ role }) => {
                                                 
                                                 <button 
                                                     onClick={(e) => handleDelete(e, n._id)}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-300 hover:text-rose-500 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                    className="absolute right-3.5 top-3.5 p-1 text-slate-400 hover:text-rose-500 hover:bg-rose-50 border border-transparent hover:border-rose-100 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 shrink-0 z-10"
+                                                    title="Delete notification"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <X className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                             {!n.isRead && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { taskService } from '../../api/services';
@@ -15,6 +16,7 @@ const PRIORITY_COLORS = {
 };
 
 const QAReviews = () => {
+    const [searchParams] = useSearchParams();
     const [tasks, setTasks] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedTask, setSelectedTask] = useState(null);
@@ -40,6 +42,16 @@ const QAReviews = () => {
     useEffect(() => {
         fetchTasks();
     }, []);
+
+    useEffect(() => {
+        const taskIdParam = searchParams.get("taskId");
+        if (taskIdParam && tasks.length > 0) {
+            const taskToSelect = tasks.find(t => t._id === taskIdParam || t.id === taskIdParam);
+            if (taskToSelect) {
+                setSelectedTask(taskToSelect);
+            }
+        }
+    }, [searchParams, tasks]);
 
     const projectOptions = useMemo(() => {
         const seen = new Set();

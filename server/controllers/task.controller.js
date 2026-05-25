@@ -165,7 +165,7 @@ export const createTask = async (req, res) => {
                 message: `${populatedTask.taskName} has been created in ${populatedTask.project.projectName}`,
                 type: "task",
                 category: "creation",
-                link: `/projects/${populatedTask.project._id}`
+                link: `/projects/${populatedTask.project._id}?taskId=${populatedTask._id}`
             });
         }
         // Notify Developer if assigned
@@ -189,7 +189,7 @@ export const createTask = async (req, res) => {
                 message: `You have been assigned as QA for ${populatedTask.taskName}`,
                 type: "task",
                 category: "assignment",
-                link: `/qa/tasks?taskId=${populatedTask._id}`
+                link: `/qa/reviews?taskId=${populatedTask._id}`
             });
         }
 
@@ -205,7 +205,7 @@ export const createTask = async (req, res) => {
                         message: `${populatedTask.taskName} has been created in ${populatedTask.project?.projectName || 'Project'} by ${req.user.name}`,
                         type: "task",
                         category: "creation",
-                        link: `/kanban/${populatedTask.project?._id}?taskId=${populatedTask._id}`
+                        link: `/projects/${populatedTask.project?._id}?taskId=${populatedTask._id}`
                     });
                 }
             }
@@ -380,7 +380,7 @@ export const updateTask = async (req, res) => {
                     message: `${updatedTask.taskName} has been updated by ${req.user.name}`,
                     type: "task",
                     category: "update",
-                    link: `/kanban/${updatedTask.project?._id}?taskId=${updatedTask._id}`
+                    link: `/projects/${updatedTask.project?._id}?taskId=${updatedTask._id}`
                 });
             }
         } catch (notifErr) {
@@ -537,7 +537,7 @@ export const updateTaskStatus = async (req, res) => {
                     message: customMsg,
                     type: "task",
                     category: category,
-                    link: `/projects/${projectId}`
+                    link: `/projects/${projectId}?taskId=${task._id}`
                 });
             }
 
@@ -550,7 +550,7 @@ export const updateTaskStatus = async (req, res) => {
                     message: customMsg,
                     type: "task",
                     category: category,
-                    link: `/projects/${projectId}`
+                    link: `/projects/${projectId}?taskId=${task._id}`
                 });
             }
 
@@ -565,7 +565,7 @@ export const updateTaskStatus = async (req, res) => {
                         message: `${taskName} in ${projectName} is ready for your review`,
                         type: "task",
                         category: "qa_review",
-                        link: `/projects/${projectId}`
+                        link: `/projects/${projectId}?taskId=${task._id}`
                     });
                 } else {
                     // Fallback: Notify all QAs if no specific QA assigned
@@ -579,7 +579,7 @@ export const updateTaskStatus = async (req, res) => {
                                 message: `${taskName} in ${projectName} is ready for review`,
                                 type: "task",
                                 category: "approval",
-                                link: `/projects/${projectId}`
+                                link: `/projects/${projectId}?taskId=${task._id}`
                             });
                         }
                     }
@@ -597,7 +597,7 @@ export const updateTaskStatus = async (req, res) => {
                         message: customMsg,
                         type: "task",
                         category: category,
-                        link: `/projects/${projectId}`
+                        link: `/projects/${projectId}?taskId=${task._id}`
                     });
                 }
             }

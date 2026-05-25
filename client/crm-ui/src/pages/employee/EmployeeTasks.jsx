@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { 
@@ -29,6 +30,7 @@ const PRIORITY_COLORS = {
 
 const EmployeeTasks = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -78,6 +80,17 @@ const EmployeeTasks = () => {
     useEffect(() => {
         fetchTasks();
     }, [user]);
+
+    useEffect(() => {
+        const taskIdParam = searchParams.get("taskId");
+        if (taskIdParam && tasks.length > 0) {
+            const taskToSelect = tasks.find(t => t.id === taskIdParam || t._id === taskIdParam);
+            if (taskToSelect) {
+                setSelectedTask(taskToSelect);
+                setIsDrawerOpen(true);
+            }
+        }
+    }, [searchParams, tasks]);
 
     const handleTaskClick = (task) => {
         setSelectedTask(task);
