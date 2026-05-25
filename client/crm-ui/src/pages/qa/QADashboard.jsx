@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { dashboardService, taskService } from '../../api/services';
@@ -29,7 +29,10 @@ import {
   Video,
   File,
   ExternalLink,
-  Globe
+  Globe,
+  TrendingUp,
+  Zap,
+  BarChart3
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
@@ -62,6 +65,7 @@ const getLinkMeta = (url = '') => {
 
 const QADashboard = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
     const [stats, setStats] = useState({ pendingReviewTasks: 0, completedTasks: 0, doneTasks: 0, overdueTasks: 0 });
@@ -71,6 +75,9 @@ const QADashboard = () => {
     const [loading, setLoading] = useState(true);
     const [projectFilter, setProjectFilter] = useState('All');
     const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+    
+    const [hoveredSlice, setHoveredSlice] = useState(null);
+    const [activityTooltip, setActivityTooltip] = useState(null);
     
     const [isActionModalOpen, setIsActionModalOpen] = useState(false);
     const [actionType, setActionType] = useState(null); // 'Approve' or 'Reject'
@@ -83,6 +90,7 @@ const QADashboard = () => {
     const [linkInput, setLinkInput] = useState("");
     const [dragOver, setDragOver] = useState(false);
     const fileInputRef = useRef(null);
+    const areaChartRef = useRef(null);
     
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
@@ -173,9 +181,162 @@ const QADashboard = () => {
         };
     }, [allTasksForStats, projectFilter]);
 
+    const dashboardMetrics = useMemo(() => {
+        const filtered = projectFilter === 'All' ? allTasksForStats : allTasksForStats.filter(t => {
+            const projectName = t.project?.projectName || t.project?.name || 'Unassigned';
+            return projectName === projectFilter;
+        });
+
+        const pendingList = filtered.filter(t => t.status === "QA Review");
+        const pending = pendingList.length;
+        
+        const approvedList = filtered.filter(t => t.status === "Completed" || t.status === "Done");
+        const approved = approvedList.length;
+        
+        let rejectedCount = 0;
+        const rejectedTasksList = [];
+        filtered.forEach(t => {
+            let hasBeenInQA = false;
+            let added = false;
+            (t.statusHistory || []).forEach(h => {
+                if (h.status === 'QA Review') {
+                    hasBeenInQA = true;
+                } else if (h.status === 'In Progress' && hasBeenInQA) {
+                    rejectedCount++;
+                    if (!added) {
+                        rejectedTasksList.push(t);
+                        added = true;
+                    }
+                    hasBeenInQA = false;
+                }
+            });
+        });
+
+        // Reviews completed today
+        let completedToday = 0;
+        const completedTodayList = [];
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        
+        filtered.forEach(t => {
+            let lastWasQA = false;
+            let added = false;
+            (t.statusHistory || []).forEach(h => {
+                if (h.status === 'QA Review') {
+                    lastWasQA = true;
+                } else if (lastWasQA && (h.status === 'Completed' || h.status === 'In Progress')) {
+                    const date = new Date(h.changedAt);
+                    if (date >= startOfToday) {
+                        completedToday++;
+                        if (!added) {
+                            completedTodayList.push(t);
+                            added = true;
+                        }
+                    }
+                    lastWasQA = false;
+                }
+            });
+        });
+
+        // Overdue tasks list
+        const overdueTasksList = filtered.filter(t => t.status === "QA Review" && t.endDate && new Date(t.endDate) < new Date());
+        const overdue = overdueTasksList.length;
+
+        // QA Efficiency
+        const totalReviews = approved + rejectedCount;
+        const efficiency = totalReviews > 0 ? Math.round((approved / totalReviews) * 100) : 100;
+
+        return {
+            pendingList,
+            pending,
+            approvedList,
+            approved,
+            rejected: rejectedCount,
+            rejectedTasksList,
+            completedToday,
+            completedTodayList,
+            overdue,
+            overdueTasksList,
+            efficiency,
+            totalReviews
+        };
+    }, [allTasksForStats, projectFilter, tasks]);
+
+    const last7DaysData = useMemo(() => {
+        const filtered = projectFilter === 'All' ? allTasksForStats : allTasksForStats.filter(t => {
+            const projectName = t.project?.projectName || t.project?.name || 'Unassigned';
+            return projectName === projectFilter;
+        });
+
+        const days = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            d.setHours(0, 0, 0, 0);
+            days.push({
+                date: d,
+                label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                count: 0,
+                approved: 0,
+                rejected: 0,
+                taskNames: []
+            });
+        }
+        
+        filtered.forEach(t => {
+            let lastWasQA = false;
+            (t.statusHistory || []).forEach(h => {
+                if (h.status === 'QA Review') {
+                    lastWasQA = true;
+                } else if (lastWasQA && (h.status === 'Completed' || h.status === 'In Progress')) {
+                    const date = new Date(h.changedAt);
+                    days.forEach(day => {
+                        const start = new Date(day.date);
+                        const end = new Date(day.date);
+                        end.setDate(end.getDate() + 1);
+                        
+                        if (date >= start && date < end) {
+                            day.count++;
+                            if (h.status === 'Completed') day.approved++;
+                            else day.rejected++;
+                            day.taskNames.push(t.taskName);
+                        }
+                    });
+                    lastWasQA = false;
+                }
+            });
+        });
+        
+        return days;
+    }, [allTasksForStats, projectFilter]);
+
+    const donutData = useMemo(() => {
+        const total = dashboardMetrics.pending + dashboardMetrics.approved + dashboardMetrics.rejected;
+        
+        if (total === 0) {
+            return [];
+        }
+        
+        return [
+            { status: 'Approved', count: dashboardMetrics.approved, percent: Math.round((dashboardMetrics.approved / total) * 100), color: 'stroke-emerald-500', legendColor: 'bg-emerald-500', hoverColor: 'text-emerald-500', fill: '#10b981' },
+            { status: 'Rejected', count: dashboardMetrics.rejected, percent: Math.round((dashboardMetrics.rejected / total) * 100), color: 'stroke-rose-500', legendColor: 'bg-rose-500', hoverColor: 'text-rose-500', fill: '#f43f5e' },
+            { status: 'Pending', count: dashboardMetrics.pending, percent: Math.round((dashboardMetrics.pending / total) * 100), color: 'stroke-amber-500', legendColor: 'bg-amber-500', hoverColor: 'text-amber-500', fill: '#f59e0b' }
+        ];
+    }, [dashboardMetrics]);
+
     useEffect(() => {
         fetchDashboardData();
     }, []);
+
+    useEffect(() => {
+        const taskIdParam = searchParams.get("taskId");
+        if (taskIdParam && allTasksForStats.length > 0) {
+            const taskToSelect = allTasksForStats.find(t => t._id === taskIdParam || t.id === taskIdParam);
+            if (taskToSelect) {
+                setSelectedTask(taskToSelect);
+            }
+        }
+    }, [searchParams, allTasksForStats]);
 
     const projectOptions = React.useMemo(() => {
         const seen = new Set();
@@ -326,81 +487,308 @@ const QADashboard = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
                 <Topbar DashboardTile="QA Dashboard" role="qa" />
                 
-                <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar">
+                <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar">
                         
-                        {/* KPI Section */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {/* ═══ 6 KPI Stat Cards ═══ */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
                             {[
-                                { label: 'Pending', value: displayStats.pendingReviewTasks?.length || displayStats.pendingReviewTasks, data: displayStats.pendingReviewTasks, icon: <Clock className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Pending QA Reviews' },
-                                { label: 'Completed', value: displayStats.completedTasks?.length || displayStats.completedTasks, data: displayStats.completedTasks, icon: <CheckCircle2 className="w-6 h-6" />, color: 'emerald-600', border: 'border-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500', iconBg: 'bg-white', labelColor: 'text-emerald-400', title: 'Completed Tasks' },
-                                { label: 'Overdue', value: displayStats.overdueTasks?.length || displayStats.overdueTasks, data: displayStats.overdueTasks, icon: <AlertTriangle className="w-6 h-6" />, color: 'rose-600', border: 'border-rose-500', bg: 'bg-rose-50', iconColor: 'text-rose-500', iconBg: 'bg-white', labelColor: 'text-rose-400', title: 'Overdue QA Tasks' },
-                                { label: 'Rejected', value: displayStats.doneTasks?.length || displayStats.doneTasks, data: displayStats.doneTasks, icon: <XCircle className="w-6 h-6" />, color: 'blue-600', border: 'border-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500', iconBg: 'bg-white', labelColor: 'text-blue-400', title: 'Rejected Tasks' },
+                                { label: 'Pending Reviews', value: dashboardMetrics.pending, data: dashboardMetrics.pendingList, icon: <Clock className="w-5 h-5" />, gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', title: 'Pending QA Reviews' },
+                                { label: 'Approved', value: dashboardMetrics.approved, data: dashboardMetrics.approvedList, icon: <CheckCircle2 className="w-5 h-5" />, gradient: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', title: 'Approved Tasks' },
+                                { label: 'Rejected', value: dashboardMetrics.rejected, data: dashboardMetrics.rejectedTasksList, icon: <XCircle className="w-5 h-5" />, gradient: 'from-rose-500 to-pink-500', bg: 'bg-rose-50', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', title: 'Rejected Tasks' },
+                                { label: 'Completed Today', value: dashboardMetrics.completedToday, data: dashboardMetrics.completedTodayList, icon: <Zap className="w-5 h-5" />, gradient: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', title: 'Completed Today' },
+                                { label: 'Overdue', value: dashboardMetrics.overdue, data: dashboardMetrics.overdueTasksList, icon: <AlertTriangle className="w-5 h-5" />, gradient: 'from-orange-500 to-red-500', bg: 'bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', title: 'Overdue Reviews', pulse: dashboardMetrics.overdue > 0 },
+                                { label: 'QA Efficiency', value: `${dashboardMetrics.efficiency}%`, icon: <TrendingUp className="w-5 h-5" />, gradient: 'from-violet-500 to-purple-500', bg: 'bg-violet-50', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', title: 'QA Efficiency Rate' },
                             ].map((stat, i) => (
-                                <div key={i} onClick={() => Array.isArray(stat.data) && setStatModal({ isOpen: true, title: stat.title, data: stat.data, type: "task" })} className={`${stat.bg} h-[100px] p-5 rounded-2xl border-b-4 ${stat.border} shadow-sm flex items-center gap-6 cursor-pointer hover:scale-[1.02] transition-transform`}>
-                                    <div className={`w-12 h-12 ${stat.iconBg} rounded-full flex items-center justify-center ${stat.iconColor} shadow-sm border border-slate-100`}>
+                                <div 
+                                    key={i} 
+                                    onClick={() => Array.isArray(stat.data) && stat.data.length > 0 && setStatModal({ isOpen: true, title: stat.title, data: stat.data, type: "task" })}
+                                    className={`${stat.bg} relative overflow-hidden p-4 rounded-2xl border border-slate-100 shadow-sm cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group`}
+                                >
+                                    <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${stat.gradient}`} />
+                                    <div className={`w-9 h-9 ${stat.iconBg} rounded-xl flex items-center justify-center ${stat.iconColor} mb-3 group-hover:scale-110 transition-transform`}>
                                         {stat.icon}
                                     </div>
-                                    <div>
-                                        <p className={`text-2xl font-black ${stat.color} leading-none mb-1.5`}>{stat.value}</p>
-                                        <p className={`text-[10px] font-semibold ${stat.labelColor}`}>{stat.label}</p>
-                                    </div>
+                                    <p className={`text-2xl font-black text-slate-800 leading-none mb-1 ${stat.pulse ? 'animate-pulse' : ''}`}>{stat.value}</p>
+                                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{stat.label}</p>
                                 </div>
                             ))}
                         </div>
 
+                        {/* ═══ Analytics Row: Donut + Area Chart ═══ */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            
+                            {/* Review Status Distribution - Donut Chart */}
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                                <h3 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                    <BarChart3 className="w-4 h-4 text-indigo-500" />
+                                    Review Status Distribution
+                                </h3>
+                                
+                                {donutData.length > 0 ? (() => {
+                                    const CIRCUMFERENCE = 2 * Math.PI * 60;
+                                    let cumulativeOffset = 0;
+                                    const totalCount = donutData.reduce((sum, d) => sum + d.count, 0);
+                                    
+                                    return (
+                                        <div className="flex flex-col items-center">
+                                            <div className="relative w-48 h-48 mx-auto">
+                                                <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
+                                                    {donutData.map((slice, idx) => {
+                                                        const sliceLength = (slice.count / totalCount) * CIRCUMFERENCE;
+                                                        const offset = cumulativeOffset;
+                                                        cumulativeOffset += sliceLength;
+                                                        const isHovered = hoveredSlice === idx;
+                                                        const isDimmed = hoveredSlice !== null && hoveredSlice !== idx;
+                                                        
+                                                        return (
+                                                            <circle
+                                                                key={idx}
+                                                                cx="100"
+                                                                cy="100"
+                                                                r="60"
+                                                                fill="none"
+                                                                stroke={slice.fill}
+                                                                strokeWidth={isHovered ? 28 : 20}
+                                                                strokeDasharray={`${sliceLength} ${CIRCUMFERENCE - sliceLength}`}
+                                                                strokeDashoffset={-offset}
+                                                                strokeLinecap="butt"
+                                                                className="transition-all duration-300 cursor-pointer"
+                                                                style={{ opacity: isDimmed ? 0.3 : 1, filter: isHovered ? 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))' : 'none' }}
+                                                                onMouseEnter={() => setHoveredSlice(idx)}
+                                                                onMouseLeave={() => setHoveredSlice(null)}
+                                                            />
+                                                        );
+                                                    })}
+                                                </svg>
+                                                {/* Center Text */}
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                                    <span className="text-3xl font-black text-slate-800">
+                                                        {hoveredSlice !== null ? donutData[hoveredSlice]?.count : totalCount}
+                                                    </span>
+                                                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                                                        hoveredSlice !== null ? donutData[hoveredSlice]?.hoverColor : 'text-slate-400'
+                                                    }`}>
+                                                        {hoveredSlice !== null ? donutData[hoveredSlice]?.status : 'Total'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Legend */}
+                                            <div className="w-full mt-4 space-y-2">
+                                                {donutData.map((slice, idx) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                                                            hoveredSlice === idx ? 'bg-slate-50 shadow-sm' : 'hover:bg-slate-50/50'
+                                                        }`}
+                                                        onMouseEnter={() => setHoveredSlice(idx)}
+                                                        onMouseLeave={() => setHoveredSlice(null)}
+                                                    >
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className={`w-3 h-3 rounded-full ${slice.legendColor} ${hoveredSlice === idx ? 'scale-125' : ''} transition-transform`} />
+                                                            <span className="text-xs font-semibold text-slate-600">{slice.status}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-bold text-slate-800">{slice.count}</span>
+                                                            <span className="text-[10px] font-medium text-slate-400">({slice.percent}%)</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                })() : (
+                                    <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                                        <BarChart3 className="w-12 h-12 mb-3 opacity-30" />
+                                        <p className="text-sm font-medium">No review data available</p>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Daily QA Activity - Area Chart */}
+                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                                <div className="flex items-center justify-between mb-5">
+                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-blue-500" />
+                                        Daily QA Activity
+                                        <span className="text-[10px] font-medium text-slate-400 ml-1">Last 7 days</span>
+                                    </h3>
+                                </div>
+                                
+                                <div className="relative" ref={areaChartRef}>
+                                    {(() => {
+                                        const maxCount = Math.max(...last7DaysData.map(d => d.count), 1);
+                                        const chartW = 560;
+                                        const chartH = 200;
+                                        const padL = 35;
+                                        const padR = 20;
+                                        const padT = 15;
+                                        const padB = 30;
+                                        const plotW = chartW - padL - padR;
+                                        const plotH = chartH - padT - padB;
+                                        const stepX = plotW / Math.max(last7DaysData.length - 1, 1);
+                                        
+                                        const points = last7DaysData.map((d, i) => ({
+                                            x: padL + i * stepX,
+                                            y: padT + plotH - (d.count / maxCount) * plotH,
+                                            ...d
+                                        }));
+                                        
+                                        const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+                                        const areaPath = `${linePath} L${points[points.length - 1]?.x || padL},${padT + plotH} L${padL},${padT + plotH} Z`;
+                                        
+                                        // Y-axis grid lines
+                                        const yTicks = 4;
+                                        const gridLines = [];
+                                        for (let i = 0; i <= yTicks; i++) {
+                                            const val = Math.round((maxCount / yTicks) * i);
+                                            const y = padT + plotH - (i / yTicks) * plotH;
+                                            gridLines.push({ val, y });
+                                        }
+                                        
+                                        return (
+                                            <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                                                <defs>
+                                                    <linearGradient id="qaActivityGradient" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+                                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
+                                                    </linearGradient>
+                                                </defs>
+                                                
+                                                {/* Grid lines */}
+                                                {gridLines.map((g, i) => (
+                                                    <g key={i}>
+                                                        <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#f1f5f9" strokeWidth="1" />
+                                                        <text x={padL - 8} y={g.y + 4} textAnchor="end" className="text-[10px]" fill="#94a3b8" style={{ fontSize: '10px' }}>{g.val}</text>
+                                                    </g>
+                                                ))}
+                                                
+                                                {/* Area fill */}
+                                                {points.length > 0 && <path d={areaPath} fill="url(#qaActivityGradient)" />}
+                                                
+                                                {/* Line */}
+                                                {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+                                                
+                                                {/* Data points + X labels */}
+                                                {points.map((p, i) => (
+                                                    <g key={i}
+                                                        onMouseEnter={(e) => {
+                                                            const rect = areaChartRef.current?.getBoundingClientRect();
+                                                            if (rect) {
+                                                                const scaleX = rect.width / chartW;
+                                                                const scaleY = rect.height / chartH;
+                                                                setActivityTooltip({
+                                                                    x: p.x * scaleX,
+                                                                    y: p.y * scaleY - 10,
+                                                                    day: p.label,
+                                                                    count: p.count,
+                                                                    approved: p.approved,
+                                                                    rejected: p.rejected,
+                                                                    taskNames: p.taskNames
+                                                                });
+                                                            }
+                                                        }}
+                                                        onMouseLeave={() => setActivityTooltip(null)}
+                                                        className="cursor-pointer"
+                                                    >
+                                                        <circle cx={p.x} cy={p.y} r="12" fill="transparent" />
+                                                        <circle cx={p.x} cy={p.y} r="4" fill="#6366f1" stroke="white" strokeWidth="2" className="transition-all duration-200 hover:r-6" />
+                                                        <text x={p.x} y={padT + plotH + 18} textAnchor="middle" fill="#94a3b8" style={{ fontSize: '10px', fontWeight: 600 }}>{p.label}</text>
+                                                    </g>
+                                                ))}
+                                            </svg>
+                                        );
+                                    })()}
+                                    
+                                    {/* Glassmorphic Tooltip */}
+                                    {activityTooltip && (
+                                        <div 
+                                            className="absolute z-20 pointer-events-none"
+                                            style={{ left: activityTooltip.x, top: activityTooltip.y, transform: 'translate(-50%, -100%)' }}
+                                        >
+                                            <div className="bg-slate-900/90 backdrop-blur-md text-white rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[180px]">
+                                                <p className="text-xs font-bold text-white/90 mb-2 border-b border-white/10 pb-1.5">{activityTooltip.day}</p>
+                                                <div className="space-y-1">
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-[10px] text-emerald-400 font-medium">Approved</span>
+                                                        <span className="text-xs font-bold text-emerald-400">{activityTooltip.approved}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center">
+                                                        <span className="text-[10px] text-rose-400 font-medium">Rejected</span>
+                                                        <span className="text-xs font-bold text-rose-400">{activityTooltip.rejected}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center border-t border-white/10 pt-1 mt-1">
+                                                        <span className="text-[10px] text-white/70 font-medium">Total</span>
+                                                        <span className="text-xs font-bold">{activityTooltip.count}</span>
+                                                    </div>
+                                                </div>
+                                                {activityTooltip.taskNames && activityTooltip.taskNames.length > 0 && (
+                                                    <div className="mt-2 pt-2 border-t border-white/10">
+                                                        <p className="text-[9px] text-white/50 font-semibold uppercase tracking-wider mb-1">Tasks</p>
+                                                        {activityTooltip.taskNames.slice(0, 4).map((name, ni) => (
+                                                            <p key={ni} className="text-[10px] text-white/80 truncate leading-relaxed">• {name}</p>
+                                                        ))}
+                                                        {activityTooltip.taskNames.length > 4 && (
+                                                            <p className="text-[9px] text-white/40 mt-0.5">+{activityTooltip.taskNames.length - 4} more</p>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="w-2 h-2 bg-slate-900/90 rotate-45 mx-auto -mt-1" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ═══ Queue + Activity Row ═══ */}
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                            {/* Main List Section */}
-                            <div className="xl:col-span-2 space-y-6">
-                                <div className="flex items-center justify-between bg-white/50 p-4 rounded-2xl mb-2">
-                                    <h2 className="section-title flex items-center">
+                            {/* Pending Review Queue */}
+                            <div className="xl:col-span-2 space-y-4">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-100">
+                                    <h2 className="text-base font-bold text-slate-800 flex items-center">
                                         <ShieldCheck className="w-5 h-5 mr-2 text-indigo-500" />
-                                        Pending Reviews
-                                        <span className="bg-indigo-100 text-indigo-700 text-xs font-bold px-2.5 py-0.5 rounded-full ml-3">
-                                            {tasks.length}
+                                        Pending Review Queue
+                                        <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full ml-3">
+                                            {filteredTasks.length}
                                         </span>
                                     </h2>
-                                     <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2">
                                         <button 
                                             onClick={handleExportQueue}
-                                            className="flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-semibold hover:bg-slate-50 transition-colors shadow-sm"
+                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm"
                                         >
-                                            <Download className="w-4 h-4" />
-                                            Download Queue
+                                            <Download className="w-3.5 h-3.5" />
+                                            Export
                                         </button>
                                         <div className="relative">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                                             <input 
                                                 type="text" 
-                                                placeholder="Search reviews..." 
-                                                className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all w-48 shadow-sm"
+                                                placeholder="Search..." 
+                                                className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all w-40 shadow-sm"
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
                                             />
                                         </div>
-
-                                        {/* Project Filter Dropdown */}
                                         <div className="relative">
                                             <button 
                                                 onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                                                className={`flex items-center justify-center p-2 bg-white border ${projectFilter !== 'All' ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/10' : 'border-slate-200 text-slate-600'} rounded-lg text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm group`}
+                                                className={`flex items-center justify-center p-1.5 bg-white border ${projectFilter !== 'All' ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/10' : 'border-slate-200 text-slate-500'} rounded-lg text-xs font-semibold hover:bg-slate-50 transition-all shadow-sm`}
                                                 title="Filter by Project"
                                             >
-                                                <Filter className={`w-4 h-4 ${projectFilter !== 'All' ? 'text-indigo-500' : 'text-slate-400 group-hover:text-indigo-500'}`} />
+                                                <Filter className={`w-3.5 h-3.5 ${projectFilter !== 'All' ? 'text-indigo-500' : 'text-slate-400'}`} />
                                             </button>
-
                                             {isFilterDropdownOpen && (
                                                 <>
                                                     <div className="fixed inset-0 z-40" onClick={() => setIsFilterDropdownOpen(false)} />
                                                     <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
                                                         <div className="px-4 py-2 border-b border-slate-50">
-                                                            <p className="text-[10px] font-bold text-slate-400">Filter by Project</p>
+                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter by Project</p>
                                                         </div>
                                                         <div className="max-h-64 overflow-y-auto custom-scrollbar">
                                                             <button
-                                                                onClick={() => {
-                                                                    setProjectFilter('All');
-                                                                    setIsFilterDropdownOpen(false);
-                                                                }}
+                                                                onClick={() => { setProjectFilter('All'); setIsFilterDropdownOpen(false); }}
                                                                 className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === 'All' ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
                                                             >
                                                                 All Projects
@@ -409,10 +797,7 @@ const QADashboard = () => {
                                                             {projectOptions.map(proj => (
                                                                 <button
                                                                     key={proj}
-                                                                    onClick={() => {
-                                                                        setProjectFilter(proj);
-                                                                        setIsFilterDropdownOpen(false);
-                                                                    }}
+                                                                    onClick={() => { setProjectFilter(proj); setIsFilterDropdownOpen(false); }}
                                                                     className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === proj ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
                                                                 >
                                                                     {proj}
@@ -427,142 +812,147 @@ const QADashboard = () => {
                                     </div>
                                 </div>
 
-                                <div className="space-y-4">
+                                <div className="space-y-3">
                                     {loading ? (
-                                        <div className="text-center p-8 text-slate-500 font-medium italic">Loading tasks...</div>
-                                    ) : filteredTasks.map(task => (
-                                        <div 
-                                            key={task._id}
-                                            onClick={() => setSelectedTask(task)}
-                                            className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer group flex flex-col sm:flex-row gap-4 sm:items-center justify-between"
-                                        >
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-2">
-                                                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100">
-                                                        {task.project?.projectName || task.project?.name || "No Project"}
-                                                    </span>
-                                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
-                                                        {task.priority || "Medium"}
-                                                    </span>
-                                                    <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-amber-50 text-amber-600 flex items-center border border-amber-100">
-                                                        <Clock className="w-3 h-3 mr-1" /> QA Review
-                                                    </span>
-                                                </div>
-                                                <h3 className="text-base font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-2">
-                                                    {task.taskName}
-                                                </h3>
-                                                <div className="flex flex-wrap gap-4 mt-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-lg bg-blue-500 text-white flex items-center justify-center text-[8px] font-bold overflow-hidden shrink-0">
-                                                            {task.assignedTo?.profilePic ? (
-                                                                <img src={task.assignedTo.profilePic} alt={task.assignedTo.name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                task.assignedTo?.name?.charAt(0) || "U"
-                                                            )}
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[10px] font-bold text-slate-700 leading-tight">{task.assignedTo?.name || "Unassigned"}</span>
-                                                            <span className="text-[8px] font-medium text-slate-400">Developer</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-6 h-6 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[8px] font-bold overflow-hidden shrink-0">
-                                                            {task.assignedQA?.profilePic ? (
-                                                                <img src={task.assignedQA.profilePic} alt={task.assignedQA.name} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                task.assignedQA?.name?.charAt(0) || "Q"
-                                                            )}
-                                                        </div>
-                                                        <div className="flex flex-col">
-                                                            <span className="text-[10px] font-bold text-slate-700 leading-tight">{task.assignedQA?.name || "Not Assigned"}</span>
-                                                            <span className="text-[8px] font-medium text-slate-400">QA Reviewer</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-4 text-xs font-medium text-slate-500 mt-3">
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="w-3.5 h-3.5" />
-                                                        <span>Due {task.endDate ? new Date(task.endDate).toLocaleDateString() : "N/A"}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1 text-slate-300">
-                                                        <Paperclip className="w-3.5 h-3.5" />
-                                                        <span>{task.attachments?.length || 0}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2 sm:pl-4 sm:border-l border-slate-100">
-                                                <button 
-                                                    onClick={(e) => handleReject(task._id, e)}
-                                                    className="flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-sm font-semibold rounded-xl transition-colors border border-rose-100 w-full sm:w-auto"
-                                                >
-                                                    <XCircle className="w-4 h-4 mr-1.5" />
-                                                    Reject
-                                                </button>
-                                                <button 
-                                                    onClick={(e) => handleApprove(task._id, e)}
-                                                    className="flex items-center justify-center px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm shadow-emerald-200 w-full sm:w-auto"
-                                                >
-                                                    <CheckCircle2 className="w-4 h-4 mr-1.5" />
-                                                    Approve
-                                                </button>
-                                            </div>
+                                        <div className="flex items-center justify-center p-12">
+                                            <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
                                         </div>
-                                    ))}
+                                    ) : filteredTasks.map(task => {
+                                        const isOverdue = task.endDate && new Date(task.endDate) < new Date();
+                                        const daysLeft = task.endDate ? Math.ceil((new Date(task.endDate) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                                        
+                                        return (
+                                            <div 
+                                                key={task._id}
+                                                onClick={() => setSelectedTask(task)}
+                                                className={`bg-white p-4 rounded-2xl shadow-sm border transition-all cursor-pointer group flex flex-col sm:flex-row gap-3 sm:items-center justify-between ${
+                                                    isOverdue 
+                                                        ? 'border-rose-200 hover:border-rose-300 hover:shadow-rose-100' 
+                                                        : 'border-slate-100 hover:border-indigo-200 hover:shadow-md'
+                                                }`}
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                                                            {task.project?.projectName || task.project?.name || "No Project"}
+                                                        </span>
+                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
+                                                            {task.priority || "Medium"}
+                                                        </span>
+                                                        {isOverdue && (
+                                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-100 animate-pulse flex items-center gap-1">
+                                                                <AlertTriangle className="w-2.5 h-2.5" /> Overdue
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1.5 truncate">
+                                                        {task.taskName}
+                                                    </h3>
+                                                    <div className="flex items-center gap-3 text-[10px] font-medium text-slate-400">
+                                                        <div className="flex items-center gap-1">
+                                                            <div className="w-4 h-4 rounded-md bg-blue-500 text-white flex items-center justify-center text-[7px] font-bold overflow-hidden shrink-0">
+                                                                {task.assignedTo?.profilePic ? (
+                                                                    <img src={task.assignedTo.profilePic} alt="" className="w-full h-full object-cover" />
+                                                                ) : (task.assignedTo?.name?.charAt(0) || "U")}
+                                                            </div>
+                                                            <span className="text-slate-600 font-semibold">{task.assignedTo?.name || "Unassigned"}</span>
+                                                        </div>
+                                                        <span className="text-slate-200">•</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <Calendar className="w-3 h-3" />
+                                                            <span className={isOverdue ? 'text-rose-500 font-bold' : ''}>
+                                                                {daysLeft !== null ? (
+                                                                    isOverdue ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`
+                                                                ) : 'No due date'}
+                                                            </span>
+                                                        </div>
+                                                        <span className="text-slate-200">•</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <Paperclip className="w-3 h-3" />
+                                                            <span>{task.attachments?.length || 0}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <button 
+                                                        onClick={(e) => handleReject(task._id, e)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition-colors border border-rose-100"
+                                                    >
+                                                        <XCircle className="w-3.5 h-3.5" />
+                                                        Reject
+                                                    </button>
+                                                    <button 
+                                                        onClick={(e) => handleApprove(task._id, e)}
+                                                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm shadow-emerald-200"
+                                                    >
+                                                        <CheckCircle2 className="w-3.5 h-3.5" />
+                                                        Approve
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                     {filteredTasks.length === 0 && !loading && (
-                                        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center opacity-60">
-                                            <ShieldCheck className="w-12 h-12 text-slate-300 mb-4" />
+                                        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+                                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
+                                                <ShieldCheck className="w-8 h-8 text-slate-300" />
+                                            </div>
                                             <h3 className="text-lg font-bold text-slate-700">All caught up!</h3>
-                                            <p className="text-slate-500 text-sm">No tasks pending QA review.</p>
+                                            <p className="text-slate-400 text-sm mt-1">No tasks pending QA review.</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Activity Section */}
+                            {/* Recent Activity Feed */}
                             <div className="xl:col-span-1">
-                                <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-6 sticky top-0">
-                                    <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center">
-                                        <Activity className="w-5 h-5 mr-2 text-blue-500" />
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sticky top-0">
+                                    <h3 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                        <Activity className="w-4 h-4 text-blue-500" />
                                         Recent Activity
-                                    </h2>
-                                    <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
+                                        <span className="text-[10px] font-medium text-slate-400 ml-auto">{recentActivity.length} events</span>
+                                    </h3>
+                                    <div className="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
                                         {recentActivity.map((activity) => (
-                                            <div key={activity.id} className="relative pl-12">
-                                                <div className={`absolute left-0 top-0.5 w-6 h-6 rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 ${
+                                            <div key={activity.id} className="relative pl-10">
+                                                <div className={`absolute left-0 top-0.5 w-[22px] h-[22px] rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 ${
                                                     activity.type === 'Approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
                                                 }`}>
-                                                    {activity.type === 'Approve' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}
+                                                    {activity.type === 'Approve' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-semibold text-slate-800">
+                                                    <p className="text-xs font-semibold text-slate-700">
                                                         You <span className={activity.type === 'Approve' ? 'text-emerald-600' : 'text-rose-600'}>
                                                             {activity.type === 'Approve' ? 'approved' : 'rejected'}
-                                                        </span> task
+                                                        </span>
                                                     </p>
-                                                    <p className="text-sm font-bold text-indigo-600 my-0.5 hover:underline cursor-pointer transition-all leading-tight">
+                                                    <p className="text-xs font-bold text-indigo-600 my-0.5 hover:underline cursor-pointer transition-all leading-tight truncate">
                                                         {activity.task}
                                                     </p>
                                                     {activity.note && (
-                                                        <div className="bg-slate-50 border border-slate-100 rounded-lg p-2.5 my-2">
-                                                            <p className="text-[11px] text-slate-500 leading-relaxed italic">
-                                                                <span className="font-bold not-italic mr-1 text-slate-400">Note:</span> "{activity.note}"
+                                                        <div className="bg-slate-50 border border-slate-100 rounded-lg p-2 my-1.5">
+                                                            <p className="text-[10px] text-slate-500 leading-relaxed italic truncate">
+                                                                "{activity.note}"
                                                             </p>
                                                         </div>
                                                     )}
-                                                    <p className="text-[10px] font-medium text-slate-400 mt-1">
+                                                    <p className="text-[9px] font-medium text-slate-400 mt-1">
                                                         {getTimeAgo(activity.timestamp)}
                                                     </p>
                                                 </div>
                                             </div>
                                         ))}
                                         {recentActivity.length === 0 && (
-                                            <p className="text-sm text-slate-400 text-center py-4 italic">No recent activity.</p>
+                                            <div className="text-center py-8">
+                                                <Activity className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                                                <p className="text-xs text-slate-400 italic">No recent activity</p>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
+                            </div>
                         </div>
-                    </div>
                 </main>
 
                 {/* Task Details Drawer */}
