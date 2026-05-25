@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { projectService, taskService, userService } from "../api/services";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import {
@@ -11,6 +12,7 @@ import {
 
 const ProjectDetailsSidebar = ({ projectId, onClose }) => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [mounted, setMounted] = useState(false);
 
     // Core States
@@ -122,6 +124,17 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
             loadProject();
         }
     }, [projectId]);
+
+    useEffect(() => {
+        const taskIdParam = searchParams.get("taskId");
+        if (taskIdParam && tasks.length > 0) {
+            const taskToSelect = tasks.find(t => t._id === taskIdParam || t.id === taskIdParam);
+            if (taskToSelect) {
+                setActiveTab("tasks");
+                setSelectedTask(taskToSelect);
+            }
+        }
+    }, [searchParams, tasks]);
 
     // Load Eligible Members for project editing
     useEffect(() => {

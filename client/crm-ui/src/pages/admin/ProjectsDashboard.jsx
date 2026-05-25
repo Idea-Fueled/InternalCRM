@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { projectService, userService } from "../../api/services";
 import { toast } from "sonner";
 import AdminSidebar from "../../components/admin/AdminSidebar";
@@ -26,6 +26,7 @@ const ProjectsDashboard = () => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [projectToDelete, setProjectToDelete] = useState(null);
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("Status: All");
     const [fromDateFilter, setFromDateFilter] = useState("");
@@ -127,6 +128,13 @@ const ProjectsDashboard = () => {
         const interval = setInterval(fetchProjects, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        const projectIdParam = searchParams.get("projectId");
+        if (projectIdParam) {
+            setSelectedProjectId(projectIdParam);
+        }
+    }, [searchParams]);
 
     const handleCreateProject = async (e) => {
         e.preventDefault();

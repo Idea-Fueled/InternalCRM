@@ -372,6 +372,7 @@ export const updateTask = async (req, res) => {
                 recipients.delete(req.user._id.toString());
             }
 
+            const projName = updatedTask.project?.projectName || updatedTask.project?.name || "Project";
             for (const recipientId of recipients) {
                 await createNotification({
                     recipient: recipientId,
@@ -380,7 +381,7 @@ export const updateTask = async (req, res) => {
                     message: `${updatedTask.taskName} has been updated by ${req.user.name}`,
                     type: "task",
                     category: "update",
-                    link: `/projects/${updatedTask.project?._id}?taskId=${updatedTask._id}`
+                    link: `/projects/${updatedTask.project?._id}?taskId=${updatedTask._id}&projectName=${encodeURIComponent(projName)}`
                 });
             }
         } catch (notifErr) {
@@ -537,7 +538,7 @@ export const updateTaskStatus = async (req, res) => {
                     message: customMsg,
                     type: "task",
                     category: category,
-                    link: `/projects/${projectId}?taskId=${task._id}`
+                    link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
                 });
             }
 
@@ -550,7 +551,7 @@ export const updateTaskStatus = async (req, res) => {
                     message: customMsg,
                     type: "task",
                     category: category,
-                    link: `/projects/${projectId}?taskId=${task._id}`
+                    link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
                 });
             }
 
@@ -565,7 +566,7 @@ export const updateTaskStatus = async (req, res) => {
                         message: `${taskName} in ${projectName} is ready for your review`,
                         type: "task",
                         category: "qa_review",
-                        link: `/projects/${projectId}?taskId=${task._id}`
+                        link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
                     });
                 } else {
                     // Fallback: Notify all QAs if no specific QA assigned
@@ -579,7 +580,7 @@ export const updateTaskStatus = async (req, res) => {
                                 message: `${taskName} in ${projectName} is ready for review`,
                                 type: "task",
                                 category: "approval",
-                                link: `/projects/${projectId}?taskId=${task._id}`
+                                link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
                             });
                         }
                     }
@@ -597,7 +598,7 @@ export const updateTaskStatus = async (req, res) => {
                         message: customMsg,
                         type: "task",
                         category: category,
-                        link: `/projects/${projectId}?taskId=${task._id}`
+                        link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
                     });
                 }
             }

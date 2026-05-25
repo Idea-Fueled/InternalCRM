@@ -713,6 +713,20 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         if (urlProject !== projectFilter) setProjectFilter(urlProject);
     }, [searchParams]);
 
+    useEffect(() => {
+        const taskIdParam = searchParams.get('taskId');
+        if (taskIdParam && tasks && tasks.length > 0) {
+            const taskToSelect = tasks.find(t => String(t._id || t.id) === taskIdParam);
+            if (taskToSelect) {
+                const taskProj = String(taskToSelect.project?.projectName || taskToSelect.project?.name || taskToSelect.project || '');
+                if (taskProj && taskProj !== 'All' && projectFilter !== taskProj) {
+                    setProjectFilter(taskProj);
+                }
+                setSelectedTask(taskToSelect);
+            }
+        }
+    }, [searchParams, tasks]);
+
     const filteredTasks = (tasks || []).filter(t => {
         const matchesSearch  = !searchQuery || (
             getTaskName(t).toLowerCase().includes(searchQuery.toLowerCase()) ||

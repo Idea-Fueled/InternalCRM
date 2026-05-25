@@ -114,7 +114,31 @@ const NotificationDropdown = ({ role }) => {
         }
         setIsOpen(false);
         if (n.link) {
-            navigate(n.link);
+            const isEmployeeRole = !['admin', 'TL', 'qa'].includes(role);
+            const routePrefix = role === 'admin' ? 'admin' : (role === 'teamLead' || role === 'TL' ? 'teamLead' : (role === 'qa' ? 'qa' : 'employee'));
+            
+            if (n.link.startsWith('/projects/')) {
+                const urlParts = n.link.split('?');
+                const pathParts = urlParts[0].split('/');
+                const projectId = pathParts[2];
+                const searchParams = new URLSearchParams(urlParts[1] || '');
+                const taskId = searchParams.get('taskId');
+                const projectName = searchParams.get('projectName');
+                
+                const isStatusChange = ["status_change", "qa_review", "approval", "rejection", "qa_approval", "qa_rejection"].includes(n.category);
+                
+                if (isStatusChange && projectName && taskId) {
+                    navigate(`/${routePrefix}/kanban?project=${encodeURIComponent(projectName)}&taskId=${taskId}`);
+                } else {
+                    let dest = `/${routePrefix}/projects?projectId=${projectId}`;
+                    if (taskId) dest += `&taskId=${taskId}`;
+                    navigate(dest);
+                }
+            } else if (n.link.startsWith('/employee/my-tasks') || n.link.startsWith('/qa/reviews')) {
+                navigate(n.link);
+            } else {
+                navigate(n.link);
+            }
         }
     };
 
