@@ -606,28 +606,25 @@ const QADashboard = () => {
                             </div>
                             
                             {/* Daily QA Activity - Area Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                                <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                        <Activity className="w-4 h-4 text-blue-500" />
-                                        Daily QA Activity
-                                        <span className="text-[10px] font-medium text-slate-400 ml-1">Last 7 days</span>
-                                    </h3>
-                                </div>
+                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
+                                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 sm:mb-5">
+                                    <Activity className="w-4 h-4 text-blue-500" />
+                                    Daily QA Activity
+                                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 ml-1">Last 7 days</span>
+                                </h3>
                                 
-                                <div className="relative max-h-[280px]" ref={areaChartRef}>
+                                <div className="relative" ref={areaChartRef}>
                                     {(() => {
                                         const rawMax = Math.max(...last7DaysData.map(d => d.count), 1);
-                                        // Round max up to a nice ceiling so ticks are clean integers
                                         const niceMax = rawMax <= 4 ? Math.max(rawMax, 2) : Math.ceil(rawMax / 4) * 4;
                                         const yTickCount = Math.min(niceMax, 5);
                                         
                                         const chartW = 800;
-                                        const chartH = 220;
-                                        const padL = 32;
-                                        const padR = 16;
-                                        const padT = 12;
-                                        const padB = 26;
+                                        const chartH = 300;
+                                        const padL = 44;
+                                        const padR = 20;
+                                        const padT = 16;
+                                        const padB = 36;
                                         const plotW = chartW - padL - padR;
                                         const plotH = chartH - padT - padB;
                                         const stepX = plotW / Math.max(last7DaysData.length - 1, 1);
@@ -654,10 +651,10 @@ const QADashboard = () => {
                                         }
                                         
                                         return (
-                                            <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                                            <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ display: 'block', maxHeight: '260px' }} preserveAspectRatio="xMidYMid meet">
                                                 <defs>
                                                     <linearGradient id="qaActivityGradient" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2" />
+                                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
                                                         <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
                                                     </linearGradient>
                                                 </defs>
@@ -665,8 +662,8 @@ const QADashboard = () => {
                                                 {/* Grid lines */}
                                                 {gridLines.map((g, i) => (
                                                     <g key={i}>
-                                                        <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#f1f5f9" strokeWidth="0.8" />
-                                                        <text x={padL - 6} y={g.y + 3} textAnchor="end" fill="#94a3b8" style={{ fontSize: '9px', fontWeight: 500 }}>{g.val}</text>
+                                                        <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#e2e8f0" strokeWidth="0.8" />
+                                                        <text x={padL - 8} y={g.y + 4.5} textAnchor="end" fill="#94a3b8" style={{ fontSize: '13px', fontWeight: 600 }}>{g.val}</text>
                                                     </g>
                                                 ))}
                                                 
@@ -674,19 +671,19 @@ const QADashboard = () => {
                                                 {points.length > 0 && <path d={areaPath} fill="url(#qaActivityGradient)" />}
                                                 
                                                 {/* Line */}
-                                                {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
+                                                {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
                                                 
                                                 {/* Data points + X labels */}
                                                 {points.map((p, i) => (
                                                     <g key={i}
-                                                        onMouseEnter={(e) => {
+                                                        onMouseEnter={() => {
                                                             const rect = areaChartRef.current?.getBoundingClientRect();
                                                             if (rect) {
                                                                 const scaleX = rect.width / chartW;
                                                                 const scaleY = rect.height / chartH;
                                                                 setActivityTooltip({
                                                                     x: p.x * scaleX,
-                                                                    y: p.y * scaleY - 10,
+                                                                    y: p.y * scaleY - 12,
                                                                     day: p.label,
                                                                     count: p.count,
                                                                     approved: p.approved,
@@ -698,9 +695,9 @@ const QADashboard = () => {
                                                         onMouseLeave={() => setActivityTooltip(null)}
                                                         className="cursor-pointer"
                                                     >
-                                                        <circle cx={p.x} cy={p.y} r="10" fill="transparent" />
-                                                        <circle cx={p.x} cy={p.y} r="3" fill="#6366f1" stroke="white" strokeWidth="1.5" />
-                                                        <text x={p.x} y={padT + plotH + 16} textAnchor="middle" fill="#94a3b8" style={{ fontSize: '9px', fontWeight: 600 }}>{p.label}</text>
+                                                        <circle cx={p.x} cy={p.y} r="18" fill="transparent" />
+                                                        <circle cx={p.x} cy={p.y} r="4.5" fill="#6366f1" stroke="white" strokeWidth="2" />
+                                                        <text x={p.x} y={padT + plotH + 24} textAnchor="middle" fill="#64748b" style={{ fontSize: '13px', fontWeight: 600 }}>{p.label}</text>
                                                     </g>
                                                 ))}
                                             </svg>
@@ -713,35 +710,35 @@ const QADashboard = () => {
                                             className="absolute z-20 pointer-events-none"
                                             style={{ left: activityTooltip.x, top: activityTooltip.y, transform: 'translate(-50%, -100%)' }}
                                         >
-                                            <div className="bg-slate-900/90 backdrop-blur-md text-white rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[180px]">
-                                                <p className="text-xs font-bold text-white/90 mb-2 border-b border-white/10 pb-1.5">{activityTooltip.day}</p>
+                                            <div className="bg-slate-900/90 backdrop-blur-md text-white rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[170px]">
+                                                <p className="text-xs font-bold text-white/90 mb-2 border-b border-white/10 pb-2">{activityTooltip.day}</p>
                                                 <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[10px] text-emerald-400 font-medium">Approved</span>
+                                                        <span className="text-[11px] text-emerald-400 font-medium">Approved</span>
                                                         <span className="text-xs font-bold text-emerald-400">{activityTooltip.approved}</span>
                                                     </div>
                                                     <div className="flex justify-between items-center">
-                                                        <span className="text-[10px] text-rose-400 font-medium">Rejected</span>
+                                                        <span className="text-[11px] text-rose-400 font-medium">Rejected</span>
                                                         <span className="text-xs font-bold text-rose-400">{activityTooltip.rejected}</span>
                                                     </div>
-                                                    <div className="flex justify-between items-center border-t border-white/10 pt-1 mt-1">
-                                                        <span className="text-[10px] text-white/70 font-medium">Total</span>
+                                                    <div className="flex justify-between items-center border-t border-white/10 pt-1.5 mt-1.5">
+                                                        <span className="text-[11px] text-white/70 font-medium">Total</span>
                                                         <span className="text-xs font-bold">{activityTooltip.count}</span>
                                                     </div>
                                                 </div>
                                                 {activityTooltip.taskNames && activityTooltip.taskNames.length > 0 && (
                                                     <div className="mt-2 pt-2 border-t border-white/10">
-                                                        <p className="text-[9px] text-white/50 font-semibold uppercase tracking-wider mb-1">Tasks</p>
+                                                        <p className="text-[10px] text-white/50 font-semibold uppercase tracking-wider mb-1">Tasks</p>
                                                         {activityTooltip.taskNames.slice(0, 4).map((name, ni) => (
-                                                            <p key={ni} className="text-[10px] text-white/80 truncate leading-relaxed">• {name}</p>
+                                                            <p key={ni} className="text-[11px] text-white/80 truncate leading-relaxed">• {name}</p>
                                                         ))}
                                                         {activityTooltip.taskNames.length > 4 && (
-                                                            <p className="text-[9px] text-white/40 mt-0.5">+{activityTooltip.taskNames.length - 4} more</p>
+                                                            <p className="text-[10px] text-white/40 mt-0.5">+{activityTooltip.taskNames.length - 4} more</p>
                                                         )}
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="w-2 h-2 bg-slate-900/90 rotate-45 mx-auto -mt-1" />
+                                            <div className="w-2.5 h-2.5 bg-slate-900/90 rotate-45 mx-auto -mt-1.5" />
                                         </div>
                                     )}
                                 </div>
