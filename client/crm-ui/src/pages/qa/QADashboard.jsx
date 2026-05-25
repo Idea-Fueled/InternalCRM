@@ -615,51 +615,58 @@ const QADashboard = () => {
                                     </h3>
                                 </div>
                                 
-                                <div className="relative" ref={areaChartRef}>
+                                <div className="relative max-h-[280px]" ref={areaChartRef}>
                                     {(() => {
-                                        const maxCount = Math.max(...last7DaysData.map(d => d.count), 1);
-                                        const chartW = 560;
-                                        const chartH = 200;
-                                        const padL = 35;
-                                        const padR = 20;
-                                        const padT = 15;
-                                        const padB = 30;
+                                        const rawMax = Math.max(...last7DaysData.map(d => d.count), 1);
+                                        // Round max up to a nice ceiling so ticks are clean integers
+                                        const niceMax = rawMax <= 4 ? Math.max(rawMax, 2) : Math.ceil(rawMax / 4) * 4;
+                                        const yTickCount = Math.min(niceMax, 5);
+                                        
+                                        const chartW = 800;
+                                        const chartH = 220;
+                                        const padL = 32;
+                                        const padR = 16;
+                                        const padT = 12;
+                                        const padB = 26;
                                         const plotW = chartW - padL - padR;
                                         const plotH = chartH - padT - padB;
                                         const stepX = plotW / Math.max(last7DaysData.length - 1, 1);
                                         
                                         const points = last7DaysData.map((d, i) => ({
                                             x: padL + i * stepX,
-                                            y: padT + plotH - (d.count / maxCount) * plotH,
+                                            y: padT + plotH - (d.count / niceMax) * plotH,
                                             ...d
                                         }));
                                         
                                         const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
                                         const areaPath = `${linePath} L${points[points.length - 1]?.x || padL},${padT + plotH} L${padL},${padT + plotH} Z`;
                                         
-                                        // Y-axis grid lines
-                                        const yTicks = 4;
+                                        // Y-axis grid lines — integer-only, no duplicates
                                         const gridLines = [];
-                                        for (let i = 0; i <= yTicks; i++) {
-                                            const val = Math.round((maxCount / yTicks) * i);
-                                            const y = padT + plotH - (i / yTicks) * plotH;
-                                            gridLines.push({ val, y });
+                                        const seenVals = new Set();
+                                        for (let i = 0; i <= yTickCount; i++) {
+                                            const val = Math.round((niceMax / yTickCount) * i);
+                                            if (!seenVals.has(val)) {
+                                                seenVals.add(val);
+                                                const y = padT + plotH - (val / niceMax) * plotH;
+                                                gridLines.push({ val, y });
+                                            }
                                         }
                                         
                                         return (
-                                            <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                                            <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
                                                 <defs>
                                                     <linearGradient id="qaActivityGradient" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-                                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.02" />
+                                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.2" />
+                                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
                                                     </linearGradient>
                                                 </defs>
                                                 
                                                 {/* Grid lines */}
                                                 {gridLines.map((g, i) => (
                                                     <g key={i}>
-                                                        <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#f1f5f9" strokeWidth="1" />
-                                                        <text x={padL - 8} y={g.y + 4} textAnchor="end" className="text-[10px]" fill="#94a3b8" style={{ fontSize: '10px' }}>{g.val}</text>
+                                                        <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#f1f5f9" strokeWidth="0.8" />
+                                                        <text x={padL - 6} y={g.y + 3} textAnchor="end" fill="#94a3b8" style={{ fontSize: '9px', fontWeight: 500 }}>{g.val}</text>
                                                     </g>
                                                 ))}
                                                 
@@ -667,7 +674,7 @@ const QADashboard = () => {
                                                 {points.length > 0 && <path d={areaPath} fill="url(#qaActivityGradient)" />}
                                                 
                                                 {/* Line */}
-                                                {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+                                                {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}
                                                 
                                                 {/* Data points + X labels */}
                                                 {points.map((p, i) => (
@@ -691,9 +698,9 @@ const QADashboard = () => {
                                                         onMouseLeave={() => setActivityTooltip(null)}
                                                         className="cursor-pointer"
                                                     >
-                                                        <circle cx={p.x} cy={p.y} r="12" fill="transparent" />
-                                                        <circle cx={p.x} cy={p.y} r="4" fill="#6366f1" stroke="white" strokeWidth="2" className="transition-all duration-200 hover:r-6" />
-                                                        <text x={p.x} y={padT + plotH + 18} textAnchor="middle" fill="#94a3b8" style={{ fontSize: '10px', fontWeight: 600 }}>{p.label}</text>
+                                                        <circle cx={p.x} cy={p.y} r="10" fill="transparent" />
+                                                        <circle cx={p.x} cy={p.y} r="3" fill="#6366f1" stroke="white" strokeWidth="1.5" />
+                                                        <text x={p.x} y={padT + plotH + 16} textAnchor="middle" fill="#94a3b8" style={{ fontSize: '9px', fontWeight: 600 }}>{p.label}</text>
                                                     </g>
                                                 ))}
                                             </svg>
