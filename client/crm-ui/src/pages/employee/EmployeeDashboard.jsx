@@ -116,6 +116,35 @@ const EmployeeDashboard = () => {
         return tasks.filter(t => projectFilter === 'All' || t.project === projectFilter);
     }, [tasks, projectFilter]);
 
+    const upcomingTasks = useMemo(() => {
+        return tasks
+            .filter(t => !['Completed', 'Done'].includes(t.status) && t.endDate && t.endDate !== "N/A")
+            .map(t => {
+                try {
+                    const dueDate = new Date(t.endDate);
+                    if (isNaN(dueDate.getTime())) return null;
+                    
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    dueDate.setHours(0, 0, 0, 0);
+                    
+                    const diffTime = dueDate - today;
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    
+                    return {
+                        ...t,
+                        diffDays,
+                        isOverdue: diffDays < 0,
+                        isNearDeadline: diffDays >= 0 && diffDays <= 3
+                    };
+                } catch (e) {
+                    return null;
+                }
+            })
+            .filter(t => t !== null)
+            .sort((a, b) => a.diffDays - b.diffDays);
+    }, [tasks]);
+
     // Update selected task when filtered tasks change
     useEffect(() => {
         if (filteredTasks.length > 0 && (!selectedTask || !filteredTasks.find(t => t.id === selectedTask.id))) {
@@ -698,6 +727,88 @@ const EmployeeDashboard = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Upcoming Deadlines Widget */}
+                            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                                <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                    <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                                        <Clock className="w-5 h-5 mr-2 text-indigo-500" />
+                                        Upcoming Deadlines
+                                    </h2>
+                                    <span className="text-xs bg-indigo-50 text-indigo-600 font-bold px-2.5 py-0.5 rounded-full">
+                                        {upcomingTasks.length} Pending
+                                    </span>
+                                </div>
+                                
+                                <div className="p-5">
+                                    {upcomingTasks.length === 0 ? (
+                                        <div className="py-8 text-center text-slate-400 italic text-sm">
+                                            No upcoming deadlines. All caught up!
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {upcomingTasks.map(task => {
+                                                const overdue = task.isOverdue;
+                                                const near = task.isNearDeadline;
+                                                
+                                                let bgBorderClass = "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md";
+                                                let dateBadgeClass = "bg-slate-50 text-slate-600 border-slate-100";
+                                                
+                                                if (overdue) {
+                                                    bgBorderClass = "bg-rose-50/20 border-rose-200 hover:border-rose-300 hover:shadow-md";
+                                                    dateBadgeClass = "bg-rose-100/60 text-rose-700 border-rose-200 animate-pulse";
+                                                } else if (near) {
+                                                    bgBorderClass = "bg-amber-50/20 border-amber-200 hover:border-amber-300 hover:shadow-md";
+                                                    dateBadgeClass = "bg-amber-100/60 text-amber-700 border-amber-200";
+                                                }
+                                                
+                                                return (
+                                                    <div
+                                                        key={task.id}
+                                                        onClick={() => setSelectedTask(task)}
+                                                        className={`p-4 border rounded-xl cursor-pointer transition-all duration-200 flex flex-col justify-between ${bgBorderClass} ${selectedTask?.id === task.id ? 'ring-2 ring-indigo-500/20 border-indigo-400' : ''}`}
+                                                    >
+                                                        <div>
+                                                            <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-100/60 px-2 py-0.5 rounded border border-slate-100 max-w-[120px] truncate">
+                                                                    {task.project}
+                                                                </span>
+                                                                <div className="flex gap-1.5 items-center">
+                                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded uppercase ${
+                                                                        task.priority === 'Critical' ? 'bg-rose-100 text-rose-700' :
+                                                                        task.priority === 'High' ? 'bg-orange-100 text-orange-700' :
+                                                                        task.priority === 'Medium' ? 'bg-blue-100 text-blue-700' :
+                                                                        'bg-slate-100 text-slate-600'
+                                                                    }`}>
+                                                                        {task.priority}
+                                                                    </span>
+                                                                    <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-lg border ${STATUS_COLORS[task.status]}`}>
+                                                                        {task.status}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            <h3 className={`font-bold text-sm leading-snug line-clamp-2 mb-3 ${selectedTask?.id === task.id ? 'text-indigo-700' : 'text-slate-800'}`}>
+                                                                {task.taskName}
+                                                            </h3>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center justify-between pt-2 border-t border-slate-50 mt-1">
+                                                            <span className="text-[10px] font-semibold text-slate-400">Due Date:</span>
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${dateBadgeClass}`}>
+                                                                <Calendar className="w-3 h-3" />
+                                                                {task.endDate}
+                                                                {overdue && " (Overdue)"}
+                                                                {near && ` (${task.diffDays === 0 ? 'Today' : `${task.diffDays}d left`})`}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
 
                             {/* My Tasks Overview */}
                             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
