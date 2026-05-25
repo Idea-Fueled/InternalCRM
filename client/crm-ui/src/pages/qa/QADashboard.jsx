@@ -30,7 +30,7 @@ import {
   File,
   ExternalLink,
   Globe,
-  TrendingUp,
+
   Zap,
   BarChart3
 } from 'lucide-react';
@@ -489,15 +489,14 @@ const QADashboard = () => {
                 
                 <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar">
                         
-                        {/* ═══ 6 KPI Stat Cards ═══ */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                        {/* ═══ 5 KPI Stat Cards ═══ */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                             {[
                                 { label: 'Pending Reviews', value: dashboardMetrics.pending, data: dashboardMetrics.pendingList, icon: <Clock className="w-5 h-5" />, gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-50', iconBg: 'bg-amber-100', iconColor: 'text-amber-600', title: 'Pending QA Reviews' },
                                 { label: 'Approved', value: dashboardMetrics.approved, data: dashboardMetrics.approvedList, icon: <CheckCircle2 className="w-5 h-5" />, gradient: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600', title: 'Approved Tasks' },
                                 { label: 'Rejected', value: dashboardMetrics.rejected, data: dashboardMetrics.rejectedTasksList, icon: <XCircle className="w-5 h-5" />, gradient: 'from-rose-500 to-pink-500', bg: 'bg-rose-50', iconBg: 'bg-rose-100', iconColor: 'text-rose-600', title: 'Rejected Tasks' },
                                 { label: 'Completed Today', value: dashboardMetrics.completedToday, data: dashboardMetrics.completedTodayList, icon: <Zap className="w-5 h-5" />, gradient: 'from-blue-500 to-indigo-500', bg: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', title: 'Completed Today' },
                                 { label: 'Overdue', value: dashboardMetrics.overdue, data: dashboardMetrics.overdueTasksList, icon: <AlertTriangle className="w-5 h-5" />, gradient: 'from-orange-500 to-red-500', bg: 'bg-orange-50', iconBg: 'bg-orange-100', iconColor: 'text-orange-600', title: 'Overdue Reviews', pulse: dashboardMetrics.overdue > 0 },
-                                { label: 'QA Efficiency', value: `${dashboardMetrics.efficiency}%`, icon: <TrendingUp className="w-5 h-5" />, gradient: 'from-violet-500 to-purple-500', bg: 'bg-violet-50', iconBg: 'bg-violet-100', iconColor: 'text-violet-600', title: 'QA Efficiency Rate' },
                             ].map((stat, i) => (
                                 <div 
                                     key={i} 
