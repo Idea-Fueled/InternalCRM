@@ -172,13 +172,13 @@ const EmployeeDashboard = () => {
         ];
 
         const circumference = 2 * Math.PI * 50; // ~314.159
-        let currentCircumference = 0;
+        let accumulatedCircumference = 0;
 
         return counts.map(item => {
             const percentage = total === 0 ? 0 : (item.count / total);
             const strokeLength = percentage * circumference;
-            const strokeOffset = circumference - currentCircumference;
-            currentCircumference += strokeLength;
+            const strokeOffset = -accumulatedCircumference;
+            accumulatedCircumference += strokeLength;
 
             return {
                 ...item,
