@@ -288,8 +288,12 @@ const EmployeeTasks = () => {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 mt-4">
-                                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Employee</p>
+                                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                                {selectedTask.assignedTo?.role ? (
+                                                    selectedTask.assignedTo.role
+                                                ) : "Employee"}
+                                            </p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
                                                     {selectedTask.assignedTo?.profilePic ? (
@@ -298,11 +302,13 @@ const EmployeeTasks = () => {
                                                         selectedTask.assignedTo?.name?.charAt(0) || "U"
                                                     )}
                                                 </div>
-                                                <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                                <span className="text-xs font-bold text-slate-700 whitespace-normal break-words leading-tight">{selectedTask.assignedTo?.name || "Unassigned"}</span>
                                             </div>
                                         </div>
-                                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">QA Reviewer</p>
+                                        <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                                                {selectedTask.assignedQA?.role === 'qa' ? 'QA Engineer' : (selectedTask.assignedQA?.role || 'QA Reviewer')}
+                                            </p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
                                                     {selectedTask.assignedQA?.profilePic ? (
@@ -311,7 +317,7 @@ const EmployeeTasks = () => {
                                                         selectedTask.assignedQA?.name?.charAt(0) || "Q"
                                                     )}
                                                 </div>
-                                                <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
+                                                <span className="text-xs font-bold text-slate-700 whitespace-normal break-words leading-tight">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
                                             </div>
                                         </div>
                                     </div>

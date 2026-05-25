@@ -30,6 +30,8 @@ const EmployeeDashboard = () => {
     const [error, setError] = useState(null);
     const [projectFilter, setProjectFilter] = useState('All');
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
+    const [hoveredSlice, setHoveredSlice] = useState(null);
+    const [barTooltip, setBarTooltip] = useState(null);
 
     const fetchDashboardData = async () => {
         if (!user?._id) return;
@@ -192,6 +194,8 @@ const EmployeeDashboard = () => {
         const dayNames = [];
         const createdCounts = [];
         const completedCounts = [];
+        const createdTasksList = [];
+        const completedTasksList = [];
         
         // Generate last 7 days starting from 6 days ago
         for (let i = 6; i >= 0; i--) {
@@ -200,6 +204,8 @@ const EmployeeDashboard = () => {
             dayNames.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
             createdCounts.push(0);
             completedCounts.push(0);
+            createdTasksList.push([]);
+            completedTasksList.push([]);
         }
 
         const days = [];
@@ -215,6 +221,7 @@ const EmployeeDashboard = () => {
                 const idx = days.indexOf(createdDate);
                 if (idx !== -1) {
                     createdCounts[idx]++;
+                    createdTasksList[idx].push(task.taskName);
                 }
             }
             
@@ -225,13 +232,35 @@ const EmployeeDashboard = () => {
                     const idx = days.indexOf(compDate);
                     if (idx !== -1) {
                         completedCounts[idx]++;
+                        if (!completedTasksList[idx].includes(task.taskName)) {
+                            completedTasksList[idx].push(task.taskName);
+                        }
                     }
                 }
             });
         });
 
-        return { dayNames, createdCounts, completedCounts };
+        return { dayNames, createdCounts, completedCounts, createdTasksList, completedTasksList };
     }, [tasks]);
+
+    const handleBarHover = (e, day, type, tasksList) => {
+        const svgElement = e.currentTarget.ownerSVGElement || e.currentTarget.viewportElement;
+        if (!svgElement) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const svgRect = svgElement.getBoundingClientRect();
+        
+        // Calculate coordinate relative to the SVG/container
+        const x = rect.left - svgRect.left + rect.width / 2;
+        const y = rect.top - svgRect.top;
+        
+        setBarTooltip({
+            x,
+            y,
+            day,
+            type,
+            tasks: tasksList
+        });
+    };
 
     // Max count for scaling the vertical bars
     const maxWeeklyValue = useMemo(() => {
@@ -349,7 +378,7 @@ const EmployeeDashboard = () => {
                     {/* SVG Analytics Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Donut Graph Card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-[340px]">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-[380px]">
                             <div className="mb-4">
                                 <h3 className="text-base font-bold text-slate-800">Productivity Distribution</h3>
                                 <p className="text-xs text-slate-500">Breakdown of tasks assigned to you by status.</p>
@@ -370,53 +399,85 @@ const EmployeeDashboard = () => {
                                         />
                                         
                                         {/* Slices */}
-                                        {displayStats.totalAssigned > 0 && donutData.map((slice, i) => (
-                                            slice.count > 0 && (
+                                        {displayStats.totalAssigned > 0 && donutData.map((slice, i) => {
+                                            const isHovered = hoveredSlice === slice.label;
+                                            const isAnyHovered = hoveredSlice !== null;
+                                            return slice.count > 0 && (
                                                 <circle
                                                     key={i}
                                                     cx="60"
                                                     cy="60"
                                                     r="50"
                                                     stroke={slice.color}
-                                                    strokeWidth="10"
+                                                    strokeWidth={isHovered ? "14" : "10"}
                                                     strokeDasharray={slice.strokeDasharray}
                                                     strokeDashoffset={slice.strokeDashoffset}
                                                     strokeLinecap="round"
                                                     fill="transparent"
-                                                    className="transition-all duration-500 ease-out hover:stroke-[12px] cursor-pointer"
-                                                    title={`${slice.label}: ${slice.count}`}
+                                                    className="transition-all duration-300 ease-out cursor-pointer"
+                                                    style={{
+                                                        opacity: isAnyHovered && !isHovered ? 0.45 : 1,
+                                                        filter: isHovered ? 'drop-shadow(0px 2px 6px rgba(0,0,0,0.15))' : 'none'
+                                                    }}
+                                                    onMouseEnter={() => setHoveredSlice(slice.label)}
+                                                    onMouseLeave={() => setHoveredSlice(null)}
                                                 />
-                                            )
-                                        ))}
+                                            );
+                                        })}
                                     </svg>
                                     
                                     {/* Middle Text Overlay */}
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                                        <span className="text-3xl font-black text-slate-800 leading-none">{displayStats.totalAssigned}</span>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Tasks</span>
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none transition-all duration-200">
+                                        <span className="text-3xl font-black text-slate-800 leading-none">
+                                            {hoveredSlice 
+                                                ? (donutData.find(d => d.label === hoveredSlice)?.count || 0)
+                                                : displayStats.totalAssigned
+                                            }
+                                        </span>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                            {hoveredSlice ? hoveredSlice : 'Tasks'}
+                                        </span>
                                     </div>
                                 </div>
 
                                 {/* Custom Legend */}
                                 <div className="flex flex-col gap-3.5 w-full sm:max-w-[200px]">
-                                    {donutData.map((item, idx) => (
-                                        <div key={idx} className="flex items-center justify-between group cursor-pointer">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="w-3.5 h-3.5 rounded-md transition-transform group-hover:scale-110" style={{ backgroundColor: item.color }} />
-                                                <span className="text-xs font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">{item.label}</span>
+                                    {donutData.map((item, idx) => {
+                                        const isHovered = hoveredSlice === item.label;
+                                        const isAnyHovered = hoveredSlice !== null;
+                                        return (
+                                            <div 
+                                                key={idx} 
+                                                className="flex items-center justify-between group cursor-pointer"
+                                                onMouseEnter={() => setHoveredSlice(item.label)}
+                                                onMouseLeave={() => setHoveredSlice(null)}
+                                                style={{
+                                                    opacity: isAnyHovered && !isHovered ? 0.5 : 1,
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-2.5">
+                                                    <div 
+                                                        className={`w-3.5 h-3.5 rounded-md transition-transform duration-200 ${isHovered ? 'scale-125 shadow-sm' : 'group-hover:scale-110'}`} 
+                                                        style={{ backgroundColor: item.color }} 
+                                                    />
+                                                    <span className={`text-xs transition-colors duration-200 ${isHovered ? 'text-slate-900 font-extrabold' : 'text-slate-600 group-hover:text-slate-800 font-semibold'}`}>
+                                                        {item.label}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className={`text-xs transition-colors duration-200 ${isHovered ? 'text-slate-900 font-extrabold' : 'text-slate-800 font-bold'}`}>{item.count}</span>
+                                                    <span className="text-[10px] font-medium text-slate-400">({item.percentage}%)</span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-xs font-bold text-slate-800">{item.count}</span>
-                                                <span className="text-[10px] font-medium text-slate-400">({item.percentage}%)</span>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
 
                         {/* Weekly Created vs Completed Bar Graph Card */}
-                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-[340px]">
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between h-[380px]">
                             <div className="mb-2 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-base font-bold text-slate-800">Weekly Productivity</h3>
@@ -435,8 +496,8 @@ const EmployeeDashboard = () => {
                             </div>
 
                             {/* Dynamic SVG Bar Chart */}
-                            <div className="relative w-full h-[230px] py-1 flex-1 flex items-center justify-center">
-                                <svg className="w-full h-full max-h-[220px]" viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
+                            <div className="relative w-full h-[280px] py-1 flex-1 flex items-center justify-center">
+                                <svg className="w-full h-full max-h-[260px]" viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
                                     {/* Definitions for gradients */}
                                     <defs>
                                         <linearGradient id="createdGrad" x1="0" y1="0" x2="0" y2="1">
@@ -501,7 +562,10 @@ const EmployeeDashboard = () => {
                                                     height={Math.max(createdHeight, 0)}
                                                     rx="4"
                                                     fill="url(#createdGrad)"
-                                                    className="transition-all duration-300 hover:opacity-90"
+                                                    className="transition-all duration-300 hover:opacity-90 cursor-pointer"
+                                                    onMouseEnter={(e) => handleBarHover(e, day, 'Created', weeklyData.createdTasksList[idx])}
+                                                    onMouseMove={(e) => handleBarHover(e, day, 'Created', weeklyData.createdTasksList[idx])}
+                                                    onMouseLeave={() => setBarTooltip(null)}
                                                 />
                                                 {/* Tooltip or Value label on hover for Created */}
                                                 {createdVal > 0 && (
@@ -512,7 +576,7 @@ const EmployeeDashboard = () => {
                                                         fontSize="9.5"
                                                         fontWeight="black"
                                                         textAnchor="middle"
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 animate-bounce"
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
                                                     >
                                                         {createdVal}
                                                     </text>
@@ -526,7 +590,10 @@ const EmployeeDashboard = () => {
                                                     height={Math.max(completedHeight, 0)}
                                                     rx="4"
                                                     fill="url(#completedGrad)"
-                                                    className="transition-all duration-300 hover:opacity-90"
+                                                    className="transition-all duration-300 hover:opacity-90 cursor-pointer"
+                                                    onMouseEnter={(e) => handleBarHover(e, day, 'Completed', weeklyData.completedTasksList[idx])}
+                                                    onMouseMove={(e) => handleBarHover(e, day, 'Completed', weeklyData.completedTasksList[idx])}
+                                                    onMouseLeave={() => setBarTooltip(null)}
                                                 />
                                                 {/* Tooltip or Value label on hover for Completed */}
                                                 {completedVal > 0 && (
@@ -537,7 +604,7 @@ const EmployeeDashboard = () => {
                                                         fontSize="9.5"
                                                         fontWeight="black"
                                                         textAnchor="middle"
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 animate-bounce"
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
                                                     >
                                                         {completedVal}
                                                     </text>
@@ -568,6 +635,36 @@ const EmployeeDashboard = () => {
                                         strokeWidth="1.5" 
                                     />
                                 </svg>
+
+                                {barTooltip && (
+                                    <div 
+                                        className="absolute z-50 bg-slate-950/95 backdrop-blur-md text-white text-xs rounded-xl p-3.5 shadow-2xl border border-slate-800 pointer-events-none max-w-[240px] transition-all duration-150 animate-in fade-in zoom-in-95"
+                                        style={{ 
+                                            left: `${barTooltip.x}px`, 
+                                            top: `${barTooltip.y}px`,
+                                            transform: 'translate(-50%, -105%)', // position above the cursor/bar
+                                        }}
+                                    >
+                                        <div className="flex items-center justify-between gap-4 mb-2 border-b border-slate-800/80 pb-1.5">
+                                            <span className="font-extrabold tracking-wider uppercase text-[9px] text-slate-400">{barTooltip.day}</span>
+                                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${barTooltip.type === 'Created' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'}`}>
+                                                {barTooltip.type}
+                                            </span>
+                                        </div>
+                                        {barTooltip.tasks.length > 0 ? (
+                                            <ul className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                                                {barTooltip.tasks.map((tName, i) => (
+                                                    <li key={i} className="flex items-start gap-2 leading-snug">
+                                                        <span className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${barTooltip.type === 'Created' ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+                                                        <span className="font-semibold text-[11px] text-slate-200">{tName}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <span className="text-slate-400 italic text-[11px]">No tasks {barTooltip.type.toLowerCase()}</span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -684,8 +781,12 @@ const EmployeeDashboard = () => {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-4 mb-6">
-                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">Employee</p>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                                                <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                                                    {selectedTask.assignedTo?.role ? (
+                                                        selectedTask.assignedTo.role
+                                                    ) : "Employee"}
+                                                </p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
                                                         {selectedTask.assignedTo?.profilePic ? (
@@ -694,11 +795,13 @@ const EmployeeDashboard = () => {
                                                             selectedTask.assignedTo?.name?.charAt(0) || "U"
                                                         )}
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                                    <span className="text-xs font-bold text-slate-700 whitespace-normal break-words leading-tight">{selectedTask.assignedTo?.name || "Unassigned"}</span>
                                                 </div>
                                             </div>
-                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                                                <p className="text-[10px] font-semibold text-slate-400 mb-2">QA Reviewer</p>
+                                            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between">
+                                                <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                                                    {selectedTask.assignedQA?.role === 'qa' ? 'QA Engineer' : (selectedTask.assignedQA?.role || 'QA Reviewer')}
+                                                </p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
                                                         {selectedTask.assignedQA?.profilePic ? (
@@ -707,7 +810,7 @@ const EmployeeDashboard = () => {
                                                             selectedTask.assignedQA?.name?.charAt(0) || "Q"
                                                         )}
                                                     </div>
-                                                    <span className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
+                                                    <span className="text-xs font-bold text-slate-700 whitespace-normal break-words leading-tight">{selectedTask.assignedQA?.name || "Not Assigned"}</span>
                                                 </div>
                                             </div>
                                         </div>
