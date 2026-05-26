@@ -309,6 +309,31 @@ const QADashboard = () => {
         
         return days;
     }, [allTasksForStats, projectFilter]);
+    
+    const weeklyStats = useMemo(() => {
+        let total = 0;
+        let approved = 0;
+        let peakCount = 0;
+        let peakDayLabel = 'N/A';
+        
+        last7DaysData.forEach(d => {
+            total += d.count;
+            approved += d.approved;
+            if (d.count > peakCount) {
+                peakCount = d.count;
+                peakDayLabel = d.label;
+            }
+        });
+        
+        const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 100;
+        
+        return {
+            total,
+            peakCount,
+            peakDayLabel: peakCount > 0 ? `${peakDayLabel} (${peakCount} review${peakCount > 1 ? 's' : ''})` : 'N/A',
+            approvalRate
+        };
+    }, [last7DaysData]);
 
     const donutData = useMemo(() => {
         const total = dashboardMetrics.pending + dashboardMetrics.approved + dashboardMetrics.rejected;
@@ -487,7 +512,7 @@ const QADashboard = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
                 <Topbar DashboardTile="QA Dashboard" role="qa" />
                 
-                <main className="flex-1 p-6 md:p-8 space-y-8 overflow-y-auto custom-scrollbar">
+                <main className="flex-1 p-6 space-y-6 overflow-y-auto custom-scrollbar">
                         
                         {/* ═══ 5 KPI Stat Cards ═══ */}
                         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -605,141 +630,171 @@ const QADashboard = () => {
                             </div>
                             
                             {/* Daily QA Activity - Area Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6">
-                                <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 sm:mb-5">
-                                    <Activity className="w-4 h-4 text-blue-500" />
-                                    Daily QA Activity
-                                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 ml-1">Last 7 days</span>
-                                </h3>
-                                
-                                <div className="relative" ref={areaChartRef}>
-                                    {(() => {
-                                        const rawMax = Math.max(...last7DaysData.map(d => d.count), 1);
-                                        const niceMax = rawMax <= 4 ? Math.max(rawMax, 2) : Math.ceil(rawMax / 4) * 4;
-                                        const yTickCount = Math.min(niceMax, 5);
-                                        
-                                        const chartW = 800;
-                                        const chartH = 300;
-                                        const padL = 44;
-                                        const padR = 20;
-                                        const padT = 16;
-                                        const padB = 36;
-                                        const plotW = chartW - padL - padR;
-                                        const plotH = chartH - padT - padB;
-                                        const stepX = plotW / Math.max(last7DaysData.length - 1, 1);
-                                        
-                                        const points = last7DaysData.map((d, i) => ({
-                                            x: padL + i * stepX,
-                                            y: padT + plotH - (d.count / niceMax) * plotH,
-                                            ...d
-                                        }));
-                                        
-                                        const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
-                                        const areaPath = `${linePath} L${points[points.length - 1]?.x || padL},${padT + plotH} L${padL},${padT + plotH} Z`;
-                                        
-                                        // Y-axis grid lines — integer-only, no duplicates
-                                        const gridLines = [];
-                                        const seenVals = new Set();
-                                        for (let i = 0; i <= yTickCount; i++) {
-                                            const val = Math.round((niceMax / yTickCount) * i);
-                                            if (!seenVals.has(val)) {
-                                                seenVals.add(val);
-                                                const y = padT + plotH - (val / niceMax) * plotH;
-                                                gridLines.push({ val, y });
-                                            }
-                                        }
-                                        
-                                        return (
-                                            <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full" style={{ display: 'block', maxHeight: '260px' }} preserveAspectRatio="xMidYMid meet">
-                                                <defs>
-                                                    <linearGradient id="qaActivityGradient" x1="0" y1="0" x2="0" y2="1">
-                                                        <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
-                                                        <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
-                                                    </linearGradient>
-                                                </defs>
-                                                
-                                                {/* Grid lines */}
-                                                {gridLines.map((g, i) => (
-                                                    <g key={i}>
-                                                        <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#e2e8f0" strokeWidth="0.8" />
-                                                        <text x={padL - 8} y={g.y + 4.5} textAnchor="end" fill="#94a3b8" style={{ fontSize: '13px', fontWeight: 600 }}>{g.val}</text>
-                                                    </g>
-                                                ))}
-                                                
-                                                {/* Area fill */}
-                                                {points.length > 0 && <path d={areaPath} fill="url(#qaActivityGradient)" />}
-                                                
-                                                {/* Line */}
-                                                {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
-                                                
-                                                {/* Data points + X labels */}
-                                                {points.map((p, i) => (
-                                                    <g key={i}
-                                                        onMouseEnter={() => {
-                                                            const rect = areaChartRef.current?.getBoundingClientRect();
-                                                            if (rect) {
-                                                                const scaleX = rect.width / chartW;
-                                                                const scaleY = rect.height / chartH;
-                                                                setActivityTooltip({
-                                                                    x: p.x * scaleX,
-                                                                    y: p.y * scaleY - 12,
-                                                                    day: p.label,
-                                                                    count: p.count,
-                                                                    approved: p.approved,
-                                                                    rejected: p.rejected,
-                                                                    taskNames: p.taskNames
-                                                                });
-                                                            }
-                                                        }}
-                                                        onMouseLeave={() => setActivityTooltip(null)}
-                                                        className="cursor-pointer"
-                                                    >
-                                                        <circle cx={p.x} cy={p.y} r="18" fill="transparent" />
-                                                        <circle cx={p.x} cy={p.y} r="4.5" fill="#6366f1" stroke="white" strokeWidth="2" />
-                                                        <text x={p.x} y={padT + plotH + 24} textAnchor="middle" fill="#64748b" style={{ fontSize: '13px', fontWeight: 600 }}>{p.label}</text>
-                                                    </g>
-                                                ))}
-                                            </svg>
-                                        );
-                                    })()}
+                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6 flex flex-col justify-between h-full">
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 sm:mb-5">
+                                        <Activity className="w-4 h-4 text-blue-500" />
+                                        Daily QA Activity
+                                        <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 ml-1">Last 7 days</span>
+                                    </h3>
                                     
-                                    {/* Glassmorphic Tooltip */}
-                                    {activityTooltip && (
-                                        <div 
-                                            className="absolute z-20 pointer-events-none"
-                                            style={{ left: activityTooltip.x, top: activityTooltip.y, transform: 'translate(-50%, -100%)' }}
-                                        >
-                                            <div className="bg-slate-900/90 backdrop-blur-md text-white rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[170px]">
-                                                <p className="text-xs font-bold text-white/90 mb-2 border-b border-white/10 pb-2">{activityTooltip.day}</p>
-                                                <div className="space-y-1">
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-[11px] text-emerald-400 font-medium">Approved</span>
-                                                        <span className="text-xs font-bold text-emerald-400">{activityTooltip.approved}</span>
+                                    <div className="relative w-full h-[180px] sm:h-[220px]" ref={areaChartRef}>
+                                        {(() => {
+                                            const rawMax = Math.max(...last7DaysData.map(d => d.count), 1);
+                                            const niceMax = rawMax <= 4 ? Math.max(rawMax, 2) : Math.ceil(rawMax / 4) * 4;
+                                            const yTickCount = Math.min(niceMax, 5);
+                                            
+                                            const chartW = 800;
+                                            const chartH = 300;
+                                            const padL = 44;
+                                            const padR = 20;
+                                            const padT = 16;
+                                            const padB = 36;
+                                            const plotW = chartW - padL - padR;
+                                            const plotH = chartH - padT - padB;
+                                            const stepX = plotW / Math.max(last7DaysData.length - 1, 1);
+                                            
+                                            const points = last7DaysData.map((d, i) => ({
+                                                x: padL + i * stepX,
+                                                y: padT + plotH - (d.count / niceMax) * plotH,
+                                                ...d
+                                            }));
+                                            
+                                            const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+                                            const areaPath = `${linePath} L${points[points.length - 1]?.x || padL},${padT + plotH} L${padL},${padT + plotH} Z`;
+                                            
+                                            // Y-axis grid lines — integer-only, no duplicates
+                                            const gridLines = [];
+                                            const seenVals = new Set();
+                                            for (let i = 0; i <= yTickCount; i++) {
+                                                const val = Math.round((niceMax / yTickCount) * i);
+                                                if (!seenVals.has(val)) {
+                                                    seenVals.add(val);
+                                                    const y = padT + plotH - (val / niceMax) * plotH;
+                                                    gridLines.push({ val, y });
+                                                }
+                                            }
+                                            
+                                            return (
+                                                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-full" style={{ display: 'block' }} preserveAspectRatio="xMidYMid meet">
+                                                    <defs>
+                                                        <linearGradient id="qaActivityGradient" x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.18" />
+                                                            <stop offset="100%" stopColor="#6366f1" stopOpacity="0.01" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                    
+                                                    {/* Grid lines */}
+                                                    {gridLines.map((g, i) => (
+                                                        <g key={i}>
+                                                            <line x1={padL} y1={g.y} x2={chartW - padR} y2={g.y} stroke="#e2e8f0" strokeWidth="0.8" />
+                                                            <text x={padL - 8} y={g.y + 4.5} textAnchor="end" fill="#94a3b8" style={{ fontSize: '13px', fontWeight: 600 }}>{g.val}</text>
+                                                        </g>
+                                                    ))}
+                                                    
+                                                    {/* Area fill */}
+                                                    {points.length > 0 && <path d={areaPath} fill="url(#qaActivityGradient)" />}
+                                                    
+                                                    {/* Line */}
+                                                    {points.length > 0 && <path d={linePath} fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />}
+                                                    
+                                                    {/* Data points + X labels */}
+                                                    {points.map((p, i) => (
+                                                        <g key={i}
+                                                            onMouseEnter={() => {
+                                                                const rect = areaChartRef.current?.getBoundingClientRect();
+                                                                if (rect) {
+                                                                    const aspect = chartW / chartH;
+                                                                    const containerAspect = rect.width / rect.height;
+                                                                    
+                                                                    let scale, offsetX, offsetY;
+                                                                    if (containerAspect > aspect) {
+                                                                        scale = rect.height / chartH;
+                                                                        offsetX = (rect.width - chartW * scale) / 2;
+                                                                        offsetY = 0;
+                                                                    } else {
+                                                                        scale = rect.width / chartW;
+                                                                        offsetX = 0;
+                                                                        offsetY = (rect.height - chartH * scale) / 2;
+                                                                    }
+                                                                    
+                                                                    setActivityTooltip({
+                                                                        x: offsetX + p.x * scale,
+                                                                        y: offsetY + p.y * scale - 12,
+                                                                        day: p.label,
+                                                                        count: p.count,
+                                                                        approved: p.approved,
+                                                                        rejected: p.rejected,
+                                                                        taskNames: p.taskNames
+                                                                    });
+                                                                }
+                                                            }}
+                                                            onMouseLeave={() => setActivityTooltip(null)}
+                                                            className="cursor-pointer"
+                                                        >
+                                                            <circle cx={p.x} cy={p.y} r="18" fill="transparent" />
+                                                            <circle cx={p.x} cy={p.y} r="4.5" fill="#6366f1" stroke="white" strokeWidth="2" />
+                                                            <text x={p.x} y={padT + plotH + 24} textAnchor="middle" fill="#64748b" style={{ fontSize: '13px', fontWeight: 600 }}>{p.label}</text>
+                                                        </g>
+                                                    ))}
+                                                </svg>
+                                            );
+                                        })()}
+                                        
+                                        {/* Glassmorphic Tooltip */}
+                                        {activityTooltip && (
+                                            <div 
+                                                className="absolute z-20 pointer-events-none transition-all duration-150 ease-out"
+                                                style={{ left: activityTooltip.x, top: activityTooltip.y, transform: 'translate(-50%, -100%)' }}
+                                            >
+                                                <div className="bg-slate-950/95 backdrop-blur-md text-white rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[170px]">
+                                                    <p className="text-xs font-bold text-white/90 mb-2 border-b border-white/10 pb-2">{activityTooltip.day}</p>
+                                                    <div className="space-y-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[11px] text-emerald-400 font-medium">Approved</span>
+                                                            <span className="text-xs font-bold text-emerald-400">{activityTooltip.approved}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="text-[11px] text-rose-400 font-medium">Rejected</span>
+                                                            <span className="text-xs font-bold text-rose-400">{activityTooltip.rejected}</span>
+                                                        </div>
+                                                        <div className="flex justify-between items-center border-t border-white/10 pt-1.5 mt-1.5">
+                                                            <span className="text-[11px] text-white/70 font-medium">Total</span>
+                                                            <span className="text-xs font-bold">{activityTooltip.count}</span>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex justify-between items-center">
-                                                        <span className="text-[11px] text-rose-400 font-medium">Rejected</span>
-                                                        <span className="text-xs font-bold text-rose-400">{activityTooltip.rejected}</span>
-                                                    </div>
-                                                    <div className="flex justify-between items-center border-t border-white/10 pt-1.5 mt-1.5">
-                                                        <span className="text-[11px] text-white/70 font-medium">Total</span>
-                                                        <span className="text-xs font-bold">{activityTooltip.count}</span>
-                                                    </div>
+                                                    {activityTooltip.taskNames && activityTooltip.taskNames.length > 0 && (
+                                                        <div className="mt-2 pt-2 border-t border-white/10">
+                                                            <p className="text-[10px] text-white/50 font-semibold uppercase tracking-wider mb-1">Tasks</p>
+                                                            {activityTooltip.taskNames.slice(0, 4).map((name, ni) => (
+                                                                <p key={ni} className="text-[11px] text-white/80 truncate leading-relaxed">• {name}</p>
+                                                            ))}
+                                                            {activityTooltip.taskNames.length > 4 && (
+                                                                <p className="text-[10px] text-white/40 mt-0.5">+{activityTooltip.taskNames.length - 4} more</p>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                {activityTooltip.taskNames && activityTooltip.taskNames.length > 0 && (
-                                                    <div className="mt-2 pt-2 border-t border-white/10">
-                                                        <p className="text-[10px] text-white/50 font-semibold uppercase tracking-wider mb-1">Tasks</p>
-                                                        {activityTooltip.taskNames.slice(0, 4).map((name, ni) => (
-                                                            <p key={ni} className="text-[11px] text-white/80 truncate leading-relaxed">• {name}</p>
-                                                        ))}
-                                                        {activityTooltip.taskNames.length > 4 && (
-                                                            <p className="text-[10px] text-white/40 mt-0.5">+{activityTooltip.taskNames.length - 4} more</p>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                <div className="w-2.5 h-2.5 bg-slate-950/95 rotate-45 mx-auto -mt-1.5 border-r border-b border-white/10" />
                                             </div>
-                                            <div className="w-2.5 h-2.5 bg-slate-900/90 rotate-45 mx-auto -mt-1.5" />
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                {/* Balanced Summary Row at the Bottom */}
+                                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100 mt-4">
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Reviews</span>
+                                        <span className="text-base font-bold text-slate-800 mt-0.5 block">{weeklyStats.total}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Approval Rate</span>
+                                        <span className="text-base font-bold text-emerald-600 mt-0.5 block">{weeklyStats.approvalRate}%</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Peak Activity</span>
+                                        <span className="text-base font-bold text-indigo-600 mt-0.5 block truncate" title={weeklyStats.peakDayLabel}>{weeklyStats.peakDayLabel}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
