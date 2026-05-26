@@ -104,6 +104,51 @@ const NotificationDropdown = ({ role }) => {
         }
     };
 
+    /**
+     * Extract taskId and projectId from any notification link format.
+     * Handles all server-generated link patterns:
+     *   /projects/:projectId?taskId=:taskId
+     *   /projects/:projectId?taskId=:taskId&projectName=...
+     *   /employee/my-tasks?taskId=:taskId
+     *   /qa/reviews?taskId=:taskId
+     *   /trash
+     */
+    const extractIdsFromLink = (link) => {
+        const result = { taskId: null, projectId: null };
+        if (!link) return result;
+
+        try {
+            const [pathPart, queryPart] = link.split('?');
+            const params = new URLSearchParams(queryPart || '');
+
+            // ── 1. Extract taskId from query params (most reliable) ──
+            result.taskId = params.get('taskId') || params.get('id') || null;
+
+            // ── 2. Extract projectId from /projects/:id path pattern ──
+            const projectPathMatch = pathPart.match(/^\/projects\/([0-9a-fA-F]{24})/);
+            if (projectPathMatch) {
+                result.projectId = projectPathMatch[1];
+            }
+
+            // ── 3. Fallback: scan for any 24-char hex ObjectID in the full link ──
+            if (!result.taskId) {
+                const allObjectIds = link.match(/[0-9a-fA-F]{24}/g) || [];
+                if (result.projectId && allObjectIds.length > 1) {
+                    // First match is projectId, second is taskId
+                    const remaining = allObjectIds.filter(id => id !== result.projectId);
+                    if (remaining.length > 0) result.taskId = remaining[0];
+                } else if (!result.projectId && allObjectIds.length > 0) {
+                    // No project path — first ObjectID is likely the taskId
+                    result.taskId = allObjectIds[0];
+                }
+            }
+        } catch (err) {
+            console.error('Failed to parse notification link:', link, err);
+        }
+
+        return result;
+    };
+
     const handleNotificationClick = async (n) => {
         if (!n.isRead) {
             try {
@@ -113,38 +158,35 @@ const NotificationDropdown = ({ role }) => {
             }
         }
         setIsOpen(false);
-        if (n.link) {
-            const isProjectLink = n.link.startsWith('/projects/');
-            const urlParts = n.link.split('?');
-            const searchParamsObj = new URLSearchParams(urlParts[1] || '');
-            const taskId = searchParamsObj.get('taskId') || searchParamsObj.get('id');
-            
-            let projectId = null;
-            if (isProjectLink) {
-                const pathParts = urlParts[0].split('/');
-                projectId = pathParts[2];
-            }
 
-            // Strictly separate task vs project sidebar activations based on notification entity type
-            const isTaskNotification = n.type === 'task' || !!taskId;
-            const isProjectNotification = n.type === 'project' && !!projectId;
+        if (!n.link) return;
 
-            if (isTaskNotification) {
-                const currentParams = new URLSearchParams(window.location.search);
-                if (taskId) {
-                    currentParams.set('taskId', taskId);
-                }
-                currentParams.delete('projectId'); // Never open Project Details Sidebar for task notifications
-                navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
-            } else if (isProjectNotification) {
-                const currentParams = new URLSearchParams(window.location.search);
-                currentParams.set('projectId', projectId);
-                currentParams.delete('taskId'); // Never open Task Details Sidebar for project notifications
-                navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
-            } else {
-                // Fallback for other general links or system notifications
-                navigate(n.link);
-            }
+        const { taskId, projectId } = extractIdsFromLink(n.link);
+
+        // ── Determine notification entity type ──
+        // A notification is task-related if its type is "task" OR if we found a taskId in the link
+        const isTaskNotification = n.type === 'task' || !!taskId;
+        const isProjectNotification = n.type === 'project' && !!projectId;
+
+        if (isTaskNotification && taskId) {
+            // ✅ Best case: we have a taskId — open the Task Details Sidebar on the current page
+            const currentParams = new URLSearchParams(window.location.search);
+            currentParams.set('taskId', taskId);
+            currentParams.delete('projectId'); // Never open Project Sidebar for task notifications
+            navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
+        } else if (isTaskNotification && !taskId) {
+            // ⚠️ It's a task notification but we couldn't extract a taskId (e.g. /trash link).
+            // Navigate to the raw link so the user at least lands on the right page.
+            navigate(n.link);
+        } else if (isProjectNotification) {
+            // Open Project Details Sidebar
+            const currentParams = new URLSearchParams(window.location.search);
+            currentParams.set('projectId', projectId);
+            currentParams.delete('taskId'); // Never open Task Sidebar for project notifications
+            navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
+        } else {
+            // System notifications or unknown link formats — navigate directly
+            navigate(n.link);
         }
     };
 
