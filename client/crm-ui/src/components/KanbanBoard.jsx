@@ -620,8 +620,10 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
             description: task.description || '',
             priority:    task.priority || 'Medium',
             endDate:     task.endDate ? new Date(task.endDate).toISOString().split('T')[0] : '',
+            startDate:   task.startDate ? new Date(task.startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
             assignedTo:  assignedToId,
-            assignedQA:  assignedQAId
+            assignedQA:  assignedQAId,
+            attachments: task.attachments || []
         });
         setIsEditModalOpen(true);
         setProjectMembers([]);
@@ -685,11 +687,24 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     };
     const getAssigneeInitial = t => getAssignee(t).substring(0, 2).toUpperCase();
     const getAssigneePic     = t => (!t.assignedTo || typeof t.assignedTo === 'string') ? null : t.assignedTo.profilePic;
+    const getStartDate = t => {
+        if (!t.startDate) return 'N/A';
+        try { return new Date(t.startDate).toLocaleDateString(); } catch { return 'N/A'; }
+    };
     const getEndDate   = t => {
         if (!t.endDate) return 'N/A';
         try { return new Date(t.endDate).toLocaleDateString(); } catch { return 'N/A'; }
     };
-    const isOverdue    = t => t.endDate && new Date(t.endDate) < new Date() && !['Completed', 'Done'].includes(t.status);
+    const isOverdue    = t => {
+        if (!t.endDate || ['Completed', 'Done'].includes(t.status)) return false;
+        try {
+            const end = new Date(t.endDate);
+            end.setHours(23, 59, 59, 999);
+            return end < new Date();
+        } catch {
+            return false;
+        }
+    };
     const getHistory   = t => Array.isArray(t.statusHistory) ? t.statusHistory : [];
 
     // Count meaningful history entries (with notes, attachments, or links)
@@ -897,25 +912,35 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                     draggable={!isLocked}
                                                     onDragStart={e => onDragStart(e, getTaskId(task), col.id)}
                                                     onClick={() => setSelectedTask(task)}
-                                                    className={`bg-white p-4 rounded-xl shadow-sm border ${overdue ? 'border-rose-200' : 'border-slate-200'} ${isLocked ? 'cursor-default opacity-90' : 'cursor-grab active:cursor-grabbing hover:shadow-md hover:border-blue-300'} transition-all group select-none`}
+                                                    className={`p-4 rounded-xl shadow-sm border transition-all group select-none ${
+                                                        overdue 
+                                                            ? 'bg-rose-50/30 border-rose-200 shadow-rose-50/50 hover:bg-rose-50/50 hover:border-rose-300 hover:shadow-md' 
+                                                            : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md'
+                                                    } ${isLocked ? 'cursor-default opacity-90' : 'cursor-grab active:cursor-grabbing'}`}
                                                 >
                                                     <div className="flex justify-between items-start mb-2.5">
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setProjectFilter(getProject(task)); }}
-                                                            className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[60%] hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all cursor-pointer"
+                                                            className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[45%] hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all cursor-pointer"
                                                         >{getProject(task)}</button>
-                                                        <div className="flex gap-1.5 shrink-0">
+                                                        <div className="flex items-center gap-1.5 shrink-0">
                                                             {overdue && (
-                                                                <span className="text-[10px] font-bold px-1.5 py-1 rounded-md bg-rose-100 text-rose-600 flex items-center" title="Overdue">
-                                                                    <AlertTriangle className="w-3 h-3" />
+                                                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 flex items-center gap-1 border border-rose-200 shrink-0" title="Overdue">
+                                                                    <AlertTriangle className="w-3 h-3 shrink-0" />
+                                                                    Overdue
                                                                 </span>
                                                             )}
                                                             {isLocked && (
-                                                                <span className="text-[10px] font-bold px-1.5 py-1 rounded-md bg-slate-100 text-slate-500 flex items-center border border-slate-200">
+                                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 flex items-center border border-slate-200">
                                                                     <Lock className="w-3 h-3" />
                                                                 </span>
                                                             )}
-                                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
+                                                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border whitespace-nowrap ${
+                                                                task.priority === 'Critical' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                                                task.priority === 'High' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                                                task.priority === 'Medium' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                                                'bg-slate-50 text-slate-500 border-slate-200'
+                                                            }`}>
                                                                 {task.priority || 'Medium'}
                                                             </span>
                                                             {can('tasks.update') && (
@@ -935,9 +960,21 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                         {getTaskName(task)}
                                                     </h4>
 
-                                                    <div className="flex items-center text-xs text-slate-500 mb-3 mt-2 font-medium">
-                                                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-slate-400" />
-                                                        <span className={overdue ? 'text-rose-600 font-bold' : ''}>{getEndDate(task)}</span>
+                                                    <div className="flex flex-col gap-1 my-2.5 bg-slate-50/40 p-2 rounded-lg border border-slate-100/30 text-[10px] font-medium text-slate-500">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="flex items-center gap-1 text-[9px] text-slate-400">
+                                                                <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                                                                Start:
+                                                            </span>
+                                                            <span className="text-slate-700 font-semibold">{getStartDate(task)}</span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="flex items-center gap-1 text-[9px] text-slate-400">
+                                                                <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
+                                                                Due:
+                                                            </span>
+                                                            <span className={`font-semibold ${overdue ? 'text-rose-600 font-bold' : 'text-slate-700'}`}>{getEndDate(task)}</span>
+                                                        </div>
                                                     </div>
 
                                                     <div className="flex items-center justify-between pt-3 border-t border-slate-100">
@@ -1086,7 +1123,6 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                     </div>
                 </div>
             )}
-
             {/* ─── Task Detail Sidebar ───────────────────────────────────────── */}
             {selectedTask && (
                 <div className="absolute inset-0 z-50 flex justify-end">
@@ -1114,15 +1150,41 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                             {/* Meta grid */}
                             <div className="grid grid-cols-2 gap-3">
                                 {[
-                                    { label: 'Status',   value: selectedTask.status,            cls: 'text-blue-700 font-bold'  },
-                                    { label: 'Assignee', value: getAssignee(selectedTask),       cls: 'text-slate-700 font-bold' },
-                                    { label: 'Due Date', value: getEndDate(selectedTask),        cls: isOverdue(selectedTask) ? 'text-rose-600 font-bold' : 'text-slate-700 font-bold' },
+                                    { label: 'Status',      value: selectedTask.status,                  cls: 'text-indigo-650 font-extrabold' },
+                                    { label: 'Priority',    value: selectedTask.priority || 'Medium',    cls: selectedTask.priority === 'Critical' ? 'text-rose-600 font-extrabold' : 'text-slate-700 font-bold' },
+                                    { label: 'Start Date',  value: getStartDate(selectedTask),           cls: 'text-slate-700 font-semibold' },
+                                    { label: 'Due Date',    value: getEndDate(selectedTask),             cls: isOverdue(selectedTask) ? 'text-rose-600 font-extrabold' : 'text-slate-700 font-semibold' },
                                 ].map(item => (
                                     <div key={item.label} className="bg-slate-50 p-3 rounded-xl border border-slate-100">
                                         <p className="text-xs font-semibold text-slate-400 mb-1">{item.label}</p>
                                         <p className={`text-sm ${item.cls}`}>{item.value}</p>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* Assigned Employees & Roles */}
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                                <h3 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Assigned Employees</h3>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-blue-200">
+                                            {getAssigneePic(selectedTask) ? <img src={getAssigneePic(selectedTask)} alt="" className="w-full h-full object-cover" /> : getAssigneeInitial(selectedTask)}
+                                        </div>
+                                        <div className="min-w-0 leading-tight">
+                                            <p className="text-xs font-bold text-slate-700 truncate">{getAssignee(selectedTask)}</p>
+                                            <p className="text-[10px] font-semibold text-slate-400">Developer</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden border border-indigo-200">
+                                            {selectedTask.assignedQA?.profilePic ? <img src={selectedTask.assignedQA.profilePic} alt="" className="w-full h-full object-cover" /> : (selectedTask.assignedQA?.name ? selectedTask.assignedQA.name.substring(0, 2).toUpperCase() : 'QA')}
+                                        </div>
+                                        <div className="min-w-0 leading-tight">
+                                            <p className="text-xs font-bold text-slate-700 truncate">{selectedTask.assignedQA?.name || 'Unassigned'}</p>
+                                            <p className="text-[10px] font-semibold text-slate-400">QA Engineer</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Description */}
@@ -1246,10 +1308,10 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                         </select>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-3">
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Priority</label>
-                                        <select value={editTaskData.priority} onChange={e => setEditTaskData({...editTaskData, priority: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer">
+                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Priority</label>
+                                        <select value={editTaskData.priority} onChange={e => setEditTaskData({...editTaskData, priority: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:border-blue-500 transition-all outline-none cursor-pointer">
                                             <option value="Low">Low</option>
                                             <option value="Medium">Medium</option>
                                             <option value="High">High</option>
@@ -1257,9 +1319,78 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1.5">Due Date</label>
-                                        <input type="date" value={editTaskData.endDate} onChange={e => setEditTaskData({...editTaskData, endDate: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none" />
+                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Start Date</label>
+                                        <input type="date" value={editTaskData.startDate} onChange={e => setEditTaskData({...editTaskData, startDate: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:border-blue-500 transition-all outline-none" />
                                     </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Due Date</label>
+                                        <input type="date" value={editTaskData.endDate} onChange={e => setEditTaskData({...editTaskData, endDate: e.target.value})} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:border-blue-500 transition-all outline-none" />
+                                    </div>
+                                </div>
+
+                                {/* Attachments uploads */}
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-700 mb-1.5 flex items-center gap-2">
+                                        <Paperclip className="w-4 h-4 text-slate-400" />
+                                        Attachments <span className="text-slate-400 font-normal text-xs">(optional)</span>
+                                    </label>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        className="hidden"
+                                        id="edit-task-attachments-input"
+                                        onChange={async (e) => {
+                                            const files = Array.from(e.target.files);
+                                            if (files.length === 0) return;
+                                            toast.loading("Uploading attachment...");
+                                            try {
+                                                const uploadedList = [...(editTaskData.attachments || [])];
+                                                for (let file of files) {
+                                                    const formData = new FormData();
+                                                    formData.append("file", file);
+                                                    const res = await taskService.uploadAttachment(formData);
+                                                    if (res.data.success) {
+                                                        uploadedList.push(res.data.file);
+                                                    }
+                                                }
+                                                setEditTaskData(prev => ({ ...prev, attachments: uploadedList }));
+                                                toast.dismiss();
+                                                toast.success("Attachment uploaded!");
+                                            } catch (err) {
+                                                toast.dismiss();
+                                                toast.error("Failed to upload attachment");
+                                            }
+                                        }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => document.getElementById("edit-task-attachments-input")?.click()}
+                                        className="w-full py-2 bg-slate-50 hover:bg-slate-100 border border-slate-250 border-dashed rounded-xl text-xs font-bold text-slate-600 transition flex items-center justify-center gap-1.5"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" /> Add Files
+                                    </button>
+
+                                    {/* Uploaded previews */}
+                                    {Array.isArray(editTaskData.attachments) && editTaskData.attachments.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mt-2">
+                                            {editTaskData.attachments.map((f, fIdx) => (
+                                                <div key={fIdx} className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-lg text-[10px] text-emerald-700 font-bold animate-in zoom-in-95 duration-100">
+                                                    <FileText className="w-3.5 h-3.5 shrink-0" />
+                                                    <span className="max-w-[120px] truncate">{f.filename}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setEditTaskData(prev => ({
+                                                            ...prev,
+                                                            attachments: prev.attachments.filter((_, i) => i !== fIdx)
+                                                        }))}
+                                                        className="p-0.5 hover:bg-emerald-100 rounded-full text-emerald-500 transition ml-1"
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex gap-3">

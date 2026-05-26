@@ -49,7 +49,8 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
         assignedQA: "",
         priority: "Medium",
         startDate: new Date().toISOString().split("T")[0],
-        endDate: ""
+        endDate: "",
+        attachments: []
     });
     const [taskSubmitting, setTaskSubmitting] = useState(false);
 
@@ -239,7 +240,8 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
             assignedQA: "",
             priority: "Medium",
             startDate: new Date().toISOString().split("T")[0],
-            endDate: ""
+            endDate: "",
+            attachments: []
         });
     };
 
@@ -792,7 +794,8 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                             assignedQA: task.assignedQA?._id || task.assignedQA || "",
                                                                             priority: task.priority || "Medium",
                                                                             startDate: task.startDate ? task.startDate.split("T")[0] : new Date().toISOString().split("T")[0],
-                                                                            endDate: task.endDate ? task.endDate.split("T")[0] : ""
+                                                                            endDate: task.endDate ? task.endDate.split("T")[0] : "",
+                                                                            attachments: task.attachments || []
                                                                         });
                                                                         setIsTaskModalOpen(true);
                                                                     }}
@@ -1256,6 +1259,70 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     />
                                 </div>
                             </div>
+
+                            {/* File Attachments */}
+                            <div className="space-y-1 mt-2.5">
+                                <label className="text-[9px] font-semibold text-slate-400 block flex items-center gap-1">
+                                    <Paperclip className="w-3.5 h-3.5" /> Attach Files (optional)
+                                </label>
+                                <input
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    id="sidebar-task-create-attachments-input"
+                                    onChange={async (e) => {
+                                        const files = Array.from(e.target.files);
+                                        if (files.length === 0) return;
+                                        toast.loading("Uploading attachments...");
+                                        try {
+                                            const uploadedList = [...(newTask.attachments || [])];
+                                            for (let file of files) {
+                                                const formData = new FormData();
+                                                formData.append("file", file);
+                                                const res = await taskService.uploadAttachment(formData);
+                                                if (res.data.success) {
+                                                    uploadedList.push(res.data.file);
+                                                }
+                                            }
+                                            setNewTask(prev => ({ ...prev, attachments: uploadedList }));
+                                            toast.dismiss();
+                                            toast.success("Attachments uploaded!");
+                                        } catch (err) {
+                                            toast.dismiss();
+                                            toast.error("Failed to upload files");
+                                        }
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => document.getElementById("sidebar-task-create-attachments-input")?.click()}
+                                    className="w-full py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 border-dashed rounded-xl text-xs font-bold text-slate-650 transition flex items-center justify-center gap-1.5"
+                                >
+                                    <Plus className="w-3.5 h-3.5" /> Add Files
+                                </button>
+
+                                {/* Previews list */}
+                                {Array.isArray(newTask.attachments) && newTask.attachments.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 pt-1.5">
+                                        {newTask.attachments.map((f, fIdx) => (
+                                            <div key={fIdx} className="flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 border border-emerald-100 rounded-lg text-[9px] text-emerald-700 font-bold">
+                                                <FileText className="w-3.5 h-3.5 shrink-0" />
+                                                <span className="max-w-[100px] truncate">{f.filename}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setNewTask(prev => ({
+                                                        ...prev,
+                                                        attachments: prev.attachments.filter((_, i) => i !== fIdx)
+                                                    }))}
+                                                    className="p-0.5 hover:bg-emerald-100 rounded-full text-emerald-500 transition"
+                                                >
+                                                    <X className="w-2.5 h-2.5" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Actions */}
@@ -1373,11 +1440,13 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                         
                                         <div>
                                             <span className="text-[8px] font-semibold text-slate-400 block">Developer</span>
-                                            <span className="font-bold text-slate-700">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                            <span className="font-bold text-slate-700 block">{selectedTask.assignedTo?.name || "Unassigned"}</span>
+                                            <span className="text-[9px] text-slate-400">Role: Developer</span>
                                         </div>
                                         <div>
                                             <span className="text-[8px] font-semibold text-slate-400 block">QA Reviewer</span>
-                                            <span className="font-bold text-slate-700">{selectedTask.assignedQA?.name || "Unassigned"}</span>
+                                            <span className="font-bold text-slate-700 block">{selectedTask.assignedQA?.name || "Unassigned"}</span>
+                                            <span className="text-[9px] text-slate-400">Role: QA Engineer</span>
                                         </div>
                                         <div>
                                             <span className="text-[8px] font-semibold text-slate-400 block">Start Date</span>
@@ -1388,6 +1457,31 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                             <span className="font-bold text-rose-600">{formatDate(selectedTask.endDate)}</span>
                                         </div>
                                     </div>
+
+                                    {/* Task level attachments inside modal */}
+                                    {Array.isArray(selectedTask.attachments) && selectedTask.attachments.length > 0 && (
+                                        <div className="space-y-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-xs">
+                                            <span className="text-[9px] font-semibold text-slate-400 block pb-1 border-b border-slate-100">Task Attachments</span>
+                                            <div className="space-y-1.5">
+                                                {selectedTask.attachments.map((file, idx) => (
+                                                    <div key={idx} className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-150 shadow-sm min-w-0">
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                            <FileText className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                            <span className="text-[10px] font-bold text-slate-700 truncate max-w-[110px]" title={file.filename}>{file.filename}</span>
+                                                        </div>
+                                                        <a
+                                                            href={file.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="p-1 bg-slate-50 hover:bg-emerald-600 text-slate-400 hover:text-white rounded transition shadow-sm border border-slate-200"
+                                                        >
+                                                            <Download className="w-3 h-3" />
+                                                        </a>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Action transition button */}
                                     {(() => {
