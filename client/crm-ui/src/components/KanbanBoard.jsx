@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { taskService, projectService } from '../api/services';
 import usePermission from '../hooks/usePermission';
+import { useAuth } from '../context/AuthContext';
 
 const COLUMNS = [
     { id: 'New',        title: 'New',        color: 'bg-slate-100',   dot: 'bg-slate-400',   dragOver: 'ring-slate-400',   icon: Clock        },
@@ -440,6 +441,7 @@ const TimelineEntry = ({ entry, idx }) => {
 // ─── Main KanbanBoard ─────────────────────────────────────────────────────────
 const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     const { can } = usePermission();
+    const { user } = useAuth();
 
     // Drag state
     const dragTaskId   = useRef(null);
@@ -449,6 +451,13 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     // Search params for deep linking
     const [searchParams, setSearchParams] = useSearchParams();
     const initialProject = searchParams.get('project') || 'All';
+    
+    // Check if opened through specific project (passed initially as project parameter)
+    const [isProjectSpecific] = useState(() => {
+        return !!searchParams.get('project');
+    });
+
+    const [isProjDropdownOpen, setIsProjDropdownOpen] = useState(false);
 
     // Status change modal
     const [pendingChange,    setPendingChange]    = useState(null);
@@ -690,15 +699,57 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
         h.attachment
     ).length;
 
-    // Project filter
+    // Filter tasks based on hierarchy and access control
+    const accessibleTasks = React.useMemo(() => {
+        if (!user) return [];
+        
+        // Admin has access to everything
+        if (user.role === 'admin') {
+            return tasks || [];
+        }
+        
+        // Team Lead has access to projects they lead or are member of
+        if (user.role === 'TL') {
+            return (tasks || []).filter(t => {
+                if (!t.project || typeof t.project !== 'object') return false;
+                const leadId = t.project.teamLead?._id || t.project.teamLead;
+                const isLead = leadId === user._id;
+                const isMember = t.project.teamMembers?.some(m => (m._id || m) === user._id);
+                return isLead || isMember;
+            });
+        }
+        
+        // Employee/developer has access only to their assigned tasks
+        if (user.role === 'employee' || user.role === 'developer') {
+            return (tasks || []).filter(t => {
+                const assigneeId = t.assignedTo?._id || t.assignedTo;
+                return assigneeId === user._id;
+            });
+        }
+        
+        // QA has access only to assigned QA tasks or tasks in QA Review status
+        if (user.role === 'qa') {
+            return (tasks || []).filter(t => {
+                const qaId = t.assignedQA?._id || t.assignedQA;
+                const assigneeId = t.assignedTo?._id || t.assignedTo;
+                const isQA = qaId === user._id || assigneeId === user._id;
+                const isQAReviewStatus = t.status === 'QA Review';
+                return isQA || isQAReviewStatus;
+            });
+        }
+        
+        return [];
+    }, [tasks, user]);
+
+    // Project filter options based on accessible tasks
     const projectOptions = React.useMemo(() => {
         const seen = new Set(); const opts = [];
-        (tasks || []).forEach(t => {
+        (accessibleTasks || []).forEach(t => {
             const name = getProject(t);
             if (name && name !== 'Unassigned' && !seen.has(name)) { seen.add(name); opts.push(name); }
         });
         return opts.sort();
-    }, [tasks]);
+    }, [accessibleTasks]);
 
     const [projectFilter, setProjectFilter] = useState(initialProject);
 
@@ -715,8 +766,8 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
 
     useEffect(() => {
         const taskIdParam = searchParams.get('taskId');
-        if (taskIdParam && tasks && tasks.length > 0) {
-            const taskToSelect = tasks.find(t => String(t._id || t.id) === taskIdParam);
+        if (taskIdParam && accessibleTasks && accessibleTasks.length > 0) {
+            const taskToSelect = accessibleTasks.find(t => String(t._id || t.id) === taskIdParam);
             if (taskToSelect) {
                 const taskProj = String(taskToSelect.project?.projectName || taskToSelect.project?.name || taskToSelect.project || '');
                 if (taskProj && taskProj !== 'All' && projectFilter !== taskProj) {
@@ -725,9 +776,9 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                 setSelectedTask(taskToSelect);
             }
         }
-    }, [searchParams, tasks]);
+    }, [searchParams, accessibleTasks]);
 
-    const filteredTasks = (tasks || []).filter(t => {
+    const filteredTasks = (accessibleTasks || []).filter(t => {
         const matchesSearch  = !searchQuery || (
             getTaskName(t).toLowerCase().includes(searchQuery.toLowerCase()) ||
             getProject(t).toLowerCase().includes(searchQuery.toLowerCase())
@@ -739,29 +790,59 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     // ─── Render ───────────────────────────────────────────────────────────────
     return (
         <>
-            {/* Project Filter Bar */}
-            {!loading && projectOptions.length > 0 && (
-                <div className="flex items-center gap-2 mb-4 flex-wrap shrink-0">
-                    <span className="text-xs font-bold text-slate-500 mr-1">Project:</span>
-                    <button
-                        onClick={() => setProjectFilter('All')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                            projectFilter === 'All'
-                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                                : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:text-blue-600'
-                        }`}
-                    >All Projects</button>
-                    {projectOptions.map(proj => (
-                        <button
-                            key={proj}
-                            onClick={() => setProjectFilter(proj === projectFilter ? 'All' : proj)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                                projectFilter === proj
-                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                    : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-400 hover:text-indigo-600'
-                            }`}
-                        >{proj}</button>
-                    ))}
+            {/* Project Filter Header / Dropdown Selector */}
+            {!loading && (
+                <div className="mb-6 shrink-0">
+                    {isProjectSpecific ? (
+                        <div className="flex items-center gap-3">
+                            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">Project Board</span>
+                            <span className="text-xl font-extrabold text-slate-800 bg-indigo-50 border border-indigo-100 px-4 py-2 rounded-2xl shadow-sm">
+                                {projectFilter}
+                            </span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <span className="text-xs font-bold text-slate-500 mr-1">Project:</span>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsProjDropdownOpen(!isProjDropdownOpen)}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 rounded-xl text-sm font-semibold shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                                >
+                                    <span>{projectFilter === 'All' ? 'All Projects' : projectFilter}</span>
+                                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                                </button>
+                                {isProjDropdownOpen && (
+                                    <>
+                                        <div className="fixed inset-0 z-40" onClick={() => setIsProjDropdownOpen(false)} />
+                                        <div className="absolute left-0 mt-2 w-64 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
+                                            <div className="px-4 py-2 border-b border-slate-50">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Switch Project</p>
+                                            </div>
+                                            <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                                                <button
+                                                    onClick={() => { setProjectFilter('All'); setIsProjDropdownOpen(false); }}
+                                                    className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === 'All' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-600'}`}
+                                                >
+                                                    All Projects
+                                                    {projectFilter === 'All' && <CheckCircle2 className="w-4 h-4 text-blue-600" />}
+                                                </button>
+                                                {projectOptions.map(proj => (
+                                                    <button
+                                                        key={proj}
+                                                        onClick={() => { setProjectFilter(proj); setIsProjDropdownOpen(false); }}
+                                                        className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === proj ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
+                                                    >
+                                                        {proj}
+                                                        {projectFilter === proj && <CheckCircle2 className="w-4 h-4 text-indigo-600" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
