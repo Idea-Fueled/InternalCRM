@@ -1,8 +1,27 @@
 import React from 'react';
 import { X, User, Briefcase, CheckSquare, Clock, AlertTriangle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
+    const [searchParams, setSearchParams] = useSearchParams();
+
     if (!isOpen) return null;
+
+    const handleItemClick = (item) => {
+        if (type === 'task') {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('taskId', item._id || item.id);
+            nextParams.delete('projectId');
+            setSearchParams(nextParams, { replace: true });
+            onClose();
+        } else if (type === 'project') {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.set('projectId', item._id || item.id);
+            nextParams.delete('taskId');
+            setSearchParams(nextParams, { replace: true });
+            onClose();
+        }
+    };
 
     const renderIcon = () => {
         if (title.toLowerCase().includes('employee')) return <User className="w-5 h-5 text-blue-600" />;
@@ -32,9 +51,13 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
 
         if (type === 'project') {
             return (
-                <div key={item._id || index} className="flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors last:border-0">
+                <div 
+                    key={item._id || index} 
+                    onClick={() => handleItemClick(item)}
+                    className="flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-indigo-50/50 hover:border-l-indigo-500 transition-all last:border-b-0 cursor-pointer group border-l-4 border-l-transparent"
+                >
                     <div className="flex items-center justify-between">
-                        <p className="text-sm font-bold text-slate-800">{item.projectName}</p>
+                        <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{item.projectName}</p>
                         <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${item.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
                             {item.status || 'Active'}
                         </span>
@@ -53,10 +76,14 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
             const priorityColor = item.priority === 'High' || item.priority === 'Critical' ? 'text-rose-600 bg-rose-50' : 'text-slate-600 bg-slate-100';
             const statusColor = item.status === 'Completed' || item.status === 'Done' ? 'text-emerald-700 bg-emerald-50' : 'text-blue-700 bg-blue-50';
             return (
-                <div key={item._id || index} className="flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors last:border-0">
+                <div 
+                    key={item._id || index} 
+                    onClick={() => handleItemClick(item)}
+                    className="flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-blue-50/50 hover:border-l-blue-500 transition-all last:border-b-0 cursor-pointer group border-l-4 border-l-transparent"
+                >
                     <div className="flex items-start justify-between gap-2">
                         <div>
-                            <p className="text-sm font-bold text-slate-800">{item.taskName}</p>
+                            <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{item.taskName}</p>
                             <p className="text-[11px] font-semibold text-slate-500 mt-0.5">{item.project?.projectName || (typeof item.project === 'string' ? item.project : 'Unassigned Project')}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
