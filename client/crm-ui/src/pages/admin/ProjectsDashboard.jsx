@@ -325,7 +325,8 @@ const ProjectsDashboard = () => {
 
     const filteredProjects = projects.filter(proj => {
         const matchesSearch = proj.projectName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                               proj.description?.toLowerCase().includes(searchQuery.toLowerCase());
+                               proj.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                               proj._id?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === "Status: All" || statusFilter === "All" || proj.timelineTag === statusFilter;
         
         let matchesDateRange = true;
@@ -390,7 +391,7 @@ const ProjectsDashboard = () => {
                             <div className="relative w-full xl:w-[400px]">
                                 <input
                                     type="text"
-                                    placeholder="Search projects by name..."
+                                    placeholder="Search projects by name or ID..."
                                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-100 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white outline-none transition text-sm font-medium placeholder-slate-400"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
