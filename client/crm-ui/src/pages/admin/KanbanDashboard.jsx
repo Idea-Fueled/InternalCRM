@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { taskService, userService, projectService } from '../../api/services';
 import { toast } from 'sonner';
 import AdminSidebar from '../../components/admin/AdminSidebar';
@@ -13,6 +14,9 @@ const KanbanDashboard = () => {
     const { can } = usePermission();
     const role = user?.role || 'admin';
     const currentRole = role === 'TL' ? 'teamLead' : role;
+
+    const [searchParams] = useSearchParams();
+    const projectQueryParam = searchParams.get('project');
 
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -70,6 +74,19 @@ const KanbanDashboard = () => {
         }
     }, [newTask.project, projects]);
 
+    // Pre-select project from query param if inside specific project board
+    useEffect(() => {
+        if (projectQueryParam && projects.length > 0) {
+            const matchedProj = projects.find(p => p.projectName === projectQueryParam);
+            if (matchedProj) {
+                setNewTask(prev => ({
+                    ...prev,
+                    project: matchedProj._id
+                }));
+            }
+        }
+    }, [projectQueryParam, projects]);
+
     const handleCreateTask = async (e) => {
         e.preventDefault();
         setSubmitted(true);
@@ -84,7 +101,17 @@ const KanbanDashboard = () => {
             toast.success('Task created successfully');
             setIsTaskModalOpen(false);
             setSubmitted(false);
-            setNewTask({ taskName: '', description: '', project: '', assignedTo: '', assignedQA: '', priority: 'Medium', startDate: new Date().toISOString().split('T')[0], endDate: '', attachments: [] });
+            setNewTask({
+                taskName: '',
+                description: '',
+                project: projectQueryParam ? (projects.find(p => p.projectName === projectQueryParam)?._id || '') : '',
+                assignedTo: '',
+                assignedQA: '',
+                priority: 'Medium',
+                startDate: new Date().toISOString().split('T')[0],
+                endDate: '',
+                attachments: []
+            });
             fetchTasks();
         } catch (err) {
             toast.error(err.response?.data?.message || 'Failed to create task');
@@ -156,8 +183,13 @@ const KanbanDashboard = () => {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block font-bold text-slate-700 mb-1.5">Project <span className="text-red-500">*</span></label>
-                                        <select required value={newTask.project} onChange={e => setNewTask({ ...newTask, project: e.target.value })}
-                                            className={`w-full px-4 py-2.5 bg-white border ${submitted && !newTask.project ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium`}>
+                                        <select
+                                            required
+                                            disabled={!!projectQueryParam}
+                                            value={newTask.project}
+                                            onChange={e => setNewTask({ ...newTask, project: e.target.value })}
+                                            className={`w-full px-4 py-2.5 bg-white border ${submitted && !newTask.project ? 'border-red-500 bg-red-50/30' : 'border-slate-200'} rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-slate-700 font-medium ${projectQueryParam ? 'disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed disabled:border-slate-200' : 'cursor-pointer'}`}
+                                        >
                                             <option value="">Select Project</option>
                                             {projects.map(p => <option key={p._id} value={p._id}>{p.projectName}</option>)}
                                         </select>
