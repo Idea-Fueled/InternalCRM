@@ -761,212 +761,221 @@ const QADashboard = () => {
 
                         {/* ═══ Queue + Activity Row ═══ */}
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                            
                             {/* Pending Review Queue */}
-                            <div className="xl:col-span-2 space-y-4">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/60 backdrop-blur-sm p-4 sm:p-5 sm:px-6 rounded-2xl border border-slate-100">
-                                    <h2 className="text-base font-bold text-slate-800 flex items-center">
-                                        <ShieldCheck className="w-5 h-5 mr-2 text-indigo-500" />
-                                        Pending Review Queue
-                                        <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full ml-3">
-                                            {filteredTasks.length}
-                                        </span>
-                                    </h2>
-                                    <div className="flex items-center gap-2">
-                                        <button 
-                                            onClick={handleExportQueue}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm"
-                                        >
-                                            <Download className="w-3.5 h-3.5" />
-                                            Export
-                                        </button>
-                                        <div className="relative">
-                                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                                            <input 
-                                                type="text" 
-                                                placeholder="Search..." 
-                                                className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all w-40 shadow-sm"
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="relative">
+                            <div className="xl:col-span-2">
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col h-[580px]">
+                                    
+                                    {/* Header */}
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-4 border-b border-slate-100 mb-4 shrink-0">
+                                        <h2 className="text-sm font-bold text-slate-800 flex items-center">
+                                            <ShieldCheck className="w-5 h-5 mr-2 text-indigo-500" />
+                                            Pending Review Queue
+                                            <span className="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full ml-3">
+                                                {filteredTasks.length}
+                                            </span>
+                                        </h2>
+                                        <div className="flex items-center gap-2">
                                             <button 
-                                                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                                                className={`flex items-center justify-center p-1.5 bg-white border ${projectFilter !== 'All' ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/10' : 'border-slate-200 text-slate-500'} rounded-lg text-xs font-semibold hover:bg-slate-50 transition-all shadow-sm`}
-                                                title="Filter by Project"
+                                                onClick={handleExportQueue}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm"
                                             >
-                                                <Filter className={`w-3.5 h-3.5 ${projectFilter !== 'All' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                                                <Download className="w-3.5 h-3.5" />
+                                                Export
                                             </button>
-                                            {isFilterDropdownOpen && (
-                                                <>
-                                                    <div className="fixed inset-0 z-40" onClick={() => setIsFilterDropdownOpen(false)} />
-                                                    <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
-                                                        <div className="px-4 py-2 border-b border-slate-50">
-                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter by Project</p>
-                                                        </div>
-                                                        <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                                                            <button
-                                                                onClick={() => { setProjectFilter('All'); setIsFilterDropdownOpen(false); }}
-                                                                className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === 'All' ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
-                                                            >
-                                                                All Projects
-                                                                {projectFilter === 'All' && <ShieldCheck className="w-4 h-4" />}
-                                                            </button>
-                                                            {projectOptions.map(proj => (
+                                            <div className="relative">
+                                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Search..." 
+                                                    className="pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all w-40 shadow-sm"
+                                                    value={searchQuery}
+                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="relative">
+                                                <button 
+                                                    onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                                                    className={`flex items-center justify-center p-1.5 bg-white border ${projectFilter !== 'All' ? 'border-indigo-500 text-indigo-600 ring-2 ring-indigo-500/10' : 'border-slate-200 text-slate-500'} rounded-lg text-xs font-semibold hover:bg-slate-50 transition-all shadow-sm`}
+                                                    title="Filter by Project"
+                                                >
+                                                    <Filter className={`w-3.5 h-3.5 ${projectFilter !== 'All' ? 'text-indigo-500' : 'text-slate-400'}`} />
+                                                </button>
+                                                {isFilterDropdownOpen && (
+                                                    <>
+                                                        <div className="fixed inset-0 z-40" onClick={() => setIsFilterDropdownOpen(false)} />
+                                                        <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 py-2 animate-in fade-in zoom-in-95 duration-100">
+                                                            <div className="px-4 py-2 border-b border-slate-50">
+                                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Filter by Project</p>
+                                                            </div>
+                                                            <div className="max-h-64 overflow-y-auto custom-scrollbar">
                                                                 <button
-                                                                    key={proj}
-                                                                    onClick={() => { setProjectFilter(proj); setIsFilterDropdownOpen(false); }}
-                                                                    className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === proj ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
+                                                                    onClick={() => { setProjectFilter('All'); setIsFilterDropdownOpen(false); }}
+                                                                    className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === 'All' ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
                                                                 >
-                                                                    {proj}
-                                                                    {projectFilter === proj && <ShieldCheck className="w-4 h-4" />}
+                                                                    All Projects
+                                                                    {projectFilter === 'All' && <ShieldCheck className="w-4 h-4" />}
                                                                 </button>
-                                                            ))}
+                                                                {projectOptions.map(proj => (
+                                                                    <button
+                                                                        key={proj}
+                                                                        onClick={() => { setProjectFilter(proj); setIsFilterDropdownOpen(false); }}
+                                                                        className={`w-full text-left px-4 py-2.5 text-sm font-medium transition-colors hover:bg-slate-50 flex items-center justify-between ${projectFilter === proj ? 'text-indigo-600 bg-indigo-50/50' : 'text-slate-600'}`}
+                                                                    >
+                                                                        {proj}
+                                                                        {projectFilter === proj && <ShieldCheck className="w-4 h-4" />}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </>
-                                            )}
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="space-y-3">
-                                    {loading ? (
-                                        <div className="flex items-center justify-center p-12">
-                                            <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
-                                        </div>
-                                    ) : filteredTasks.map(task => {
-                                        const isOverdue = task.endDate && new Date(task.endDate) < new Date();
-                                        const daysLeft = task.endDate ? Math.ceil((new Date(task.endDate) - new Date()) / (1000 * 60 * 60 * 24)) : null;
-                                        
-                                        return (
-                                            <div 
-                                                key={task._id}
-                                                onClick={() => setSelectedTask(task)}
-                                                className={`bg-white p-4 rounded-2xl shadow-sm border transition-all cursor-pointer group flex flex-col sm:flex-row gap-3 sm:items-center justify-between ${
-                                                    isOverdue 
-                                                        ? 'border-rose-200 hover:border-rose-300 hover:shadow-rose-100' 
-                                                        : 'border-slate-100 hover:border-indigo-200 hover:shadow-md'
-                                                }`}
-                                            >
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                        <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
-                                                            {task.project?.projectName || task.project?.name || "No Project"}
-                                                        </span>
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
-                                                            {task.priority || "Medium"}
-                                                        </span>
-                                                        {isOverdue && (
-                                                            <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-100 animate-pulse flex items-center gap-1">
-                                                                <AlertTriangle className="w-2.5 h-2.5" /> Overdue
+                                    {/* Scrollable List Container */}
+                                    <div className="flex-grow overflow-y-auto custom-scrollbar pr-1 space-y-3">
+                                        {loading ? (
+                                            <div className="flex items-center justify-center p-12 h-full">
+                                                <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+                                            </div>
+                                        ) : filteredTasks.map(task => {
+                                            const isOverdue = task.endDate && new Date(task.endDate) < new Date();
+                                            const daysLeft = task.endDate ? Math.ceil((new Date(task.endDate) - new Date()) / (1000 * 60 * 60 * 24)) : null;
+                                            
+                                            return (
+                                                <div 
+                                                    key={task._id}
+                                                    onClick={() => setSelectedTask(task)}
+                                                    className={`bg-white p-4 rounded-2xl shadow-sm border transition-all cursor-pointer group flex flex-col sm:flex-row gap-3 sm:items-center justify-between ${
+                                                        isOverdue 
+                                                            ? 'border-rose-200 hover:border-rose-300 hover:shadow-rose-100' 
+                                                            : 'border-slate-100 hover:border-indigo-200 hover:shadow-md'
+                                                    }`}
+                                                >
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                            <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                                                                {task.project?.projectName || task.project?.name || "No Project"}
                                                             </span>
-                                                        )}
-                                                    </div>
-                                                    <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1.5 truncate">
-                                                        {task.taskName}
-                                                    </h3>
-                                                    <div className="flex items-center gap-3 text-[10px] font-medium text-slate-400">
-                                                        <div className="flex items-center gap-1">
-                                                            <div className="w-4 h-4 rounded-md bg-blue-500 text-white flex items-center justify-center text-[7px] font-bold overflow-hidden shrink-0">
-                                                                {task.assignedTo?.profilePic ? (
-                                                                    <img src={task.assignedTo.profilePic} alt="" className="w-full h-full object-cover" />
-                                                                ) : (task.assignedTo?.name?.charAt(0) || "U")}
+                                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${PRIORITY_COLORS[task.priority] || PRIORITY_COLORS['Medium']}`}>
+                                                                {task.priority || "Medium"}
+                                                            </span>
+                                                            {isOverdue && (
+                                                                <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-100 animate-pulse flex items-center gap-1">
+                                                                    <AlertTriangle className="w-2.5 h-2.5" /> Overdue
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <h3 className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors mb-1.5 truncate">
+                                                            {task.taskName}
+                                                        </h3>
+                                                        <div className="flex items-center gap-3 text-[10px] font-medium text-slate-400">
+                                                            <div className="flex items-center gap-1">
+                                                                <div className="w-4 h-4 rounded-md bg-blue-500 text-white flex items-center justify-center text-[7px] font-bold overflow-hidden shrink-0">
+                                                                    {task.assignedTo?.profilePic ? (
+                                                                        <img src={task.assignedTo.profilePic} alt="" className="w-full h-full object-cover" />
+                                                                    ) : (task.assignedTo?.name?.charAt(0) || "U")}
+                                                                </div>
+                                                                <span className="text-slate-600 font-semibold">{task.assignedTo?.name || "Unassigned"}</span>
                                                             </div>
-                                                            <span className="text-slate-600 font-semibold">{task.assignedTo?.name || "Unassigned"}</span>
-                                                        </div>
-                                                        <span className="text-slate-200">•</span>
-                                                        <div className="flex items-center gap-1">
-                                                            <Calendar className="w-3 h-3" />
-                                                            <span className={isOverdue ? 'text-rose-500 font-bold' : ''}>
-                                                                {daysLeft !== null ? (
-                                                                    isOverdue ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`
-                                                                ) : 'No due date'}
-                                                            </span>
-                                                        </div>
-                                                        <span className="text-slate-200">•</span>
-                                                        <div className="flex items-center gap-1">
-                                                            <Paperclip className="w-3 h-3" />
-                                                            <span>{task.attachments?.length || 0}</span>
+                                                            <span className="text-slate-200">•</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar className="w-3 h-3" />
+                                                                <span className={isOverdue ? 'text-rose-500 font-bold' : ''}>
+                                                                    {daysLeft !== null ? (
+                                                                        isOverdue ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`
+                                                                    ) : 'No due date'}
+                                                                </span>
+                                                            </div>
+                                                            <span className="text-slate-200">•</span>
+                                                            <div className="flex items-center gap-1">
+                                                                <Paperclip className="w-3 h-3" />
+                                                                <span>{task.attachments?.length || 0}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
 
-                                                <div className="flex items-center gap-2 shrink-0">
-                                                    <button 
-                                                        onClick={(e) => handleReject(task._id, e)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition-colors border border-rose-100"
-                                                    >
-                                                        <XCircle className="w-3.5 h-3.5" />
-                                                        Reject
-                                                    </button>
-                                                    <button 
-                                                        onClick={(e) => handleApprove(task._id, e)}
-                                                        className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm shadow-emerald-200"
-                                                    >
-                                                        <CheckCircle2 className="w-3.5 h-3.5" />
-                                                        Approve
-                                                    </button>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <button 
+                                                            onClick={(e) => handleReject(task._id, e)}
+                                                            className="flex items-center gap-1 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition-colors border border-rose-100"
+                                                        >
+                                                            <XCircle className="w-3.5 h-3.5" />
+                                                            Reject
+                                                        </button>
+                                                        <button 
+                                                            onClick={(e) => handleApprove(task._id, e)}
+                                                            className="flex items-center gap-1 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm shadow-emerald-200"
+                                                        >
+                                                            <CheckCircle2 className="w-3.5 h-3.5" />
+                                                            Approve
+                                                        </button>
+                                                    </div>
                                                 </div>
+                                            );
+                                        })}
+                                        {filteredTasks.length === 0 && !loading && (
+                                            <div className="border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center h-full">
+                                                <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
+                                                    <ShieldCheck className="w-8 h-8 text-slate-300" />
+                                                </div>
+                                                <h3 className="text-lg font-bold text-slate-700">All caught up!</h3>
+                                                <p className="text-slate-400 text-sm mt-1">No tasks pending QA review.</p>
                                             </div>
-                                        );
-                                    })}
-                                    {filteredTasks.length === 0 && !loading && (
-                                        <div className="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
-                                            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
-                                                <ShieldCheck className="w-8 h-8 text-slate-300" />
-                                            </div>
-                                            <h3 className="text-lg font-bold text-slate-700">All caught up!</h3>
-                                            <p className="text-slate-400 text-sm mt-1">No tasks pending QA review.</p>
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Recent Activity Feed */}
                             <div className="xl:col-span-1">
-                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sticky top-0">
-                                    <h3 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2">
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col h-[580px]">
+                                    <h3 className="text-sm font-bold text-slate-800 pb-4 border-b border-slate-100 mb-4 flex items-center gap-2 shrink-0">
                                         <Activity className="w-4 h-4 text-blue-500" />
                                         Recent Activity
                                         <span className="text-[10px] font-medium text-slate-400 ml-auto">{recentActivity.length} events</span>
                                     </h3>
-                                    <div className="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100 max-h-[500px] overflow-y-auto custom-scrollbar pr-1">
-                                        {recentActivity.map((activity) => (
-                                            <div key={activity.id} className="relative pl-10">
-                                                <div className={`absolute left-0 top-0.5 w-[22px] h-[22px] rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 ${
-                                                    activity.type === 'Approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
-                                                }`}>
-                                                    {activity.type === 'Approve' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                    
+                                    <div className="flex-grow overflow-y-auto custom-scrollbar pr-1 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
+                                        <div className="space-y-4">
+                                            {recentActivity.map((activity) => (
+                                                <div key={activity.id} className="relative pl-10">
+                                                    <div className={`absolute left-0 top-0.5 w-[22px] h-[22px] rounded-full flex items-center justify-center border-2 border-white shadow-sm z-10 ${
+                                                        activity.type === 'Approve' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                                                    }`}>
+                                                        {activity.type === 'Approve' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-slate-700">
+                                                            You <span className={activity.type === 'Approve' ? 'text-emerald-600' : 'text-rose-600'}>
+                                                                {activity.type === 'Approve' ? 'approved' : 'rejected'}
+                                                            </span>
+                                                        </p>
+                                                        <p className="text-xs font-bold text-indigo-600 my-0.5 hover:underline cursor-pointer transition-all leading-tight truncate">
+                                                            {activity.task}
+                                                        </p>
+                                                        {activity.note && (
+                                                            <div className="bg-slate-50 border border-slate-100 rounded-lg p-2 my-1.5">
+                                                                <p className="text-[10px] text-slate-500 leading-relaxed italic truncate">
+                                                                    "{activity.note}"
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        <p className="text-[9px] font-medium text-slate-400 mt-1">
+                                                            {getTimeAgo(activity.timestamp)}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div>
-                                                    <p className="text-xs font-semibold text-slate-700">
-                                                        You <span className={activity.type === 'Approve' ? 'text-emerald-600' : 'text-rose-600'}>
-                                                            {activity.type === 'Approve' ? 'approved' : 'rejected'}
-                                                        </span>
-                                                    </p>
-                                                    <p className="text-xs font-bold text-indigo-600 my-0.5 hover:underline cursor-pointer transition-all leading-tight truncate">
-                                                        {activity.task}
-                                                    </p>
-                                                    {activity.note && (
-                                                        <div className="bg-slate-50 border border-slate-100 rounded-lg p-2 my-1.5">
-                                                            <p className="text-[10px] text-slate-500 leading-relaxed italic truncate">
-                                                                "{activity.note}"
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                    <p className="text-[9px] font-medium text-slate-400 mt-1">
-                                                        {getTimeAgo(activity.timestamp)}
-                                                    </p>
+                                            ))}
+                                            {recentActivity.length === 0 && (
+                                                <div className="text-center py-8">
+                                                    <Activity className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+                                                    <p className="text-xs text-slate-400 italic">No recent activity</p>
                                                 </div>
-                                            </div>
-                                        ))}
-                                        {recentActivity.length === 0 && (
-                                            <div className="text-center py-8">
-                                                <Activity className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-                                                <p className="text-xs text-slate-400 italic">No recent activity</p>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
