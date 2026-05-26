@@ -309,31 +309,7 @@ const QADashboard = () => {
         
         return days;
     }, [allTasksForStats, projectFilter]);
-    
-    const weeklyStats = useMemo(() => {
-        let total = 0;
-        let approved = 0;
-        let peakCount = 0;
-        let peakDayLabel = 'N/A';
-        
-        last7DaysData.forEach(d => {
-            total += d.count;
-            approved += d.approved;
-            if (d.count > peakCount) {
-                peakCount = d.count;
-                peakDayLabel = d.label;
-            }
-        });
-        
-        const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 100;
-        
-        return {
-            total,
-            peakCount,
-            peakDayLabel: peakCount > 0 ? `${peakDayLabel} (${peakCount} review${peakCount > 1 ? 's' : ''})` : 'N/A',
-            approvalRate
-        };
-    }, [last7DaysData]);
+
 
     const donutData = useMemo(() => {
         const total = dashboardMetrics.pending + dashboardMetrics.approved + dashboardMetrics.rejected;
@@ -630,15 +606,15 @@ const QADashboard = () => {
                             </div>
                             
                             {/* Daily QA Activity - Area Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sm:p-6 flex flex-col justify-between h-full">
-                                <div>
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 sm:mb-5">
+                            <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col justify-between h-full">
+                                <div className="flex flex-col h-full justify-between">
+                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-5 shrink-0">
                                         <Activity className="w-4 h-4 text-blue-500" />
                                         Daily QA Activity
                                         <span className="text-[10px] sm:text-[11px] font-medium text-slate-400 ml-1">Last 7 days</span>
                                     </h3>
                                     
-                                    <div className="relative w-full h-[180px] sm:h-[220px]" ref={areaChartRef}>
+                                    <div className="relative w-full flex-grow min-h-[220px] lg:min-h-[280px]" ref={areaChartRef}>
                                         {(() => {
                                             const rawMax = Math.max(...last7DaysData.map(d => d.count), 1);
                                             const niceMax = rawMax <= 4 ? Math.max(rawMax, 2) : Math.ceil(rawMax / 4) * 4;
@@ -780,22 +756,6 @@ const QADashboard = () => {
                                         )}
                                     </div>
                                 </div>
-                                
-                                {/* Balanced Summary Row at the Bottom */}
-                                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100 mt-4">
-                                    <div>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total Reviews</span>
-                                        <span className="text-base font-bold text-slate-800 mt-0.5 block">{weeklyStats.total}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Approval Rate</span>
-                                        <span className="text-base font-bold text-emerald-600 mt-0.5 block">{weeklyStats.approvalRate}%</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Peak Activity</span>
-                                        <span className="text-base font-bold text-indigo-600 mt-0.5 block truncate" title={weeklyStats.peakDayLabel}>{weeklyStats.peakDayLabel}</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -803,7 +763,7 @@ const QADashboard = () => {
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                             {/* Pending Review Queue */}
                             <div className="xl:col-span-2 space-y-4">
-                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/60 backdrop-blur-sm p-4 rounded-2xl border border-slate-100">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white/60 backdrop-blur-sm p-4 sm:p-5 sm:px-6 rounded-2xl border border-slate-100">
                                     <h2 className="text-base font-bold text-slate-800 flex items-center">
                                         <ShieldCheck className="w-5 h-5 mr-2 text-indigo-500" />
                                         Pending Review Queue
@@ -965,7 +925,7 @@ const QADashboard = () => {
 
                             {/* Recent Activity Feed */}
                             <div className="xl:col-span-1">
-                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 sticky top-0">
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sticky top-0">
                                     <h3 className="text-sm font-bold text-slate-800 mb-5 flex items-center gap-2">
                                         <Activity className="w-4 h-4 text-blue-500" />
                                         Recent Activity
