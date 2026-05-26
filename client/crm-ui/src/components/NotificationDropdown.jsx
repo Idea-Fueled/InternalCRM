@@ -125,19 +125,24 @@ const NotificationDropdown = ({ role }) => {
                 projectId = pathParts[2];
             }
 
-            // Contextual Sidebar Opening: Stay on SAME page and append taskId/projectId query params
-            if (taskId || projectId) {
+            // Strictly separate task vs project sidebar activations based on notification entity type
+            const isTaskNotification = n.type === 'task' || !!taskId;
+            const isProjectNotification = n.type === 'project' && !!projectId;
+
+            if (isTaskNotification) {
                 const currentParams = new URLSearchParams(window.location.search);
                 if (taskId) {
                     currentParams.set('taskId', taskId);
-                    currentParams.delete('projectId'); // Avoid opening both
-                } else if (projectId) {
-                    currentParams.set('projectId', projectId);
-                    currentParams.delete('taskId');
                 }
+                currentParams.delete('projectId'); // Never open Project Details Sidebar for task notifications
+                navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
+            } else if (isProjectNotification) {
+                const currentParams = new URLSearchParams(window.location.search);
+                currentParams.set('projectId', projectId);
+                currentParams.delete('taskId'); // Never open Task Details Sidebar for project notifications
                 navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
             } else {
-                // Fallback for general navigation
+                // Fallback for other general links or system notifications
                 navigate(n.link);
             }
         }
