@@ -28,6 +28,49 @@ const PRIORITY_COLORS = {
     'Critical': 'bg-rose-100 text-rose-700',
 };
 
+const getCardStyle = (status, overdue) => {
+    if (overdue) {
+        return {
+            bgBorder: 'bg-rose-50 border-rose-300 border-l-4 border-l-rose-500 shadow-sm shadow-rose-100/40 hover:bg-rose-100/60 hover:border-rose-400 hover:border-l-rose-600 hover:shadow-md',
+            badge: 'bg-rose-100 text-rose-700 border-rose-250',
+            dot: 'bg-rose-500'
+        };
+    }
+    switch (status) {
+        case 'New':
+            return {
+                bgBorder: 'bg-slate-50/40 border-slate-200 border-l-4 border-l-slate-400 hover:bg-slate-50/80 hover:border-slate-300 hover:border-l-slate-500 hover:shadow-md',
+                badge: 'bg-slate-100 text-slate-600 border-slate-200',
+                dot: 'bg-slate-400'
+            };
+        case 'In Progress':
+            return {
+                bgBorder: 'bg-blue-50/20 border-blue-200 border-l-4 border-l-blue-400 hover:bg-blue-50/45 hover:border-blue-300 hover:border-l-blue-500 hover:shadow-md',
+                badge: 'bg-blue-100 text-blue-700 border-blue-200',
+                dot: 'bg-blue-500'
+            };
+        case 'QA Review':
+            return {
+                bgBorder: 'bg-indigo-50/25 border-indigo-200 border-l-4 border-l-indigo-400 hover:bg-indigo-50/50 hover:border-indigo-300 hover:border-l-indigo-500 hover:shadow-md',
+                badge: 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                dot: 'bg-indigo-500'
+            };
+        case 'Completed':
+        case 'Done':
+            return {
+                bgBorder: 'bg-emerald-50/20 border-emerald-200 border-l-4 border-l-emerald-400 hover:bg-emerald-50/45 hover:border-emerald-300 hover:border-l-emerald-500 hover:shadow-md',
+                badge: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                dot: 'bg-emerald-500'
+            };
+        default:
+            return {
+                bgBorder: 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md',
+                badge: 'bg-slate-100 text-slate-600 border-slate-200',
+                dot: 'bg-slate-400'
+            };
+    }
+};
+
 // ─── File type helpers ────────────────────────────────────────────────────────
 const getFileIcon = (fileType = '', filename = '') => {
     const t = (fileType + filename).toLowerCase();
@@ -906,17 +949,14 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                             const hist     = getHistory(task);
                                             const richCount = countRichHistory(task);
                                             const isLocked = (role === 'developer' || role === 'employee') && ['QA Review', 'Completed', 'Done'].includes(col.id);
+                                            const cardStyle = getCardStyle(task.status, overdue);
                                             return (
                                                 <div
                                                     key={getTaskId(task)}
                                                     draggable={!isLocked}
                                                     onDragStart={e => onDragStart(e, getTaskId(task), col.id)}
                                                     onClick={() => setSelectedTask(task)}
-                                                    className={`p-4 rounded-xl shadow-sm border transition-all group select-none ${
-                                                        overdue 
-                                                             ? 'bg-rose-50 border-rose-300 border-l-4 border-l-rose-500 shadow-sm shadow-rose-100 hover:bg-rose-100/60 hover:border-rose-400 hover:border-l-rose-600 hover:shadow-md' 
-                                                            : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md'
-                                                    } ${isLocked ? 'cursor-default opacity-90' : 'cursor-grab active:cursor-grabbing'}`}
+                                                    className={`p-4 rounded-xl shadow-sm border transition-all group select-none ${cardStyle.bgBorder} ${isLocked ? 'cursor-default opacity-90' : 'cursor-grab active:cursor-grabbing'}`}
                                                 >
                                                     <div className="flex justify-between items-start mb-2.5">
                                                         <button
@@ -924,10 +964,15 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                             className="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100 truncate max-w-[45%] hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all cursor-pointer"
                                                         >{getProject(task)}</button>
                                                         <div className="flex items-center gap-1.5 shrink-0">
-                                                            {overdue && (
-                                                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 flex items-center gap-1 border border-rose-200 shrink-0" title="Overdue">
+                                                            {overdue ? (
+                                                                <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 flex items-center gap-1 border border-rose-200 shrink-0 animate-pulse" title="Overdue">
                                                                     <AlertTriangle className="w-3 h-3 shrink-0" />
                                                                     Overdue
+                                                                </span>
+                                                            ) : (
+                                                                <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded-md border whitespace-nowrap flex items-center gap-1.5 ${cardStyle.badge}`}>
+                                                                    <div className={`w-1 h-1 rounded-full ${cardStyle.dot}`} />
+                                                                    {task.status}
                                                                 </span>
                                                             )}
                                                             {isLocked && (
