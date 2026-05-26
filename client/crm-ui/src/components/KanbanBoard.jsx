@@ -914,7 +914,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                                     onClick={() => setSelectedTask(task)}
                                                     className={`p-4 rounded-xl shadow-sm border transition-all group select-none ${
                                                         overdue 
-                                                            ? 'bg-rose-50/30 border-rose-200 shadow-rose-50/50 hover:bg-rose-50/50 hover:border-rose-300 hover:shadow-md' 
+                                                             ? 'bg-rose-50 border-rose-300 border-l-4 border-l-rose-500 shadow-sm shadow-rose-100 hover:bg-rose-100/60 hover:border-rose-400 hover:border-l-rose-600 hover:shadow-md' 
                                                             : 'bg-white border-slate-200 hover:border-blue-300 hover:shadow-md'
                                                     } ${isLocked ? 'cursor-default opacity-90' : 'cursor-grab active:cursor-grabbing'}`}
                                                 >
