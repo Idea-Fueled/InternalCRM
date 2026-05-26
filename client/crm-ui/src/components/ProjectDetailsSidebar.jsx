@@ -731,12 +731,11 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                     {filteredTasks.map((task) => (
                                                         <tr
                                                             key={task._id}
-                                                            onClick={() => setSelectedTask(task)}
-                                                            className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                                                            className="hover:bg-slate-50/50 transition-colors"
                                                         >
                                                             <td className="px-6 py-3.5">
                                                                 <div className="leading-snug max-w-[200px] truncate">
-                                                                    <p className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition-colors truncate">
+                                                                    <p className="text-xs font-bold text-slate-800 transition-colors truncate">
                                                                         {task.taskName}
                                                                     </p>
                                                                     <span className="text-[10px] font-bold text-slate-600 flex items-center gap-1 mt-1">
