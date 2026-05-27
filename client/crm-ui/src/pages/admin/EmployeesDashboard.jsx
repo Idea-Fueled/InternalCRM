@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, authService, departmentService } from "../../api/services";
@@ -74,6 +75,7 @@ const Card = ({ children, className = "" }) => (
 );
 
 const EmployeesDashboard = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
     const { can } = usePermission();
     const [employees, setEmployees] = useState([]);
@@ -82,6 +84,14 @@ const EmployeesDashboard = () => {
     const [roleFilter, setRoleFilter] = useState("All Roles");
     
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
+
+    const handleTaskClick = (taskId) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('taskId', taskId);
+        nextParams.delete('projectId');
+        setSearchParams(nextParams, { replace: true });
+        setSelectedEmployee(null); // Close employee modal
+    };
 
     const [searchQuery, setSearchQuery] = useState("");
     const [isAddEmployeeModalOpen, setIsAddEmployeeModalOpen] = useState(false);
@@ -1009,8 +1019,12 @@ const EmployeesDashboard = () => {
                                             {selectedEmployee.tasks.overdue > 0 && (
                                                 <div className="p-3 bg-rose-50/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
                                                     {selectedEmployee.tasks.list?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== 'Completed' && t.status !== 'Done').map((task, idx) => (
-                                                        <div key={idx} className="p-3 bg-white border border-rose-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-rose-300 hover:shadow-md">
-                                                            <span className="text-sm font-bold text-slate-800 break-words">{task.taskName}</span>
+                                                        <div 
+                                                            key={idx} 
+                                                            onClick={() => handleTaskClick(task._id || task.id)}
+                                                            className="p-3 bg-white border border-rose-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-rose-300 hover:border-l-rose-500 hover:shadow-md cursor-pointer border-l-4 border-l-transparent group"
+                                                        >
+                                                            <span className="text-sm font-bold text-slate-800 break-words group-hover:text-rose-600 transition-colors">{task.taskName}</span>
                                                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide break-words">{task.project?.projectName || 'Internal Project'}</span>
                                                         </div>
                                                     ))}
@@ -1032,8 +1046,12 @@ const EmployeesDashboard = () => {
                                             {selectedEmployee.tasks.done > 0 && (
                                                 <div className="p-3 bg-emerald-50/20 space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
                                                     {selectedEmployee.tasks.list?.filter(t => t.status === 'Completed' || t.status === 'Done').map((task, idx) => (
-                                                        <div key={idx} className="p-3 bg-white border border-emerald-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-emerald-300 hover:shadow-md">
-                                                            <span className="text-sm font-bold text-slate-800 break-words">{task.taskName}</span>
+                                                        <div 
+                                                            key={idx} 
+                                                            onClick={() => handleTaskClick(task._id || task.id)}
+                                                            className="p-3 bg-white border border-emerald-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-emerald-300 hover:border-l-emerald-500 hover:shadow-md cursor-pointer border-l-4 border-l-transparent group"
+                                                        >
+                                                            <span className="text-sm font-bold text-slate-800 break-words group-hover:text-emerald-600 transition-colors">{task.taskName}</span>
                                                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide break-words">{task.project?.projectName || 'Internal Project'}</span>
                                                         </div>
                                                     ))}
@@ -1055,9 +1073,13 @@ const EmployeesDashboard = () => {
                                             {selectedEmployee.tasks.total > 0 && (
                                                 <div className="p-3 bg-blue-50/20 space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
                                                     {selectedEmployee.tasks.list?.map((task, idx) => (
-                                                        <div key={idx} className="p-3 bg-white border border-blue-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-blue-300 hover:shadow-md">
+                                                        <div 
+                                                            key={idx} 
+                                                            onClick={() => handleTaskClick(task._id || task.id)}
+                                                            className="p-3 bg-white border border-blue-100 rounded-xl shadow-sm flex flex-col gap-1 transition-all hover:border-blue-300 hover:border-l-blue-500 hover:shadow-md cursor-pointer border-l-4 border-l-transparent group"
+                                                        >
                                                             <div className="flex justify-between items-start gap-2">
-                                                                <span className="text-sm font-bold text-slate-800 break-words flex-1">{task.taskName}</span>
+                                                                <span className="text-sm font-bold text-slate-800 break-words flex-1 group-hover:text-blue-600 transition-colors">{task.taskName}</span>
                                                                 <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase shrink-0 ${
                                                                     task.status === 'Completed' || task.status === 'Done' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' :
                                                                     task.status === 'In Progress' ? 'bg-blue-50 text-blue-600 border border-blue-200' : 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { userService, taskService } from '../../api/services';
@@ -23,6 +24,7 @@ const TASK_STATUS_COLORS = {
 };
 
 const TeamLeadTeam = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [team, setTeam] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterRole, setFilterRole] = useState("All");
@@ -30,6 +32,14 @@ const TeamLeadTeam = () => {
     const [selectedMember, setSelectedMember] = useState(null);
     const [loading, setLoading] = useState(true);
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
+
+    const handleTaskClick = (taskId) => {
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('taskId', taskId);
+        nextParams.delete('projectId');
+        setSearchParams(nextParams, { replace: true });
+        setSelectedMember(null); // Close member drawer
+    };
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -381,7 +391,11 @@ const TeamLeadTeam = () => {
                                     
                                     <div className="space-y-3">
                                         {selectedMember.tasks.map(task => (
-                                            <div key={task.id} className="p-4 border border-slate-200 rounded-xl hover:border-blue-300 transition-colors group">
+                                            <div 
+                                                key={task.id} 
+                                                onClick={() => handleTaskClick(task._id || task.id)}
+                                                className="p-4 border border-slate-200 rounded-xl hover:bg-blue-50/50 hover:border-l-blue-500 hover:border-blue-300 border-l-4 border-l-transparent cursor-pointer transition-all group"
+                                            >
                                                 <div className="flex justify-between items-start mb-2">
                                                     <h4 className="font-semibold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{task.taskName}</h4>
                                                     <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${TASK_STATUS_COLORS[task.status] || TASK_STATUS_COLORS['New']}`}>
