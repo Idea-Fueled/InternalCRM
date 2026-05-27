@@ -464,6 +464,12 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
     const containerRef = useRef(null);
     const { width, height } = useResize(containerRef);
     const [hoveredDayIndex, setHoveredDayIndex] = useState(null);
+    const [selectedEmpIndex, setSelectedEmpIndex] = useState(null);
+
+    // Reset selection when department or input list changes to prevent out of bounds
+    useEffect(() => {
+        setSelectedEmpIndex(null);
+    }, [selectedDept, users, allTasks]);
     
     // Sort and find top 3 performing employees
     const employeesPerformance = users
@@ -591,6 +597,7 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
 
                         {/* Render lines and gradients for each employee */}
                         {trendPoints.map((points, empIdx) => {
+                            if (selectedEmpIndex !== null && empIdx !== selectedEmpIndex) return null;
                             let linePath = "";
                             if (points.length > 0) {
                                 linePath = `M ${points[0].x} ${points[0].y}`;
@@ -680,15 +687,18 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
                             <span>{labels[hoveredDayIndex]}</span>
                         </div>
                         <div className="space-y-1.5">
-                            {employeeTrends.map((trend, idx) => (
-                                <div key={idx} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-1.5 min-w-0">
-                                        <span className={`w-2 h-2 rounded-full ${employeeColors[idx].bg}`} />
-                                        <span className="truncate text-slate-200">{trend.employee.name}</span>
+                            {employeeTrends.map((trend, idx) => {
+                                if (selectedEmpIndex !== null && idx !== selectedEmpIndex) return null;
+                                return (
+                                    <div key={idx} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5 min-w-0">
+                                            <span className={`w-2 h-2 rounded-full ${employeeColors[idx].bg}`} />
+                                            <span className="truncate text-slate-200">{trend.employee.name}</span>
+                                        </div>
+                                        <span className="font-mono font-bold text-slate-100">{trend.counts[hoveredDayIndex]} tasks</span>
                                     </div>
-                                    <span className="font-mono font-bold text-slate-100">{trend.counts[hoveredDayIndex]} tasks</span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -699,8 +709,24 @@ const EmployeePerformanceGraph = ({ allTasks, users, selectedDept = "All" }) => 
                 {employeeTrends.map((trend, idx) => {
                     const colors = employeeColors[idx];
                     const initials = trend.employee.name?.split(" ").map(n => n[0]).join("").substring(0, 2) || "U";
+                    const isSelected = selectedEmpIndex === idx;
+                    const isAnySelected = selectedEmpIndex !== null;
+                    
+                    let activeStyles = "border-slate-100 bg-slate-50/35 hover:bg-slate-50";
+                    if (isSelected) {
+                        if (idx === 0) activeStyles = "border-indigo-300 bg-indigo-50/50 shadow-sm ring-1 ring-indigo-300";
+                        else if (idx === 1) activeStyles = "border-emerald-300 bg-emerald-50/50 shadow-sm ring-1 ring-emerald-300";
+                        else if (idx === 2) activeStyles = "border-amber-300 bg-amber-50/50 shadow-sm ring-1 ring-amber-300";
+                    } else if (isAnySelected) {
+                        activeStyles = "border-slate-100 bg-white opacity-40 hover:opacity-75";
+                    }
+
                     return (
-                        <div key={idx} className="flex flex-col items-center p-2 rounded-xl border border-slate-100 bg-slate-50/35 hover:bg-slate-50 transition-all duration-150">
+                        <div 
+                            key={idx} 
+                            onClick={() => setSelectedEmpIndex(selectedEmpIndex === idx ? null : idx)}
+                            className={`flex flex-col items-center p-2 rounded-xl border transition-all duration-200 cursor-pointer ${activeStyles}`}
+                        >
                             <div className="flex items-center gap-1.5 min-w-0 w-full justify-center">
                                 <div className="w-5.5 h-5.5 rounded-full bg-slate-200 border border-white flex items-center justify-center text-[8px] font-bold text-slate-600 shrink-0 overflow-hidden hidden sm:flex">
                                     {trend.employee.profilePic ? (
