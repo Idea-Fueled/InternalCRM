@@ -577,9 +577,34 @@ const ProjectsDashboard = () => {
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">Team Lead</span>
                                                 <span className="text-sm font-semibold text-slate-700 truncate">{leadName}</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-lg">
-                                                <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                                <span className="text-xs font-bold text-slate-600">{membersCount}</span>
+                                            <div className="relative group/badge" onClick={(e) => e.stopPropagation()}>
+                                                <span className="flex items-center gap-1.5 font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-lg cursor-default hover:bg-slate-200 transition-colors">
+                                                    <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                                    <span className="text-xs font-bold text-slate-600">{membersCount}</span>
+                                                </span>
+                                                
+                                                {membersCount > 0 && (
+                                                    <div className="absolute right-0 bottom-full mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 opacity-0 invisible group-hover/badge:opacity-100 group-hover/badge:visible transition-all duration-200 z-[100]">
+                                                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1 text-left">Team Members</h4>
+                                                        <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
+                                                            {project.teamMembers.map(m => (
+                                                                <div key={m._id} className="flex items-center gap-2 text-left bg-slate-50/50 p-1.5 rounded-lg border border-slate-100">
+                                                                    <div className="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold overflow-hidden shrink-0 border border-blue-100">
+                                                                        {m.profilePic ? (
+                                                                            <img src={m.profilePic} alt={m.name} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            m.name?.charAt(0).toUpperCase() || 'U'
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex flex-col overflow-hidden">
+                                                                        <span className="text-xs font-bold text-slate-700 truncate">{m.name}</span>
+                                                                        <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider truncate">{m.role || 'Member'}</span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 
