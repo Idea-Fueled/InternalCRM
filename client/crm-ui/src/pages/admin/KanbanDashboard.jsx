@@ -36,7 +36,7 @@ const KanbanDashboard = () => {
                 userService.getAllUsers()
             ]);
             setProjects(projRes.data.projects || []);
-            setUsers(userRes.data.data || []);
+            setUsers((userRes.data.data || []).filter(u => u.status !== 'inactive'));
         } catch (err) {
             console.error('Failed to load helper data', err);
         }

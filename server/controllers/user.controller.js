@@ -139,6 +139,21 @@ export const loginController = async (req, res) => {
             })
         }
 
+        // Auto-reactivation check
+        if (user.status === "inactive" && user.inactiveUntil && new Date() > new Date(user.inactiveUntil)) {
+            user.status = "free";
+            user.inactiveUntil = null;
+            user.inactiveReason = "";
+            await user.save();
+        }
+
+        if (user.status === "inactive") {
+            return res.status(403).json({
+                message: "Your account is currently marked as inactive. Please contact your administrator for access.",
+                isInactive: true
+            });
+        }
+
         const isPasswordValid = await comparePassword(password, user.password);
         if (!isPasswordValid) {
             return res.status(401).json({
@@ -211,6 +226,12 @@ export const getCurrentUser = (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
+        // Auto-reactivate expired inactive users company-wide before queries
+        await User.updateMany(
+            { status: "inactive", inactiveUntil: { $ne: null, $lt: new Date() } },
+            { $set: { status: "free", inactiveUntil: null, inactiveReason: "" } }
+        );
+
         const { teamLeadId, teamLead, role, status, orgTree } = req.query;
         const targetTeamLead = teamLeadId || teamLead;
         const { role: userRole, _id } = req.user;

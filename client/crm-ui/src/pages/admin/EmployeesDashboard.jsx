@@ -149,6 +149,13 @@ const EmployeesDashboard = () => {
     const [isChangingPwd, setIsChangingPwd] = useState(false);
     const [pwdSubmitted, setPwdSubmitted] = useState(false);
 
+    // Inactive Employee Modal state declarations
+    const [isInactiveModalOpen, setIsInactiveModalOpen] = useState(false);
+    const [inactiveEmployee, setInactiveEmployee] = useState(null);
+    const [inactiveReason, setInactiveReason] = useState("");
+    const [inactiveDays, setInactiveDays] = useState("");
+    const [isSubmittingInactive, setIsSubmittingInactive] = useState(false);
+
     const fetchDepartments = async () => {
         try {
             const res = await departmentService.getAllDepartments();
@@ -210,7 +217,7 @@ const EmployeesDashboard = () => {
                         dept: u.department || "Engineering",
                         lead: u.teamLeads?.map(tl => tl.name).join(", ") || "N/A",
                         tasks: { total: userTasks.length, done, overdue, list: userTasks },
-                        status: u.isActive ? (overdue > 0 ? "Overdue" : "Active") : "Inactive",
+                        status: u.status === "inactive" ? "Inactive" : (overdue > 0 ? "Overdue" : "Active"),
                         joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A",
                         raw: u
                     };
@@ -386,13 +393,44 @@ const EmployeesDashboard = () => {
 
     const handleStatusToggle = async (emp, e) => {
         if (e) e.stopPropagation();
+        if (emp.status === "Inactive") {
+            try {
+                await userService.updateUser(emp.id, { status: "free", inactiveUntil: null, inactiveReason: "" });
+                toast.success("Employee reactivated successfully");
+                fetchData();
+            } catch (err) {
+                toast.error("Failed to reactivate employee");
+            }
+        } else {
+            setInactiveEmployee(emp);
+            setInactiveReason("");
+            setInactiveDays("");
+            setIsInactiveModalOpen(true);
+        }
+    };
+
+    const handleConfirmInactive = async (e) => {
+        e.preventDefault();
+        if (!inactiveEmployee) return;
+        setIsSubmittingInactive(true);
         try {
-            const newStatus = !emp.raw.isActive;
-            await userService.updateUser(emp.id, { isActive: newStatus });
-            toast.success(`Employee ${newStatus ? 'activated' : 'deactivated'}`);
+            const days = parseInt(inactiveDays, 10);
+            const inactiveUntil = days > 0 ? new Date(Date.now() + days * 24 * 60 * 60 * 1000) : null;
+            await userService.updateUser(inactiveEmployee.id, {
+                status: "inactive",
+                inactiveReason: inactiveReason.trim(),
+                inactiveUntil
+            });
+            toast.success("Employee marked as inactive");
+            setIsInactiveModalOpen(false);
+            setInactiveEmployee(null);
+            setInactiveReason("");
+            setInactiveDays("");
             fetchData();
         } catch (err) {
-            toast.error("Failed to update status");
+            toast.error(err.response?.data?.message || "Failed to mark employee as inactive");
+        } finally {
+            setIsSubmittingInactive(false);
         }
     };
 
@@ -1512,6 +1550,68 @@ const EmployeesDashboard = () => {
                 </div>
             )}
             
+            {/* Inactive Confirmation Modal */}
+            {isInactiveModalOpen && inactiveEmployee && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsInactiveModalOpen(false)} />
+                    <form onSubmit={handleConfirmInactive} className="bg-white w-full max-w-md rounded-[24px] shadow-2xl overflow-hidden relative z-10 animate-in zoom-in-95 duration-200 border border-slate-100 flex flex-col">
+                        <div className="p-6 border-b border-slate-100 flex items-center justify-between shrink-0">
+                            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Mark Employee Inactive</h3>
+                            <button type="button" onClick={() => setIsInactiveModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <div className="p-6 space-y-4 flex-1">
+                            <p className="text-sm text-slate-500 font-semibold leading-relaxed">
+                                Are you sure you want to mark <span className="font-bold text-slate-700">{inactiveEmployee.name}</span> as inactive? This will block their login and restrict project assignments.
+                            </p>
+                            
+                            <div className="space-y-1">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Reason for Inactivity (Optional)</label>
+                                <textarea
+                                    value={inactiveReason}
+                                    onChange={(e) => setInactiveReason(e.target.value)}
+                                    placeholder="e.g., Medical leave, sabbatical, project transition..."
+                                    rows={3}
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none placeholder-slate-400 text-slate-700"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Inactive Duration in Days (Optional)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={inactiveDays}
+                                    onChange={(e) => setInactiveDays(e.target.value)}
+                                    placeholder="Leave blank for indefinite inactivity..."
+                                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-slate-400 text-slate-700"
+                                />
+                                <span className="text-[10px] text-slate-400 font-medium block">If entered, their account will automatically reactivate after that duration ends.</span>
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => setIsInactiveModalOpen(false)}
+                                className="flex-1 px-4 py-3 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition-all cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={isSubmittingInactive}
+                                className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                {isSubmittingInactive ? (
+                                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+                                ) : 'Mark Inactive'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
             <StatDetailModal 
                 isOpen={statModal.isOpen} 
                 onClose={() => setStatModal({ ...statModal, isOpen: false })} 

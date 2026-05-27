@@ -57,7 +57,7 @@ const ProjectsDashboard = () => {
     const fetchInitialData = async () => {
         try {
             const res = await userService.getAllUsers({ role: 'TL' });
-            setTeamLeads(res.data.data || []);
+            setTeamLeads((res.data.data || []).filter(u => u.status !== 'inactive'));
         } catch (err) {
             console.error("Failed to load team leads", err);
         }
@@ -71,7 +71,7 @@ const ProjectsDashboard = () => {
             }
             try {
                 const res = await userService.getAllUsers({ teamLead: newProject.teamLead });
-                const members = (res.data.data || []).filter(u => u.role !== 'admin' && u.role !== 'TL');
+                const members = (res.data.data || []).filter(u => u.role !== 'admin' && u.role !== 'TL' && u.status !== 'inactive');
                 setTeamMembersList(members);
             } catch (err) {
                 console.error("Failed to fetch team members", err);

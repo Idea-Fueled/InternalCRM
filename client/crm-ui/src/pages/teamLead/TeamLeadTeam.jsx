@@ -68,7 +68,7 @@ const TeamLeadTeam = () => {
                             id: u._id,
                             initial: u.name?.substring(0, 2).toUpperCase() || 'U',
                             availability,
-                            status: u.isActive !== false ? 'Active' : 'Inactive', // default active if isActive is undefined
+                            status: u.status === 'inactive' ? 'Inactive' : 'Active',
                             avatarColor: colors[i % colors.length],
                             stats: { total: userTasks.length, completed, overdue },
                             tasks: userTasks
@@ -252,9 +252,11 @@ const TeamLeadTeam = () => {
                                                             member.initial
                                                         )}
                                                     </div>
-                                                    {member.status === 'Active' && (
+                                                    {member.status === 'Active' ? (
                                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full z-10 shadow-sm"></div>
-                                                    )}
+                                                    ) : member.status === 'Inactive' ? (
+                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-slate-400 border-2 border-white rounded-full z-10 shadow-sm"></div>
+                                                    ) : null}
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-slate-800 text-lg group-hover:text-blue-600 transition-colors">{member.name}</h3>
@@ -347,9 +349,11 @@ const TeamLeadTeam = () => {
                                                 selectedMember.initial
                                             )}
                                         </div>
-                                        {selectedMember.status === 'Active' && (
+                                        {selectedMember.status === 'Active' ? (
                                             <div className="absolute bottom-0 right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full z-10 shadow-sm"></div>
-                                        )}
+                                        ) : selectedMember.status === 'Inactive' ? (
+                                            <div className="absolute bottom-0 right-1 w-4 h-4 bg-slate-400 border-2 border-white rounded-full z-10 shadow-sm"></div>
+                                        ) : null}
                                     </div>
                                     <h2 className="text-2xl font-bold text-slate-900">{selectedMember.name}</h2>
                                     <p className="text-sm font-medium text-slate-500 mt-1">{selectedMember.role}</p>

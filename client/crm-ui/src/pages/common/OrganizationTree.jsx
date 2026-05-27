@@ -567,8 +567,10 @@ const OrganizationTree = () => {
                                 ) : getInitials(node.name)}
                             </div>
                             {/* Status Indicator */}
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white bg-emerald-500 flex items-center justify-center shadow" title="Active">
-                                <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                            <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${node.status === 'inactive' ? 'bg-slate-400' : 'bg-emerald-500'} flex items-center justify-center shadow`} title={node.status === 'inactive' ? 'Inactive' : 'Active'}>
+                                {node.status !== 'inactive' && (
+                                    <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                                )}
                             </div>
                         </div>
 

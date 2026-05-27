@@ -1431,8 +1431,8 @@ const AdminDashboard = () => {
                                             const totalAssigned = memberTasks.length;
                                             const completionRate = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
                                             
-                                            const statusText = activeCount > 3 ? `Busy - ${activeCount} active` : activeCount > 0 ? `${activeCount} active` : "Available";
-                                            const statusColor = activeCount > 3 ? "bg-rose-500" : activeCount > 0 ? "bg-amber-500" : "bg-emerald-500";
+                                            const statusText = member.status === "inactive" ? "Inactive" : (activeCount > 3 ? `Busy - ${activeCount} active` : activeCount > 0 ? `${activeCount} active` : "Available");
+                                            const statusColor = member.status === "inactive" ? "bg-slate-400" : (activeCount > 3 ? "bg-rose-500" : activeCount > 0 ? "bg-amber-500" : "bg-emerald-500");
                                             
                                             return (
                                                 <div key={member._id || i} className="flex items-center justify-between p-4 hover:bg-slate-50/50 transition">
@@ -1454,7 +1454,7 @@ const AdminDashboard = () => {
                                                                 <span>•</span>
                                                                 <span className="text-slate-400 capitalize">{member.department || "Engineering"}</span>
                                                                 <span>•</span>
-                                                                <span className={`font-bold ${activeCount > 3 ? 'text-rose-500' : activeCount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                                                <span className={`font-bold ${member.status === 'inactive' ? 'text-slate-400' : (activeCount > 3 ? 'text-rose-500' : activeCount > 0 ? 'text-amber-600' : 'text-emerald-600')}`}>
                                                                     {statusText}
                                                                 </span>
                                                             </div>

@@ -147,7 +147,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                     params.teamLead = project.teamLead._id;
                 }
                 const res = await userService.getAllUsers(params);
-                const devsAndQas = (res.data.data || []).filter(u => u.role === "developer" || u.role === "qa");
+                const devsAndQas = (res.data.data || []).filter(u => (u.role === "developer" || u.role === "qa") && u.status !== "inactive");
                 setEligibleMembers(devsAndQas);
             } catch (err) {
                 console.error("Failed to load eligible team members", err);
@@ -613,7 +613,14 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="text-xs font-black text-slate-800 truncate">{project.teamLead?.name || "N/A"}</span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-xs font-black text-slate-800 truncate">{project.teamLead?.name || "N/A"}</span>
+                                                        {project.teamLead?.status === 'inactive' && (
+                                                            <span className="px-1 py-0.1 rounded text-[7px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase shrink-0">
+                                                                Inactive
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <span className="text-[10px] font-semibold text-slate-400">Project manager / TL</span>
                                                 </div>
                                             </div>
@@ -638,11 +645,17 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                 <span className="text-[9px] font-bold text-slate-400 truncate">{m.email}</span>
                                                             </div>
                                                         </div>
-                                                        <span className={`px-1.5 py-0.2 rounded text-[8px] font-semibold shrink-0 ${
-                                                            m.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
-                                                        }`}>
-                                                            {m.role === "qa" ? "QA" : "Dev"}
-                                                        </span>
+                                                        {m.status === 'inactive' ? (
+                                                            <span className="px-1.5 py-0.2 rounded text-[8px] font-bold shrink-0 bg-slate-100 text-slate-500 border border-slate-200 uppercase">
+                                                                Inactive
+                                                            </span>
+                                                        ) : (
+                                                            <span className={`px-1.5 py-0.2 rounded text-[8px] font-semibold shrink-0 ${
+                                                                m.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
+                                                            }`}>
+                                                                {m.role === "qa" ? "QA" : "Dev"}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 ))}
                                                 {(project.teamMembers || []).length === 0 && (
@@ -1197,7 +1210,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 >
                                     <option value="">Unassigned</option>
                                     {(project.teamMembers || [])
-                                        .filter(m => m.role === "developer")
+                                        .filter(m => m.role === "developer" && m.status !== "inactive")
                                         .map(m => (
                                             <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
                                         ))
@@ -1215,7 +1228,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 >
                                     <option value="">Unassigned</option>
                                     {(project.teamMembers || [])
-                                        .filter(m => m.role === "qa")
+                                        .filter(m => m.role === "qa" && m.status !== "inactive")
                                         .map(m => (
                                             <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
                                         ))

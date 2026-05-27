@@ -15,6 +15,7 @@ export default function WelcomePage() {
     });
     const [loading, setLoading] = useState(false);
     const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
+    const [showInactiveModal, setShowInactiveModal] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
@@ -50,7 +51,9 @@ export default function WelcomePage() {
             toast.success(res.data.message || "Login successful");
         } catch (err) {
             console.error("Login error:", err);
-            if (err.response?.status === 403 || err.response?.data?.isDeactivated) {
+            if (err.response?.data?.isInactive) {
+                setShowInactiveModal(true);
+            } else if (err.response?.status === 403 || err.response?.data?.isDeactivated) {
                 setShowDeactivatedModal(true);
             } else {
                 const errorMsg = err.response?.data?.message || "Invalid credentials. Please try again.";
@@ -185,6 +188,36 @@ export default function WelcomePage() {
                             </p>
                             <button 
                                 onClick={() => setShowDeactivatedModal(false)}
+                                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                            >
+                                Understood
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Inactive Account Modal */}
+            {showInactiveModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-md overflow-hidden relative animate-in zoom-in-95 duration-200">
+                        <button 
+                            onClick={() => setShowInactiveModal(false)}
+                            className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                        
+                        <div className="p-8 flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-slate-50 text-slate-500 rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
+                                <ShieldAlert className="w-8 h-8 text-slate-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Account Inactive</h3>
+                            <p className="text-slate-600 text-sm mb-8 leading-relaxed font-semibold">
+                                Your account is currently marked as inactive. Please contact your administrator for access.
+                            </p>
+                            <button 
+                                onClick={() => setShowInactiveModal(false)}
                                 className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                             >
                                 Understood

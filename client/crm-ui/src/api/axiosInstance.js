@@ -40,6 +40,8 @@ axiosInstance.interceptors.response.use(
                     error.response.data.message = "Please fill all required fields correctly.";
                 } else if (lower.includes("unauthorized") || lower.includes("jwt") || lower.includes("expired token")) {
                     error.response.data.message = "Your session has expired. Please login again.";
+                } else if (lower.includes("inactive")) {
+                    // Preserve the custom inactive account message from backend
                 } else if (lower.includes("access denied") || lower.includes("forbidden")) {
                     error.response.data.message = "You do not have permission to perform this action.";
                 } else if (lower.includes("internal server error") || lower.includes("server error") || lower.includes("500")) {

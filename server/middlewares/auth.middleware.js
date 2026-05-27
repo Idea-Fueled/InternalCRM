@@ -23,6 +23,21 @@ export const protectRoute = async (req, res, next) => {
             })
         }
 
+        // Auto-reactivation check
+        if (user.status === "inactive" && user.inactiveUntil && new Date() > new Date(user.inactiveUntil)) {
+            user.status = "free";
+            user.inactiveUntil = null;
+            user.inactiveReason = "";
+            await user.save();
+        }
+
+        if (user.status === "inactive") {
+            return res.status(403).json({
+                message: "Your account is currently marked as inactive. Please contact your administrator for access.",
+                isInactive: true
+            });
+        }
+
         req.user = user;
         next();
     } catch (error) {

@@ -43,8 +43,16 @@ const userSchema = new mongoose.Schema({
     //employee availability
     status: {
         type: String,
-        enum: ["busy", "free"],
+        enum: ["busy", "free", "inactive"],
         default: "free"
+    },
+    inactiveReason: {
+        type: String,
+        default: ""
+    },
+    inactiveUntil: {
+        type: Date,
+        default: null
     },
 
     projects: [{

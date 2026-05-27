@@ -99,7 +99,7 @@ const TeamLeadDashboard = () => {
                         const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
                         const total = userTasks.length;
                         const pending = total - completed;
-                        const status = pending === 0 ? "Free" : "Busy";
+                        const status = u.status === "inactive" ? "Inactive" : (pending === 0 ? "Free" : "Busy");
                         const workload = total > 0 ? Math.round((pending / total) * 100) : 0;
                         const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-orange-500', 'bg-slate-500'];
                         
@@ -592,9 +592,11 @@ const TeamLeadDashboard = () => {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
+                                                                member.status === 'Inactive' ? 'bg-slate-50 text-slate-500 border border-slate-200' :
                                                                 member.status === 'Free' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
                                                             }`}>
                                                                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
+                                                                    member.status === 'Inactive' ? 'bg-slate-400' :
                                                                     member.status === 'Free' ? 'bg-emerald-500' : 'bg-amber-500'
                                                                 }`}></span>
                                                                 {member.status}
