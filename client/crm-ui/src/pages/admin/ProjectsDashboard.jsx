@@ -608,17 +608,29 @@ const ProjectsDashboard = () => {
                                             </div>
                                         </div>
 
-                                        <div className="w-full">
-                                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
-                                                <span>PROGRESS</span>
-                                                <span>{progress}%</span>
+                                        <div className="w-full flex items-center justify-between gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
+                                                    <span>PROGRESS</span>
+                                                    <span>{progress}%</span>
+                                                </div>
+                                                <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                                    <div 
+                                                        className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                                                        style={{ width: `${progress}%` }}
+                                                    ></div>
+                                                </div>
                                             </div>
-                                            <div className="w-full bg-slate-100 rounded-full h-1.5">
-                                                <div 
-                                                    className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
-                                                    style={{ width: `${progress}%` }}
-                                                ></div>
-                                            </div>
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const routeBase = role === 'TL' ? 'teamLead' : role;
+                                                    navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                                }}
+                                                className="px-3 py-1.5 bg-blue-600 text-white font-bold text-[11px] rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1 shrink-0 shadow-sm shadow-blue-100 hover:shadow-md hover:shadow-blue-200/50"
+                                            >
+                                                Board <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
+                                            </button>
                                         </div>
                                     </div>
                                 ) : (
