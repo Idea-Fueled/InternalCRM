@@ -27,6 +27,7 @@ import OrganizationTree from "./pages/common/OrganizationTree";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProjectDetails from "./pages/common/ProjectDetails";
+import MyTeam from "./pages/common/MyTeam";
 
 import { Toaster } from "sonner";
 
@@ -135,6 +136,10 @@ const App = () => {
         path: "/employee/organization-tree",
         element: <ProtectedRoute allowedRoles={["employee", "admin"]}><OrganizationTree /></ProtectedRoute>
       },
+      {
+        path: "/employee/my-team",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><MyTeam /></ProtectedRoute>
+      },
       // QA Routes
       {
         path: "/qa/dashboard",
@@ -159,6 +164,10 @@ const App = () => {
       {
         path: "/qa/organization-tree",
         element: <ProtectedRoute allowedRoles={["qa", "admin"]}><OrganizationTree /></ProtectedRoute>
+      },
+      {
+        path: "/qa/my-team",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><MyTeam /></ProtectedRoute>
       },
       {
         path: "*",
