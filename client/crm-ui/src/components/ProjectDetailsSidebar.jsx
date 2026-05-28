@@ -616,9 +616,12 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                     <div className="flex items-center gap-1.5">
                                                         <span className="text-xs font-black text-slate-800 truncate">{project.teamLead?.name || "N/A"}</span>
                                                         {project.teamLead?.status === 'inactive' && (
-                                                            <span className="px-1 py-0.1 rounded text-[7px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase shrink-0">
-                                                                Inactive
-                                                            </span>
+                                                             <span 
+                                                                 className="px-1 py-0.1 rounded text-[7px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase shrink-0 cursor-help"
+                                                                 title={`Reason: ${project.teamLead.inactiveReason || 'None specified'}\nDuration: ${project.teamLead.inactiveUntil ? `Until ${new Date(project.teamLead.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : 'Indefinite'}`}
+                                                             >
+                                                                 Inactive
+                                                             </span>
                                                         )}
                                                     </div>
                                                     <span className="text-[10px] font-semibold text-slate-400">Project manager / TL</span>
@@ -646,7 +649,10 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             </div>
                                                         </div>
                                                         {m.status === 'inactive' ? (
-                                                            <span className="px-1.5 py-0.2 rounded text-[8px] font-bold shrink-0 bg-slate-100 text-slate-500 border border-slate-200 uppercase">
+                                                            <span 
+                                                                className="px-1.5 py-0.2 rounded text-[8px] font-bold shrink-0 bg-slate-100 text-slate-500 border border-slate-200 uppercase cursor-help"
+                                                                title={`Reason: ${m.inactiveReason || 'None specified'}\nDuration: ${m.inactiveUntil ? `Until ${new Date(m.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : 'Indefinite'}`}
+                                                            >
                                                                 Inactive
                                                             </span>
                                                         ) : (

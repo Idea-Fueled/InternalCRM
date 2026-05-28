@@ -23,6 +23,13 @@ const TASK_STATUS_COLORS = {
   'Overdue': 'bg-rose-100 text-rose-700',
 };
 
+const getInactivityDaysLeft = (inactiveUntil) => {
+    if (!inactiveUntil) return "Indefinite";
+    const diffTime = new Date(inactiveUntil) - new Date();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? `${diffDays} days remaining` : "Reactivating...";
+};
+
 const TeamLeadTeam = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [team, setTeam] = useState([]);
@@ -239,7 +246,11 @@ const TeamLeadTeam = () => {
                                 <div 
                                     key={member.id} 
                                     onClick={() => setSelectedMember(member)}
-                                    className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-lg hover:border-blue-300 transition-all cursor-pointer group flex flex-col"
+                                    className={`rounded-2xl border shadow-sm transition-all cursor-pointer group flex flex-col ${
+                                        member.status === 'Inactive' 
+                                            ? 'bg-slate-50 border-slate-200/85 hover:shadow-md hover:border-slate-355'
+                                            : 'bg-white border-slate-200 hover:shadow-lg hover:border-blue-300'
+                                    }`}
                                 >
                                     <div className="p-5 flex-1">
                                         <div className="flex justify-between items-start mb-4">
@@ -259,7 +270,12 @@ const TeamLeadTeam = () => {
                                                     ) : null}
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-slate-800 text-lg group-hover:text-blue-600 transition-colors">{member.name}</h3>
+                                                    <div className="flex items-center gap-2">
+                                                        <h3 className={`font-bold text-lg group-hover:text-blue-600 transition-colors ${member.status === 'Inactive' ? 'text-slate-500' : 'text-slate-800'}`}>{member.name}</h3>
+                                                        {member.status === 'Inactive' && (
+                                                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
+                                                        )}
+                                                    </div>
                                                     <p className="text-xs font-medium text-slate-500">{member.role}</p>
                                                 </div>
                                             </div>
@@ -268,28 +284,43 @@ const TeamLeadTeam = () => {
                                             </button>
                                         </div>
 
-                                        <div className="mb-5">
+                                        <div className="mb-5 flex flex-wrap gap-2 items-center">
                                             <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[member.availability]}`}>
                                                 {member.availability}
                                             </span>
                                         </div>
 
-                                        {/* Performance Bar */}
-                                        <div className="space-y-2">
-                                            <div className="flex justify-between items-center text-xs font-semibold">
-                                                <span className="text-slate-500">Task Completion</span>
-                                                <span className="text-slate-800">{completionRatio}%</span>
+                                        {member.status === 'Inactive' ? (
+                                            <div className="mb-5 p-2.5 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1">
+                                                <div className="flex items-start gap-1 min-w-0">
+                                                    <span className="font-bold text-slate-700 shrink-0">Reason:</span>
+                                                    <span className="truncate italic text-slate-600">{member.inactiveReason || "None specified"}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 shrink-0">
+                                                    <span className="font-bold text-slate-700">Duration:</span>
+                                                    <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-[10px]">
+                                                        {member.inactiveUntil ? `${getInactivityDaysLeft(member.inactiveUntil)} (Until ${new Date(member.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})` : "Indefinite"}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
-                                                <div 
-                                                    className={`h-full rounded-full transition-all duration-1000 ${
-                                                        completionRatio > 80 ? 'bg-emerald-500' : 
-                                                        completionRatio > 40 ? 'bg-blue-500' : 'bg-amber-500'
-                                                    }`}
-                                                    style={{ width: `${completionRatio}%` }}
-                                                />
+                                        ) : (
+                                            /* Performance Bar */
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between items-center text-xs font-semibold">
+                                                    <span className="text-slate-500">Task Completion</span>
+                                                    <span className="text-slate-800">{completionRatio}%</span>
+                                                </div>
+                                                <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                    <div 
+                                                        className={`h-full rounded-full transition-all duration-1000 ${
+                                                            completionRatio > 80 ? 'bg-emerald-500' : 
+                                                            completionRatio > 40 ? 'bg-blue-500' : 'bg-amber-500'
+                                                        }`}
+                                                        style={{ width: `${completionRatio}%` }}
+                                                    />
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                     
                                     <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
@@ -370,6 +401,25 @@ const TeamLeadTeam = () => {
                             </div>
 
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                                {selectedMember.status === 'Inactive' && (
+                                    <div className="mb-6 p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col gap-2.5 text-xs text-slate-600 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <div className="flex items-center gap-2 pb-2 border-b border-slate-200/50">
+                                            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                            <span className="font-bold uppercase tracking-wider text-slate-500 text-[10px]">Inactivity Profile</span>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider">Reason for Inactivity</span>
+                                            <p className="italic text-slate-700 text-xs font-semibold">{selectedMember.inactiveReason || "No reason specified"}</p>
+                                        </div>
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-bold text-slate-500 text-[10px] uppercase tracking-wider">Duration</span>
+                                            <p className="text-slate-800 font-bold">
+                                                {selectedMember.inactiveUntil ? `${getInactivityDaysLeft(selectedMember.inactiveUntil)} (Until ${new Date(selectedMember.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})` : "Indefinite"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Quick Stats */}
                                 <div className="grid grid-cols-3 gap-3 mb-8">
                                     <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">

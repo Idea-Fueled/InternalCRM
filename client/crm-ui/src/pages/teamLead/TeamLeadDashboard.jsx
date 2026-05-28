@@ -596,8 +596,7 @@ const TeamLeadDashboard = () => {
                                                                 member.status === 'Free' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-amber-50 text-amber-700 border border-amber-100'
                                                             }`}>
                                                                 <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                                                                    member.status === 'Inactive' ? 'bg-slate-400' :
-                                                                    member.status === 'Free' ? 'bg-emerald-500' : 'bg-amber-500'
+                                                                    member.status === 'Inactive' ? 'bg-slate-400' : 'bg-emerald-500'
                                                                 }`}></span>
                                                                 {member.status}
                                                             </span>

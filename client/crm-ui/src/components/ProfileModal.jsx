@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
     X, Mail, Briefcase, Calendar, Camera, Loader2, 
-    Trash2, Users, UserCheck, Award
+    Trash2, Users, UserCheck, Award, ShieldAlert
 } from "lucide-react";
 import { authService, userService } from "../api/services";
 import { toast } from "sonner";
@@ -230,6 +230,29 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                             )}
                         </div>
                     </div>
+
+                    {user?.status === 'inactive' && (
+                        <div className="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col gap-2 text-xs text-slate-600 w-full animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="flex items-center gap-2 pb-2 border-b border-slate-200/50">
+                                <ShieldAlert className="w-4 h-4 text-slate-400 shrink-0" />
+                                <span className="font-bold uppercase tracking-wider text-slate-500 text-[10px]">Inactivity Profile</span>
+                            </div>
+                            <div className="flex flex-col gap-0.5">
+                                <span className="font-bold text-slate-500 text-[9px] uppercase tracking-wider">Reason for Inactivity</span>
+                                <p className="italic text-slate-700 font-semibold">{user.inactiveReason || "No reason specified"}</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5 mt-1">
+                                <span className="font-bold text-slate-500 text-[9px] uppercase tracking-wider">Duration</span>
+                                <p className="text-slate-800 font-bold">
+                                    {user.inactiveUntil ? `${(() => {
+                                        const diffTime = new Date(user.inactiveUntil) - new Date();
+                                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                        return diffDays > 0 ? `${diffDays} days remaining` : "Reactivating...";
+                                    })()} (Until ${new Date(user.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})` : "Indefinite"}
+                                </p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Left & Right layout for general info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
