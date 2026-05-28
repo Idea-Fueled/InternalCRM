@@ -130,12 +130,31 @@ const NotificationDropdown = ({ role }) => {
             const isProjectNotification = n.type === 'project' && !!projectId;
 
             if (isTaskNotification) {
-                const currentParams = new URLSearchParams(window.location.search);
+                // Navigate to the role-appropriate Kanban page so the user sees the task in context
+                const roleMap = {
+                    admin: '/admin/kanban',
+                    TL: '/teamLead/kanban',
+                    teamLead: '/teamLead/kanban',
+                    employee: '/employee/kanban',
+                    developer: '/employee/kanban',
+                    qa: '/qa/kanban',
+                };
+                const kanbanPath = roleMap[user?.role] || roleMap[role] || '/admin/kanban';
+
+                // Build kanban query params:
+                //   - taskId  → KanbanBoard auto-opens the task detail sidebar
+                //   - project → KanbanBoard auto-selects that project's column filter
+                const kanbanParams = new URLSearchParams();
                 if (taskId) {
-                    currentParams.set('taskId', taskId);
+                    kanbanParams.set('taskId', taskId);
                 }
-                currentParams.delete('projectId'); // Never open Project Details Sidebar for task notifications
-                navigate(`${window.location.pathname}?${currentParams.toString()}`, { replace: true });
+                const projectName = searchParamsObj.get('projectName');
+                if (projectName) {
+                    // project param is the project name (what KanbanBoard uses for its filter)
+                    kanbanParams.set('project', projectName);
+                }
+
+                navigate(`${kanbanPath}?${kanbanParams.toString()}`);
             } else if (isProjectNotification) {
                 const currentParams = new URLSearchParams(window.location.search);
                 currentParams.set('projectId', projectId);
