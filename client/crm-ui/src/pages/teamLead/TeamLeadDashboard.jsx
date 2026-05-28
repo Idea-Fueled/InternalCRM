@@ -476,66 +476,6 @@ const TeamLeadDashboard = () => {
                                     })}
                                 </div>
                             </div>
-                            <div className="flex justify-end pt-3 mt-2 border-t border-slate-50">
-                                <Link to="/teamLead/projects" className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 group">
-                                    Track Milestones <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                                </Link>
-                            </div>
-                        </div>
-                        {/* Overdue Tasks Timeline priority card */}
-                        <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 mb-4">
-                                    <AlertCircle className="w-4 h-4 text-rose-500" />
-                                    Overdue Tasks Timeline & Risk Factor
-                                </h3>
-                                <p className="text-slate-500 text-xs font-semibold mb-4 leading-relaxed">
-                                    Overdue tasks pose delivery blockers. Grouped below by assigned task urgency metrics:
-                                </p>
-                                <div className="space-y-4">
-                                    {/* High Urgency */}
-                                    <div className="flex items-center justify-between p-3.5 bg-red-50/50 border border-red-100 rounded-2xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
-                                                <AlertTriangle className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-bold text-slate-700">Critical / High Severity</h4>
-                                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Overdue sprint backlog blocks</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-lg font-black text-red-600">{overdueGroupHigh}</span>
-                                    </div>
-
-                                    {/* Medium Urgency */}
-                                    <div className="flex items-center justify-between p-3.5 bg-amber-50/50 border border-amber-100 rounded-2xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600 shrink-0">
-                                                <Clock className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-bold text-slate-700">Normal Priority</h4>
-                                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Secondary sprint components</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-lg font-black text-amber-600">{overdueGroupMed}</span>
-                                    </div>
-
-                                    {/* Low Urgency */}
-                                    <div className="flex items-center justify-between p-3.5 bg-slate-50/70 border border-slate-100 rounded-2xl">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
-                                                <Calendar className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-bold text-slate-700">Low Priority</h4>
-                                                <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Flexible backlog items</p>
-                                            </div>
-                                        </div>
-                                        <span className="text-lg font-black text-slate-600">{overdueGroupLow}</span>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
                     </div>
@@ -551,9 +491,6 @@ const TeamLeadDashboard = () => {
                                         <Users className="w-4 h-4 text-blue-500" />
                                         Team Members Overview
                                     </h3>
-                                    <Link to="/teamLead/team" className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 group">
-                                        Performance Panel <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                                    </Link>
                                 </div>
                                 <div className="overflow-x-auto scrollbar-thin">
                                     <table className="w-full text-left border-collapse">
