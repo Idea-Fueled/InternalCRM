@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
 import { dashboardService, projectService, userService, taskService } from '../../api/services';
@@ -23,6 +23,7 @@ import StatDetailModal from '../../components/StatDetailModal';
 
 const TeamLeadDashboard = () => {
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [stats, setStats] = useState({
         totalTeamTasks: 0,
         activeProjects: 0,
@@ -652,7 +653,7 @@ const TeamLeadDashboard = () => {
                                                         </td>
                                                         <td className="px-6 py-3">
                                                             <button 
-                                                                onClick={() => navigate('/teamLead/tasks')}
+                                                                onClick={() => setSearchParams({ taskId: task._id })}
                                                                 className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-0.5 cursor-pointer"
                                                             >
                                                                 Review <ChevronRight className="w-3.5 h-3.5" />
