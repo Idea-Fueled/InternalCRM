@@ -32,7 +32,7 @@ const MyTeam = () => {
                 if (!user) return;
                 
                 const [usersRes, tasksRes] = await Promise.all([
-                    userService.getAllUsers(),
+                    userService.getAllUsers({ orgTree: true }),
                     taskService.getAllTasks()
                 ]);
                 

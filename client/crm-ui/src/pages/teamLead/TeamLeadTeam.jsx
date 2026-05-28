@@ -56,7 +56,7 @@ const TeamLeadTeam = () => {
         const fetchTeamData = async () => {
             try {
                 const [usersRes, tasksRes] = await Promise.all([
-                    userService.getAllUsers(),
+                    userService.getAllUsers({ orgTree: true }),
                     taskService.getAllTasks()
                 ]);
                 
