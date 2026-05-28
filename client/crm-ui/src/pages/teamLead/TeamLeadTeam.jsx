@@ -79,7 +79,17 @@ const TeamLeadTeam = () => {
                     }));
                     setReportingManagers(formattedManagers);
                     
-                    const teamMembers = allUsers.map((u, i) => {
+                    const myId = user?._id;
+                    const filteredUsers = allUsers.filter(u => {
+                        const isSelf = u._id === myId;
+                        const reportsToMe = (u.teamLeads || []).some(tl => {
+                            const tlId = tl._id || tl;
+                            return tlId === myId;
+                        });
+                        return isSelf || reportsToMe;
+                    });
+                    
+                    const teamMembers = filteredUsers.map((u, i) => {
                         const userTasks = allTasks.filter(t => t.assignedTo?._id === u._id);
                         const completed = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
                         const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
