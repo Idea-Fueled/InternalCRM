@@ -89,6 +89,7 @@ const EmployeesDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ total: 0, active: 0, withOverdue: 0, inactive: 0 });
     const [roleFilter, setRoleFilter] = useState("All Roles");
+    const [viewMode, setViewMode] = useState("list"); // 'list' | 'grid'
     
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
@@ -605,7 +606,7 @@ const EmployeesDashboard = () => {
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                             </div>
                         </div>
-                        <div className="flex gap-2 w-full sm:w-auto mr-1">
+                        <div className="flex gap-2 w-full sm:w-auto mr-1 items-center">
                             <select 
                                 className="px-4 py-2 bg-slate-50 border-none text-slate-600 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none"
                                 value={roleFilter}
@@ -617,7 +618,32 @@ const EmployeesDashboard = () => {
                                 <option value="qa">QA</option>
                                 <option value="TL">Team Lead</option>
                             </select>
-                             <button 
+                            {/* List / Grid toggle */}
+                            <div className="flex items-center bg-slate-100 rounded-xl p-1 gap-0.5">
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    title="List view"
+                                    className={`p-1.5 rounded-lg transition-all ${
+                                        viewMode === 'list'
+                                            ? 'bg-white shadow-sm text-blue-600'
+                                            : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    title="Grid view"
+                                    className={`p-1.5 rounded-lg transition-all ${
+                                        viewMode === 'grid'
+                                            ? 'bg-white shadow-sm text-blue-600'
+                                            : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                                </button>
+                            </div>
+                            <button 
                                 onClick={handleExport}
                                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition text-sm"
                             >
@@ -627,14 +653,138 @@ const EmployeesDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Employee List (Card-Table Hybrid) */}
-                    <div className="space-y-3">
+                    {/* Employee List / Grid */}
+                    <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
                         {loading ? (
-                             <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center">
+                             <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center col-span-full">
                                 <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                                 <h3 className="text-lg font-bold text-slate-700">Loading employees...</h3>
                             </div>
                         ) : filteredEmployees.length > 0 ? filteredEmployees.map((emp, i) => (
+                            viewMode === 'grid' ? (
+                                <div
+                                    key={i}
+                                    onClick={() => setSelectedEmployee(emp)}
+                                    className={`group relative rounded-2xl border shadow-sm transition-all duration-300 cursor-pointer overflow-hidden flex flex-col ${
+                                        emp.status === 'Inactive'
+                                            ? 'bg-slate-50 border-slate-200/80 hover:shadow-md'
+                                            : 'bg-white border-slate-200/60 hover:shadow-lg hover:border-blue-200'
+                                    }`}
+                                >
+                                    {/* Colour accent top bar */}
+                                    <div className={`h-1 w-full ${
+                                        emp.status === 'Inactive' ? 'bg-slate-300' :
+                                        emp.status === 'Overdue'  ? 'bg-amber-400'  :
+                                        'bg-gradient-to-r from-blue-500 to-indigo-500'
+                                    }`} />
+
+                                    <div className="p-5 flex flex-col gap-4 flex-1">
+                                        {/* Avatar + name row */}
+                                        <div className="flex items-start gap-3">
+                                            <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden ${
+                                                emp.status === 'Inactive' ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'
+                                            }`}>
+                                                {emp.raw.profilePic ? (
+                                                    <img src={emp.raw.profilePic} alt={emp.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    emp.name.charAt(0)
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    <h4 className={`text-sm font-bold truncate ${
+                                                        emp.status === 'Inactive' ? 'text-slate-500' : 'text-slate-800 group-hover:text-blue-700'
+                                                    } transition-colors`}>{emp.name}</h4>
+                                                    {emp.status === 'Inactive' && (
+                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
+                                                    )}
+                                                </div>
+                                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize mt-0.5 inline-block ${
+                                                    emp.status === 'Inactive' ? 'bg-slate-100 text-slate-500' : 'bg-blue-50 text-blue-600'
+                                                }`}>{emp.role === 'TL' ? 'Team Lead' : emp.role}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Dept + Lead */}
+                                        <div className="space-y-1.5 text-xs text-slate-500">
+                                            <div className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                                <span className="font-medium text-slate-600 truncate">{emp.dept}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                <span className="truncate">Lead: <span className="font-semibold text-slate-600">{emp.lead}</span></span>
+                                            </div>
+                                        </div>
+
+                                        {/* Task stats */}
+                                        <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
+                                            <div className="flex flex-col">
+                                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Done</span>
+                                                <span className="text-sm font-bold text-slate-700">{emp.tasks.done}<span className="text-xs font-normal text-slate-400">/{emp.tasks.total}</span></span>
+                                            </div>
+                                            {emp.tasks.overdue > 0 && (
+                                                <div className="flex flex-col pl-3 border-l border-slate-100">
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-red-400">Overdue</span>
+                                                    <span className="text-sm font-bold text-red-600">{emp.tasks.overdue}</span>
+                                                </div>
+                                            )}
+                                            <div className="ml-auto">
+                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                                                    emp.status === 'Active'   ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                    emp.status === 'Overdue'  ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                    'bg-slate-100 text-slate-500 border-slate-200'
+                                                }`}>{emp.status}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Inactive info */}
+                                        {emp.status === 'Inactive' && (
+                                            <div className="bg-slate-100/70 rounded-xl px-3 py-2 text-[10px] text-slate-500 space-y-0.5">
+                                                <div><span className="font-bold text-slate-600">Reason: </span><span className="italic">{emp.raw.inactiveReason || 'None specified'}</span></div>
+                                                <div><span className="font-bold text-slate-600">Until: </span>{emp.raw.inactiveUntil ? new Date(emp.raw.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Indefinite'}</div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Actions footer */}
+                                    <div className="px-5 pb-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); can('users.update') && handleStatusToggle(emp, e); }}
+                                            disabled={!can('users.update')}
+                                            className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${
+                                                !can('users.update') ? 'cursor-default opacity-60' : 'cursor-pointer'
+                                            } ${
+                                                emp.status === 'Inactive'
+                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                                                    : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
+                                            }`}
+                                        >
+                                            {emp.status === 'Inactive' ? 'Reactivate' : 'Mark Inactive'}
+                                        </button>
+                                        <div className="flex items-center gap-1">
+                                            {can('users.update') && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleEditEmployee(emp, e); }}
+                                                    className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Edit"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                </button>
+                                            )}
+                                            {can('users.delete') && (
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.id, e); }}
+                                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
                             <div 
                                 key={i} 
                                 onClick={() => setSelectedEmployee(emp)} 
@@ -770,8 +920,9 @@ const EmployeesDashboard = () => {
                                     </div>
                                 )}
                             </div>
+                            )
                         )) : (
-                            <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center">
+                            <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center col-span-full">
                                 <svg className="w-12 h-12 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                                 <h3 className="text-lg font-bold text-slate-700">No employees found</h3>
                                 <p className="text-slate-500 text-sm mt-1">Try adjusting your search or filters.</p>
