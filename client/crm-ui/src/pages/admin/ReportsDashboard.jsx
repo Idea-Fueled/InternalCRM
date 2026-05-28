@@ -3,21 +3,24 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, projectService } from "../../api/services";
 import { exportPDF, exportOverallReport } from "../../utils/pdfExport";
-import { Download } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight, FolderOpen, AlertCircle } from "lucide-react";
 import StatDetailModal from "../../components/StatDetailModal";
+import { useAuth } from "../../context/AuthContext";
 
 const ReportsDashboard = () => {
+    const { user } = useAuth();
     const [loading, setLoading] = useState(true);
     const [tasks, setTasks] = useState([]);
     const [users, setUsers] = useState([]);
     const [projects, setProjects] = useState([]);
-    const [selectedProjectId, setSelectedProjectId] = useState("All");
+    const [selectedProjectId, setSelectedProjectId] = useState("");
     const [fromDate, setFromDate] = useState("2026-04-01");
     const [toDate, setToDate] = useState("2026-05-31");
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
 
     useEffect(() => {
         const fetchData = async () => {
+            if (!user) return;
             try {
                 setLoading(true);
                 const [taskRes, userRes, projRes] = await Promise.all([
@@ -27,7 +30,17 @@ const ReportsDashboard = () => {
                 ]);
                 setTasks(taskRes.data.tasks || []);
                 setUsers(userRes.data.data || []);
-                setProjects(projRes.data.projects || []);
+                
+                const allProjects = projRes.data.projects || [];
+                let scopedProjects = [];
+                if (user?.role === "admin") {
+                    scopedProjects = allProjects;
+                } else if (user?.role === "TL") {
+                    scopedProjects = allProjects.filter(p => p.teamLead?._id === user._id || p.teamLead === user._id);
+                } else {
+                    scopedProjects = allProjects.filter(p => p.teamMembers?.some(m => (m._id || m) === user?._id));
+                }
+                setProjects(scopedProjects);
             } catch (err) {
                 console.error("Failed to fetch reports data", err);
             } finally {
@@ -35,9 +48,9 @@ const ReportsDashboard = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [user]);
 
-    const filteredTasks = tasks.filter(t => {
+    const filteredTasks = !selectedProjectId ? [] : tasks.filter(t => {
         const matchesProject = selectedProjectId === "All" || t.project?._id === selectedProjectId;
         if (!matchesProject) return false;
 
@@ -56,6 +69,26 @@ const ReportsDashboard = () => {
 
         return true;
     });
+
+    const currentProjectIndex = projects.findIndex(p => p._id === selectedProjectId);
+
+    const handleSlidePrev = () => {
+        if (projects.length === 0) return;
+        let newIndex = currentProjectIndex - 1;
+        if (newIndex < 0) {
+            newIndex = projects.length - 1;
+        }
+        setSelectedProjectId(projects[newIndex]._id);
+    };
+
+    const handleSlideNext = () => {
+        if (projects.length === 0) return;
+        let newIndex = currentProjectIndex + 1;
+        if (newIndex >= projects.length) {
+            newIndex = 0;
+        }
+        setSelectedProjectId(projects[newIndex]._id);
+    };
 
     const insights = [
         { label: "New", value: filteredTasks.filter(t => t.status === "New").length, data: filteredTasks.filter(t => t.status === "New"), color: "text-slate-500", bg: "bg-slate-100", dot: "bg-slate-400" },
@@ -219,7 +252,7 @@ const ReportsDashboard = () => {
 
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
-            <AdminSidebar />
+            <AdminSidebar role={user?.role === 'TL' ? 'teamLead' : (user?.role === 'qa' ? 'qa' : (user?.role === 'admin' ? 'admin' : 'employee'))} />
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="Reports" />
                 
@@ -243,7 +276,7 @@ const ReportsDashboard = () => {
                                     value={selectedProjectId}
                                     onChange={(e) => setSelectedProjectId(e.target.value)}
                                 >
-                                    <option value="All">All Projects</option>
+                                    <option value="">Select Project</option>
                                     {projects.map(p => (
                                         <option key={p._id} value={p._id}>{p.projectName}</option>
                                     ))}
@@ -273,7 +306,34 @@ const ReportsDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Top Insights */}
+                    {!selectedProjectId ? (
+                        <div className="bg-white rounded-3xl p-16 border border-slate-200/60 shadow-sm flex flex-col items-center justify-center text-center max-w-4xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                            <div className="w-20 h-20 bg-blue-50 text-blue-600 border border-blue-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                                <FolderOpen className="w-10 h-10 animate-bounce" />
+                            </div>
+                            <h2 className="text-2xl font-black text-slate-800 tracking-tight">Select a Project to View Reports</h2>
+                            <p className="text-slate-500 font-semibold text-sm max-w-md mt-2 leading-relaxed">
+                                Get a complete operational overview of task completion timelines, developer performance metrics, and system-wide activity logs. Select one of your assigned projects to load analytics.
+                            </p>
+                            
+                            {projects.length > 0 && (
+                                <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-2xl">
+                                    {projects.slice(0, 6).map((proj) => (
+                                        <button
+                                            key={proj._id}
+                                            onClick={() => setSelectedProjectId(proj._id)}
+                                            className="px-4 py-3 bg-slate-50 border border-slate-200/80 hover:border-blue-400 hover:bg-blue-50/20 text-slate-700 font-bold text-xs rounded-xl shadow-sm hover:shadow transition-all text-left flex items-center justify-between group cursor-pointer"
+                                        >
+                                            <span className="truncate group-hover:text-blue-600 transition-colors mr-2">{proj.projectName}</span>
+                                            <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <>
+                            {/* Top Insights */}
                     <div>
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -393,49 +453,92 @@ const ReportsDashboard = () => {
                                 <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                                 Active Project Focus
                             </h2>
-                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 shadow-lg shadow-blue-900/20 text-white relative overflow-hidden h-[calc(100%-2rem)] flex flex-col">
+                            <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 shadow-lg shadow-blue-900/20 text-white relative overflow-hidden h-[calc(100%-2rem)] min-h-[350px] flex flex-col justify-between hover:shadow-xl transition-all duration-300">
                                 {/* Decor */}
                                 <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-[40px] pointer-events-none"></div>
                                 <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[40px] pointer-events-none"></div>
                                 
-                                <div className="relative z-10 flex-1 flex flex-col">
+                                <div className="relative z-10 flex-1 flex flex-col justify-between">
                                     {projectReport ? (
                                         <>
-                                    <div className="flex items-start justify-between mb-8">
-                                        <div>
-                                            <div className="inline-block px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-[10px] font-bold uppercase tracking-wider mb-3 border border-white/10">Active</div>
-                                            <h3 className="text-2xl font-black tracking-tight">{projectReport.name}</h3>
-                                            <div className="flex items-center gap-2 mt-2 text-blue-100 text-sm font-medium">
-                                                <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                                Lead: {projectReport.lead}
+                                            <div className="flex items-start justify-between mb-4">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10 shrink-0">
+                                                            {activeProject?.status || "Active"}
+                                                        </span>
+                                                    </div>
+                                                    <h3 className="text-2xl font-black tracking-tight truncate" title={projectReport.name}>{projectReport.name}</h3>
+                                                    <div className="flex items-center gap-2 mt-2 text-blue-100 text-sm font-semibold">
+                                                        <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                        Lead: {projectReport.lead}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-2 gap-4 mb-auto border-y border-white/10 py-5">
-                                        <div>
-                                            <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Timeline</span>
-                                            <div className="text-sm font-semibold">{projectReport.start}</div>
-                                            <div className="text-sm font-semibold opacity-80">{projectReport.end}</div>
-                                        </div>
-                                        <div>
-                                            <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Tasks</span>
-                                            <div className="text-xl font-bold">{projectReport.completedTasks}<span className="text-sm opacity-70">/{projectReport.totalTasks}</span></div>
-                                        </div>
-                                    </div>
+                                            <div className="grid grid-cols-2 gap-4 my-auto border-y border-white/10 py-5">
+                                                <div>
+                                                    <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Timeline</span>
+                                                    <div className="text-xs font-bold">{projectReport.start}</div>
+                                                    <div className="text-xs font-bold opacity-80">{projectReport.end}</div>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Tasks</span>
+                                                    <div className="text-xl font-bold">{projectReport.completedTasks}<span className="text-sm opacity-70">/{projectReport.totalTasks}</span></div>
+                                                </div>
+                                            </div>
 
-                                    <div className="mt-6">
-                                        <div className="flex justify-between items-end mb-2">
-                                            <span className="text-xs font-bold text-blue-100 tracking-wide uppercase">Completion</span>
-                                            <span className="text-2xl font-black">{projectReport.progress}%</span>
-                                        </div>
-                                        <div className="w-full bg-black/20 rounded-full h-2.5 backdrop-blur-sm border border-white/10">
-                                            <div className="bg-white h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${projectReport.progress}%` }}></div>
-                                        </div>
-                                    </div>
-                                    </>
+                                            <div className="mt-4">
+                                                <div className="flex justify-between items-end mb-2">
+                                                    <span className="text-xs font-bold text-blue-100 tracking-wide uppercase">Completion</span>
+                                                    <span className="text-2xl font-black">{projectReport.progress}%</span>
+                                                </div>
+                                                <div className="w-full bg-black/20 rounded-full h-2.5 backdrop-blur-sm border border-white/10">
+                                                    <div className="bg-white h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-500" style={{ width: `${projectReport.progress}%` }}></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Slider Navigation */}
+                                            {projects.length > 1 && (
+                                                <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+                                                    <button 
+                                                        onClick={handleSlidePrev}
+                                                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white border border-white/5 active:scale-95 cursor-pointer"
+                                                        title="Previous Project"
+                                                    >
+                                                        <ChevronLeft className="w-4 h-4" />
+                                                    </button>
+                                                    <div className="flex items-center gap-1">
+                                                        {projects.map((p, idx) => (
+                                                            <button
+                                                                key={p._id}
+                                                                onClick={() => setSelectedProjectId(p._id)}
+                                                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                                                    idx === currentProjectIndex ? 'w-4 bg-white' : 'bg-white/40 hover:bg-white/60'
+                                                                }`}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                    <button 
+                                                        onClick={handleSlideNext}
+                                                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white border border-white/5 active:scale-95 cursor-pointer"
+                                                        title="Next Project"
+                                                    >
+                                                        <ChevronRight className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </>
                                     ) : (
-                                        <div className="flex-1 flex items-center justify-center text-blue-100 font-bold">Select a project to see details</div>
+                                        <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
+                                            <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mb-3 animate-pulse">
+                                                <FolderOpen className="w-6 h-6 text-blue-100" />
+                                            </div>
+                                            <h4 className="text-lg font-black tracking-tight">Select Project First</h4>
+                                            <p className="text-xs text-blue-100/70 font-medium max-w-[200px] mt-1.5 leading-relaxed">
+                                                Choose a project from the filters or slider list to view performance insight.
+                                            </p>
+                                        </div>
                                     )}
                                 </div>
                             </div>
@@ -515,6 +618,8 @@ const ReportsDashboard = () => {
                             </div>
                         </div>
                     </div>
+                        </>
+                    )}
 
                 </main>
             </div>

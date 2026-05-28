@@ -72,7 +72,7 @@ const App = () => {
       },
       {
         path: "/admin/reports",
-        element: <ProtectedRoute allowedRoles={["admin"]} requiredPermission="reports.view"><ReportsDashboard /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["admin"]}><ReportsDashboard /></ProtectedRoute>
       },
       {
         path: "/admin/trash",
@@ -111,6 +111,10 @@ const App = () => {
         path: "/teamLead/organization-tree",
         element: <ProtectedRoute allowedRoles={["TL", "admin"]}><OrganizationTree /></ProtectedRoute>
       },
+      {
+        path: "/teamLead/reports",
+        element: <ProtectedRoute allowedRoles={["TL", "admin"]}><ReportsDashboard /></ProtectedRoute>
+      },
       // Employee Routes
       {
         path: "/employee/dashboard",
@@ -140,6 +144,10 @@ const App = () => {
         path: "/employee/my-team",
         element: <ProtectedRoute allowedRoles={["employee", "admin"]}><MyTeam /></ProtectedRoute>
       },
+      {
+        path: "/employee/reports",
+        element: <ProtectedRoute allowedRoles={["employee", "admin"]}><ReportsDashboard /></ProtectedRoute>
+      },
       // QA Routes
       {
         path: "/qa/dashboard",
@@ -168,6 +176,10 @@ const App = () => {
       {
         path: "/qa/my-team",
         element: <ProtectedRoute allowedRoles={["qa", "admin"]}><MyTeam /></ProtectedRoute>
+      },
+      {
+        path: "/qa/reports",
+        element: <ProtectedRoute allowedRoles={["qa", "admin"]}><ReportsDashboard /></ProtectedRoute>
       },
       {
         path: "*",
