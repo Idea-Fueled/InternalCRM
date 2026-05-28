@@ -344,9 +344,10 @@ export const updateUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
+        const hasTeamLeadsField = ('teamLeads' in req.body) || ('teamLeads[]' in req.body);
         const updateData = {
             ...otherData,
-            teamLeads: finalTeamLeads,
+            ...(hasTeamLeadsField && { teamLeads: finalTeamLeads }),
             ...(parsedPermissions !== null && { permissions: parsedPermissions })
         };
 

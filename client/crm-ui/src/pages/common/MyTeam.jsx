@@ -52,8 +52,12 @@ const MyTeam = () => {
                     // 1. Resolve Reporting Managers
                     let managers = [];
                     if (userRole === "TL") {
-                        // TL reports to Admins
-                        managers = allUsers.filter(u => u.role === "admin");
+                        // TL reports to assigned team leads if set, else falls back to Admins
+                        if (myTeamLeadIds.length > 0) {
+                            managers = allUsers.filter(u => myTeamLeadIds.includes(getIdString(u._id)));
+                        } else {
+                            managers = allUsers.filter(u => u.role === "admin");
+                        }
                     } else {
                         // Dev / QA reports to assigned Team Leads
                         managers = allUsers.filter(u => 
@@ -192,10 +196,12 @@ const MyTeam = () => {
                                                 
                                                 {mgr.status === 'Inactive' && (
                                                     <div className="sm:max-w-xs p-3 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1 self-stretch flex flex-col justify-center">
-                                                        <div className="flex items-start gap-1 min-w-0">
-                                                            <span className="font-bold text-slate-700 shrink-0">Reason:</span>
-                                                            <span className="truncate italic text-slate-600">{mgr.inactiveReason || "None specified"}</span>
-                                                        </div>
+                                                        {(user?.role === 'admin' || user?.role === 'TL') && (
+                                                            <div className="flex items-start gap-1 min-w-0">
+                                                                <span className="font-bold text-slate-700 shrink-0">Reason:</span>
+                                                                <span className="truncate italic text-slate-600">{mgr.inactiveReason || "None specified"}</span>
+                                                            </div>
+                                                        )}
                                                         <div className="flex items-center gap-1 shrink-0">
                                                             <span className="font-bold text-slate-700">Duration:</span>
                                                             <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-[10px]">
@@ -284,10 +290,12 @@ const MyTeam = () => {
 
                                                         {member.status === 'Inactive' ? (
                                                             <div className="p-2.5 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1">
-                                                                <div className="flex items-start gap-1 min-w-0">
-                                                                    <span className="font-bold text-slate-700 shrink-0">Reason:</span>
-                                                                    <span className="truncate italic text-slate-600">{member.inactiveReason || "None specified"}</span>
-                                                                </div>
+                                                                {(user?.role === 'admin' || user?.role === 'TL') && (
+                                                                    <div className="flex items-start gap-1 min-w-0">
+                                                                        <span className="font-bold text-slate-700 shrink-0">Reason:</span>
+                                                                        <span className="truncate italic text-slate-600">{member.inactiveReason || "None specified"}</span>
+                                                                    </div>
+                                                                )}
                                                                 <div className="flex items-center gap-1 shrink-0">
                                                                     <span className="font-bold text-slate-700">Duration:</span>
                                                                     <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-[10px]">

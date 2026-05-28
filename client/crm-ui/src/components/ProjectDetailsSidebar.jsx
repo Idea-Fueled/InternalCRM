@@ -618,7 +618,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                         {project.teamLead?.status === 'inactive' && (
                                                              <span 
                                                                  className="px-1 py-0.1 rounded text-[7px] font-black bg-slate-100 text-slate-500 border border-slate-200 uppercase shrink-0 cursor-help"
-                                                                 title={`Reason: ${project.teamLead.inactiveReason || 'None specified'}\nDuration: ${project.teamLead.inactiveUntil ? `Until ${new Date(project.teamLead.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : 'Indefinite'}`}
+                                                                 title={`${(user?.role === 'admin' || user?.role === 'TL') ? `Reason: ${project.teamLead.inactiveReason || 'None specified'}\n` : ''}Duration: ${project.teamLead.inactiveUntil ? `Until ${new Date(project.teamLead.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : 'Indefinite'}`}
                                                              >
                                                                  Inactive
                                                              </span>
@@ -651,7 +651,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                         {m.status === 'inactive' ? (
                                                             <span 
                                                                 className="px-1.5 py-0.2 rounded text-[8px] font-bold shrink-0 bg-slate-100 text-slate-500 border border-slate-200 uppercase cursor-help"
-                                                                title={`Reason: ${m.inactiveReason || 'None specified'}\nDuration: ${m.inactiveUntil ? `Until ${new Date(m.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : 'Indefinite'}`}
+                                                                title={`${(user?.role === 'admin' || user?.role === 'TL') ? `Reason: ${m.inactiveReason || 'None specified'}\n` : ''}Duration: ${m.inactiveUntil ? `Until ${new Date(m.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}` : 'Indefinite'}`}
                                                             >
                                                                 Inactive
                                                             </span>

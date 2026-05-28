@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 
 const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, initial }) => {
-    const { updateUserProfile } = useAuth();
+    const { user: currentUser, updateUserProfile } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
     const [isLoadingRelations, setIsLoadingRelations] = useState(false);
@@ -82,6 +82,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
 
     // --- Dynamic Relations Calculations ---
     const userRole = user?.role || role;
+    const canSeeReason = currentUser?.role === 'admin' || currentUser?.role === 'TL';
 
     // Helper to get initials
     const getInitials = (name) => {
@@ -237,10 +238,12 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <ShieldAlert className="w-4 h-4 text-slate-400 shrink-0" />
                                 <span className="font-bold uppercase tracking-wider text-slate-500 text-[10px]">Inactivity Profile</span>
                             </div>
+                            {canSeeReason && (
                             <div className="flex flex-col gap-0.5">
                                 <span className="font-bold text-slate-500 text-[9px] uppercase tracking-wider">Reason for Inactivity</span>
                                 <p className="italic text-slate-700 font-semibold">{user.inactiveReason || "No reason specified"}</p>
                             </div>
+                            )}
                             <div className="flex flex-col gap-0.5 mt-1">
                                 <span className="font-bold text-slate-500 text-[9px] uppercase tracking-wider">Duration</span>
                                 <p className="text-slate-800 font-bold">

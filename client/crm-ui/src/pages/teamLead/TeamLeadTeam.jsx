@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AdminSidebar from '../../components/admin/AdminSidebar';
 import Topbar from '../../components/Topbar';
+import { useAuth } from '../../context/AuthContext';
 import { userService, taskService } from '../../api/services';
 import { 
   Search, Filter, Users, CheckCircle2, Clock, AlertCircle, 
@@ -32,6 +33,7 @@ const getInactivityDaysLeft = (inactiveUntil) => {
 };
 
 const TeamLeadTeam = () => {
+    const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const [team, setTeam] = useState([]);
     const [reportingManagers, setReportingManagers] = useState([]);
@@ -62,9 +64,15 @@ const TeamLeadTeam = () => {
                     const allUsers = usersRes.data.data;
                     const allTasks = tasksRes.data.tasks;
                     
-                    // Resolve Reporting Managers (Admins for TL)
-                    const admins = allUsers.filter(u => u.role === "admin");
-                    const formattedManagers = admins.map(mgr => ({
+                    // Resolve Reporting Managers (assigned teamLeads for TL, else fall back to admins)
+                    const myTeamLeadIds = (user?.teamLeads || []).map(tl => tl._id || tl);
+                    let managers = [];
+                    if (myTeamLeadIds.length > 0) {
+                        managers = allUsers.filter(u => myTeamLeadIds.includes(u._id));
+                    } else {
+                        managers = allUsers.filter(u => u.role === "admin");
+                    }
+                    const formattedManagers = managers.map(mgr => ({
                         ...mgr,
                         id: mgr._id,
                         status: mgr.status === "inactive" ? "Inactive" : "Active"
@@ -216,10 +224,12 @@ const TeamLeadTeam = () => {
                                         
                                         {mgr.status === 'Inactive' && (
                                             <div className="sm:max-w-xs p-3 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1 self-stretch flex flex-col justify-center">
-                                                <div className="flex items-start gap-1 min-w-0">
-                                                    <span className="font-bold text-slate-700 shrink-0">Reason:</span>
-                                                    <span className="truncate italic text-slate-600">{mgr.inactiveReason || "None specified"}</span>
-                                                </div>
+                                                {user?.role === 'admin' && (
+                                                    <div className="flex items-start gap-1 min-w-0">
+                                                        <span className="font-bold text-slate-700 shrink-0">Reason:</span>
+                                                        <span className="truncate italic text-slate-600">{mgr.inactiveReason || "None specified"}</span>
+                                                    </div>
+                                                )}
                                                 <div className="flex items-center gap-1 shrink-0">
                                                     <span className="font-bold text-slate-700">Duration:</span>
                                                     <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-[10px]">
