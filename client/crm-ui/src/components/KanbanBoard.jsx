@@ -495,10 +495,8 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const initialProject = searchParams.get('project') || 'All';
     
-    // Check if opened through specific project (passed initially as project parameter)
-    const [isProjectSpecific] = useState(() => {
-        return !!searchParams.get('project');
-    });
+    // Derived: true whenever the URL has a ?project= param (reactive to navigation)
+    const isProjectSpecific = !!searchParams.get('project');
 
     const [isProjDropdownOpen, setIsProjDropdownOpen] = useState(false);
 
