@@ -80,6 +80,23 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
         }
     };
 
+    const getUserRoleCategory = (u) => {
+        if (!u) return 'employee';
+        const role = (u.role || '').toLowerCase();
+        const designation = (u.designation || '').toLowerCase();
+        if (role === 'admin' || designation === 'admin') {
+            return 'admin';
+        }
+        const checkText = designation || role;
+        if (checkText.includes('qa')) {
+            return 'qa';
+        }
+        if (checkText.includes('team lead') || checkText.includes('lead')) {
+            return 'TL';
+        }
+        return 'employee';
+    };
+
     // --- Dynamic Relations Calculations ---
     const userRole = user?.role || role;
     const canSeeReason = currentUser?.role === 'admin' || currentUser?.role === 'TL';
@@ -125,26 +142,31 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
     };
 
     const myTeamLeadIds = (user?.teamLeads || []).map(tl => getIdString(tl));
+    const myManagerId = user?.reportingManager?._id || user?.reportingManager;
 
-    // 1. Calculations for Developer / QA
+    // 1. Calculations for Developer / QA / Dynamic Employee
     const reportingManagers = allUsers.filter(u => 
-        u.role === 'TL' && myTeamLeadIds.includes(getIdString(u._id))
+        (getUserRoleCategory(u) === 'TL' || getUserRoleCategory(u) === 'admin') &&
+        ((myManagerId && getIdString(u._id) === getIdString(myManagerId)) ||
+         (!myManagerId && myTeamLeadIds.includes(getIdString(u._id))))
     );
 
     const teammates = allUsers.filter(u => 
         getIdString(u._id) !== getIdString(user?._id) && 
-        !['admin', 'TL'].includes(u.role) &&
-        (u.teamLeads || []).map(tl => getIdString(tl)).some(tlId => myTeamLeadIds.includes(tlId))
+        getUserRoleCategory(u) !== 'admin' && getUserRoleCategory(u) !== 'TL' &&
+        ((myManagerId && getIdString(u.reportingManager || u.teamLeads?.[0]) === getIdString(myManagerId)) ||
+         (!myManagerId && (u.teamLeads || []).map(tl => getIdString(tl)).some(tlId => myTeamLeadIds.includes(tlId))))
     );
 
     // 2. Calculations for Team Lead (TL)
-    const tlManagers = allUsers.filter(u => u.role === 'admin');
+    const tlManagers = allUsers.filter(u => getUserRoleCategory(u) === 'admin');
     const reportingTeamTL = allUsers.filter(u => 
-        (u.teamLeads || []).map(tl => getIdString(tl)).includes(getIdString(user?._id))
+        ((u.reportingManager && getIdString(u.reportingManager) === getIdString(user?._id)) ||
+         (!u.reportingManager && (u.teamLeads || []).map(tl => getIdString(tl)).includes(getIdString(user?._id))))
     );
 
     // 3. Calculations for Admin
-    const reportingTeamAdmin = allUsers.filter(u => u.role === 'TL');
+    const reportingTeamAdmin = allUsers.filter(u => getUserRoleCategory(u) === 'TL');
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onClick={onClose}>
@@ -217,8 +239,8 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                         {/* Name and Badges */}
                         <h3 className="text-2xl font-bold text-slate-800 mt-4 mb-2">{displayName}</h3>
                         <div className="flex items-center gap-2">
-                            <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getRoleBadgeStyle(userRole)}`}>
-                                {displayRole}
+                            <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getRoleBadgeStyle(getUserRoleCategory(user || { role: userRole }))}`}>
+                                {user?.designation || displayRole || formatRole(userRole)}
                             </span>
                             {user?.status === 'inactive' ? (
                                 <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
@@ -304,14 +326,14 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                         ) : (
                             <>
                                 {/* 1. Reporting Manager Block (Developers, QAs, Team Leads only) */}
-                                {userRole !== 'admin' && (
+                                {getUserRoleCategory(user || { role: userRole }) !== 'admin' && (
                                     <div>
                                         <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                                             <UserCheck className="w-4 h-4 text-blue-500" />
                                             Reporting Manager
                                         </h4>
                                         <div className="space-y-2">
-                                            {userRole === 'TL' ? (
+                                            {getUserRoleCategory(user || { role: userRole }) === 'TL' ? (
                                                 /* TL reports to Admins */
                                                 tlManagers.length > 0 ? (
                                                     tlManagers.map(mgr => (
@@ -362,12 +384,12 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <div>
                                     <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
                                         <Users className="w-4 h-4 text-indigo-500" />
-                                        {userRole === 'admin' ? "Active Team Leads" : userRole === 'TL' ? "Reporting Team Members" : "My Teammates"}
+                                        {getUserRoleCategory(user || { role: userRole }) === 'admin' ? "Active Team Leads" : getUserRoleCategory(user || { role: userRole }) === 'TL' ? "Reporting Team Members" : "My Teammates"}
                                     </h4>
 
                                     <div className="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
                                         {/* Render items based on role */}
-                                        {userRole === 'admin' && (
+                                        {getUserRoleCategory(user || { role: userRole }) === 'admin' && (
                                             reportingTeamAdmin.length > 0 ? (
                                                 reportingTeamAdmin.map(member => (
                                                     <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
@@ -379,8 +401,8 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-700">{member.name}</span>
                                                         </div>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
-                                                            {formatRole(member.role)}
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
+                                                            {member.designation || formatRole(member.role)}
                                                         </span>
                                                     </div>
                                                 ))
@@ -391,7 +413,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                             )
                                         )}
 
-                                        {userRole === 'TL' && (
+                                        {getUserRoleCategory(user || { role: userRole }) === 'TL' && (
                                             reportingTeamTL.length > 0 ? (
                                                 reportingTeamTL.map(member => (
                                                     <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
@@ -403,8 +425,8 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-700">{member.name}</span>
                                                         </div>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
-                                                            {formatRole(member.role)}
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
+                                                            {member.designation || formatRole(member.role)}
                                                         </span>
                                                     </div>
                                                 ))
@@ -415,7 +437,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                             )
                                         )}
 
-                                        {userRole !== 'admin' && userRole !== 'TL' && (
+                                        {getUserRoleCategory(user || { role: userRole }) !== 'admin' && getUserRoleCategory(user || { role: userRole }) !== 'TL' && (
                                             teammates.length > 0 ? (
                                                 teammates.map(member => (
                                                     <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
@@ -427,8 +449,8 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                                             </div>
                                                             <span className="text-xs font-bold text-slate-700">{member.name}</span>
                                                         </div>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(member.role)}`}>
-                                                            {formatRole(member.role)}
+                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
+                                                            {member.designation || formatRole(member.role)}
                                                         </span>
                                                     </div>
                                                 ))

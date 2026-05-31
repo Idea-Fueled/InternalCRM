@@ -18,6 +18,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    designation: {
+        type: String,
+        default: ""
+    },
+    reportingManager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        default: null
+    },
     department: {
         type: String
     },

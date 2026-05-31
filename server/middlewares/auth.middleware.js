@@ -1,6 +1,21 @@
 import jwt from "jsonwebtoken";
 import User from "../models/user.schema.js";
 
+export const getUserRoleCategory = (user) => {
+    if (!user) return 'employee';
+    if (user.role === 'admin' || (user.designation && user.designation.toLowerCase() === 'admin')) {
+        return 'admin';
+    }
+    const designation = (user.designation || user.role || '').toLowerCase();
+    if (designation.includes('qa')) {
+        return 'qa';
+    }
+    if (designation.includes('team lead') || designation.includes('lead')) {
+        return 'TL';
+    }
+    return 'employee';
+};
+
 export const protectRoute = async (req, res, next) => {
     try {
         const token = req.cookies.token;
@@ -37,6 +52,11 @@ export const protectRoute = async (req, res, next) => {
                 isInactive: true
             });
         }
+
+        // Dynamically resolve and override role category for hierarchy/scoping
+        const resolvedRole = getUserRoleCategory(user);
+        user.designation = user.designation || user.role;
+        user.role = resolvedRole;
 
         req.user = user;
         next();

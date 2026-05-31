@@ -1,4 +1,5 @@
 import User from "../models/user.schema.js";
+import { getUserRoleCategory } from "../middlewares/auth.middleware.js";
 import { generateToken } from "../utils/authToken.js";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";
 import { cloudinary } from "../config/cloudinary.js";
@@ -8,7 +9,7 @@ import { sendWelcomeEmail } from "../utils/email.js";
 
 export const registerUser = async (req, res, next) => {
     try {
-        let { name, email, password, role, department, status } = req.body;
+        let { name, email, password, role, designation, department, reportingManager, status } = req.body;
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
 
         if (!name || !email || !role) {
@@ -40,9 +41,20 @@ export const registerUser = async (req, res, next) => {
             profilePicPublicId = req.file.filename;
         }
 
-        // Robustly normalize teamLeads
+        // Dynamic Role & Designation Scoping
+        let resolvedDesignation = designation || role;
+        const resolvedRole = getUserRoleCategory({ role, designation: resolvedDesignation });
+        
+        // Single supervisor setup
+        const finalReportingManager = reportingManager && reportingManager !== 'null' && reportingManager !== 'undefined' && reportingManager !== '' 
+            ? reportingManager 
+            : null;
+
+        // Legacy teamLeads mapping for backward compatibility
         let finalTeamLeads = [];
-        if (incomingTeamLeads) {
+        if (finalReportingManager) {
+            finalTeamLeads = [finalReportingManager];
+        } else if (incomingTeamLeads) {
             if (Array.isArray(incomingTeamLeads)) {
                 finalTeamLeads = incomingTeamLeads;
             } else if (typeof incomingTeamLeads === 'string') {
@@ -50,9 +62,8 @@ export const registerUser = async (req, res, next) => {
             } else {
                 finalTeamLeads = [incomingTeamLeads];
             }
+            finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
         }
-        // Filter out duplicates and invalid IDs
-        finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
 
         // Parse permissions from body or fall back to role defaults
         let permissions = [];
@@ -60,14 +71,16 @@ export const registerUser = async (req, res, next) => {
         if (rawPerms) {
             permissions = Array.isArray(rawPerms) ? rawPerms : String(rawPerms).split(',').map(p => p.trim()).filter(Boolean);
         } else {
-            permissions = DEFAULT_ROLE_PERMISSIONS[role] || DEFAULT_ROLE_PERMISSIONS['developer'];
+            permissions = DEFAULT_ROLE_PERMISSIONS[resolvedRole] || DEFAULT_ROLE_PERMISSIONS['developer'];
         }
 
         const user = new User({
             name, 
             email, 
             password: hashedPassword, 
-            role, 
+            role: resolvedRole, 
+            designation: resolvedDesignation || (resolvedRole === 'admin' ? 'Admin' : resolvedRole),
+            reportingManager: finalReportingManager,
             department, 
             teamLeads: finalTeamLeads,
             profilePic,
@@ -102,6 +115,8 @@ export const registerUser = async (req, res, next) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                designation: user.designation,
+                reportingManager: user.reportingManager,
                 department: user.department,
                 profilePic: user.profilePic
             }
@@ -176,7 +191,9 @@ export const loginController = async (req, res) => {
                 id: user._id,
                 email: user.email,
                 name: user.name,
-                role: user.role,
+                role: getUserRoleCategory(user),
+                designation: user.designation || user.role,
+                reportingManager: user.reportingManager,
                 profilePic: user.profilePic,
                 teamLeads: user.teamLeads || [],
                 teamMembers: user.teamMembers || [],
@@ -208,7 +225,9 @@ export const getCurrentUser = (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role,
+                role: getUserRoleCategory(user),
+                designation: user.designation || user.role,
+                reportingManager: user.reportingManager,
                 department: user.department || null,
                 profilePic: user.profilePic || "",
                 teamLeads: user.teamLeads || [],
@@ -282,6 +301,7 @@ export const getAllUsers = async (req, res) => {
 
         const users = await User.find(query)
             .populate("teamLeads", "name")
+            .populate("reportingManager", "name")
             .sort({ name: 1 });
         
         return res.status(200).json({
@@ -319,9 +339,19 @@ export const updateUser = async (req, res) => {
 
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
         
-        // Robustly normalize teamLeads
-        let finalTeamLeads = [];
-        if (incomingTeamLeads) {
+        const user = await User.findById(_id);
+        if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Single supervisor setup
+        const finalReportingManager = 'reportingManager' in req.body 
+            ? (req.body.reportingManager && req.body.reportingManager !== 'null' && req.body.reportingManager !== 'undefined' && req.body.reportingManager !== '' ? req.body.reportingManager : null)
+            : undefined;
+
+        // Legacy teamLeads normalization
+        let finalTeamLeads = undefined;
+        if (finalReportingManager !== undefined) {
+            finalTeamLeads = finalReportingManager ? [finalReportingManager] : [];
+        } else if (incomingTeamLeads) {
             if (Array.isArray(incomingTeamLeads)) {
                 finalTeamLeads = incomingTeamLeads;
             } else if (typeof incomingTeamLeads === 'string') {
@@ -329,8 +359,8 @@ export const updateUser = async (req, res) => {
             } else {
                 finalTeamLeads = [incomingTeamLeads];
             }
+            finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
         }
-        finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
 
         // Parse permissions
         const rawPerms = req.body.permissions || req.body['permissions[]'];
@@ -341,15 +371,20 @@ export const updateUser = async (req, res) => {
                 : String(rawPerms).split(',').map(p => p.trim()).filter(Boolean);
         }
 
-        const user = await User.findById(_id);
-        if (!user) return res.status(404).json({ message: "User not found!" });
-
-        const hasTeamLeadsField = ('teamLeads' in req.body) || ('teamLeads[]' in req.body);
         const updateData = {
             ...otherData,
-            ...(hasTeamLeadsField && { teamLeads: finalTeamLeads }),
+            ...(finalReportingManager !== undefined && { reportingManager: finalReportingManager }),
+            ...(finalTeamLeads !== undefined && { teamLeads: finalTeamLeads }),
             ...(parsedPermissions !== null && { permissions: parsedPermissions })
         };
+
+        // Dynamic Role & Designation Scoping
+        if (otherData.role !== undefined || otherData.designation !== undefined) {
+            const resolvedDesignation = otherData.designation !== undefined ? otherData.designation : (otherData.role !== undefined ? otherData.role : user.designation);
+            const resolvedRole = getUserRoleCategory({ role: otherData.role || user.role, designation: resolvedDesignation });
+            updateData.role = resolvedRole;
+            updateData.designation = resolvedDesignation || (resolvedRole === 'admin' ? 'Admin' : resolvedRole);
+        }
 
         if (req.file) {
             console.log("File received in updateUser:", req.file);
@@ -369,7 +404,7 @@ export const updateUser = async (req, res) => {
             _id,
             updateData,
             { new: true, runValidators: true }
-        ).select("-password")
+        ).select("-password").populate("reportingManager", "name").populate("teamLeads", "name");
 
         return res.status(200).json({
             message: "User updated successfully!",
