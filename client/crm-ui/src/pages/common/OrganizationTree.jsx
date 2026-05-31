@@ -199,17 +199,32 @@ const OrganizationTree = () => {
         return ["All", ...combined];
     }, [allUsers, dbDepartments]);
 
-    // Calculate dynamic manager name
+    // Calculate dynamic manager names (supporting multiple managers)
     const getManagerName = (node) => {
-        const leadId = node.teamLeads && node.teamLeads.length > 0 ? getIdString(node.teamLeads[0]) : null;
-        if (!leadId) return null;
-        const manager = allUsers.find(u => getIdString(u._id) === leadId);
-        return manager ? manager.name : null;
+        let ids = [];
+        if (node.reportingManagers && node.reportingManagers.length > 0) {
+            ids = node.reportingManagers.map(m => getIdString(m._id || m));
+        } else if (node.reportingManager) {
+            ids = [getIdString(node.reportingManager._id || node.reportingManager)];
+        } else if (node.teamLeads && node.teamLeads.length > 0) {
+            ids = node.teamLeads.map(tl => getIdString(tl._id || tl));
+        }
+        const uniqueIds = [...new Set(ids)].filter(Boolean);
+        if (uniqueIds.length === 0) return null;
+        const managers = allUsers.filter(u => uniqueIds.includes(getIdString(u._id)));
+        if (managers.length === 0) return null;
+        return managers.map(m => m.name).join(", ");
     };
 
     // Calculate direct reporting size
     const getReporteesCount = (nodeId) => {
-        return allUsers.filter(u => (u.teamLeads || []).map(t => getIdString(t)).includes(getIdString(nodeId))).length;
+        const nodeIdStr = getIdString(nodeId);
+        return allUsers.filter(u => {
+            const mgrs = u.reportingManagers?.map(m => getIdString(m._id || m)) || [];
+            const mgrSingular = u.reportingManager ? getIdString(u.reportingManager._id || u.reportingManager) : null;
+            const legacyTLs = u.teamLeads?.map(tl => getIdString(tl._id || tl)) || [];
+            return mgrs.includes(nodeIdStr) || mgrSingular === nodeIdStr || legacyTLs.includes(nodeIdStr);
+        }).length;
     };
 
     // Helper to snap/center viewport on a specific node card
@@ -294,158 +309,91 @@ const OrganizationTree = () => {
     const rootNodes = useMemo(() => {
         if (allUsers.length === 0) return [];
 
-        let activeUsers = allUsers.filter(u => u.isActive !== false);
+        let activeUsers = allUsers.filter(u => u.status !== 'inactive' && u.isActive !== false);
 
+        // Helper: Get list of manager IDs for a user
+        const getManagersForUser = (userObj) => {
+            let ids = [];
+            if (userObj.reportingManagers && userObj.reportingManagers.length > 0) {
+                ids = userObj.reportingManagers.map(m => getIdString(m._id || m));
+            } else if (userObj.reportingManager) {
+                ids = [getIdString(userObj.reportingManager._id || userObj.reportingManager)];
+            } else if (userObj.teamLeads && userObj.teamLeads.length > 0) {
+                ids = userObj.teamLeads.map(tl => getIdString(tl._id || tl));
+            }
+            return [...new Set(ids)].filter(id => id && id !== getIdString(userObj._id));
+        };
+
+        // Recursive tree builder
+        const buildTreeFromRoots = (roots, list, visited = new Set()) => {
+            return roots.map(root => {
+                const rootId = getIdString(root._id);
+                if (visited.has(rootId)) {
+                    return { ...root, children: [] };
+                }
+                const localVisited = new Set(visited);
+                localVisited.add(rootId);
+
+                // Find active children reporting to this node
+                const children = list.filter(u => {
+                    const mgrs = getManagersForUser(u);
+                    return mgrs.includes(rootId);
+                });
+
+                return {
+                    ...root,
+                    children: children.length > 0 ? buildTreeFromRoots(children, list, localVisited) : []
+                };
+            });
+        };
+
+        // If in "My Team" tab, filter hierarchy dynamically by role / relationship
+        if (activeTab === "Team") {
+            const roleLower = String(user?.role || 'admin').toLowerCase();
+            
+            if (roleLower === 'admin') {
+                // Admin: show themselves at the top
+                const myRoot = activeUsers.filter(u => getIdString(u._id) === getIdString(user?._id));
+                if (myRoot.length > 0) {
+                    return buildTreeFromRoots(myRoot, activeUsers);
+                }
+                // Fallback to all admins if they aren't found in active list
+                const allAdmins = activeUsers.filter(u => u.role === 'admin');
+                return buildTreeFromRoots(allAdmins, activeUsers);
+            } else if (roleLower === 'tl') {
+                // Team Lead: show themselves at the top and their reports/descendants
+                const myRoot = activeUsers.filter(u => getIdString(u._id) === getIdString(user?._id));
+                return buildTreeFromRoots(myRoot, activeUsers);
+            } else {
+                // Developer / QA / Employee: show their reporting managers at the top, and peers/self under them
+                const currentUserObj = activeUsers.find(u => getIdString(u._id) === getIdString(user?._id));
+                if (!currentUserObj) return [];
+                const mgrIds = getManagersForUser(currentUserObj);
+                const roots = activeUsers.filter(u => mgrIds.includes(getIdString(u._id)));
+                
+                if (roots.length > 0) {
+                    return buildTreeFromRoots(roots, activeUsers);
+                } else {
+                    return buildTreeFromRoots([currentUserObj], activeUsers);
+                }
+            }
+        }
+
+        // Top of the Organization tab: Show full hierarchy based strictly on relationships
+        // Apply department filter first if applicable
         if (selectedDept && selectedDept !== "All") {
             const lowerDept = String(selectedDept).toLowerCase().trim();
             activeUsers = activeUsers.filter(u => String(u.department).toLowerCase().trim() === lowerDept);
         }
 
-        // Helper: Check if a user ID reports to a given lead ID
-        const reportsTo = (emp, leadId) => {
-            if (!emp) return false;
-            return (emp.teamLeads || []).some(lead => {
-                if (!lead) return false;
-                const id = typeof lead === 'object' && lead._id ? lead._id : lead;
-                return getIdString(id) === getIdString(leadId);
-            });
-        };
+        // Roots: users in activeUsers who have no managers *inside* activeUsers
+        const activeUserIds = new Set(activeUsers.map(u => getIdString(u._id)));
+        const roots = activeUsers.filter(u => {
+            const mgrs = getManagersForUser(u);
+            return !mgrs.some(mId => activeUserIds.has(mId));
+        });
 
-        // Recursive tree builder for full/general structures
-        const buildTreeFromRoots = (roots, tlsList, staffList, isTopView) => {
-            return roots.map(root => {
-                let children = [];
-                if (root.role === 'admin') {
-                    if (isTopView) {
-                        // Gather TLs reporting to this admin
-                        let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
-                        // Gather staff reporting to this admin
-                        let directStaff = staffList.filter(s => reportsTo(s, root._id));
-
-                        // Fallback for first Admin: collect orphaned TLs and orphaned staff
-                        const allAdminsInScope = roots.filter(u => u.role === 'admin');
-                        if (allAdminsInScope[0] && getIdString(root._id) === getIdString(allAdminsInScope[0]._id)) {
-                            // Orphaned TLs
-                            const orphanedTLs = tlsList.filter(tl => {
-                                const hasValidAdminLead = (tl.teamLeads || []).some(leadId => 
-                                    allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
-                                );
-                                return !hasValidAdminLead;
-                            });
-                            directTLs = [...directTLs, ...orphanedTLs];
-
-                            // Orphaned staff (no active TL in the database)
-                            const orphanedStaff = staffList.filter(s => {
-                                const hasActiveTL = (s.teamLeads || []).some(leadId =>
-                                    tlsList.some(tl => getIdString(tl._id) === getIdString(leadId))
-                                );
-                                const reportsToAdmin = (s.teamLeads || []).some(leadId =>
-                                    allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
-                                );
-                                return !hasActiveTL && !reportsToAdmin;
-                            });
-                            directStaff = [...directStaff, ...orphanedStaff];
-                        }
-
-                        children = [...directTLs, ...directStaff];
-                    } else {
-                        // In My Team tab: Flat tree structure managed under logged-in Admin
-                        let directTLs = tlsList.filter(tl => reportsTo(tl, root._id));
-                        const allAdminsInScope = roots.filter(u => u.role === 'admin');
-                        if (allAdminsInScope[0] && getIdString(root._id) === getIdString(allAdminsInScope[0]._id)) {
-                            const orphanedTLs = tlsList.filter(tl => {
-                                const hasValidAdminLead = (tl.teamLeads || []).some(leadId => 
-                                    allAdminsInScope.some(adm => getIdString(adm._id) === getIdString(leadId))
-                                );
-                                return !hasValidAdminLead;
-                            });
-                            directTLs = [...directTLs, ...orphanedTLs];
-                        }
-                        children = directTLs;
-                    }
-                } else if (root.role === 'TL') {
-                    // Find developers & QAs reporting to this TL
-                    children = staffList.filter(m => reportsTo(m, root._id));
-                } else if (root.role === 'department') {
-                    // Virtual department node: children are already mapped
-                    children = root.children;
-                }
-
-                return {
-                    ...root,
-                    children: children.length > 0 ? buildTreeFromRoots(children, tlsList, staffList, isTopView) : []
-                };
-            });
-        };
-
-        // If in "My Team" tab, filter hierarchy dynamically by role
-        if (activeTab === "Team") {
-            const roleLower = String(user?.role || 'admin').toLowerCase();
-            
-            if (roleLower === 'admin') {
-                const admins = activeUsers.filter(u => u.role === 'admin' && getIdString(u._id) === getIdString(user?._id));
-                let tls = activeUsers.filter(u => u.role === 'TL');
-                let staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL');
-
-                if (admins.length > 0) {
-                    return buildTreeFromRoots(admins, tls, staff, false);
-                } else {
-                    const allAdmins = activeUsers.filter(u => u.role === 'admin');
-                    return buildTreeFromRoots(allAdmins, tls, staff, false);
-                }
-            } else if (roleLower === 'tl') {
-                const currentTlObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
-                if (currentTlObj) {
-                    let staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL' && reportsTo(u, currentTlObj._id));
-
-                    return [{
-                        ...currentTlObj,
-                        children: staff.map(s => ({ ...s, children: [] }))
-                    }];
-                }
-                return [];
-            } else {
-                // Developer & QA: show their TL + teammates under same TL
-                const currentEmpObj = activeUsers.find(u => getIdString(u._id) === getIdString(user._id));
-                const myLeadIds = (currentEmpObj?.teamLeads || []).map(l => getIdString(typeof l === 'object' ? l._id : l));
-                let myLeads = activeUsers.filter(u => u.role === 'TL' && myLeadIds.includes(getIdString(u._id)));
-
-                if (myLeads.length > 0) {
-                    return myLeads.map(lead => {
-                        let staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL' && reportsTo(u, lead._id));
-
-                        return {
-                            ...lead,
-                            children: staff.map(s => ({ ...s, children: [] }))
-                        };
-                    });
-                } else {
-                    if (currentEmpObj) {
-                        return [{ ...currentEmpObj, children: [] }];
-                    }
-                    return [];
-                }
-            }
-        }
-
-        // Top of the Organization tab: Show full hierarchy with department-wise visual separation
-        const admins = activeUsers.filter(u => u.role === 'admin');
-        const tls = activeUsers.filter(u => u.role === 'TL');
-        const staff = activeUsers.filter(u => u.role !== 'admin' && u.role !== 'TL');
-
-        if (admins.length > 0) {
-            return buildTreeFromRoots(admins, tls, staff, true);
-        } else {
-            // Use TLs and orphaned staff as roots if no Admins exist
-            const orphanedStaff = staff.filter(s => {
-                return !(s.teamLeads || []).some(leadId =>
-                    tls.some(tl => getIdString(tl._id) === getIdString(leadId))
-                );
-            });
-
-            const fallbackRoots = [...tls, ...orphanedStaff];
-            return buildTreeFromRoots(fallbackRoots, tls, staff, true);
-        }
+        return buildTreeFromRoots(roots, activeUsers);
     }, [allUsers, activeTab, user, selectedDept]);
 
 

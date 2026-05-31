@@ -269,31 +269,34 @@ export const getAllUsers = async (req, res) => {
         
         const isOrgTree = orgTree === 'true' || orgTree === true || String(orgTree).toLowerCase() === 'true';
 
-        if (isOrgTree) {
-            // CENTRALIZED COMPANY-WIDE EXPLORER: Completely bypass ALL restrictions for ALL roles
-            // All users (Admin, TL, Developer, QA) see the entire organization tree
+        if (userRole !== 'admin') {
+            const userDept = req.user.department || "";
+            const managers = req.user.reportingManagers || [];
+            
+            const orConditions = [
+                { _id: _id },
+                { reportingManagers: _id },
+                { reportingManager: _id },
+                { teamLeads: _id }
+            ];
+
+            if (userDept) {
+                orConditions.push({ department: userDept });
+            }
+            if (managers.length > 0) {
+                orConditions.push({ _id: { $in: managers } });
+            }
+            const mySingularManager = req.user.reportingManager;
+            if (mySingularManager) {
+                orConditions.push({ _id: mySingularManager });
+            }
+
+            query = {
+                ...query,
+                $or: orConditions
+            };
         } else {
-            // Standard scoping for other modules (task assignment / dropdown lists)
-            if (userRole === 'TL') {
-                query = {
-                    ...query,
-                    $or: [
-                        { teamLeads: _id },
-                        { _id: _id }
-                    ]
-                };
-            } else if (userRole !== 'admin') {
-                // Scope Employee (e.g. developer, qa, or any dynamic role) to their respective teams (same as TLs)
-                const leads = req.user.teamLeads || [];
-                query = {
-                    ...query,
-                    $or: [
-                        { teamLeads: { $in: leads } },
-                        { _id: { $in: leads } },
-                        { _id: _id }
-                    ]
-                };
-            } else if (targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
+            if (!isOrgTree && targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
                 query.teamLeads = targetTeamLead;
             }
         }

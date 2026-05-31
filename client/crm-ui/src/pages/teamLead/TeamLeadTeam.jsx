@@ -64,14 +64,24 @@ const TeamLeadTeam = () => {
                     const allUsers = usersRes.data.data;
                     const allTasks = tasksRes.data.tasks;
                     
-                    // Resolve Reporting Managers (assigned teamLeads for TL, else fall back to admins)
-                    const myTeamLeadIds = (user?.teamLeads || []).map(tl => tl._id || tl);
-                    let managers = [];
-                    if (myTeamLeadIds.length > 0) {
-                        managers = allUsers.filter(u => myTeamLeadIds.includes(u._id));
-                    } else {
-                        managers = allUsers.filter(u => u.role === "admin");
-                    }
+                    // Resolve Reporting Managers strictly from database relationships
+                    const getManagersForUser = (userObj) => {
+                        let ids = [];
+                        if (userObj.reportingManagers && userObj.reportingManagers.length > 0) {
+                            ids = userObj.reportingManagers.map(m => m._id || m);
+                        } else if (userObj.reportingManager) {
+                            ids = [userObj.reportingManager._id || userObj.reportingManager];
+                        } else if (userObj.teamLeads && userObj.teamLeads.length > 0) {
+                            ids = userObj.teamLeads.map(tl => tl._id || tl);
+                        }
+                        const idStrings = [...new Set(ids.map(id => {
+                            if (!id) return "";
+                            return typeof id === 'object' ? String(id._id || id) : String(id);
+                        }))].filter(Boolean);
+                        return allUsers.filter(u => idStrings.includes(String(u._id)));
+                    };
+
+                    const managers = getManagersForUser(user);
                     const formattedManagers = managers.map(mgr => ({
                         ...mgr,
                         id: mgr._id,
@@ -81,12 +91,17 @@ const TeamLeadTeam = () => {
                     
                     const myId = user?._id;
                     const filteredUsers = allUsers.filter(u => {
-                        const isSelf = u._id === myId;
-                        const reportsToMe = (u.teamLeads || []).some(tl => {
-                            const tlId = tl._id || tl;
-                            return tlId === myId;
-                        });
-                        return isSelf || reportsToMe;
+                        const isSelf = String(u._id) === String(myId);
+                        
+                        const inSameDept = user?.department && u.department && String(u.department).toLowerCase().trim() === String(user.department).toLowerCase().trim();
+                        
+                        const isDirectReport = (
+                            u.reportingManagers?.some(m => String(m._id || m) === String(myId)) ||
+                            String(u.reportingManager?._id || u.reportingManager) === String(myId) ||
+                            u.teamLeads?.some(tl => String(tl._id || tl) === String(myId))
+                        );
+                        
+                        return isSelf || inSameDept || isDirectReport;
                     });
                     
                     const teamMembers = filteredUsers.map((u, i) => {
@@ -222,9 +237,19 @@ const TeamLeadTeam = () => {
                                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs font-semibold text-slate-450 mt-1 capitalize">
-                                                    {mgr.role === 'TL' ? 'Team Lead' : (mgr.role === 'admin' ? 'Corporate Admin' : mgr.role)}
-                                                </p>
+                                                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                                    <p className="text-xs font-semibold text-slate-500 capitalize">
+                                                        {mgr.designation || (mgr.role === 'TL' ? 'Team Lead' : (mgr.role === 'admin' ? 'Corporate Admin' : mgr.role))}
+                                                    </p>
+                                                    {mgr.department && (
+                                                        <>
+                                                            <span className="text-slate-300 text-xs font-semibold">•</span>
+                                                            <p className="text-xs font-semibold text-slate-450 capitalize">
+                                                                {mgr.department}
+                                                            </p>
+                                                        </>
+                                                    )}
+                                                </div>
                                                 <div className="flex items-center gap-1.5 text-slate-400 text-xs mt-1.5 font-medium">
                                                     <Mail className="w-3.5 h-3.5" />
                                                     <span className="truncate">{mgr.email}</span>
