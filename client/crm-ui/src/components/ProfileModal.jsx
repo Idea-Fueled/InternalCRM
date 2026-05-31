@@ -141,29 +141,48 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
         return String(id);
     };
 
+    const myReportingManagersIds = (user?.reportingManagers || []).map(m => getIdString(m));
     const myTeamLeadIds = (user?.teamLeads || []).map(tl => getIdString(tl));
     const myManagerId = user?.reportingManager?._id || user?.reportingManager;
 
     // 1. Calculations for Developer / QA / Dynamic Employee
-    const reportingManagers = allUsers.filter(u => 
-        (getUserRoleCategory(u) === 'TL' || getUserRoleCategory(u) === 'admin') &&
-        ((myManagerId && getIdString(u._id) === getIdString(myManagerId)) ||
-         (!myManagerId && myTeamLeadIds.includes(getIdString(u._id))))
-    );
+    const reportingManagers = allUsers.filter(u => {
+        const uId = getIdString(u._id);
+        if (myReportingManagersIds.length > 0) {
+            return myReportingManagersIds.includes(uId);
+        }
+        return (getUserRoleCategory(u) === 'TL' || getUserRoleCategory(u) === 'admin') &&
+            ((myManagerId && uId === getIdString(myManagerId)) ||
+             (!myManagerId && myTeamLeadIds.includes(uId)));
+    });
 
-    const teammates = allUsers.filter(u => 
-        getIdString(u._id) !== getIdString(user?._id) && 
-        getUserRoleCategory(u) !== 'admin' && getUserRoleCategory(u) !== 'TL' &&
-        ((myManagerId && getIdString(u.reportingManager || u.teamLeads?.[0]) === getIdString(myManagerId)) ||
-         (!myManagerId && (u.teamLeads || []).map(tl => getIdString(tl)).some(tlId => myTeamLeadIds.includes(tlId))))
-    );
+    const teammates = allUsers.filter(u => {
+        if (getIdString(u._id) === getIdString(user?._id)) return false;
+        if (getUserRoleCategory(u) === 'admin' || getUserRoleCategory(u) === 'TL') return false;
+
+        const uManagers = (u.reportingManagers || []).map(m => getIdString(m));
+        if (myReportingManagersIds.length > 0 && uManagers.length > 0) {
+            return uManagers.some(mId => myReportingManagersIds.includes(mId));
+        }
+
+        const uManagerId = u.reportingManager?._id || u.reportingManager;
+        const uTeamLeadIds = (u.teamLeads || []).map(tl => getIdString(tl));
+
+        return ((myManagerId && getIdString(uManagerId) === getIdString(myManagerId)) ||
+                (!myManagerId && uTeamLeadIds.some(tlId => myTeamLeadIds.includes(tlId))));
+    });
 
     // 2. Calculations for Team Lead (TL)
     const tlManagers = allUsers.filter(u => getUserRoleCategory(u) === 'admin');
-    const reportingTeamTL = allUsers.filter(u => 
-        ((u.reportingManager && getIdString(u.reportingManager) === getIdString(user?._id)) ||
-         (!u.reportingManager && (u.teamLeads || []).map(tl => getIdString(tl)).includes(getIdString(user?._id))))
-    );
+    const reportingTeamTL = allUsers.filter(u => {
+        const uManagers = (u.reportingManagers || []).map(m => getIdString(m));
+        const userIdStr = getIdString(user?._id);
+        if (uManagers.length > 0) {
+            return uManagers.includes(userIdStr);
+        }
+        return ((u.reportingManager && getIdString(u.reportingManager) === userIdStr) ||
+                (!u.reportingManager && (u.teamLeads || []).map(tl => getIdString(tl)).includes(userIdStr)));
+    });
 
     // 3. Calculations for Admin
     const reportingTeamAdmin = allUsers.filter(u => getUserRoleCategory(u) === 'TL');

@@ -29,7 +29,7 @@ export const protectRoute = async (req, res, next) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         console.log(`Token verified for user ID: ${decoded.id}`);
 
-        const user = await User.findById(decoded.id).select("-password");
+        const user = await User.findById(decoded.id).select("-password").populate("reportingManagers", "name designation role");
 
         if (!user) {
             console.log(`User not found in DB for ID: ${decoded.id}`);

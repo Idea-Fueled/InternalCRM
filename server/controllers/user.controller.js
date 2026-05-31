@@ -45,25 +45,24 @@ export const registerUser = async (req, res, next) => {
         let resolvedDesignation = designation || role;
         const resolvedRole = getUserRoleCategory({ role, designation: resolvedDesignation });
         
-        // Single supervisor setup
-        const finalReportingManager = reportingManager && reportingManager !== 'null' && reportingManager !== 'undefined' && reportingManager !== '' 
-            ? reportingManager 
-            : null;
-
-        // Legacy teamLeads mapping for backward compatibility
-        let finalTeamLeads = [];
-        if (finalReportingManager) {
-            finalTeamLeads = [finalReportingManager];
-        } else if (incomingTeamLeads) {
-            if (Array.isArray(incomingTeamLeads)) {
-                finalTeamLeads = incomingTeamLeads;
-            } else if (typeof incomingTeamLeads === 'string') {
-                finalTeamLeads = incomingTeamLeads.split(',').map(id => id.trim()).filter(id => id);
+        // Retrieve and process multiple reporting managers
+        const incomingManagers = req.body.reportingManagers || req.body['reportingManagers[]'];
+        let finalReportingManagers = [];
+        if (incomingManagers) {
+            if (Array.isArray(incomingManagers)) {
+                finalReportingManagers = incomingManagers;
+            } else if (typeof incomingManagers === 'string') {
+                finalReportingManagers = incomingManagers.split(',').map(id => id.trim()).filter(id => id);
             } else {
-                finalTeamLeads = [incomingTeamLeads];
+                finalReportingManagers = [incomingManagers];
             }
-            finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+            finalReportingManagers = [...new Set(finalReportingManagers)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+        } else if (reportingManager && reportingManager !== 'null' && reportingManager !== 'undefined' && reportingManager !== '') {
+            finalReportingManagers = [reportingManager];
         }
+
+        const finalReportingManager = finalReportingManagers[0] || null;
+        const finalTeamLeads = finalReportingManagers;
 
         // Parse permissions from body or fall back to role defaults
         let permissions = [];
@@ -81,6 +80,7 @@ export const registerUser = async (req, res, next) => {
             role: resolvedRole, 
             designation: resolvedDesignation || (resolvedRole === 'admin' ? 'Admin' : resolvedRole),
             reportingManager: finalReportingManager,
+            reportingManagers: finalReportingManagers,
             department, 
             teamLeads: finalTeamLeads,
             profilePic,
@@ -117,6 +117,7 @@ export const registerUser = async (req, res, next) => {
                 role: user.role,
                 designation: user.designation,
                 reportingManager: user.reportingManager,
+                reportingManagers: user.reportingManagers,
                 department: user.department,
                 profilePic: user.profilePic
             }
@@ -194,6 +195,7 @@ export const loginController = async (req, res) => {
                 role: getUserRoleCategory(user),
                 designation: user.designation || user.role,
                 reportingManager: user.reportingManager,
+                reportingManagers: user.reportingManagers || [],
                 profilePic: user.profilePic,
                 teamLeads: user.teamLeads || [],
                 teamMembers: user.teamMembers || [],
@@ -228,6 +230,7 @@ export const getCurrentUser = (req, res) => {
                 role: getUserRoleCategory(user),
                 designation: user.designation || user.role,
                 reportingManager: user.reportingManager,
+                reportingManagers: user.reportingManagers || [],
                 department: user.department || null,
                 profilePic: user.profilePic || "",
                 teamLeads: user.teamLeads || [],
@@ -302,6 +305,7 @@ export const getAllUsers = async (req, res) => {
         const users = await User.find(query)
             .populate("teamLeads", "name")
             .populate("reportingManager", "name")
+            .populate("reportingManagers", "name designation role profilePic")
             .sort({ name: 1 });
         
         return res.status(200).json({
@@ -333,34 +337,29 @@ export const updateUser = async (req, res) => {
         const { _id } = req.params;
         const { ...otherData } = req.body;
 
-        // SECURITY: Never allow password to be updated through the generic updateUser route.
-        // Password changes must go through the dedicated changeUserPassword endpoint.
         delete otherData.password;
 
-        const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
-        
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
+
+        const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
+        const incomingManagers = req.body.reportingManagers || req.body['reportingManagers[]'];
+        let finalReportingManagers = undefined;
+        if (incomingManagers !== undefined) {
+            if (Array.isArray(incomingManagers)) {
+                finalReportingManagers = incomingManagers;
+            } else if (typeof incomingManagers === 'string') {
+                finalReportingManagers = incomingManagers.split(',').map(id => id.trim()).filter(id => id);
+            } else {
+                finalReportingManagers = [incomingManagers];
+            }
+            finalReportingManagers = [...new Set(finalReportingManagers)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+        }
 
         // Single supervisor setup
         const finalReportingManager = 'reportingManager' in req.body 
             ? (req.body.reportingManager && req.body.reportingManager !== 'null' && req.body.reportingManager !== 'undefined' && req.body.reportingManager !== '' ? req.body.reportingManager : null)
             : undefined;
-
-        // Legacy teamLeads normalization
-        let finalTeamLeads = undefined;
-        if (finalReportingManager !== undefined) {
-            finalTeamLeads = finalReportingManager ? [finalReportingManager] : [];
-        } else if (incomingTeamLeads) {
-            if (Array.isArray(incomingTeamLeads)) {
-                finalTeamLeads = incomingTeamLeads;
-            } else if (typeof incomingTeamLeads === 'string') {
-                finalTeamLeads = incomingTeamLeads.split(',').map(id => id.trim()).filter(id => id);
-            } else {
-                finalTeamLeads = [incomingTeamLeads];
-            }
-            finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
-        }
 
         // Parse permissions
         const rawPerms = req.body.permissions || req.body['permissions[]'];
@@ -373,10 +372,31 @@ export const updateUser = async (req, res) => {
 
         const updateData = {
             ...otherData,
-            ...(finalReportingManager !== undefined && { reportingManager: finalReportingManager }),
-            ...(finalTeamLeads !== undefined && { teamLeads: finalTeamLeads }),
             ...(parsedPermissions !== null && { permissions: parsedPermissions })
         };
+
+        if (finalReportingManagers !== undefined) {
+            updateData.reportingManagers = finalReportingManagers;
+            updateData.reportingManager = finalReportingManagers[0] || null;
+            updateData.teamLeads = finalReportingManagers;
+        } else if (finalReportingManager !== undefined) {
+            updateData.reportingManager = finalReportingManager;
+            updateData.reportingManagers = finalReportingManager ? [finalReportingManager] : [];
+            updateData.teamLeads = finalReportingManager ? [finalReportingManager] : [];
+        } else if (incomingTeamLeads) {
+            let finalTeamLeads = [];
+            if (Array.isArray(incomingTeamLeads)) {
+                finalTeamLeads = incomingTeamLeads;
+            } else if (typeof incomingTeamLeads === 'string') {
+                finalTeamLeads = incomingTeamLeads.split(',').map(id => id.trim()).filter(id => id);
+            } else {
+                finalTeamLeads = [incomingTeamLeads];
+            }
+            finalTeamLeads = [...new Set(finalTeamLeads)].filter(id => id !== 'null' && id !== 'undefined' && id !== '');
+            updateData.teamLeads = finalTeamLeads;
+            updateData.reportingManagers = finalTeamLeads;
+            updateData.reportingManager = finalTeamLeads[0] || null;
+        }
 
         // Dynamic Role & Designation Scoping
         if (otherData.role !== undefined || otherData.designation !== undefined) {
@@ -404,7 +424,10 @@ export const updateUser = async (req, res) => {
             _id,
             updateData,
             { new: true, runValidators: true }
-        ).select("-password").populate("reportingManager", "name").populate("teamLeads", "name");
+        ).select("-password")
+         .populate("reportingManager", "name")
+         .populate("reportingManagers", "name designation role profilePic")
+         .populate("teamLeads", "name");
 
         return res.status(200).json({
             message: "User updated successfully!",

@@ -42,6 +42,117 @@ const DEFAULT_ROLE_PERMISSIONS = {
     qa:        ['tasks.update'],
 };
 
+const SearchableMultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, disabled }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const dropdownRef = React.useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter(opt => {
+        const query = search.toLowerCase();
+        return opt.name.toLowerCase().includes(query) || (opt.designation || "").toLowerCase().includes(query);
+    });
+
+    const handleToggle = (id) => {
+        if (selectedValues.includes(id)) {
+            onChange(selectedValues.filter(val => val !== id));
+        } else {
+            onChange([...selectedValues, id]);
+        }
+    };
+
+    const handleRemove = (id, e) => {
+        e.stopPropagation();
+        onChange(selectedValues.filter(val => val !== id));
+    };
+
+    return (
+        <div ref={dropdownRef} className="relative w-full">
+            <div
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                className={`w-full min-h-[42px] px-3 py-2 bg-white border border-slate-200 rounded-lg flex flex-wrap gap-1.5 items-center cursor-pointer transition-all ${
+                    disabled ? "bg-slate-50 cursor-not-allowed opacity-60" : "focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 hover:border-slate-300"
+                }`}
+            >
+                {selectedValues.length === 0 && (
+                    <span className="text-slate-400 text-sm select-none">{placeholder || "Search and select managers..."}</span>
+                )}
+                {selectedValues.map(id => {
+                    const opt = options.find(o => o.id === id);
+                    if (!opt) return null;
+                    return (
+                        <span key={id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md border border-blue-100 max-w-[220px] truncate">
+                            <span className="truncate">{opt.name}</span>
+                            <button
+                                type="button"
+                                onClick={(e) => handleRemove(id, e)}
+                                className="text-blue-500 hover:text-blue-700 focus:outline-none shrink-0"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </span>
+                    );
+                })}
+            </div>
+
+            {isOpen && (
+                <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150 flex flex-col max-h-[300px]">
+                    <div className="p-2 border-b border-slate-100 bg-slate-50/50">
+                        <input
+                            type="text"
+                            placeholder="Type to search..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
+                        />
+                    </div>
+                    <div className="overflow-y-auto max-h-[220px] custom-scrollbar divide-y divide-slate-50">
+                        {filteredOptions.length === 0 ? (
+                            <div className="p-4 text-center text-slate-400 text-xs font-medium">No managers found</div>
+                        ) : (
+                            filteredOptions.map(opt => {
+                                const isChecked = selectedValues.includes(opt.id);
+                                return (
+                                    <div
+                                        key={opt.id}
+                                        onClick={() => handleToggle(opt.id)}
+                                        className={`flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors text-sm font-semibold text-slate-700 justify-between ${
+                                            isChecked ? "bg-blue-50/30 text-blue-700" : ""
+                                        }`}
+                                    >
+                                        <div className="flex flex-col min-w-0">
+                                            <span className="truncate">{opt.name}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{opt.designation || "Employee"}</span>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={isChecked}
+                                            onChange={() => {}}
+                                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 shrink-0 cursor-pointer animate-none"
+                                        />
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const PermissionGroups = ({ permissions, onChange }) => {
     const groups = [...new Set(ALL_PERMISSIONS.map(p => p.group))];
     return (
@@ -132,6 +243,7 @@ const EmployeesDashboard = () => {
         designation: "Web Developer",
         department: "Engineering",
         reportingManager: "",
+        reportingManagers: [],
         teamLeads: [],
         permissions: DEFAULT_ROLE_PERMISSIONS['developer']
     });
@@ -147,6 +259,7 @@ const EmployeesDashboard = () => {
             designation: "Web Developer",
             department: "Engineering",
             reportingManager: "",
+            reportingManagers: [],
             teamLeads: [],
             permissions: DEFAULT_ROLE_PERMISSIONS['developer'],
             profilePic: null
@@ -250,7 +363,9 @@ const EmployeesDashboard = () => {
                         designation: u.designation || u.role,
                         email: u.email,
                         dept: u.department || "Engineering",
-                        lead: u.reportingManager?.name || u.teamLeads?.map(tl => tl.name).join(", ") || "N/A",
+                        lead: u.reportingManagers && u.reportingManagers.length > 0 
+                            ? u.reportingManagers.map(m => m.name).join(", ") 
+                            : (u.reportingManager?.name || u.teamLeads?.map(tl => tl.name).join(", ") || "N/A"),
                         tasks: { total: userTasks.length, done, overdue, list: userTasks },
                         status: u.status === "inactive" ? "Inactive" : (overdue > 0 ? "Overdue" : "Active"),
                         joinedDate: u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A",
@@ -267,13 +382,9 @@ const EmployeesDashboard = () => {
                     inactive: formattedEmployees.filter(e => e.status === "Inactive").length
                 });
 
-                // Populate reporting managers: all Admins and Team Leads based on keyword category resolving
-                const potentialManagers = allUsers.filter(u => {
-                    const cat = getUserRoleCategory(u);
-                    return cat === 'TL' || cat === 'admin';
-                }).map(u => ({ id: u._id, name: u.name, designation: u.designation || u.role }));
-                
-                setTeamLeads(potentialManagers);
+                // Populate reporting managers: all active employees in searchable multi-select
+                const activeEmployees = allUsers.filter(u => u.status !== 'inactive').map(u => ({ id: u._id, name: u.name, designation: u.designation || u.role }));
+                setTeamLeads(activeEmployees);
             }
         } catch (err) {
             console.error("Failed to fetch employees data", err);
@@ -309,7 +420,14 @@ const EmployeesDashboard = () => {
 
             formData.append('role', finalRole);
             formData.append('designation', finalDesignation);
-            formData.append('reportingManager', newEmployee.reportingManager || '');
+            if (newEmployee.reportingManagers && newEmployee.reportingManagers.length > 0) {
+                newEmployee.reportingManagers.forEach(id => {
+                    formData.append('reportingManagers[]', id);
+                });
+                formData.append('reportingManager', newEmployee.reportingManagers[0]);
+            } else {
+                formData.append('reportingManager', newEmployee.reportingManager || '');
+            }
             formData.append('department', newEmployee.department);
             
             if (newEmployee.profilePic) {
@@ -330,6 +448,7 @@ const EmployeesDashboard = () => {
                 designation: "Web Developer",
                 department: "Engineering",
                 reportingManager: "",
+                reportingManagers: [],
                 teamLeads: [],
                 permissions: DEFAULT_ROLE_PERMISSIONS['developer'],
                 profilePic: null
@@ -358,6 +477,7 @@ const EmployeesDashboard = () => {
             designation: emp.raw.designation || emp.raw.role,
             department: emp.dept,
             reportingManager: emp.raw.reportingManager?._id || emp.raw.reportingManager || emp.raw.teamLeads?.[0]?._id || emp.raw.teamLeads?.[0] || "",
+            reportingManagers: emp.raw.reportingManagers?.map(m => m._id || m) || emp.raw.teamLeads?.map(tl => tl._id || tl) || [],
             teamLeads: emp.raw.teamLeads?.map(tl => tl._id || tl) || [],
             permissions: emp.raw.permissions?.length > 0 ? emp.raw.permissions : (DEFAULT_ROLE_PERMISSIONS[emp.raw.role] || []),
             profilePic: null
@@ -385,7 +505,14 @@ const EmployeesDashboard = () => {
 
             formData.append('role', finalRole);
             formData.append('designation', finalDesignation);
-            formData.append('reportingManager', newEmployee.reportingManager || '');
+            if (newEmployee.reportingManagers && newEmployee.reportingManagers.length > 0) {
+                newEmployee.reportingManagers.forEach(id => {
+                    formData.append('reportingManagers[]', id);
+                });
+                formData.append('reportingManager', newEmployee.reportingManagers[0]);
+            } else {
+                formData.append('reportingManager', newEmployee.reportingManager || '');
+            }
             formData.append('department', newEmployee.department);
             
             if (newEmployee.profilePic) {
@@ -406,6 +533,7 @@ const EmployeesDashboard = () => {
                 designation: "Web Developer",
                 department: "Engineering",
                 reportingManager: "",
+                reportingManagers: [],
                 teamLeads: [],
                 permissions: DEFAULT_ROLE_PERMISSIONS['developer'],
                 profilePic: null
@@ -1158,18 +1286,14 @@ const EmployeesDashboard = () => {
                                         )}
                                     </select>
                                 </div>
-                                <div className="space-y-1.5 md:col-span-2">
+                                <div className="space-y-1.5 md:col-span-2 animate-none">
                                     <label className="block text-sm font-bold text-slate-700">Reporting Manager</label>
-                                    <select 
-                                        value={newEmployee.reportingManager || ""}
-                                        onChange={(e) => setNewEmployee({...newEmployee, reportingManager: e.target.value})}
-                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
-                                    >
-                                        <option value="">No Reporting Manager (N/A)</option>
-                                        {teamLeads.map(tl => (
-                                            <option key={tl.id} value={tl.id}>{tl.name} ({tl.designation})</option>
-                                        ))}
-                                    </select>
+                                    <SearchableMultiSelectDropdown
+                                        options={teamLeads}
+                                        selectedValues={newEmployee.reportingManagers || []}
+                                        onChange={(vals) => setNewEmployee({...newEmployee, reportingManagers: vals})}
+                                        placeholder="Search and select reporting managers..."
+                                    />
                                 </div>
                                 <div className="space-y-1.5 md:col-span-2 border-t border-slate-100 pt-4 mt-2">
                                     <div className="flex items-center gap-2 mb-2">
@@ -1561,18 +1685,14 @@ const EmployeesDashboard = () => {
                                     </select>
                                 </div>
                                 {newEmployee.role !== 'admin' && (
-                                    <div className="space-y-1.5 md:col-span-2">
+                                    <div className="space-y-1.5 md:col-span-2 animate-none">
                                         <label className="block text-sm font-bold text-slate-700">Reporting Manager</label>
-                                        <select 
-                                            value={newEmployee.reportingManager || ""}
-                                            onChange={(e) => setNewEmployee({...newEmployee, reportingManager: e.target.value})}
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm transition-all cursor-pointer"
-                                        >
-                                            <option value="">No Reporting Manager (N/A)</option>
-                                            {teamLeads.filter(tl => tl.id !== editingEmployee?._id).map(tl => (
-                                                <option key={tl.id} value={tl.id}>{tl.name} ({tl.designation})</option>
-                                            ))}
-                                        </select>
+                                        <SearchableMultiSelectDropdown
+                                            options={teamLeads.filter(tl => tl.id !== editingEmployee?._id)}
+                                            selectedValues={newEmployee.reportingManagers || []}
+                                            onChange={(vals) => setNewEmployee({...newEmployee, reportingManagers: vals})}
+                                            placeholder="Search and select reporting managers..."
+                                        />
                                     </div>
                                 )}
                                 <div className="space-y-1.5 md:col-span-2 border-t border-slate-100 pt-4 mt-2">

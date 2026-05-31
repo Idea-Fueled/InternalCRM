@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
         ref: "User",
         default: null
     },
+    reportingManagers: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    }],
     department: {
         type: String
     },

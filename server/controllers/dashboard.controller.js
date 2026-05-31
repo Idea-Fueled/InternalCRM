@@ -118,14 +118,15 @@ export const getEmployeeDashboard = async (req, res) => {
 // QA Dashboard
 export const getQADashboard = async (req, res) => {
     try {
+        const qaId = req.user._id;
         const [
             pendingReviewTasks,
             completedTasks,
             doneTasks
         ] = await Promise.all([
-            Task.countDocuments({ status: "QA Review", isDeleted: false }),
-            Task.countDocuments({ status: "Completed", isDeleted: false }),
-            Task.countDocuments({ status: "Done", isDeleted: false })
+            Task.countDocuments({ assignedQA: qaId, status: "QA Review", isDeleted: false }),
+            Task.countDocuments({ assignedQA: qaId, status: "Completed", isDeleted: false }),
+            Task.countDocuments({ assignedQA: qaId, status: "Done", isDeleted: false })
         ]);
 
         return res.status(200).json({

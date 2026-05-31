@@ -257,13 +257,6 @@ export const getAllTasks = async (req, res) => {
                 orConditions.push({ project: { $in: ledProjectIds } });
             }
 
-            // If QA, also show all tasks in QA Review status so they can see the queue,
-            // and tasks they have previously changed status on (so their recent activity works)
-            if (role === "qa") {
-                orConditions.push({ status: "QA Review" });
-                orConditions.push({ "statusHistory.changedBy": _id });
-            }
-
             query = { 
                 ...query, 
                 $or: orConditions
@@ -312,6 +305,20 @@ export const getSingleTask = async (req, res) => {
                 success: false,
                 message: "Task not found"
             });
+        }
+
+        const { role, _id } = req.user;
+        if (role !== "admin") {
+            const isAssigned = (task.assignedTo?._id?.toString() === _id.toString() || task.assignedTo?.toString() === _id.toString() ||
+                                task.assignedQA?._id?.toString() === _id.toString() || task.assignedQA?.toString() === _id.toString());
+            const isProjectTL = task.project && (task.project.teamLead?.toString() === _id.toString() || task.project.teamLead?._id?.toString() === _id.toString());
+            
+            if (!isAssigned && !isProjectTL) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Unauthorized Access: You do not have access to this task."
+                });
+            }
         }
 
         // Apply hierarchy-based visibility
@@ -569,20 +576,31 @@ export const updateTaskStatus = async (req, res) => {
                         link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
                     });
                 } else {
-                    // Fallback: Notify all QAs if no specific QA assigned
-                    const qas = await User.find({ role: "qa" });
-                    for (const qa of qas) {
-                        if (qa._id.toString() !== req.user._id.toString()) {
-                            await createNotification({
-                                recipient: qa._id,
-                                sender: req.user._id,
-                                title: "New QA Review Request",
-                                message: `${taskName} in ${projectName} is ready for review`,
-                                type: "task",
-                                category: "approval",
-                                link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
+                    // Fallback: Notify QAs assigned as members in that project
+                    try {
+                        const Project = (await import("../models/project.schema.js")).default;
+                        const project = await Project.findById(projectId).select("teamMembers");
+                        if (project && project.teamMembers && project.teamMembers.length > 0) {
+                            const qas = await User.find({ 
+                                _id: { $in: project.teamMembers },
+                                role: "qa" 
                             });
+                            for (const qa of qas) {
+                                if (qa._id.toString() !== req.user._id.toString()) {
+                                    await createNotification({
+                                        recipient: qa._id,
+                                        sender: req.user._id,
+                                        title: "New QA Review Request",
+                                        message: `${taskName} in ${projectName} is ready for review`,
+                                        type: "task",
+                                        category: "approval",
+                                        link: `/projects/${projectId}?taskId=${task._id}&projectName=${encodeURIComponent(projectName)}`
+                                    });
+                                }
+                            }
                         }
+                    } catch (err) {
+                        console.error("Error in fallback QA notifications:", err);
                     }
                 }
             }
@@ -727,11 +745,27 @@ export const getDeletedTasks = async (req, res) => {
     }
 };
 
-// Get Tasks by Project
 export const getTasksByProject = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const tasks = await Task.find({ project: projectId, isDeleted: false })
+        const { role, _id } = req.user;
+
+        let query = { project: projectId, isDeleted: false };
+
+        if (role !== "admin") {
+            const Project = (await import("../models/project.schema.js")).default;
+            const project = await Project.findOne({ _id: projectId, isDeleted: false });
+            
+            const isProjectTL = project && (project.teamLead?.toString() === _id.toString() || project.teamLead?._id?.toString() === _id.toString());
+            if (!isProjectTL) {
+                query.$or = [
+                    { assignedTo: _id },
+                    { assignedQA: _id }
+                ];
+            }
+        }
+
+        const tasks = await Task.find(query)
             .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
