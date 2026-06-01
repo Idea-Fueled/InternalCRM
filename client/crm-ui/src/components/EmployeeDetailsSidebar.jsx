@@ -67,6 +67,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
     if (!isOpen || !empRaw) return null;
 
     const initials = empRaw.name?.charAt(0).toUpperCase() || "U";
+    const isAdmin = empRaw.role?.toLowerCase() === 'admin';
     const statusColor = empRaw.status === "Inactive" 
         ? "bg-slate-100 text-slate-650 border-slate-200" 
         : "bg-emerald-50 text-emerald-700 border-emerald-100";
@@ -138,11 +139,13 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                     {empRaw.status || "Active"}
                                 </span>
                             </div>
+                            {!isAdmin && (
                             <p className="text-xs font-bold text-slate-500 mt-1.5 flex items-center gap-1.5">
                                 <span className="text-slate-800">{empRaw.designation || "Developer"}</span>
                                 <span className="text-slate-300">•</span>
                                 <span>{empRaw.department?.name || empRaw.department || "No Department"}</span>
                             </p>
+                            )}
                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                                 <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-lg ${getRoleBadgeColor(empRaw.role)}`}>
                                     {empRaw.role === "TL" ? "Team Lead" : empRaw.role === "developer" ? "Employee" : empRaw.role?.toUpperCase()}
@@ -161,8 +164,10 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                 <div className="flex border-b border-slate-200 bg-white px-6 shrink-0">
                     {[
                         { id: "overview", label: "Overview", icon: <User className="w-4 h-4" /> },
-                        { id: "projects", label: `Projects (${projects.length})`, icon: <Folder className="w-4 h-4" /> },
-                        { id: "tasks", label: `Tasks (${tasks.length})`, icon: <ClipboardList className="w-4 h-4" /> }
+                        ...(!isAdmin ? [
+                            { id: "projects", label: `Projects (${projects.length})`, icon: <Folder className="w-4 h-4" /> },
+                            { id: "tasks", label: `Tasks (${tasks.length})`, icon: <ClipboardList className="w-4 h-4" /> }
+                        ] : [])
                     ].map(tab => (
                         <button
                             key={tab.id}
@@ -226,7 +231,8 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                 </div>
                             </div> */}
 
-                            {/* Reporting Structure */}
+                            {/* Reporting Structure (hidden for admins) */}
+                            {!isAdmin && (
                             <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
                                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Reporting Structure</h4>
                                 <div className="space-y-3">
@@ -259,6 +265,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                     )}
                                 </div>
                             </div>
+                            )}
 
                             {/* Inactivity Schedule Detail */}
                             {empRaw.status === "Inactive" && (

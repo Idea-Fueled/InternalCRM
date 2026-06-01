@@ -321,6 +321,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                             </div>
                         </div>
 
+                        {getUserRoleCategory(user || { role: userRole }) !== 'admin' && (
                         <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-indigo-50/20 hover:border-indigo-100/50 flex items-start gap-3">
                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600 mt-0.5">
                                 <Briefcase className="w-4 h-4" />
@@ -330,6 +331,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <p className="text-sm font-semibold text-slate-700">{user?.department || "Engineering"}</p>
                             </div>
                         </div>
+                        )}
 
                         <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-purple-50/20 hover:border-purple-100/50 flex items-start gap-3">
                             <div className="p-2 bg-purple-50 rounded-xl text-purple-600 mt-0.5">
