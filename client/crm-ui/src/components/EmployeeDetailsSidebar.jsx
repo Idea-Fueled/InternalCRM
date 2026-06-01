@@ -5,6 +5,7 @@ import {
     Activity, ClipboardList
 } from "lucide-react";
 import { projectService, taskService } from "../api/services";
+import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 
 export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
@@ -15,6 +16,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
     const [activeSection, setActiveSection] = useState("overview"); // "overview" | "projects" | "tasks"
 
     const empRaw = employee?.raw || employee;
+    const { user: currentUser } = useAuth();
 
     useEffect(() => {
         if (isOpen && empRaw?._id) {
@@ -67,7 +69,9 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
     if (!isOpen || !empRaw) return null;
 
     const initials = empRaw.name?.charAt(0).toUpperCase() || "U";
-    const isAdmin = empRaw.role?.toLowerCase() === 'admin';
+    const viewedIsAdmin = empRaw.role?.toLowerCase() === 'admin';
+    const loggedInIsAdmin = currentUser?.role?.toLowerCase() === 'admin';
+
     const statusColor = empRaw.status === "Inactive" 
         ? "bg-slate-100 text-slate-650 border-slate-200" 
         : "bg-emerald-50 text-emerald-700 border-emerald-100";
@@ -135,9 +139,11 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                         <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="text-lg font-black text-slate-800 leading-none truncate">{empRaw.name}</h3>
-                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-full ${statusColor}`}>
-                                    {empRaw.status || "Active"}
-                                </span>
+                                {!(viewedIsAdmin && !loggedInIsAdmin) && (
+                                    <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-full ${statusColor}`}>
+                                        {empRaw.status || "Active"}
+                                    </span>
+                                )}
                             </div>
                             {!isAdmin && (
                             <p className="text-xs font-bold text-slate-500 mt-1.5 flex items-center gap-1.5">
@@ -154,6 +160,10 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                     <span className="text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-lg truncate max-w-xs" title={empRaw.inactiveReason}>
                                         Reason: {empRaw.inactiveReason}
                                     </span>
+                                )}
+                                {/* Hide availability/status pill for admin profiles when the logged-in user is not an admin */}
+                                {!(viewedIsAdmin && !loggedInIsAdmin) && (
+                                    <></>
                                 )}
                             </div>
                         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
-    X, Mail, Briefcase, Calendar, Camera, Loader2, 
+    X, Mail, Phone, Briefcase, Calendar, Camera, Loader2, 
     Trash2, Users, UserCheck, Award, ShieldAlert
 } from "lucide-react";
 import { authService, userService } from "../api/services";
@@ -272,14 +272,17 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                             <span className={`text-xs font-bold px-3 py-1 rounded-full border ${getRoleBadgeStyle(getUserRoleCategory(user || { role: userRole }))}`}>
                                 {user?.designation || displayRole || formatRole(userRole)}
                             </span>
-                            {user?.status === 'inactive' ? (
-                                <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
-                                    <div className="w-2 h-2 rounded-full bg-slate-400" /> Inactive
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100/50">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active
-                                </span>
+                            {/* Hide active/inactive pill when viewing an admin profile and the logged-in user is not an admin */}
+                            {!(getUserRoleCategory(user || { role: userRole }) === 'admin' && currentUser?.role !== 'admin') && (
+                                user?.status === 'inactive' ? (
+                                    <span className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 bg-slate-50 px-3 py-1 rounded-full border border-slate-200">
+                                        <div className="w-2 h-2 rounded-full bg-slate-400" /> Inactive
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100/50">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active
+                                    </span>
+                                )
                             )}
                         </div>
                     </div>
@@ -318,6 +321,16 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                             <div className="overflow-hidden">
                                 <p className="text-[10px] font-bold text-slate-400 mb-0.5">Email Address</p>
                                 <p className="text-sm font-semibold text-slate-700 truncate">{user?.email || "N/A"}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-blue-50/20 hover:border-blue-100/50 flex items-start gap-3">
+                            <div className="p-2 bg-blue-50 rounded-xl text-blue-600 mt-0.5">
+                                <Phone className="w-4 h-4" />
+                            </div>
+                            <div className="overflow-hidden">
+                                <p className="text-[10px] font-bold text-slate-400 mb-0.5">Phone Number</p>
+                                <p className="text-sm font-semibold text-slate-700 truncate">{user?.phone || "Not provided"}</p>
                             </div>
                         </div>
 
