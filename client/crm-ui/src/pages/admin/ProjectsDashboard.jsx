@@ -554,13 +554,15 @@ const ProjectsDashboard = () => {
                                                 <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-fit">{project._id.slice(-6).toUpperCase()}</span>
                                                 <h3 className="text-lg font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
                                             </div>
-                                            <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border whitespace-nowrap ${
-                                                project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                'bg-slate-50 text-slate-500 border-slate-200'
-                                            }`}>
-                                                {project.status}
-                                            </span>
+                                            {project.status !== 'Active' && (
+                                                <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border whitespace-nowrap ${
+                                                    project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                    project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                    'bg-slate-50 text-slate-500 border-slate-200'
+                                                }`}>
+                                                    {project.status}
+                                                </span>
+                                            )}
                                         </div>
 
                                         <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed">{project.description}</p>
@@ -614,7 +616,7 @@ const ProjectsDashboard = () => {
                                                     <span>PROGRESS</span>
                                                     <span>{progress}%</span>
                                                 </div>
-                                                <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                                <div className="w-full bg-slate-200 rounded-full h-1.5">
                                                     <div 
                                                         className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
                                                         style={{ width: `${progress}%` }}
@@ -676,13 +678,15 @@ const ProjectsDashboard = () => {
                                     <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
                                         <div className="flex items-center justify-between">
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
-                                                    project.status === 'Active' || project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                    project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-slate-50 text-slate-500 border-slate-200'
-                                                }`}>
-                                                    {project.status}
-                                                </span>
+                                                {project.status !== 'Active' && (
+                                                    <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
+                                                        project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                        project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                        'bg-slate-50 text-slate-500 border-slate-200'
+                                                    }`}>
+                                                        {project.status}
+                                                    </span>
+                                                )}
                                                 <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${timelineClass}`}>
                                                     {timelineTag}
                                                 </span>
@@ -726,7 +730,7 @@ const ProjectsDashboard = () => {
                                                 <span>PROGRESS</span>
                                                 <span>{progress}%</span>
                                             </div>
-                                            <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                            <div className="w-full bg-slate-200 rounded-full h-1.5">
                                                 <div 
                                                     className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
                                                     style={{ width: `${progress}%` }}

@@ -1380,11 +1380,13 @@ const AdminDashboard = () => {
                                                             <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150 truncate">
                                                                 {proj.projectName}
                                                             </span>
-                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                                                                proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                                                            }`}>
-                                                                {proj.status || 'Active'}
-                                                            </span>
+                                                            {proj.status !== 'Active' && proj.status && (
+                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                                                    proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                                                                }`}>
+                                                                    {proj.status}
+                                                                </span>
+                                                            )}
                                                         </div>
                                                         <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500 shrink-0">
                                                             <span>{completedCount}/{totalCount} tasks</span>
@@ -1392,7 +1394,7 @@ const AdminDashboard = () => {
                                                             <span className="text-slate-700">{progress}%</span>
                                                         </div>
                                                     </div>
-                                                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                                                         <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${progress}%` }}></div>
                                                     </div>
                                                 </div>

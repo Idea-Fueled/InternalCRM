@@ -416,7 +416,7 @@ const TeamLeadDashboard = () => {
                                                 <span className="text-slate-500 font-semibold">{dev.completed}/{dev.total} Completed</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                                                <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden flex">
                                                     <div 
                                                         className="bg-emerald-500 h-full rounded-l-full transition-all"
                                                         style={{ width: `${dev.total > 0 ? (dev.completed / dev.total) * 100 : 0}%` }}
@@ -464,7 +464,7 @@ const TeamLeadDashboard = () => {
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                    <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden">
                                                         <div 
                                                             className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
                                                             style={{ width: `${pct}%` }}
@@ -547,7 +547,7 @@ const TeamLeadDashboard = () => {
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-3">
-                                                                <div className="w-16 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                                                <div className="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden">
                                                                     <div 
                                                                         className={`h-full rounded-full ${
                                                                             member.workload > 80 ? 'bg-rose-500' : 

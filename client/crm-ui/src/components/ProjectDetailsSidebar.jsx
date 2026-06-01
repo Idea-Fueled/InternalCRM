@@ -532,15 +532,16 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                     ) : project ? (
                         <div className="flex-1 mr-4 space-y-2">
                             <div className="flex flex-wrap gap-2 items-center">
-                                <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
-                                    project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                    project.status === "Active" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                    project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                    project.status === "At Risk" ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                    "bg-slate-50 text-slate-600 border-slate-200"
-                                }`}>
-                                    {project.status || "Active"}
-                                </span>
+                                {project.status !== 'Active' && (
+                                    <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
+                                        project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                        project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                        project.status === "At Risk" ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                        "bg-slate-50 text-slate-600 border-slate-200"
+                                    }`}>
+                                        {project.status}
+                                    </span>
+                                )}
                                 <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
                                     project.priority === "Critical" ? "bg-rose-50 text-rose-600 border-rose-100 animate-pulse" :
                                     project.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :
@@ -554,7 +555,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                             
                             {/* Short completion details */}
                             <div className="w-full flex items-center gap-3 pt-1">
-                                <div className="flex-1 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div className="flex-1 bg-slate-200 rounded-full h-1.5 overflow-hidden">
                                     <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${progressPercent}%` }}></div>
                                 </div>
                                 <span className="text-[10px] font-black text-slate-500 shrink-0">{progressPercent}% DONE</span>

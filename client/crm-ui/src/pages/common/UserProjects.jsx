@@ -175,11 +175,11 @@ const UserProjects = ({ role = "developer" }) => {
                                             <div>
                                                 <h1 className="dashboard-heading">{selectedProject.name}</h1>
                                                 <div className="flex items-center gap-3 mt-3">
-                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
-                                                        selectedProject.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                                                    }`}>
-                                                        {selectedProject.status}
-                                                    </span>
+                                                    {selectedProject.status !== 'Active' && (
+                                                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-blue-50 text-blue-600 border-blue-100">
+                                                            {selectedProject.status}
+                                                        </span>
+                                                    )}
                                                     <span className="text-slate-400 text-xs font-medium flex items-center gap-1">
                                                         <Calendar className="w-3.5 h-3.5" />
                                                         Created {formatDate(selectedProject.createdAt)}
@@ -192,7 +192,7 @@ const UserProjects = ({ role = "developer" }) => {
                                             </div>
                                         </div>
                                         
-                                        <div className="w-full bg-slate-100 rounded-full h-3 mb-8">
+                                        <div className="w-full bg-slate-200 rounded-full h-3 mb-8">
                                             <div 
                                                 className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full shadow-sm transition-all duration-1000 ease-out" 
                                                 style={{ width: `${selectedProject.progress}%` }}
@@ -569,11 +569,11 @@ const UserProjects = ({ role = "developer" }) => {
                                                 <LayoutList className="w-6 h-6" />
                                             </div>
                                             <div className="flex flex-wrap gap-2 items-center">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
-                                                    p.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100'
-                                                }`}>
-                                                    {p.status}
-                                                </span>
+                                                {p.status !== 'Active' && (
+                                                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-blue-50 text-blue-600 border-blue-100">
+                                                        {p.status}
+                                                    </span>
+                                                )}
                                                 <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${timelineClass}`}>
                                                     {timelineTag}
                                                 </span>
@@ -591,7 +591,7 @@ const UserProjects = ({ role = "developer" }) => {
                                                 <span>Progress</span>
                                                 <span className="text-slate-700">{p.progress}%</span>
                                             </div>
-                                            <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                            <div className="w-full bg-slate-200 rounded-full h-1.5">
                                                 <div 
                                                     className={`h-1.5 rounded-full transition-all duration-500 ${p.status === 'Active' ? 'bg-emerald-500' : 'bg-blue-500'}`}
                                                     style={{ width: `${p.progress}%` }}

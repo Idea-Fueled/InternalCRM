@@ -582,15 +582,16 @@ const ProjectDetails = () => {
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div className="space-y-3 max-w-3xl">
                                     <div className="flex flex-wrap gap-2 items-center">
-                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
-                                            project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                            project.status === "Active" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                            project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                            project.status === "At Risk" ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                            "bg-slate-50 text-slate-600 border-slate-200"
-                                        }`}>
-                                            {project.status || "Active"}
-                                        </span>
+                                        {project.status !== 'Active' && (
+                                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
+                                                project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                project.status === "At Risk" ? "bg-rose-50 text-rose-600 border-rose-100" :
+                                                "bg-slate-50 text-slate-600 border-slate-200"
+                                            }`}>
+                                                {project.status}
+                                            </span>
+                                        )}
                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
                                             project.priority === "Critical" ? "bg-rose-50 text-rose-600 border-rose-100 animate-pulse" :
                                             project.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :
@@ -625,7 +626,7 @@ const ProjectDetails = () => {
 
                             {/* Completion Progress Bar */}
                             <div className="space-y-2">
-                                <div className="w-full bg-slate-100 rounded-full h-3">
+                                <div className="w-full bg-slate-200 rounded-full h-3">
                                     <div
                                         className="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full shadow-sm transition-all duration-1000 ease-out"
                                         style={{ width: `${progressPercent}%` }}
