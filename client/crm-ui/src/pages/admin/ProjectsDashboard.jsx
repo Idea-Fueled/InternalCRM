@@ -480,7 +480,7 @@ const ProjectsDashboard = () => {
                     <div className={viewType === "list" ? "space-y-3" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}>
                         {/* Projects List (Card-Table Hybrid) */}
                         {filteredProjects.length === 0 ? (
-                            <div className="bg-white rounded-2xl p-20 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm opacity-60">
+                            <div className="bg-white rounded-2xl p-20 flex flex-col items-center justify-center border border-slate-200/60 shadow-sm opacity-100">
                                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                                     <svg className="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
                                 </div>

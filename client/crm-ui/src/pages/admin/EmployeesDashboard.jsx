@@ -1040,7 +1040,7 @@ const EmployeesDashboard = () => {
                                                 {emp.status}
                                             </button>
                                             <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0 pr-0.5">
-                                                {can('users.update') && (
+                                                {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
                                                     <button 
                                                         onClick={(e) => handleStatusToggle(emp, e)}
                                                         className={`p-1.5 rounded-lg transition-colors shrink-0 ${
@@ -1057,7 +1057,7 @@ const EmployeesDashboard = () => {
                                                         )}
                                                     </button>
                                                 )}
-                                                {can('users.update') && (
+                                                {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
                                                     <button 
                                                         onClick={(e) => handleEditEmployee(emp, e)}
                                                         className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
