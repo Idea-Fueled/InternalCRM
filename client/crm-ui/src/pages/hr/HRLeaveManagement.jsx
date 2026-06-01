@@ -192,7 +192,7 @@ const HRLeaveManagement = () => {
                                                             </div>
                                                             <div className="min-w-0">
                                                                 <p className="text-slate-800 truncate">{emp.name}</p>
-                                                                <p className="text-[10px] font-medium text-slate-450 truncate mt-0.5">{emp.designation || emp.role}</p>
+                                                                <p className="text-[10px] font-medium text-slate-450 truncate mt-0.5">{emp.designation || (emp.role ? (emp.role === 'TL' ? 'Team Lead' : (emp.role === 'qa' ? 'QA' : (emp.role === 'admin' ? 'Admin' : emp.role.charAt(0).toUpperCase() + emp.role.slice(1)))) : 'Employee')}</p>
                                                             </div>
                                                         </div>
                                                     </td>

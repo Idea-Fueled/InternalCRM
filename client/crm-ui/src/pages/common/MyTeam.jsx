@@ -123,6 +123,16 @@ const MyTeam = () => {
 
     const displaySidebarRole = user?.role === 'TL' ? 'teamLead' : (user?.role === 'qa' ? 'qa' : 'employee');
 
+    const formatRole = (r) => {
+        if (!r) return 'Employee';
+        const lower = (r || '').toString();
+        if (lower === 'tl' || lower === 'TL') return 'Team Lead';
+        if (lower.toLowerCase() === 'qa') return 'QA';
+        if (lower.toLowerCase() === 'admin') return 'Admin';
+        if (lower.toLowerCase() === 'developer') return 'Developer';
+        return r.charAt(0).toUpperCase() + r.slice(1);
+    };
+
     return (
         <div className="flex min-h-screen bg-[#f8fafc] font-sans text-slate-800">
             <AdminSidebar role={displaySidebarRole} />
@@ -187,7 +197,7 @@ const MyTeam = () => {
                                                         </div>
                                                         <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                                             <p className="text-xs font-semibold text-slate-500 capitalize">
-                                                                {mgr.designation || (mgr.role === 'TL' ? 'Team Lead' : (mgr.role === 'admin' ? 'Corporate Admin' : mgr.role))}
+                                                                {mgr.designation || formatRole(mgr.role)}
                                                             </p>
                                                             {mgr.department && (
                                                                 <>
@@ -288,7 +298,7 @@ const MyTeam = () => {
                                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.designation || (member.role === 'TL' ? 'Team Lead' : (member.role === 'qa' ? 'QA' : member.role))}</p>
+                                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.designation || formatRole(member.role)}</p>
                                                                 </div>
                                                             </div>
                                                         </div>

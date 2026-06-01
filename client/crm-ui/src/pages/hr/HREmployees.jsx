@@ -246,7 +246,7 @@ const HREmployees = () => {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-[11px] font-bold text-slate-500 truncate mt-1">{emp.designation || emp.role}</p>
+                                                <p className="text-[11px] font-bold text-slate-500 truncate mt-1">{emp.designation || (emp.role ? (emp.role === 'TL' ? 'Team Lead' : (emp.role === 'qa' ? 'QA' : (emp.role === 'admin' ? 'Admin' : emp.role.charAt(0).toUpperCase() + emp.role.slice(1)))) : 'Employee')}</p>
                                                 
                                                 <div className="flex flex-col gap-1 mt-3">
                                                     <div className="flex items-center gap-1.5 text-[10px] text-slate-550 font-semibold truncate">

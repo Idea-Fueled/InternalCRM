@@ -739,7 +739,7 @@ const HRDashboard = () => {
                                                         </div>
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-bold text-slate-800 truncate">{emp.name}</p>
-                                                            <p className="text-[11px] font-semibold text-slate-450 truncate mt-0.5">{emp.designation || emp.role} • {emp.department || "Unassigned"}</p>
+                                                            <p className="text-[11px] font-semibold text-slate-450 truncate mt-0.5">{emp.designation || (emp.role ? (emp.role === 'TL' ? 'Team Lead' : (emp.role === 'qa' ? 'QA' : (emp.role === 'admin' ? 'Admin' : emp.role.charAt(0).toUpperCase() + emp.role.slice(1)))) : 'Employee')} • {emp.department || "Unassigned"}</p>
                                                         </div>
                                                     </div>
                                                     <div className="bg-slate-50 border border-slate-200/50 rounded-xl p-3 text-xs space-y-2">
