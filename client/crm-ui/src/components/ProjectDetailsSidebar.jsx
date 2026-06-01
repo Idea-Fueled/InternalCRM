@@ -1215,7 +1215,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                 <span className={`px-1.5 py-0.2 rounded text-[7px] font-bold ${
                                                     member.role === "qa" ? "bg-purple-50 text-purple-600 border border-purple-100" : "bg-blue-50 text-blue-600 border border-blue-100"
                                                 }`}>
-                                                    {member.role === "qa" ? "QA" : "Dev"}
+                                                    {member.designation || (member.role === "qa" ? "QA" : "Dev")}
                                                 </span>
                                                 <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
                                                     isChecked

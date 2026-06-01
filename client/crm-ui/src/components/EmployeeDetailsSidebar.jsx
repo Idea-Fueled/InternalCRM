@@ -154,7 +154,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                             )}
                             <div className="flex flex-wrap gap-1.5 mt-2.5">
                                 <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-lg ${getRoleBadgeColor(empRaw.role)}`}>
-                                    {empRaw.role === "TL" ? "Team Lead" : empRaw.role === "developer" ? "Employee" : empRaw.role?.toUpperCase()}
+                                    {empRaw.designation || (empRaw.role === "TL" ? "Team Lead" : empRaw.role === "developer" ? "Employee" : empRaw.role?.toUpperCase())}
                                 </span>
                                 {empRaw.status === "Inactive" && empRaw.inactiveReason && (
                                     <span className="text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-lg truncate max-w-xs" title={empRaw.inactiveReason}>

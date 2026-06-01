@@ -868,7 +868,7 @@ const EmployeesDashboard = () => {
                                                 </div>
                                                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize mt-0.5 inline-block ${
                                                     emp.status === 'Inactive' ? 'bg-slate-100 text-slate-500' : 'bg-blue-50 text-blue-600'
-                                                }`}>{emp.role === 'TL' ? 'Team Lead' : emp.role}</span>
+                                                }`}>{emp.designation || (emp.role === 'TL' ? 'Team Lead' : emp.role)}</span>
                                             </div>
                                         </div>
 
@@ -886,7 +886,7 @@ const EmployeesDashboard = () => {
                                             )}
                                         </div>
 
-                                        {/* Task stats */}
+                                        {emp.raw.role !== 'admin' && (
                                         <div className="flex items-center gap-3 pt-1 border-t border-slate-100">
                                             <div className="flex flex-col">
                                                 <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Done</span>
@@ -908,6 +908,7 @@ const EmployeesDashboard = () => {
                                                     )}
                                             </div>
                                         </div>
+                                        )}
 
                                         {/* Inactive info */}
                                         {emp.status === 'Inactive' && (
@@ -985,7 +986,7 @@ const EmployeesDashboard = () => {
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate capitalize">{emp.role === 'TL' ? 'Team Lead' : emp.role}</span>
+                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate capitalize">{emp.designation || (emp.role === 'TL' ? 'Team Lead' : emp.role)}</span>
                                             </div>
                                         </div>
                                     </div>
