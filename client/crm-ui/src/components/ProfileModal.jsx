@@ -7,6 +7,63 @@ import { authService, userService } from "../api/services";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 
+// Helper to robustly fetch string ID from any ID type
+const getIdString = (id) => {
+    if (!id) return "";
+    if (typeof id === 'object') return id._id ? String(id._id) : String(id);
+    return String(id);
+};
+
+// Helper to get initials
+const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(" ");
+    if (parts.length > 1) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+};
+
+// Helper to format role names beautifully
+const formatRole = (r) => {
+    if (r === 'TL') return 'Team Lead';
+    if (r === 'qa') return 'QA';
+    return r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Employee';
+};
+
+// Role style mapping
+const getRoleBadgeStyle = (r) => {
+    switch (r) {
+        case 'admin':
+            return 'bg-blue-50 text-blue-700 border-blue-100/50';
+        case 'TL':
+            return 'bg-purple-50 text-purple-700 border-purple-100/50';
+        case 'developer':
+            return 'bg-indigo-50 text-indigo-700 border-indigo-100/50';
+        case 'qa':
+            return 'bg-pink-50 text-pink-700 border-pink-100/50';
+        default:
+            return 'bg-slate-50 text-slate-700 border-slate-100/50';
+    }
+};
+
+const getUserRoleCategory = (u) => {
+    if (!u) return 'employee';
+    const role = (u.role || '').toLowerCase();
+    const designation = (u.designation || '').toLowerCase();
+    if (role === 'admin' || designation === 'admin') {
+        return 'admin';
+    }
+    const checkText = designation || role;
+    if (checkText.includes('qa')) {
+        return 'qa';
+    }
+    if (checkText.includes('team lead') || checkText.includes('lead')) {
+        return 'TL';
+    }
+    return 'employee';
+};
+
 const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, initial }) => {
     const { user: currentUser, updateUserProfile, logout } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
@@ -90,68 +147,10 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
             toast.error("Failed to logout. Please try again.");
         }
     };
-
-    const getUserRoleCategory = (u) => {
-        if (!u) return 'employee';
-        const role = (u.role || '').toLowerCase();
-        const designation = (u.designation || '').toLowerCase();
-        if (role === 'admin' || designation === 'admin') {
-            return 'admin';
-        }
-        const checkText = designation || role;
-        if (checkText.includes('qa')) {
-            return 'qa';
-        }
-        if (checkText.includes('team lead') || checkText.includes('lead')) {
-            return 'TL';
-        }
-        return 'employee';
-    };
-
     // --- Dynamic Relations Calculations ---
     const userRole = user?.role || role;
     const canSeeReason = currentUser?.role === 'admin' || currentUser?.role === 'TL';
     const isMyProfile = user && currentUser && (getIdString(user._id) === getIdString(currentUser._id) || user.email === currentUser.email);
-
-    // Helper to get initials
-    const getInitials = (name) => {
-        if (!name) return "?";
-        const parts = name.split(" ");
-        if (parts.length > 1) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return name.substring(0, 2).toUpperCase();
-    };
-
-    // Helper to format role names beautifully
-    const formatRole = (r) => {
-        if (r === 'TL') return 'Team Lead';
-        if (r === 'qa') return 'QA';
-        return r ? r.charAt(0).toUpperCase() + r.slice(1) : 'Employee';
-    };
-
-    // Role style mapping
-    const getRoleBadgeStyle = (r) => {
-        switch (r) {
-            case 'admin':
-                return 'bg-blue-50 text-blue-700 border-blue-100/50';
-            case 'TL':
-                return 'bg-purple-50 text-purple-700 border-purple-100/50';
-            case 'developer':
-                return 'bg-indigo-50 text-indigo-700 border-indigo-100/50';
-            case 'qa':
-                return 'bg-pink-50 text-pink-700 border-pink-100/50';
-            default:
-                return 'bg-slate-50 text-slate-700 border-slate-100/50';
-        }
-    };
-
-    // Helper to robustly fetch string ID from any ID type
-    const getIdString = (id) => {
-        if (!id) return "";
-        if (typeof id === 'object') return id._id ? String(id._id) : String(id);
-        return String(id);
-    };
 
     const myReportingManagersIds = (user?.reportingManagers || []).map(m => getIdString(m));
     const myTeamLeadIds = (user?.teamLeads || []).map(tl => getIdString(tl));
