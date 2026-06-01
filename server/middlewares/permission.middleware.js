@@ -48,6 +48,9 @@ export const DEFAULT_ROLE_PERMISSIONS = {
         'tasks.create', 'tasks.update', 'tasks.delete',
         'reports.view', 'trash.view'
     ],
+    hr: [
+        'users.create', 'users.update', 'reports.view'
+    ],
     TL: [
         'tasks.create', 'tasks.update',
         'projects.update',

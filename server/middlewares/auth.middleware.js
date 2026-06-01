@@ -7,6 +7,9 @@ export const getUserRoleCategory = (user) => {
         return 'admin';
     }
     const designation = (user.designation || user.role || '').toLowerCase();
+    if (designation.includes('hr') || designation.includes('human resources')) {
+        return 'hr';
+    }
     if (designation.includes('qa')) {
         return 'qa';
     }
@@ -93,6 +96,15 @@ export const isAdminOrTL = (req, res, next) => {
     if (req.user.role !== "admin" && req.user.role !== "TL") {
         return res.status(403).json({
             message: "Access denied - Admin or Team Lead only"
+        })
+    }
+    next();
+}
+
+export const isHR = (req, res, next) => {
+    if (req.user.role !== "hr" && req.user.role !== "admin") {
+        return res.status(403).json({
+            message: "Access denied - HR or Admin only"
         })
     }
     next();

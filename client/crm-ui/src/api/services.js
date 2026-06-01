@@ -95,3 +95,12 @@ export const searchService = {
 export const auditLogService = {
     getAuditLogs: () => axiosInstance.get('/audit-logs'),
 };
+
+// Leave Services
+export const leaveService = {
+    getLeaves: () => axiosInstance.get('/leaves'),
+    applyLeave: (data) => axiosInstance.post('/leaves/apply', data),
+    updateLeaveStatus: (id, status) => axiosInstance.patch(`/leaves/${id}/status`, { status }),
+    adjustBalances: (data) => axiosInstance.patch('/leaves/adjust-balance', data),
+    getHRStats: () => axiosInstance.get('/leaves/hr-stats'),
+};

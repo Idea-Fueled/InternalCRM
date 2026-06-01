@@ -1,4 +1,5 @@
 import User from "../models/user.schema.js";
+import jwt from "jsonwebtoken";
 import { getUserRoleCategory } from "../middlewares/auth.middleware.js";
 import { generateToken } from "../utils/authToken.js";
 import { hashPassword, comparePassword } from "../utils/hashPassword.js";
@@ -16,6 +17,25 @@ export const registerUser = async (req, res, next) => {
             return res.status(400).json({
                 message: "Name, email, and role are required!"
             })
+        }
+
+        // Strictly restrict admin creation to logged-in admins
+        const resolvedRoleCategory = getUserRoleCategory({ role, designation });
+        if (resolvedRoleCategory === 'admin' || (designation && designation.toLowerCase().includes('admin'))) {
+            let callingUser = null;
+            if (req.cookies?.token) {
+                try {
+                    const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+                    callingUser = await User.findById(decoded.id);
+                } catch (e) {
+                    console.error("Token verification failed in admin creation block:", e.message);
+                }
+            }
+            if (!callingUser || callingUser.role !== 'admin') {
+                return res.status(403).json({
+                    message: "Access denied. Only administrators can create admin accounts."
+                });
+            }
         }
 
         const existsingUser = await User.findOne({ email });
@@ -311,9 +331,29 @@ export const getAllUsers = async (req, res) => {
             .populate("reportingManagers", "name designation role profilePic")
             .sort({ name: 1 });
         
+        // Strictly sanitize inactiveReason based on role permissions
+        const currentUserId = String(req.user?._id || "");
+        const currentUserRole = req.user?.role || "employee";
+        const isAdminOrHR = currentUserRole === 'admin' || currentUserRole === 'hr';
+
+        const sanitizedUsers = users.map(u => {
+            const uObj = u.toObject ? u.toObject() : u;
+            const isSelf = String(uObj._id) === currentUserId;
+            
+            // Extract IDs of Team Leads and Reporting Managers
+            const tls = (uObj.teamLeads || []).map(tl => typeof tl === 'object' ? String(tl._id) : String(tl));
+            const rms = (uObj.reportingManagers || []).map(rm => typeof rm === 'object' ? String(rm._id) : String(rm));
+            const isManagerOfUser = tls.includes(currentUserId) || rms.includes(currentUserId) || (uObj.reportingManager && String(uObj.reportingManager) === currentUserId);
+
+            if (!isAdminOrHR && !isSelf && !isManagerOfUser) {
+                uObj.inactiveReason = ""; // Strict privacy masking
+            }
+            return uObj;
+        });
+
         return res.status(200).json({
             success: true,
-            data: users
+            data: sanitizedUsers
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });
@@ -344,6 +384,20 @@ export const updateUser = async (req, res) => {
 
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Non-admin users (such as HR) cannot modify admin accounts or promote to admin
+        if (req.user?.role !== 'admin') {
+            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
+                return res.status(403).json({
+                    message: "Access denied. Only administrators can modify admin accounts."
+                });
+            }
+            if (otherData.role === 'admin' || (otherData.designation && otherData.designation.toLowerCase().includes('admin'))) {
+                return res.status(403).json({
+                    message: "Access denied. Non-administrators cannot promote users to administrators."
+                });
+            }
+        }
 
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
         const incomingManagers = req.body.reportingManagers || req.body['reportingManagers[]'];

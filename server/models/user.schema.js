@@ -80,6 +80,18 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    casualLeaveBalance: {
+        type: Number,
+        default: 12
+    },
+    sickLeaveBalance: {
+        type: Number,
+        default: 10
+    },
+    earnedLeaveBalance: {
+        type: Number,
+        default: 15
+    },
     resetPasswordToken: {
         type: String,
         default: null

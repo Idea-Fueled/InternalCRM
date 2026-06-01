@@ -28,6 +28,12 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ProjectDetails from "./pages/common/ProjectDetails";
 import MyTeam from "./pages/common/MyTeam";
+import HRDashboard from "./pages/hr/HRDashboard";
+import HREmployees from "./pages/hr/HREmployees";
+import HRLeaveManagement from "./pages/hr/HRLeaveManagement";
+import HRReports from "./pages/hr/HRReports";
+import HRNotifications from "./pages/hr/HRNotifications";
+import EmployeeLeaves from "./pages/employee/EmployeeLeaves";
 
 import { Toaster } from "sonner";
 
@@ -86,6 +92,35 @@ const App = () => {
         path: "/admin/organization-tree",
         element: <ProtectedRoute allowedRoles={["admin"]}><OrganizationTree /></ProtectedRoute>
       },
+      // HR Routes
+      {
+        path: "/hr/dashboard",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><HRDashboard /></ProtectedRoute>
+      },
+      {
+        path: "/hr/employees",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><HREmployees /></ProtectedRoute>
+      },
+      {
+        path: "/hr/leaves",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><HRLeaveManagement /></ProtectedRoute>
+      },
+      {
+        path: "/hr/organization-tree",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><OrganizationTree /></ProtectedRoute>
+      },
+      {
+        path: "/hr/reports",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><HRReports /></ProtectedRoute>
+      },
+      {
+        path: "/hr/notifications",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><HRNotifications /></ProtectedRoute>
+      },
+      {
+        path: "/hr/my-team",
+        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><MyTeam /></ProtectedRoute>
+      },
       // Team Lead Routes
       {
         path: "/teamlead/dashboard",
@@ -143,6 +178,10 @@ const App = () => {
       {
         path: "/employee/my-team",
         element: <ProtectedRoute allowedRoles={["employee", "admin"]}><MyTeam /></ProtectedRoute>
+      },
+      {
+        path: "/employee/leaves",
+        element: <ProtectedRoute allowedRoles={["employee", "TL", "qa", "admin"]}><EmployeeLeaves /></ProtectedRoute>
       },
       {
         path: "/employee/reports",

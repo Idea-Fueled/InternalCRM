@@ -12,6 +12,7 @@ import departmentRoutes from "./routes/department.route.js";
 import passwordRoutes from "./routes/password.route.js";
 import searchRoutes from "./routes/search.route.js";
 import auditLogRoutes from "./routes/auditLog.route.js";
+import leaveRoutes from "./routes/leave.route.js";
 
 
 const app = express();
@@ -157,6 +158,7 @@ app.use("/departments", departmentRoutes);
 app.use("/auth", passwordRoutes);
 app.use("/search", searchRoutes);
 app.use("/audit-logs", auditLogRoutes);
+app.use("/leaves", leaveRoutes);
 
 
 // Centralized Express Error Handling Middleware
