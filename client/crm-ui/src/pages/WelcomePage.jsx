@@ -25,7 +25,7 @@ export default function WelcomePage() {
             let target = "/admin/dashboard";
             if (user.role === "admin") target = "/admin/dashboard";
             else if (user.role === "hr") target = "/hr/dashboard";
-            else if (user.role === "TL") target = "/teamlead/dashboard";
+            else if (user.role === "TL") target = "/teamLead/dashboard";
             else if (user.role === "qa") target = "/qa/dashboard";
             else if (isEmployeeRole) target = "/employee/dashboard";
             

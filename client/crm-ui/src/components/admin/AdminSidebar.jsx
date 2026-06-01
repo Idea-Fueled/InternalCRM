@@ -19,7 +19,7 @@ const AdminSidebar = ({ role = "admin" }) => {
     const userRole = user?.role || (role === "teamLead" ? "TL" : role);
     const isEmployee = !["admin", "TL", "qa", "hr"].includes(userRole);
     const displayName = user?.name || (userRole === "TL" ? "Team Lead" : userRole === "qa" ? "QA" : userRole === "hr" ? "HR" : isEmployee ? (userRole?.charAt(0).toUpperCase() + userRole?.slice(1)) : "Admin");
-    const displayRole = userRole === 'TL' ? 'Team Lead' : userRole === 'hr' ? 'HR' : (userRole?.charAt(0).toUpperCase() + userRole?.slice(1)) || "Role";
+    const displayRole = user?.designation || (userRole === 'TL' ? 'Team Lead' : userRole === 'hr' ? 'HR' : (userRole?.charAt(0).toUpperCase() + userRole?.slice(1))) || "Role";
     const initial = displayName.charAt(0).toUpperCase();
 
     useEffect(() => {

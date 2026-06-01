@@ -163,7 +163,7 @@ export const getAllProjects = async (req, res, next) => {
         // Role-based filtering
         if (role === "TL") {
             query.teamLead = _id;
-        } else if (role !== "admin") {
+        } else if (role !== "admin" && role !== "hr") {
             query.teamMembers = _id;
         }
         // Admins see all projects (no additional filter)

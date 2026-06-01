@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children, allowedRoles, requiredPermission }) => {
 
     // Check role
     if (allowedRoles) {
-        if (allowedRoles.includes('employee') && !['admin', 'TL', 'qa'].includes(user.role)) {
+        if (allowedRoles.includes('employee') && !['admin', 'TL', 'qa', 'hr'].includes(user.role)) {
             return children;
         }
         if (allowedRoles.includes(user.role)) {

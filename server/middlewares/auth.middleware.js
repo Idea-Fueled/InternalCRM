@@ -7,7 +7,7 @@ export const getUserRoleCategory = (user) => {
         return 'admin';
     }
     const designation = (user.designation || user.role || '').toLowerCase();
-    if (designation.includes('hr') || designation.includes('human resources')) {
+    if (/\bhr\b/.test(designation) || designation.includes('human resources')) {
         return 'hr';
     }
     if (designation.includes('qa')) {

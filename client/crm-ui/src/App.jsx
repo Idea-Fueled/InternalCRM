@@ -123,7 +123,7 @@ const App = () => {
       },
       // Team Lead Routes
       {
-        path: "/teamlead/dashboard",
+        path: "/teamLead/dashboard",
         element: <ProtectedRoute allowedRoles={["TL", "admin"]}><TeamLeadDashboard /></ProtectedRoute>
       },
       {
