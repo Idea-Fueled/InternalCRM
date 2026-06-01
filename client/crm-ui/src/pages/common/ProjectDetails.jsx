@@ -4,6 +4,7 @@ import { projectService, taskService, userService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
+import DeleteConfirmModal from "../../components/DeleteConfirmModal";
 import { toast } from "sonner";
 import {
     ArrowLeft, Calendar, Users, CheckCircle2, Clock, AlertCircle,
@@ -35,6 +36,11 @@ const ProjectDetails = () => {
     const [editingTask, setEditingTask] = useState(null);
     const [selectedTask, setSelectedTask] = useState(null);
     const [isTransitionModalOpen, setIsTransitionModalOpen] = useState(false);
+
+    // Deletion Modal States
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'note' | 'attachment', id: string }
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Eligible Members (for adding/removing team members)
     const [eligibleMembers, setEligibleMembers] = useState([]);
@@ -199,6 +205,65 @@ const ProjectDetails = () => {
             toast.error(err.response?.data?.message || "Failed to add comment");
         } finally {
             setCommentSubmitting(false);
+        }
+    };
+
+    // Permission check for notes/comments deletion
+    const canDeleteProjectNote = (note) => {
+        if (!user || !project) return false;
+        if (user.role === "admin") return true;
+        const authorId = note.author?._id || note.author;
+        const isAuthor = authorId === user._id;
+        if (isAuthor) return true;
+        
+        const isLead = project.teamLead?._id === user._id || project.teamLead === user._id;
+        if (isLead) {
+            const authorRole = note.author?.role;
+            if (authorRole !== "admin" && authorRole !== "TL") {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // Permission check for attachments deletion
+    const canDeleteProjectAttachment = (attachment) => {
+        if (!user || !project) return false;
+        if (user.role === "admin") return true;
+        const uploaderId = attachment.uploadedBy?._id || attachment.uploadedBy;
+        const isUploader = uploaderId === user._id;
+        if (isUploader) return true;
+        
+        const isLead = project.teamLead?._id === user._id || project.teamLead === user._id;
+        if (isLead) {
+            const uploaderRole = attachment.uploadedBy?.role;
+            if (uploaderRole !== "admin" && uploaderRole !== "TL") {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    // Confirm deletion
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            setIsDeleting(true);
+            if (deleteTarget.type === "note") {
+                await projectService.deleteProjectNote(projectId, deleteTarget.id);
+                toast.success("Comment deleted successfully!");
+            } else if (deleteTarget.type === "attachment") {
+                await projectService.deleteProjectAttachment(projectId, deleteTarget.id);
+                toast.success("Attachment deleted successfully!");
+            }
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
+            loadProject();
+        } catch (err) {
+            console.error("Failed to delete project item", err);
+            toast.error(err.response?.data?.message || "Failed to delete item");
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -853,14 +918,28 @@ const ProjectDetails = () => {
                                                     </div>
                                                 </div>
 
-                                                <a
-                                                    href={file.url}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="p-2 bg-white hover:bg-indigo-600 text-slate-400 hover:text-white rounded-lg shadow-sm border border-slate-100 transition shrink-0"
-                                                >
-                                                    <Download className="w-3.5 h-3.5" />
-                                                </a>
+                                                <div className="flex items-center gap-1.5 shrink-0">
+                                                    <a
+                                                        href={file.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="p-2 bg-white hover:bg-indigo-600 text-slate-400 hover:text-white rounded-lg shadow-sm border border-slate-100 transition"
+                                                    >
+                                                        <Download className="w-3.5 h-3.5" />
+                                                    </a>
+                                                    {canDeleteProjectAttachment(file) && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setDeleteTarget({ type: "attachment", id: file._id || file.id });
+                                                                setIsDeleteModalOpen(true);
+                                                            }}
+                                                            className="p-2 bg-white hover:bg-rose-650 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-lg shadow-sm border border-slate-100 transition cursor-pointer"
+                                                            title="Delete Document"
+                                                        >
+                                                            <Trash2 className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })}
@@ -906,7 +985,21 @@ const ProjectDetails = () => {
                                                             {note.author?.role === "TL" ? "TL" : note.author?.role || "Member"}
                                                         </span>
                                                     </div>
-                                                    <span className="text-[9px] font-semibold text-slate-400 shrink-0">{formatDate(note.createdAt)}</span>
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <span className="text-[9px] font-semibold text-slate-400">{formatDate(note.createdAt)}</span>
+                                                        {canDeleteProjectNote(note) && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDeleteTarget({ type: "note", id: note._id || note.id });
+                                                                    setIsDeleteModalOpen(true);
+                                                                }}
+                                                                className="p-1 hover:bg-rose-50 text-slate-350 hover:text-rose-600 rounded-md transition-colors cursor-pointer"
+                                                                title="Delete Comment"
+                                                            >
+                                                                <Trash2 className="w-3 h-3" />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
                                                 <p className="text-[11px] font-semibold text-slate-500 leading-relaxed m-0 text-left">
                                                     {note.text}
@@ -1658,6 +1751,23 @@ const ProjectDetails = () => {
                     </form>
                 </div>
             )}
+
+            {/* Deletion Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setDeleteTarget(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                isDeleting={isDeleting}
+                title={deleteTarget?.type === "note" ? "Delete Comment" : "Delete Attachment"}
+                message={
+                    deleteTarget?.type === "note"
+                        ? "Are you sure you want to delete this discussion note? This comment will be permanently removed from the project thread and recorded in the Audit Logs."
+                        : "Are you sure you want to delete this attachment? This file will be permanently removed from the project repository and recorded in the Audit Logs."
+                }
+            />
         </div>
     );
 };

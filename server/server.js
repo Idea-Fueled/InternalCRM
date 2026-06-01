@@ -11,6 +11,8 @@ import notificationRoutes from "./routes/notification.route.js";
 import departmentRoutes from "./routes/department.route.js";
 import passwordRoutes from "./routes/password.route.js";
 import searchRoutes from "./routes/search.route.js";
+import auditLogRoutes from "./routes/auditLog.route.js";
+
 
 const app = express();
 
@@ -154,6 +156,8 @@ app.use("/notifications", notificationRoutes);
 app.use("/departments", departmentRoutes);
 app.use("/auth", passwordRoutes);
 app.use("/search", searchRoutes);
+app.use("/audit-logs", auditLogRoutes);
+
 
 // Centralized Express Error Handling Middleware
 app.use((err, req, res, next) => {

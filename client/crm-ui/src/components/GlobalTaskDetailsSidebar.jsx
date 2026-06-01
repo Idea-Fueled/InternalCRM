@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
     X, Calendar, Paperclip, FileText, MessageSquare, 
     ArrowRight, History, Lock, ExternalLink, Download, 
-    ChevronUp, ChevronDown, AlertTriangle 
+    ChevronUp, ChevronDown, AlertTriangle, Trash2
 } from 'lucide-react';
 import { taskService } from '../api/services';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'sonner';
+import DeleteConfirmModal from './DeleteConfirmModal';
 
 const PRIORITY_COLORS = {
     'Low':      'bg-slate-100 text-slate-600 border border-slate-200/50',
@@ -52,7 +55,7 @@ const formatDateTime = (dt) => {
     } catch { return ''; }
 };
 
-const AttachmentCard = ({ file }) => {
+const AttachmentCard = ({ file, onDelete = null }) => {
     const img = isImageFile(file.fileType, file.url);
     const meta = getFileIcon(file.fileType, file.filename);
     const Icon = meta.icon;
@@ -82,6 +85,16 @@ const AttachmentCard = ({ file }) => {
             >
                 <ExternalLink className="w-3.5 h-3.5" />
             </a>
+            {onDelete && (
+                <button
+                    type="button"
+                    onClick={onDelete}
+                    className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    title="Delete Attachment"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                </button>
+            )}
         </div>
     );
 };
@@ -111,7 +124,7 @@ const ScreenshotLinkCard = ({ url }) => {
     );
 };
 
-const TimelineEntry = ({ entry }) => {
+const TimelineEntry = ({ entry, canDeleteNote = false, onDeleteNote = null, canDeleteAttachment = null, onDeleteAttachment = null }) => {
     const [expanded, setExpanded] = useState(true);
     const isRestricted = entry.notes === '[Restricted Visibility]';
     const hasAttachments = Array.isArray(entry.attachments) && entry.attachments.length > 0;
@@ -157,7 +170,21 @@ const TimelineEntry = ({ entry }) => {
                 <div className="px-4 pb-4 space-y-4 border-t border-slate-100 pt-3">
                     {entry.notes && (
                         <div>
-                            <p className="text-xs font-bold text-slate-500 mb-1.5 flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Notes</p>
+                            <div className="flex items-center justify-between mb-1.5">
+                                <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                                    <MessageSquare className="w-3.5 h-3.5" /> Notes
+                                </p>
+                                {canDeleteNote && onDeleteNote && (
+                                    <button
+                                        type="button"
+                                        onClick={onDeleteNote}
+                                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                                        title="Delete Note"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </div>
                             <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">{entry.notes}</p>
                         </div>
                     )}
@@ -165,7 +192,13 @@ const TimelineEntry = ({ entry }) => {
                         <div>
                             <p className="text-xs font-bold text-slate-500 mb-2 flex items-center gap-1.5"><Paperclip className="w-3.5 h-3.5" /> Attachments ({entry.attachments.length})</p>
                             <div className="space-y-2">
-                                {entry.attachments.map((f, fi) => <AttachmentCard key={fi} file={f} />)}
+                                {entry.attachments.map((f, fi) => (
+                                    <AttachmentCard 
+                                        key={fi} 
+                                        file={f} 
+                                        onDelete={canDeleteAttachment && canDeleteAttachment(f) ? () => onDeleteAttachment(f) : null}
+                                    />
+                                ))}
                             </div>
                         </div>
                     )}
@@ -190,26 +223,90 @@ const TimelineEntry = ({ entry }) => {
 };
 
 const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
+    const { user } = useAuth();
     const [task, setTask] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    // Deletion Modal States
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'note' | 'attachment', id: string, name?: string }
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const fetchTaskDetails = async (silent = false) => {
+        if (!taskId) return;
+        try {
+            if (!silent) setLoading(true);
+            const res = await taskService.getAllTasks();
+            const allTasks = res.data.tasks || [];
+            const matched = allTasks.find(t => String(t._id || t.id) === String(taskId));
+            setTask(matched || null);
+        } catch (err) {
+            console.error("Failed to load task details:", err);
+        } finally {
+            if (!silent) setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchTaskDetails = async () => {
-            if (!taskId) return;
-            try {
-                setLoading(true);
-                const res = await taskService.getAllTasks();
-                const allTasks = res.data.tasks || [];
-                const matched = allTasks.find(t => String(t._id || t.id) === String(taskId));
-                setTask(matched || null);
-            } catch (err) {
-                console.error("Failed to load task details:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchTaskDetails();
     }, [taskId]);
+
+    // Permission checks
+    const isProjectTL = task?.project?.teamLead?._id === user?._id || task?.project?.teamLead === user?._id;
+
+    const canDeleteTaskNote = (entry) => {
+        if (!user || !task) return false;
+        if (user.role === 'admin') return true;
+        
+        const authorId = entry.changedBy?._id || entry.changedBy;
+        if (authorId === user._id) return true;
+        
+        if (isProjectTL) {
+            const authorRole = entry.changedBy?.role;
+            if (authorRole !== 'admin' && authorRole !== 'TL') {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const canDeleteTaskAttachment = (attachment, parentEntry = null) => {
+        if (!user || !task) return false;
+        if (user.role === 'admin') return true;
+        
+        const uploaderId = attachment.uploadedBy?._id || attachment.uploadedBy || (parentEntry ? (parentEntry.changedBy?._id || parentEntry.changedBy) : null);
+        if (uploaderId === user._id) return true;
+        
+        if (isProjectTL) {
+            const uploaderRole = attachment.uploadedBy?.role || (parentEntry ? parentEntry.changedBy?.role : null);
+            if (uploaderRole !== 'admin' && uploaderRole !== 'TL') {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        try {
+            setIsDeleting(true);
+            if (deleteTarget.type === 'note') {
+                await taskService.deleteTaskHistoryNote(task._id || task.id, deleteTarget.id);
+                toast.success("Task comment deleted successfully!");
+            } else if (deleteTarget.type === 'attachment') {
+                await taskService.deleteTaskAttachment(task._id || task.id, deleteTarget.id);
+                toast.success("Task attachment deleted successfully!");
+            }
+            setIsDeleteModalOpen(false);
+            setDeleteTarget(null);
+            fetchTaskDetails(true); // reload silently
+        } catch (err) {
+            console.error("Failed to delete task item:", err);
+            toast.error(err.response?.data?.message || "Failed to delete item");
+        } finally {
+            setIsDeleting(false);
+        }
+    };
 
     if (!taskId) return null;
 
@@ -316,7 +413,16 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
                                         <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-600">{task.attachments.length}</span>
                                     </h3>
                                     <div className="space-y-2">
-                                        {task.attachments.map((f, i) => <AttachmentCard key={i} file={f} />)}
+                                        {task.attachments.map((f, i) => (
+                                            <AttachmentCard 
+                                                key={i} 
+                                                file={f} 
+                                                onDelete={canDeleteTaskAttachment(f) ? () => {
+                                                    setDeleteTarget({ type: 'attachment', id: f._id || f.id || f.url, name: f.filename });
+                                                    setIsDeleteModalOpen(true);
+                                                } : null}
+                                            />
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -343,7 +449,20 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
                                         <div className="absolute left-4 top-4 bottom-4 w-px bg-slate-250" aria-hidden />
                                         <div className="space-y-3">
                                             {task.statusHistory.slice().reverse().map((entry, idx) => (
-                                                <TimelineEntry key={idx} entry={entry} />
+                                                <TimelineEntry 
+                                                    key={idx} 
+                                                    entry={entry} 
+                                                    canDeleteNote={canDeleteTaskNote(entry)}
+                                                    onDeleteNote={() => {
+                                                        setDeleteTarget({ type: 'note', id: entry._id || entry.id });
+                                                        setIsDeleteModalOpen(true);
+                                                    }}
+                                                    canDeleteAttachment={(f) => canDeleteTaskAttachment(f, entry)}
+                                                    onDeleteAttachment={(f) => {
+                                                        setDeleteTarget({ type: 'attachment', id: f._id || f.id || f.url, name: f.filename });
+                                                        setIsDeleteModalOpen(true);
+                                                    }}
+                                                />
                                             ))}
                                         </div>
                                     </div>
@@ -361,6 +480,23 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
                     >Close</button>
                 </div>
             </div>
+
+            {/* Deletion Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={() => {
+                    setIsDeleteModalOpen(false);
+                    setDeleteTarget(null);
+                }}
+                onConfirm={handleConfirmDelete}
+                isDeleting={isDeleting}
+                title={deleteTarget?.type === "note" ? "Delete Task Comment" : "Delete Task Attachment"}
+                message={
+                    deleteTarget?.type === "note"
+                        ? "Are you sure you want to delete this task comment? This action cannot be undone and will be permanently recorded in the Audit Logs."
+                        : `Are you sure you want to delete the attachment "${deleteTarget?.name}"? This action cannot be undone and will be permanently recorded in the Audit Logs.`
+                }
+            />
         </div>
     );
 };

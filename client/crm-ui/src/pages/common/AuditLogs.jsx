@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
-import { notificationService } from "../../api/services";
+import { notificationService, auditLogService } from "../../api/services";
 import { useAuth } from "../../context/AuthContext";
 import { 
     History, Search, Filter, Calendar, 
     CheckCircle2, XCircle, Clock, MessageSquare,
-    ChevronLeft, ChevronRight, Download
+    ChevronLeft, ChevronRight, Download, ShieldAlert
 } from "lucide-react";
 import { exportPDF } from "../../utils/pdfExport";
 
@@ -23,11 +23,32 @@ const AuditLogs = () => {
     const fetchLogs = async () => {
         try {
             setLoading(true);
-            const res = await notificationService.getMyNotifications();
-            if (res.data.success) {
-                // We use notifications as audit logs for now as they track history
-                setLogs(res.data.notifications || []);
+            const notifRes = await notificationService.getMyNotifications();
+            let merged = [];
+            if (notifRes.data.success) {
+                merged = [...(notifRes.data.notifications || [])];
             }
+            
+            try {
+                const auditRes = await auditLogService.getAuditLogs();
+                if (auditRes.data.success) {
+                    const auditLogs = (auditRes.data.logs || []).map(log => ({
+                        _id: log._id,
+                        createdAt: log.timestamp || new Date(),
+                        title: `Deleted ${log.itemType}`,
+                        category: "deletion",
+                        message: log.details,
+                        isAuditLog: true
+                    }));
+                    merged = [...merged, ...auditLogs];
+                }
+            } catch (err) {
+                console.error("Failed to fetch custom audit logs:", err);
+            }
+            
+            // Sort combined logs descending by date
+            merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            setLogs(merged);
         } catch (error) {
             console.error("Failed to fetch logs:", error);
         } finally {
@@ -111,6 +132,7 @@ const AuditLogs = () => {
                                 <option value="status_change">Status Changes</option>
                                 <option value="approval">Approvals</option>
                                 <option value="creation">Creations</option>
+                                <option value="deletion">Deletions</option>
                             </select>
 
                         </div>
@@ -145,6 +167,7 @@ const AuditLogs = () => {
                                     ) : filteredLogs.map((log) => {
                                         const isApprove = log.category === 'approval';
                                         const isReject = log.category === 'rejection';
+                                        const isDeletion = log.category === 'deletion';
                                         
                                         return (
                                             <tr key={log._id} className="hover:bg-slate-50/50 transition-colors group">
@@ -159,10 +182,12 @@ const AuditLogs = () => {
                                                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${
                                                             isApprove ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
                                                             isReject ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                                            isDeletion ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                                             'bg-blue-50 border-blue-100 text-blue-600'
                                                         }`}>
                                                             {isApprove ? <CheckCircle2 className="w-4 h-4" /> :
                                                              isReject ? <XCircle className="w-4 h-4" /> :
+                                                             isDeletion ? <ShieldAlert className="w-4 h-4 text-rose-600" /> :
                                                              log.type === 'project' ? <MessageSquare className="w-4 h-4" /> :
                                                              <Clock className="w-4 h-4" />}
                                                         </div>
@@ -172,14 +197,14 @@ const AuditLogs = () => {
                                                 <td className="px-6 py-4">
                                                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
                                                         isApprove ? 'bg-emerald-50 text-emerald-600' :
-                                                        isReject ? 'bg-rose-50 text-rose-600' :
+                                                        isReject || isDeletion ? 'bg-rose-50 text-rose-600' :
                                                         'bg-slate-100 text-slate-500'
                                                     }`}>
                                                         {(log.category || "System").replace(/_/g, ' ')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm text-slate-600 max-w-md line-clamp-1 group-hover:line-clamp-none transition-all duration-300">
+                                                    <p className="text-sm text-slate-650 max-w-md line-clamp-1 group-hover:line-clamp-none transition-all duration-300">
                                                         {log.message}
                                                     </p>
                                                 </td>

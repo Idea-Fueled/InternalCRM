@@ -1,6 +1,8 @@
 import { Task } from "../models/task.schema.js";
 import { createNotification } from "./notification.controller.js";
 import User from "../models/user.schema.js";
+import Project from "../models/project.schema.js";
+import { createAuditLog } from "./auditLog.controller.js";
 
 // ─── Hierarchy-Based Visibility Helper ────────────────────────────────────────
 // Filters statusHistory entries so that notes, attachments, and screenshotLinks
@@ -136,7 +138,11 @@ export const createTask = async (req, res) => {
             endDate,
             developerNotes,
             qaNotes,
-            attachments: attachments || [],
+            attachments: (attachments || []).map(att => ({
+                ...att,
+                uploadedBy: att.uploadedBy || req.user._id,
+                createdAt: att.createdAt || new Date()
+            })),
             screenshotLinks: screenshotLinks || [],
             isDeleted,
             statusHistory: [{
@@ -346,6 +352,14 @@ export const updateTask = async (req, res) => {
         // Prevent updating isDeleted via this route
         delete updates.isDeleted;
 
+        if (updates.attachments && Array.isArray(updates.attachments)) {
+            updates.attachments = updates.attachments.map(att => ({
+                ...att,
+                uploadedBy: att.uploadedBy || req.user._id,
+                createdAt: att.createdAt || new Date()
+            }));
+        }
+
         const updatedTask = await Task.findOneAndUpdate(
             { _id: id, isDeleted: false },
             updates,
@@ -453,13 +467,19 @@ export const updateTaskStatus = async (req, res) => {
             }
         }
 
+        const enrichedAttachments = (Array.isArray(attachments) ? attachments : []).map(att => ({
+            ...att,
+            uploadedBy: att.uploadedBy || req.user._id,
+            createdAt: att.createdAt || new Date()
+        }));
+
         // Build history entry with rich data
         const historyEntry = {
             fromStatus: taskToUpdate.status,
             status,
             notes: notes || "",
             attachment: attachment || "",
-            attachments: Array.isArray(attachments) ? attachments : [],
+            attachments: enrichedAttachments,
             screenshotLinks: Array.isArray(screenshotLinks) ? screenshotLinks : [],
             changedBy: req.user._id,
             changedAt: new Date()
@@ -480,8 +500,8 @@ export const updateTaskStatus = async (req, res) => {
 
         // Append new attachments and screenshot links to the top-level task arrays
         const pushToArrays = {};
-        if (Array.isArray(attachments) && attachments.length > 0) {
-            pushToArrays.attachments = { $each: attachments };
+        if (enrichedAttachments.length > 0) {
+            pushToArrays.attachments = { $each: enrichedAttachments };
         }
         if (Array.isArray(screenshotLinks) && screenshotLinks.length > 0) {
             pushToArrays.screenshotLinks = { $each: screenshotLinks };
@@ -843,5 +863,216 @@ export const hardDeleteTask = async (req, res) => {
             success: false,
             message: error.message || "Internal server error"
         });
+    }
+};
+
+// Delete Task History Note / Comment
+export const deleteTaskHistoryNote = async (req, res) => {
+    try {
+        const { id, historyId } = req.params;
+        const task = await Task.findById(id);
+        if (!task || task.isDeleted) {
+            return res.status(404).json({ success: false, message: "Task not found" });
+        }
+
+        const entry = task.statusHistory.id(historyId);
+        if (!entry) {
+            return res.status(404).json({ success: false, message: "History entry not found" });
+        }
+
+        const entryAuthor = await User.findById(entry.changedBy);
+        const { role, _id } = req.user;
+        const isAuthor = entry.changedBy?.toString() === _id.toString();
+        const isAdminUser = role === "admin";
+        
+        const project = await Project.findById(task.project);
+        const isProjectLead = project?.teamLead?.toString() === _id.toString();
+
+        let hasPermission = false;
+        if (isAdminUser) {
+            hasPermission = true;
+        } else if (isAuthor) {
+            hasPermission = true;
+        } else if (isProjectLead) {
+            if (!entryAuthor || (entryAuthor.role !== "admin" && entryAuthor.role !== "TL")) {
+                hasPermission = true;
+            }
+        }
+
+        if (!hasPermission) {
+            return res.status(403).json({ success: false, message: "Unauthorized to delete this note" });
+        }
+
+        const deletedNoteText = entry.notes;
+        entry.notes = "";
+        await task.save();
+
+        const updatedTask = await Task.findById(id)
+            .populate("project", "projectName name status teamLead")
+            .populate("assignedTo", "name email profilePic")
+            .populate("assignedQA", "name email profilePic")
+            .populate("statusHistory.changedBy", "name role profilePic");
+
+        // Record Audit Log
+        const details = `Task transition comment "${deletedNoteText.substring(0, 40)}${deletedNoteText.length > 40 ? '...' : ''}" on task "${task.taskName}" was deleted by ${req.user.name} (${role})`;
+        await createAuditLog({
+            req,
+            itemType: "Note",
+            project: task.project,
+            task: id,
+            details
+        });
+
+        // Send notifications
+        try {
+            const recipients = new Set();
+            if (project?.teamLead) recipients.add(project.teamLead.toString());
+            if (task.assignedTo) recipients.add(task.assignedTo.toString());
+            if (task.assignedQA) recipients.add(task.assignedQA.toString());
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+
+            recipients.delete(_id.toString());
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: _id,
+                    title: "Task Comment/Note Deleted",
+                    message: `A note was deleted from task "${task.taskName}" by ${req.user.name} (${role})`,
+                    type: "task",
+                    category: "delete",
+                    link: `/projects/${task.project}?taskId=${task._id}`
+                });
+            }
+        } catch (err) {
+            console.error("Task comment deletion notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Note deleted successfully",
+            task: updatedTask
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Delete Task Attachment
+export const deleteTaskAttachment = async (req, res) => {
+    try {
+        const { id, attachmentId } = req.params;
+        const task = await Task.findById(id);
+        if (!task || task.isDeleted) {
+            return res.status(404).json({ success: false, message: "Task not found" });
+        }
+
+        let attachment = null;
+        let attachmentSource = null; // "task" or "history"
+        let parentHistoryEntry = null;
+
+        // Check top-level task.attachments
+        attachment = task.attachments.id(attachmentId);
+        if (attachment) {
+            attachmentSource = "task";
+        } else {
+            // Check statusHistory.attachments
+            for (const hEntry of task.statusHistory) {
+                const att = hEntry.attachments.id(attachmentId);
+                if (att) {
+                    attachment = att;
+                    attachmentSource = "history";
+                    parentHistoryEntry = hEntry;
+                    break;
+                }
+            }
+        }
+
+        if (!attachment) {
+            return res.status(404).json({ success: false, message: "Attachment not found" });
+        }
+
+        const uploaderId = attachment.uploadedBy || (attachmentSource === "history" ? parentHistoryEntry?.changedBy : null);
+        const uploader = uploaderId ? await User.findById(uploaderId) : null;
+        const { role, _id } = req.user;
+        const isUploader = uploaderId?.toString() === _id.toString();
+        const isAdminUser = role === "admin";
+        
+        const project = await Project.findById(task.project);
+        const isProjectLead = project?.teamLead?.toString() === _id.toString();
+
+        let hasPermission = false;
+        if (isAdminUser) {
+            hasPermission = true;
+        } else if (isUploader) {
+            hasPermission = true;
+        } else if (isProjectLead) {
+            if (!uploader || (uploader.role !== "admin" && uploader.role !== "TL")) {
+                hasPermission = true;
+            }
+        }
+
+        if (!hasPermission) {
+            return res.status(403).json({ success: false, message: "Unauthorized to delete this attachment" });
+        }
+
+        // Pull attachment out of array
+        if (attachmentSource === "task") {
+            task.attachments.pull({ _id: attachmentId });
+        } else {
+            parentHistoryEntry.attachments.pull({ _id: attachmentId });
+        }
+        await task.save();
+
+        const updatedTask = await Task.findById(id)
+            .populate("project", "projectName name status teamLead")
+            .populate("assignedTo", "name email profilePic")
+            .populate("assignedQA", "name email profilePic")
+            .populate("statusHistory.changedBy", "name role profilePic");
+
+        // Record Audit Log
+        const details = `Attachment "${attachment.filename}" was deleted from task "${task.taskName}" by ${req.user.name} (${role})`;
+        await createAuditLog({
+            req,
+            itemType: "Attachment",
+            project: task.project,
+            task: id,
+            details
+        });
+
+        // Send notifications
+        try {
+            const recipients = new Set();
+            if (project?.teamLead) recipients.add(project.teamLead.toString());
+            if (task.assignedTo) recipients.add(task.assignedTo.toString());
+            if (task.assignedQA) recipients.add(task.assignedQA.toString());
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+
+            recipients.delete(_id.toString());
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: _id,
+                    title: "Task Attachment Deleted",
+                    message: `File "${attachment.filename}" was deleted from task "${task.taskName}" by ${req.user.name} (${role})`,
+                    type: "task",
+                    category: "delete",
+                    link: `/projects/${task.project}?taskId=${task._id}`
+                });
+            }
+        } catch (err) {
+            console.error("Task attachment deletion notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Attachment deleted successfully",
+            task: updatedTask
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
     }
 };

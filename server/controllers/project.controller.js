@@ -2,6 +2,7 @@ import Project from "../models/project.schema.js";
 import { createNotification } from "./notification.controller.js";
 import User from "../models/user.schema.js";
 import { Task } from "../models/task.schema.js";
+import { createAuditLog } from "./auditLog.controller.js";
 
 // Create a new project
 export const createProject = async (req, res, next) => {
@@ -776,6 +777,182 @@ export const updateProjectMembers = async (req, res) => {
             success: true,
             message: "Project members updated successfully",
             project: updatedProject
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Delete Project Note / Comment
+export const deleteProjectNote = async (req, res) => {
+    try {
+        const { id, noteId } = req.params;
+        const project = await Project.findById(id);
+        if (!project || project.isDeleted) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        const note = project.notes.id(noteId);
+        if (!note) {
+            return res.status(404).json({ success: false, message: "Note not found" });
+        }
+
+        const noteAuthor = await User.findById(note.author);
+        const { role, _id } = req.user;
+        const isAuthor = note.author?.toString() === _id.toString();
+        const isAdminUser = role === "admin";
+        const isProjectLead = project.teamLead?.toString() === _id.toString();
+
+        let hasPermission = false;
+        if (isAdminUser) {
+            hasPermission = true;
+        } else if (isAuthor) {
+            hasPermission = true;
+        } else if (isProjectLead) {
+            if (!noteAuthor || (noteAuthor.role !== "admin" && noteAuthor.role !== "TL")) {
+                hasPermission = true;
+            }
+        }
+
+        if (!hasPermission) {
+            return res.status(403).json({ success: false, message: "Unauthorized to delete this note" });
+        }
+
+        // Pull note out of array
+        project.notes.pull({ _id: noteId });
+        await project.save();
+
+        const updatedProject = await Project.findById(id)
+            .populate("notes.author", "name email role profilePic");
+
+        // Record Audit Log
+        const details = `Comment/Note "${note.text.substring(0, 40)}${note.text.length > 40 ? '...' : ''}" was deleted by ${req.user.name} (${role})`;
+        await createAuditLog({
+            req,
+            itemType: "Note",
+            project: id,
+            details
+        });
+
+        // Send notifications
+        try {
+            const recipients = new Set();
+            if (project.teamLead) recipients.add(project.teamLead.toString());
+            if (project.teamMembers) {
+                project.teamMembers.forEach(m => recipients.add(m.toString()));
+            }
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+
+            recipients.delete(_id.toString()); // remove self
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: _id,
+                    title: "Project Comment/Note Deleted",
+                    message: `A note was deleted from project "${project.projectName}" by ${req.user.name} (${role})`,
+                    type: "project",
+                    category: "delete",
+                    link: `/projects/${project._id}`
+                });
+            }
+        } catch (err) {
+            console.error("Deletion notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Note deleted successfully",
+            notes: updatedProject.notes
+        });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// Delete Project Attachment
+export const deleteProjectAttachment = async (req, res) => {
+    try {
+        const { id, attachmentId } = req.params;
+        const project = await Project.findById(id);
+        if (!project || project.isDeleted) {
+            return res.status(404).json({ success: false, message: "Project not found" });
+        }
+
+        const attachment = project.attachments.id(attachmentId);
+        if (!attachment) {
+            return res.status(404).json({ success: false, message: "Attachment not found" });
+        }
+
+        const uploader = await User.findById(attachment.uploadedBy);
+        const { role, _id } = req.user;
+        const isUploader = attachment.uploadedBy?.toString() === _id.toString();
+        const isAdminUser = role === "admin";
+        const isProjectLead = project.teamLead?.toString() === _id.toString();
+
+        let hasPermission = false;
+        if (isAdminUser) {
+            hasPermission = true;
+        } else if (isUploader) {
+            hasPermission = true;
+        } else if (isProjectLead) {
+            if (!uploader || (uploader.role !== "admin" && uploader.role !== "TL")) {
+                hasPermission = true;
+            }
+        }
+
+        if (!hasPermission) {
+            return res.status(403).json({ success: false, message: "Unauthorized to delete this attachment" });
+        }
+
+        // Pull attachment out of array
+        project.attachments.pull({ _id: attachmentId });
+        await project.save();
+
+        const updatedProject = await Project.findById(id)
+            .populate("attachments.uploadedBy", "name email role profilePic");
+
+        // Record Audit Log
+        const details = `Attachment "${attachment.filename}" was deleted from project "${project.projectName}" by ${req.user.name} (${role})`;
+        await createAuditLog({
+            req,
+            itemType: "Attachment",
+            project: id,
+            details
+        });
+
+        // Send notifications
+        try {
+            const recipients = new Set();
+            if (project.teamLead) recipients.add(project.teamLead.toString());
+            if (project.teamMembers) {
+                project.teamMembers.forEach(m => recipients.add(m.toString()));
+            }
+            const admins = await User.find({ role: "admin" });
+            admins.forEach(admin => recipients.add(admin._id.toString()));
+
+            recipients.delete(_id.toString()); // remove self
+
+            for (const recipientId of recipients) {
+                await createNotification({
+                    recipient: recipientId,
+                    sender: _id,
+                    title: "Project Attachment Deleted",
+                    message: `File "${attachment.filename}" was deleted from project "${project.projectName}" by ${req.user.name} (${role})`,
+                    type: "project",
+                    category: "delete",
+                    link: `/projects/${project._id}`
+                });
+            }
+        } catch (err) {
+            console.error("Deletion notification error:", err);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Attachment deleted successfully",
+            attachments: updatedProject.attachments
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: error.message });

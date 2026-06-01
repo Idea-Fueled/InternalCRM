@@ -11,7 +11,9 @@ import {
     getTasksByProject,
     getTasksByUser,
     hardDeleteTask,
-    uploadTaskAttachment
+    uploadTaskAttachment,
+    deleteTaskHistoryNote,
+    deleteTaskAttachment
 } from "../controllers/task.controller.js";
 import { isAdmin, protectRoute } from "../middlewares/auth.middleware.js";
 import { checkPermission } from "../middlewares/permission.middleware.js";
@@ -31,6 +33,8 @@ router.put("/:id/status",         protectRoute, updateTaskStatus);
 // Full task edit requires tasks.update permission
 router.put("/:id",                protectRoute, checkPermission("tasks.update"), updateTask);
 router.put("/:id/restore",        protectRoute, checkPermission("tasks.delete"), restoreTask);
+router.delete("/:id/notes/:historyId", protectRoute, deleteTaskHistoryNote);
+router.delete("/:id/attachments/:attachmentId", protectRoute, deleteTaskAttachment);
 router.delete("/:id",             protectRoute, checkPermission("tasks.delete"), deleteTask);
 router.delete("/hard/:id",        protectRoute, isAdmin, hardDeleteTask);
 

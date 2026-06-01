@@ -20,9 +20,11 @@ export const projectService = {
     getTrashProjects: () => axiosInstance.get('/projects/trash'),
     restoreProject: (id) => axiosInstance.put(`/projects/restore/${id}`),
     addProjectNote: (id, text) => axiosInstance.post(`/projects/${id}/notes`, { text }),
+    deleteProjectNote: (id, noteId) => axiosInstance.delete(`/projects/${id}/notes/${noteId}`),
     uploadProjectAttachments: (id, formData) => axiosInstance.post(`/projects/${id}/attachments`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
+    deleteProjectAttachment: (id, attachmentId) => axiosInstance.delete(`/projects/${id}/attachments/${attachmentId}`),
     updateProjectMembers: (id, teamMembers) => axiosInstance.put(`/projects/${id}/members`, { teamMembers }),
 };
 
@@ -42,6 +44,8 @@ export const taskService = {
     hardDeleteTask: (id) => axiosInstance.delete(`/tasks/hard/${id}`),
     getDeletedTasks: () => axiosInstance.get('/tasks/trash'),
     restoreTask: (id) => axiosInstance.put(`/tasks/${id}/restore`),
+    deleteTaskHistoryNote: (id, historyId) => axiosInstance.delete(`/tasks/${id}/notes/${historyId}`),
+    deleteTaskAttachment: (id, attachmentId) => axiosInstance.delete(`/tasks/${id}/attachments/${attachmentId}`),
 };
 
 // User Services
@@ -85,4 +89,9 @@ export const authService = {
 // Search Services
 export const searchService = {
     globalSearch: (query) => axiosInstance.get('/search', { params: { query } }),
+};
+
+// Audit Log Services
+export const auditLogService = {
+    getAuditLogs: () => axiosInstance.get('/audit-logs'),
 };

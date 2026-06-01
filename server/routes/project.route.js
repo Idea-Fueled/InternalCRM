@@ -10,7 +10,9 @@ import {
     hardDeleteProject,
     addProjectNote,
     uploadProjectAttachments,
-    updateProjectMembers
+    updateProjectMembers,
+    deleteProjectNote,
+    deleteProjectAttachment
 } from "../controllers/project.controller.js";
 import { isAdmin, protectRoute } from "../middlewares/auth.middleware.js";
 import { checkPermission } from "../middlewares/permission.middleware.js";
@@ -29,7 +31,9 @@ router.put("/restore/:id", protectRoute, checkPermission("projects.delete"), res
 
 // SaaS addition sub-routes
 router.post("/:id/notes",        protectRoute, addProjectNote);
+router.delete("/:id/notes/:noteId", protectRoute, deleteProjectNote);
 router.post("/:id/attachments",  protectRoute, uploadAttachment.array("attachments", 10), uploadProjectAttachments);
+router.delete("/:id/attachments/:attachmentId", protectRoute, deleteProjectAttachment);
 router.put("/:id/members",      protectRoute, updateProjectMembers);
 
 export default router;

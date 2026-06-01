@@ -55,7 +55,9 @@ const taskSchema = new mongoose.Schema({
         {
             url: { type: String },
             filename: { type: String },
-            fileType: { type: String }
+            fileType: { type: String },
+            uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+            createdAt: { type: Date, default: Date.now }
         }
     ],
     screenshotLinks: [
@@ -75,7 +77,9 @@ const taskSchema = new mongoose.Schema({
                 {
                     url: { type: String },
                     filename: { type: String },
-                    fileType: { type: String }
+                    fileType: { type: String },
+                    uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+                    createdAt: { type: Date, default: Date.now }
                 }
             ],
             screenshotLinks: [
