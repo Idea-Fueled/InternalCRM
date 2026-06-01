@@ -899,11 +899,13 @@ const EmployeesDashboard = () => {
                                                 </div>
                                             )}
                                             <div className="ml-auto">
-                                                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                                                    emp.status === 'Active'   ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                    emp.status === 'Overdue'  ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-slate-100 text-slate-500 border-slate-200'
-                                                }`}>{emp.status}</span>
+                                                    {!(emp.raw.role === 'admin' && user?.role !== 'admin') && (
+                                                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                                                            emp.status === 'Active'   ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                            emp.status === 'Overdue'  ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                            'bg-slate-100 text-slate-500 border-slate-200'
+                                                        }`}>{emp.status}</span>
+                                                    )}
                                             </div>
                                         </div>
 
@@ -1026,19 +1028,21 @@ const EmployeesDashboard = () => {
                                         </div>
 
                                         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                                            <button 
-                                                onClick={() => can('users.update') && handleStatusToggle(emp)}
-                                                disabled={!can('users.update')}
-                                                className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors shrink-0 ${
-                                                    !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
-                                                } ${
-                                                    emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                    emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-slate-50 text-slate-500 border-slate-200'
-                                                }`}
-                                            >
-                                                {emp.status}
-                                            </button>
+                                            {!(emp.raw.role === 'admin' && user?.role !== 'admin') && (
+                                                <button 
+                                                    onClick={() => can('users.update') && handleStatusToggle(emp)}
+                                                    disabled={!can('users.update')}
+                                                    className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors shrink-0 ${
+                                                        !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
+                                                    } ${
+                                                        emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                        emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                        'bg-slate-50 text-slate-500 border-slate-200'
+                                                    }`}
+                                                >
+                                                    {emp.status}
+                                                </button>
+                                            )}
                                             <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0 pr-0.5">
                                                 {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
                                                     <button 
