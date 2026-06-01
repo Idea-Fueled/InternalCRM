@@ -54,11 +54,14 @@ const getUserRoleCategory = (u) => {
     if (role === 'admin' || designation === 'admin') {
         return 'admin';
     }
+    if (role === 'hr' || designation.includes('hr')) {
+        return 'hr';
+    }
     const checkText = designation || role;
     if (checkText.includes('qa')) {
         return 'qa';
     }
-    if (checkText.includes('team lead') || checkText.includes('lead')) {
+    if (checkText.includes('team lead') || checkText.includes('lead') || role === 'tl') {
         return 'TL';
     }
     return 'employee';
@@ -285,6 +288,11 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 )
                             )}
                         </div>
+                        {/* Top-level Contact Info */}
+                        <div className="flex flex-col items-center gap-1.5 mt-3.5 text-xs text-slate-500 font-semibold">
+                            <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {user?.email}</span>
+                            {user?.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {user.phone}</span>}
+                        </div>
                     </div>
 
                     {user?.status === 'inactive' && (
@@ -334,7 +342,6 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                             </div>
                         </div>
 
-                        {getUserRoleCategory(user || { role: userRole }) !== 'admin' && (
                         <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-indigo-50/20 hover:border-indigo-100/50 flex items-start gap-3">
                             <div className="p-2 bg-indigo-50 rounded-xl text-indigo-600 mt-0.5">
                                 <Briefcase className="w-4 h-4" />
@@ -344,7 +351,6 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <p className="text-sm font-semibold text-slate-700">{user?.department || "Engineering"}</p>
                             </div>
                         </div>
-                        )}
 
                         <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 transition-all duration-200 hover:bg-purple-50/20 hover:border-purple-100/50 flex items-start gap-3">
                             <div className="p-2 bg-purple-50 rounded-xl text-purple-600 mt-0.5">
@@ -359,157 +365,161 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                         </div>
                     </div>
 
-                    <div className="border-t border-slate-100 my-6" />
+                    {getUserRoleCategory(user || { role: userRole }) !== 'admin' && (
+                        <>
+                            <div className="border-t border-slate-100 my-6" />
 
-                    {/* ─── Hierarchy / Reporting Section ───────────────────────────── */}
-                    <div className="space-y-6">
-                        {isLoadingRelations ? (
-                            <div className="flex flex-col items-center justify-center py-8 gap-2">
-                                <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                                <p className="text-xs text-slate-400 font-semibold">Resolving organization matrix...</p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* 1. Reporting Manager Block (Developers, QAs, Team Leads only) */}
-                                {getUserRoleCategory(user || { role: userRole }) !== 'admin' && (
-                                    <div>
-                                        <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
-                                            <UserCheck className="w-4 h-4 text-blue-500" />
-                                            Reporting Manager
-                                        </h4>
-                                        <div className="space-y-2">
-                                            {getUserRoleCategory(user || { role: userRole }) === 'TL' ? (
-                                                /* TL reports to Admins */
-                                                tlManagers.length > 0 ? (
-                                                    tlManagers.map(mgr => (
-                                                        <div key={mgr._id} className="flex items-center gap-3 p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all">
-                                                            <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm">
-                                                                {mgr.profilePic ? (
-                                                                    <img src={mgr.profilePic} alt={mgr.name} className="w-full h-full object-cover" />
-                                                                ) : getInitials(mgr.name)}
+                            {/* ─── Hierarchy / Reporting Section ───────────────────────────── */}
+                            <div className="space-y-6">
+                                {isLoadingRelations ? (
+                                    <div className="flex flex-col items-center justify-center py-8 gap-2">
+                                        <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                                        <p className="text-xs text-slate-400 font-semibold">Resolving organization matrix...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* 1. Reporting Manager Block (Developers, QAs, Team Leads only) */}
+                                        {getUserRoleCategory(user || { role: userRole }) !== 'admin' && (
+                                            <div>
+                                                <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
+                                                    <UserCheck className="w-4 h-4 text-blue-500" />
+                                                    Reporting Manager
+                                                </h4>
+                                                <div className="space-y-2">
+                                                    {getUserRoleCategory(user || { role: userRole }) === 'TL' ? (
+                                                        /* TL reports to Admins */
+                                                        tlManagers.length > 0 ? (
+                                                            tlManagers.map(mgr => (
+                                                                <div key={mgr._id} className="flex items-center gap-3 p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all">
+                                                                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm">
+                                                                        {mgr.profilePic ? (
+                                                                            <img src={mgr.profilePic} alt={mgr.name} className="w-full h-full object-cover" />
+                                                                        ) : getInitials(mgr.name)}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
+                                                                        <p className="text-[10px] font-bold text-blue-600">Corporate Administrator</p>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-center text-xs font-medium text-slate-400">
+                                                                No supervisor assigned
                                                             </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
-                                                                <p className="text-[10px] font-bold text-blue-600">Corporate Administrator</p>
+                                                        )
+                                                    ) : (
+                                                        /* Developer / QA report to assigned Team Leads */
+                                                        reportingManagers.length > 0 ? (
+                                                            reportingManagers.map(mgr => (
+                                                                <div key={mgr._id} className="flex items-center gap-3 p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all">
+                                                                    <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm">
+                                                                        {mgr.profilePic ? (
+                                                                            <img src={mgr.profilePic} alt={mgr.name} className="w-full h-full object-cover" />
+                                                                        ) : getInitials(mgr.name)}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
+                                                                        <p className="text-[10px] font-bold text-purple-600">Team Lead / Reporting Manager</p>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        ) : (
+                                                            <div className="p-4 bg-slate-50/50 border border-slate-100 border-dashed rounded-2xl text-center text-xs font-medium text-slate-400">
+                                                                No reporting manager assigned
                                                             </div>
+                                                        )
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* 2. Reporting Team / Teammates Block */}
+                                        <div>
+                                            <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
+                                                <Users className="w-4 h-4 text-indigo-500" />
+                                                {getUserRoleCategory(user || { role: userRole }) === 'admin' ? "Active Team Leads" : getUserRoleCategory(user || { role: userRole }) === 'TL' ? "Reporting Team Members" : "My Teammates"}
+                                            </h4>
+
+                                            <div className="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
+                                                {/* Render items based on role */}
+                                                {getUserRoleCategory(user || { role: userRole }) === 'admin' && (
+                                                    reportingTeamAdmin.length > 0 ? (
+                                                        reportingTeamAdmin.map(member => (
+                                                            <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
+                                                                        {member.profilePic ? (
+                                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                        ) : getInitials(member.name)}
+                                                                    </div>
+                                                                    <span className="text-xs font-bold text-slate-700">{member.name}</span>
+                                                                </div>
+                                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
+                                                                    {member.designation || formatRole(member.role)}
+                                                                </span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
+                                                            No active Team Leads registered in the system
                                                         </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="p-4 bg-slate-50/50 border border-slate-100 rounded-2xl text-center text-xs font-medium text-slate-400">
-                                                        No supervisor assigned
-                                                    </div>
-                                                )
-                                            ) : (
-                                                /* Developer / QA report to assigned Team Leads */
-                                                reportingManagers.length > 0 ? (
-                                                    reportingManagers.map(mgr => (
-                                                        <div key={mgr._id} className="flex items-center gap-3 p-3 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all">
-                                                            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shadow-sm">
-                                                                {mgr.profilePic ? (
-                                                                    <img src={mgr.profilePic} alt={mgr.name} className="w-full h-full object-cover" />
-                                                                ) : getInitials(mgr.name)}
+                                                    )
+                                                )}
+
+                                                {getUserRoleCategory(user || { role: userRole }) === 'TL' && (
+                                                    reportingTeamTL.length > 0 ? (
+                                                        reportingTeamTL.map(member => (
+                                                            <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
+                                                                        {member.profilePic ? (
+                                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                        ) : getInitials(member.name)}
+                                                                    </div>
+                                                                    <span className="text-xs font-bold text-slate-700">{member.name}</span>
+                                                                </div>
+                                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
+                                                                    {member.designation || formatRole(member.role)}
+                                                                </span>
                                                             </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-bold text-slate-700 truncate">{mgr.name}</p>
-                                                                <p className="text-[10px] font-bold text-purple-600">Team Lead / Reporting Manager</p>
-                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
+                                                            No developers or QA assigned under you yet
                                                         </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="p-4 bg-slate-50/50 border border-slate-100 border-dashed rounded-2xl text-center text-xs font-medium text-slate-400">
-                                                        No reporting manager assigned
-                                                    </div>
-                                                )
-                                            )}
+                                                    )
+                                                )}
+
+                                                {getUserRoleCategory(user || { role: userRole }) !== 'admin' && getUserRoleCategory(user || { role: userRole }) !== 'TL' && (
+                                                    teammates.length > 0 ? (
+                                                        teammates.map(member => (
+                                                            <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
+                                                                        {member.profilePic ? (
+                                                                            <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
+                                                                        ) : getInitials(member.name)}
+                                                                    </div>
+                                                                    <span className="text-xs font-bold text-slate-700">{member.name}</span>
+                                                                </div>
+                                                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
+                                                                    {member.designation || formatRole(member.role)}
+                                                                </span>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
+                                                            No teammates found under your reporting lead
+                                                        </div>
+                                                    )
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    </>
                                 )}
-
-                                {/* 2. Reporting Team / Teammates Block */}
-                                <div>
-                                    <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
-                                        <Users className="w-4 h-4 text-indigo-500" />
-                                        {getUserRoleCategory(user || { role: userRole }) === 'admin' ? "Active Team Leads" : getUserRoleCategory(user || { role: userRole }) === 'TL' ? "Reporting Team Members" : "My Teammates"}
-                                    </h4>
-
-                                    <div className="max-h-48 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-slate-200">
-                                        {/* Render items based on role */}
-                                        {getUserRoleCategory(user || { role: userRole }) === 'admin' && (
-                                            reportingTeamAdmin.length > 0 ? (
-                                                reportingTeamAdmin.map(member => (
-                                                    <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
-                                                                {member.profilePic ? (
-                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
-                                                                ) : getInitials(member.name)}
-                                                            </div>
-                                                            <span className="text-xs font-bold text-slate-700">{member.name}</span>
-                                                        </div>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
-                                                            {member.designation || formatRole(member.role)}
-                                                        </span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
-                                                    No active Team Leads registered in the system
-                                                </div>
-                                            )
-                                        )}
-
-                                        {getUserRoleCategory(user || { role: userRole }) === 'TL' && (
-                                            reportingTeamTL.length > 0 ? (
-                                                reportingTeamTL.map(member => (
-                                                    <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
-                                                                {member.profilePic ? (
-                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
-                                                                ) : getInitials(member.name)}
-                                                            </div>
-                                                            <span className="text-xs font-bold text-slate-700">{member.name}</span>
-                                                        </div>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
-                                                            {member.designation || formatRole(member.role)}
-                                                        </span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
-                                                    No developers or QA assigned under you yet
-                                                </div>
-                                            )
-                                        )}
-
-                                        {getUserRoleCategory(user || { role: userRole }) !== 'admin' && getUserRoleCategory(user || { role: userRole }) !== 'TL' && (
-                                            teammates.length > 0 ? (
-                                                teammates.map(member => (
-                                                    <div key={member._id} className="flex items-center justify-between p-2.5 bg-slate-50/40 border border-slate-100 hover:border-indigo-100 rounded-xl hover:bg-slate-50 transition-all duration-150">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-extrabold overflow-hidden">
-                                                                {member.profilePic ? (
-                                                                    <img src={member.profilePic} alt={member.name} className="w-full h-full object-cover" />
-                                                                ) : getInitials(member.name)}
-                                                            </div>
-                                                            <span className="text-xs font-bold text-slate-700">{member.name}</span>
-                                                        </div>
-                                                        <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getRoleBadgeStyle(getUserRoleCategory(member))}`}>
-                                                            {member.designation || formatRole(member.role)}
-                                                        </span>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div className="p-4 bg-slate-50/30 border border-slate-100 border-dashed rounded-xl text-center text-xs text-slate-400 font-medium">
-                                                    No teammates found under your reporting lead
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                </div>
-                            </>
-                        )}
-                    </div>
+                            </div>
+                        </>
+                    )}
 
                     {isMyProfile ? (
                         <button 

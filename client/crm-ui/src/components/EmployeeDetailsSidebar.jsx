@@ -69,6 +69,26 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
     if (!isOpen || !empRaw) return null;
 
     const initials = empRaw.name?.charAt(0).toUpperCase() || "U";
+    const getUserRoleCategory = (u) => {
+        if (!u) return 'employee';
+        const role = (u.role || '').toLowerCase();
+        const designation = (u.designation || '').toLowerCase();
+        if (role === 'admin' || designation === 'admin') {
+            return 'admin';
+        }
+        if (role === 'hr' || designation.includes('hr')) {
+            return 'hr';
+        }
+        const checkText = designation || role;
+        if (checkText.includes('qa')) {
+            return 'qa';
+        }
+        if (checkText.includes('team lead') || checkText.includes('lead') || role === 'tl') {
+            return 'TL';
+        }
+        return 'employee';
+    };
+    const viewedRoleCat = getUserRoleCategory(empRaw);
     const viewedIsAdmin = empRaw.role?.toLowerCase() === 'admin';
     const loggedInIsAdmin = currentUser?.role?.toLowerCase() === 'admin';
 
@@ -166,6 +186,11 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                     <></>
                                 )}
                             </div>
+                            {/* Top-level Contact Info */}
+                            <div className="flex flex-col gap-1.5 mt-3 text-xs text-slate-500 font-semibold">
+                                <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {empRaw.email}</span>
+                                {empRaw.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {empRaw.phone}</span>}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -241,39 +266,141 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                             </div>
 
                             {/* Reporting Structure (hidden for admins) */}
-                            {!viewedIsAdmin && (
-                            <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
-                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Reporting Structure</h4>
-                                <div className="space-y-3">
-                                    {empRaw.reportingManagers && empRaw.reportingManagers.length > 0 ? (
-                                        empRaw.reportingManagers.map((mgr, idx) => (
-                                            <div key={mgr._id || idx} className="flex items-center gap-3 p-2 bg-slate-50/60 border border-slate-100 rounded-xl">
+                            {viewedRoleCat !== 'admin' && (
+                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Reporting Structure</h4>
+                                    <div className="space-y-3">
+                                        {empRaw.reportingManagers && empRaw.reportingManagers.length > 0 ? (
+                                            empRaw.reportingManagers.map((mgr, idx) => (
+                                                <div key={mgr._id || idx} className="flex items-center gap-3 p-2 bg-slate-50/60 border border-slate-100 rounded-xl">
+                                                    <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-xs font-black">
+                                                        {mgr.profilePic ? (
+                                                            <img src={mgr.profilePic} alt="" className="w-full h-full object-cover rounded-lg" />
+                                                        ) : (mgr.name?.charAt(0) || "M")}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                         <p className="text-xs font-black text-slate-800 leading-none">{mgr.name}</p>
+                                                         <p className="text-[10px] font-semibold text-slate-455 mt-1">{mgr.designation || (mgr.role === "TL" ? "Team Lead" : (mgr.role === "qa" || mgr.role === "QA" ? "QA" : (mgr.role === "admin" ? "Admin" : (mgr.role?.charAt(0).toUpperCase() + mgr.role?.slice(1)) || "Reporting Manager")))}</p>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : empRaw.reportingManager ? (
+                                            <div className="flex items-center gap-3 p-2 bg-slate-50/60 border border-slate-100 rounded-xl">
                                                 <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-xs font-black">
-                                                    {mgr.profilePic ? (
-                                                        <img src={mgr.profilePic} alt="" className="w-full h-full object-cover rounded-lg" />
-                                                    ) : (mgr.name?.charAt(0) || "M")}
+                                                    {empRaw.reportingManager.name?.charAt(0) || "M"}
                                                 </div>
                                                 <div className="min-w-0">
-                                                     <p className="text-xs font-black text-slate-800 leading-none">{mgr.name}</p>
-                                                     <p className="text-[10px] font-semibold text-slate-450 mt-1">{mgr.designation || (mgr.role === "TL" ? "Team Lead" : (mgr.role === "qa" || mgr.role === "QA" ? "QA" : (mgr.role === "admin" ? "Admin" : (mgr.role?.charAt(0).toUpperCase() + mgr.role?.slice(1)) || "Reporting Manager")))}</p>
+                                                    <p className="text-xs font-black text-slate-800 leading-none">{empRaw.reportingManager.name || empRaw.reportingManager}</p>
+                                                    <p className="text-[10px] font-semibold text-slate-455 mt-1">Reporting Manager</p>
                                                 </div>
                                             </div>
-                                        ))
-                                    ) : empRaw.reportingManager ? (
-                                        <div className="flex items-center gap-3 p-2 bg-slate-50/60 border border-slate-100 rounded-xl">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center text-xs font-black">
-                                                {empRaw.reportingManager.name?.charAt(0) || "M"}
-                                            </div>
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-black text-slate-800 leading-none">{empRaw.reportingManager.name || empRaw.reportingManager}</p>
-                                                <p className="text-[10px] font-semibold text-slate-455 mt-1">Reporting Manager</p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <p className="text-xs font-bold text-slate-400 italic">No reporting manager assigned.</p>
-                                    )}
+                                        ) : (
+                                            <p className="text-xs font-bold text-slate-400 italic">No reporting manager assigned.</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* Role-Specific Metric Panels */}
+                            {viewedRoleCat === 'admin' ? (
+                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                        <Shield className="w-4 h-4 text-blue-500" />
+                                        Admin Information
+                                    </h4>
+                                    <div className="space-y-3.5 text-xs font-semibold text-slate-650 leading-relaxed">
+                                        <div>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Full Name</span>
+                                            <span className="text-slate-800 mt-1 block font-bold">{empRaw.name}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Designation</span>
+                                            <span className="text-slate-800 mt-1 block font-bold">{empRaw.designation || "Corporate Administrator"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Department</span>
+                                            <span className="text-slate-800 mt-1 block">{empRaw.department || "Administration"}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Status</span>
+                                            <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] mt-1 border ${empRaw.status === "Inactive" ? "bg-slate-100 text-slate-500 border-slate-200" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
+                                                {empRaw.status || "Active"}
+                                            </span>
+                                        </div>
+                                        {empRaw.reportingManager && (
+                                            <div>
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reporting Manager</span>
+                                                <span className="text-slate-800 mt-1 block">{empRaw.reportingManager?.name || empRaw.reportingManager}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ) : viewedRoleCat === 'TL' ? (
+                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                        <Layers className="w-4 h-4 text-purple-500" />
+                                        Team & Project Metrics
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Active Projects</span>
+                                            <span className="text-lg font-bold text-purple-700 mt-1 block">{projects.length}</span>
+                                        </div>
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Department Tasks</span>
+                                            <span className="text-lg font-bold text-emerald-700 mt-1 block">{tasks.length}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : viewedRoleCat === 'qa' ? (
+                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                        <CheckCircle className="w-4 h-4 text-emerald-500" />
+                                        QA Review Metrics
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Audits Conducted</span>
+                                            <span className="text-lg font-bold text-emerald-700 mt-1 block">{tasks.filter(t => t.status === "Completed" || t.status === "Done").length}</span>
+                                        </div>
+                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pending Reviews</span>
+                                            <span className="text-lg font-bold text-amber-700 mt-1 block">{tasks.filter(t => t.status === "Testing" || t.status === "In Progress").length}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : viewedRoleCat === 'hr' ? (
+                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                        <User className="w-4 h-4 text-pink-500" />
+                                        HR Roster Overview
+                                    </h4>
+                                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Role Access</span>
+                                        <span className="text-lg font-bold text-pink-700 mt-1 block">Active HR Executive</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                                        <Activity className="w-4 h-4 text-blue-500" />
+                                        Productivity Metrics
+                                    </h4>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Total</span>
+                                            <span className="text-base font-bold text-slate-800 mt-0.5 block">{tasks.length}</span>
+                                        </div>
+                                        <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 text-center">
+                                            <span className="text-[9px] font-bold text-emerald-600 uppercase tracking-wider block">Done</span>
+                                            <span className="text-base font-bold text-emerald-700 mt-0.5 block">{tasks.filter(t => t.status === "Completed" || t.status === "Done").length}</span>
+                                        </div>
+                                        <div className="bg-rose-50/50 p-3 rounded-xl border border-rose-100 text-center">
+                                            <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wider block">Pending</span>
+                                            <span className="text-base font-bold text-rose-700 mt-0.5 block">{tasks.filter(t => t.status !== "Completed" && t.status !== "Done").length}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             )}
 
                             {/* Inactivity Schedule Detail */}

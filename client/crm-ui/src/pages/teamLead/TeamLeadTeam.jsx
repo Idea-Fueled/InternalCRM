@@ -7,7 +7,7 @@ import { userService, taskService } from '../../api/services';
 import { 
   Search, Filter, Users, CheckCircle2, Clock, AlertCircle, 
   MoreVertical, X, Calendar, Activity, Briefcase, Download,
-  UserCheck, Mail
+  UserCheck, Mail, User, Phone
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
@@ -40,6 +40,26 @@ const formatRole = (r) => {
     if (lower === 'admin') return 'Admin';
     if (lower === 'developer') return 'Developer';
     return r.charAt(0).toUpperCase() + r.slice(1);
+};
+
+const getUserRoleCategory = (u) => {
+    if (!u) return 'employee';
+    const role = (u.role || '').toLowerCase();
+    const designation = (u.designation || '').toLowerCase();
+    if (role === 'admin' || designation === 'admin') {
+        return 'admin';
+    }
+    if (role === 'hr' || designation.includes('hr')) {
+        return 'hr';
+    }
+    const checkText = designation || role;
+    if (checkText.includes('qa')) {
+        return 'qa';
+    }
+    if (checkText.includes('team lead') || checkText.includes('lead') || role === 'tl') {
+        return 'TL';
+    }
+    return 'employee';
 };
 
 const TeamLeadTeam = () => {
@@ -528,6 +548,11 @@ const TeamLeadTeam = () => {
                                     </div>
                                     <h2 className="text-2xl font-bold text-slate-900">{selectedMember.name}</h2>
                                     <p className="text-sm font-medium text-slate-500 mt-1">{selectedMember.designation || formatRole(selectedMember.role)}</p>
+                                    {/* Top-level Contact Info */}
+                                    <div className="flex flex-col items-center gap-1.5 mt-2.5 text-xs text-slate-500 font-semibold">
+                                        <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {selectedMember.email}</span>
+                                        {selectedMember.phone && <span className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" /> {selectedMember.phone}</span>}
+                                    </div>
                                     
                                     <div className="flex gap-2 mt-4">
                                         <span className={`inline-flex items-center px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[selectedMember.availability]}`}>
@@ -560,60 +585,158 @@ const TeamLeadTeam = () => {
                                     </div>
                                 )}
 
-                                {/* Quick Stats */}
-                                <div className="grid grid-cols-3 gap-3 mb-8">
-                                    <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total</p>
-                                        <p className="text-xl font-bold text-slate-800">{selectedMember.stats.total}</p>
-                                    </div>
-                                    <div className="bg-emerald-50 p-4 rounded-2xl text-center border border-emerald-100">
-                                        <p className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wider mb-1">Done</p>
-                                        <p className="text-xl font-bold text-emerald-700">{selectedMember.stats.completed}</p>
-                                    </div>
-                                    <div className="bg-rose-50 p-4 rounded-2xl text-center border border-rose-100">
-                                        <p className="text-[10px] font-bold text-rose-600/70 uppercase tracking-wider mb-1">Overdue</p>
-                                        <p className="text-xl font-bold text-rose-700">{selectedMember.stats.overdue}</p>
-                                    </div>
-                                </div>
-
-                                {/* Active Tasks List */}
-                                <div className="mb-6">
-                                    <h3 className="section-title mb-4 flex items-center">
-                                        <Briefcase className="w-4 h-4 mr-2 text-indigo-500" />
-                                        Assigned Tasks
-                                    </h3>
-                                    
-                                    <div className="space-y-3">
-                                        {selectedMember.tasks.map(task => (
-                                            <div 
-                                                key={task.id} 
-                                                onClick={() => handleTaskClick(task._id || task.id)}
-                                                className="p-4 border border-slate-200 rounded-xl hover:bg-blue-50/50 hover:border-l-blue-500 hover:border-blue-300 border-l-4 border-l-transparent cursor-pointer transition-all group"
-                                            >
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h4 className="font-semibold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{task.taskName}</h4>
-                                                    <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${TASK_STATUS_COLORS[task.status] || TASK_STATUS_COLORS['New']}`}>
-                                                        {task.status}
+                                {getUserRoleCategory(selectedMember) === 'admin' ? (
+                                    <div className="space-y-6">
+                                        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
+                                            <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
+                                                <User className="w-4 h-4 text-blue-500" />
+                                                Admin Information
+                                            </h3>
+                                            <div className="space-y-3.5 text-xs font-semibold text-slate-650 leading-relaxed">
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Full Name</span>
+                                                    <span className="text-slate-800 mt-1 block font-bold">{selectedMember.name}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Designation</span>
+                                                    <span className="text-slate-800 mt-1 block font-bold">{selectedMember.designation || "Corporate Administrator"}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Department</span>
+                                                    <span className="text-slate-800 mt-1 block">{selectedMember.department || "Administration"}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Email Address</span>
+                                                    <span className="text-slate-800 mt-1 block font-mono">{selectedMember.email}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Phone Number</span>
+                                                    <span className="text-slate-800 mt-1 block">{selectedMember.phone || "Not provided"}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Status</span>
+                                                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] mt-1 border ${selectedMember.status === "Inactive" ? "bg-slate-100 text-slate-500 border-slate-200" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
+                                                        {selectedMember.status}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center justify-between mt-3 text-xs">
-                                                    <div className={`flex items-center font-medium ${task.endDate && new Date(task.endDate) < new Date() ? 'text-rose-600' : 'text-slate-500'}`}>
-                                                        <Calendar className="w-3.5 h-3.5 mr-1.5" />
-                                                        {task.endDate ? new Date(task.endDate).toLocaleDateString() : "No deadline"}
+                                                {selectedMember.reportingManager && (
+                                                    <div>
+                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reporting Manager</span>
+                                                        <span className="text-slate-800 mt-1 block">{selectedMember.reportingManager?.name || selectedMember.reportingManager}</span>
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                                                        {task.priority} Priority
-                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : getUserRoleCategory(selectedMember) === 'TL' ? (
+                                    <div className="space-y-6">
+                                        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
+                                            <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
+                                                <Activity className="w-4 h-4 text-purple-500" />
+                                                Team & Project Metrics
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Managed Tasks</span>
+                                                    <span className="text-xl font-bold text-purple-700 mt-1 block">{selectedMember.tasks?.length || 0}</span>
+                                                </div>
+                                                <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Completed</span>
+                                                    <span className="text-xl font-bold text-emerald-700 mt-1 block">{selectedMember.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0}</span>
                                                 </div>
                                             </div>
-                                        ))}
-                                        {selectedMember.tasks.length === 0 && (
-                                            <div className="text-center p-6 border border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-medium">
-                                                No tasks currently assigned.
-                                            </div>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
+                                ) : getUserRoleCategory(selectedMember) === 'qa' ? (
+                                    <div className="space-y-6">
+                                        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
+                                            <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                QA Review Metrics
+                                            </h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reviewed Tasks</span>
+                                                    <span className="text-xl font-bold text-emerald-700 mt-1 block">{selectedMember.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0}</span>
+                                                </div>
+                                                <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pending Reviews</span>
+                                                    <span className="text-xl font-bold text-amber-700 mt-1 block">{selectedMember.tasks?.filter(t => t.status === "Testing" || t.status === "In Progress").length || 0}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : getUserRoleCategory(selectedMember) === 'hr' ? (
+                                    <div className="space-y-6">
+                                        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
+                                            <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
+                                                <Users className="w-4 h-4 text-pink-500" />
+                                                HR Management Metrics
+                                            </h3>
+                                            <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Roster Access</span>
+                                                <span className="text-xl font-bold text-pink-700 mt-1 block">Active HR Executive</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Quick Stats */}
+                                        <div className="grid grid-cols-3 gap-3 mb-8">
+                                            <div className="bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total</p>
+                                                <p className="text-xl font-bold text-slate-800">{selectedMember.stats.total}</p>
+                                            </div>
+                                            <div className="bg-emerald-50 p-4 rounded-2xl text-center border border-emerald-100">
+                                                <p className="text-[10px] font-bold text-emerald-600/70 uppercase tracking-wider mb-1">Done</p>
+                                                <p className="text-xl font-bold text-emerald-700">{selectedMember.stats.completed}</p>
+                                            </div>
+                                            <div className="bg-rose-50 p-4 rounded-2xl text-center border border-rose-100">
+                                                <p className="text-[10px] font-bold text-rose-600/70 uppercase tracking-wider mb-1">Overdue</p>
+                                                <p className="text-xl font-bold text-rose-700">{selectedMember.stats.overdue}</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Active Tasks List */}
+                                        <div className="mb-6">
+                                            <h3 className="section-title mb-4 flex items-center">
+                                                <Briefcase className="w-4 h-4 mr-2 text-indigo-500" />
+                                                Assigned Tasks
+                                            </h3>
+                                            
+                                            <div className="space-y-3">
+                                                {selectedMember.tasks.map(task => (
+                                                    <div 
+                                                        key={task.id} 
+                                                        onClick={() => handleTaskClick(task._id || task.id)}
+                                                        className="p-4 border border-slate-200 rounded-xl hover:bg-blue-50/50 hover:border-l-blue-500 hover:border-blue-300 border-l-4 border-l-transparent cursor-pointer transition-all group"
+                                                    >
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <h4 className="font-semibold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{task.taskName}</h4>
+                                                            <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${TASK_STATUS_COLORS[task.status] || TASK_STATUS_COLORS['New']}`}>
+                                                                {task.status}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center justify-between mt-3 text-xs">
+                                                            <div className={`flex items-center font-medium ${task.endDate && new Date(task.endDate) < new Date() ? 'text-rose-600' : 'text-slate-500'}`}>
+                                                                <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                                                                {task.endDate ? new Date(task.endDate).toLocaleDateString() : "No deadline"}
+                                                            </div>
+                                                            <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                                                                {task.priority} Priority
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {selectedMember.tasks.length === 0 && (
+                                                    <div className="text-center p-6 border border-dashed border-slate-200 rounded-xl text-slate-400 text-sm font-medium">
+                                                        No tasks currently assigned.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
