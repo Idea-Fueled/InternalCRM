@@ -332,7 +332,7 @@ const HRLeaveManagement = () => {
                                         {selectedLeave.status !== "Pending" && selectedLeave.processedBy && (
                                             <div className="pt-3 border-t border-slate-100 text-[10px] font-bold text-slate-500 flex items-center gap-1.5">
                                                 <Info className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                                <span>Processed by {selectedLeave.processedBy?.name} ({selectedLeave.processedBy?.designation || "HR"})</span>
+                                                <span>Processed by {selectedLeave.processedBy?.name} ({selectedLeave.processedBy?.designation || (selectedLeave.processedBy?.role === 'TL' ? 'Team Lead' : (selectedLeave.processedBy?.role === 'qa' || selectedLeave.processedBy?.role === 'QA' ? 'QA' : (selectedLeave.processedBy?.role === 'admin' ? 'Admin' : (selectedLeave.processedBy?.role === 'hr' ? 'HR' : (selectedLeave.processedBy?.role ? selectedLeave.processedBy.role.charAt(0).toUpperCase() + selectedLeave.processedBy.role.slice(1) : 'HR')))))})</span>
                                             </div>
                                         )}
                                     </div>
@@ -370,7 +370,7 @@ const HRLeaveManagement = () => {
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="text-xs font-black text-slate-800 truncate leading-none">{selectedEmployee.name}</h4>
-                                    <p className="text-[10px] font-bold text-slate-500 truncate mt-1">{selectedEmployee.designation || selectedEmployee.role}</p>
+                                    <p className="text-[10px] font-bold text-slate-500 truncate mt-1">{selectedEmployee.designation || (selectedEmployee.role === 'TL' ? 'Team Lead' : (selectedEmployee.role === 'qa' || selectedEmployee.role === 'QA' ? 'QA' : (selectedEmployee.role === 'admin' ? 'Admin' : (selectedEmployee.role ? selectedEmployee.role.charAt(0).toUpperCase() + selectedEmployee.role.slice(1) : 'Employee'))))}</p>
                                 </div>
                             </div>
 

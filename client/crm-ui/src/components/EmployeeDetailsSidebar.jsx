@@ -153,9 +153,9 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                             </p>
                             )}
                             <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-lg ${getRoleBadgeColor(empRaw.role)}`}>
-                                    {empRaw.designation || (empRaw.role === "TL" ? "Team Lead" : empRaw.role === "developer" ? "Employee" : empRaw.role?.toUpperCase())}
-                                </span>
+                                 <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 border rounded-lg ${getRoleBadgeColor(empRaw.role)}`}>
+                                     {empRaw.designation || (empRaw.role === "TL" ? "Team Lead" : (empRaw.role === "qa" || empRaw.role === "QA" ? "QA" : (empRaw.role === "admin" ? "Admin" : (empRaw.role === "developer" ? "Employee" : (empRaw.role?.charAt(0).toUpperCase() + empRaw.role?.slice(1)) || "Employee"))))}
+                                 </span>
                                 {empRaw.status === "Inactive" && empRaw.inactiveReason && (
                                     <span className="text-[9px] font-semibold text-rose-600 bg-rose-50 border border-rose-100 px-2 py-0.5 rounded-lg truncate max-w-xs" title={empRaw.inactiveReason}>
                                         Reason: {empRaw.inactiveReason}
@@ -240,28 +240,6 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                 </div>
                             </div>
 
-                            {/* Leaves section (Temporarily Commented Out) */}
-                            {/* <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
-                                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Leave Balances</h4>
-                                <div className="grid grid-cols-3 gap-3">
-                                    <div className="bg-blue-50/40 border border-blue-100 p-3.5 rounded-xl text-center">
-                                        <span className="text-[9px] font-bold text-blue-600/80 uppercase tracking-wider block">Casual</span>
-                                        <span className="text-lg font-black text-blue-700 block mt-1">{empRaw.casualLeaveBalance ?? 12}</span>
-                                        <span className="text-[8px] font-bold text-blue-500 block mt-0.5">days</span>
-                                    </div>
-                                    <div className="bg-emerald-50/40 border border-emerald-100 p-3.5 rounded-xl text-center">
-                                        <span className="text-[9px] font-bold text-emerald-600/80 uppercase tracking-wider block">Sick</span>
-                                        <span className="text-lg font-black text-emerald-700 block mt-1">{empRaw.sickLeaveBalance ?? 10}</span>
-                                        <span className="text-[8px] font-bold text-emerald-500 block mt-0.5">days</span>
-                                    </div>
-                                    <div className="bg-purple-50/40 border border-purple-100 p-3.5 rounded-xl text-center">
-                                        <span className="text-[9px] font-bold text-purple-600/80 uppercase tracking-wider block">Earned</span>
-                                        <span className="text-lg font-black text-purple-700 block mt-1">{empRaw.earnedLeaveBalance ?? 15}</span>
-                                        <span className="text-[8px] font-bold text-purple-500 block mt-0.5">days</span>
-                                    </div>
-                                </div>
-                            </div> */}
-
                             {/* Reporting Structure (hidden for admins) */}
                             {!viewedIsAdmin && (
                             <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
@@ -276,8 +254,8 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                                     ) : (mgr.name?.charAt(0) || "M")}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-xs font-black text-slate-800 leading-none">{mgr.name}</p>
-                                                    <p className="text-[10px] font-semibold text-slate-450 mt-1">{mgr.designation || mgr.role || "Reporting Manager"}</p>
+                                                     <p className="text-xs font-black text-slate-800 leading-none">{mgr.name}</p>
+                                                     <p className="text-[10px] font-semibold text-slate-450 mt-1">{mgr.designation || (mgr.role === "TL" ? "Team Lead" : (mgr.role === "qa" || mgr.role === "QA" ? "QA" : (mgr.role === "admin" ? "Admin" : (mgr.role?.charAt(0).toUpperCase() + mgr.role?.slice(1)) || "Reporting Manager")))}</p>
                                                 </div>
                                             </div>
                                         ))

@@ -164,7 +164,7 @@ const EmployeeDashboard = () => {
             t.endDate
         ]);
         exportPDF({
-            title: `My Assigned Tasks - ${user?.name || 'Employee'} (${user?.role || 'Employee'}) ${projectFilter !== 'All' ? `(${projectFilter})` : ''}`,
+            title: `My Assigned Tasks - ${user?.name || 'Employee'} (${user?.designation || (user?.role === 'TL' ? 'Team Lead' : (user?.role === 'qa' || user?.role === 'QA' ? 'QA' : (user?.role === 'admin' ? 'Admin' : (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Employee'))))}) ${projectFilter !== 'All' ? `(${projectFilter})` : ''}`,
             filename: `my_tasks_${new Date().getTime()}.pdf`,
             columns,
             data
@@ -311,7 +311,7 @@ const EmployeeDashboard = () => {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div>
                             <h1 className="dashboard-heading">Welcome back, {user?.name || 'Employee'}!</h1>
-                            <p className="dashboard-subheading">Here is your customized portal as a <span className="font-bold text-blue-600">{user?.role || 'Employee'}</span>.</p>
+                            <p className="dashboard-subheading">Here is your customized portal as a <span className="font-bold text-blue-600">{user?.designation || (user?.role === 'TL' ? 'Team Lead' : (user?.role === 'qa' || user?.role === 'QA' ? 'QA' : (user?.role === 'admin' ? 'Admin' : (user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Employee'))))}</span>.</p>
                         </div>
                         <div className="flex items-center gap-3">
                             {projectOptions.length > 0 && (
@@ -894,9 +894,7 @@ const EmployeeDashboard = () => {
                                         <div className="grid grid-cols-2 gap-4 mb-6">
                                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between">
                                                 <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
-                                                    {selectedTask.assignedTo?.role ? (
-                                                        selectedTask.assignedTo.role
-                                                    ) : "Employee"}
+                                                    {selectedTask.assignedTo?.designation || (selectedTask.assignedTo?.role === 'TL' ? 'Team Lead' : (selectedTask.assignedTo?.role === 'qa' || selectedTask.assignedTo?.role === 'QA' ? 'QA' : (selectedTask.assignedTo?.role === 'admin' ? 'Admin' : selectedTask.assignedTo?.role ? selectedTask.assignedTo.role.charAt(0).toUpperCase() + selectedTask.assignedTo.role.slice(1) : "Employee")))}
                                                 </p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">
@@ -911,7 +909,7 @@ const EmployeeDashboard = () => {
                                             </div>
                                             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 flex flex-col justify-between">
                                                 <p className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wide">
-                                                    {selectedTask.assignedQA?.role === 'qa' ? 'QA Engineer' : (selectedTask.assignedQA?.role || 'QA Reviewer')}
+                                                    {selectedTask.assignedQA?.designation || (selectedTask.assignedQA?.role === 'qa' || selectedTask.assignedQA?.role === 'QA' ? 'QA' : (selectedTask.assignedQA?.role || 'QA Reviewer'))}
                                                 </p>
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-xs font-bold overflow-hidden shrink-0">

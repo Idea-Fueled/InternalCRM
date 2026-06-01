@@ -108,6 +108,7 @@ const TeamLeadDashboard = () => {
                             id: u._id,
                             name: u.name,
                             role: u.role,
+                            designation: u.designation || "",
                             email: u.email,
                             initial: u.name?.substring(0, 2).toUpperCase() || "U",
                             total,
@@ -524,7 +525,7 @@ const TeamLeadDashboard = () => {
                                                                 </div>
                                                                 <div>
                                                                     <p className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{member.name}</p>
-                                                                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5 capitalize">{member.role}</p>
+                                                                    <p className="text-[10px] font-semibold text-slate-400 mt-0.5 capitalize">{member.designation || (member.role === 'TL' ? 'Team Lead' : (member.role === 'qa' || member.role === 'QA' ? 'QA' : (member.role === 'admin' ? 'Admin' : (member.role?.charAt(0).toUpperCase() + member.role?.slice(1)) || 'Employee')))}</p>
                                                                 </div>
                                                             </div>
                                                         </td>

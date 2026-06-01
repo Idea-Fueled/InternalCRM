@@ -32,6 +32,16 @@ const getInactivityDaysLeft = (inactiveUntil) => {
     return diffDays > 0 ? `${diffDays} days remaining` : "Reactivating...";
 };
 
+const formatRole = (r) => {
+    if (!r) return 'Employee';
+    const lower = r.toString().toLowerCase();
+    if (lower === 'tl') return 'Team Lead';
+    if (lower === 'qa') return 'QA';
+    if (lower === 'admin') return 'Admin';
+    if (lower === 'developer') return 'Developer';
+    return r.charAt(0).toUpperCase() + r.slice(1);
+};
+
 const TeamLeadTeam = () => {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -406,7 +416,7 @@ const TeamLeadTeam = () => {
                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
                                                         )}
                                                     </div>
-                                                    <p className="text-xs font-medium text-slate-500">{member.role}</p>
+                                                    <p className="text-xs font-medium text-slate-500">{member.designation || formatRole(member.role)}</p>
                                                 </div>
                                             </div>
                                             <button className="text-slate-300 hover:text-slate-500 transition-colors">
@@ -517,7 +527,7 @@ const TeamLeadTeam = () => {
                                         ) : null}
                                     </div>
                                     <h2 className="text-2xl font-bold text-slate-900">{selectedMember.name}</h2>
-                                    <p className="text-sm font-medium text-slate-500 mt-1">{selectedMember.role}</p>
+                                    <p className="text-sm font-medium text-slate-500 mt-1">{selectedMember.designation || formatRole(selectedMember.role)}</p>
                                     
                                     <div className="flex gap-2 mt-4">
                                         <span className={`inline-flex items-center px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[selectedMember.availability]}`}>

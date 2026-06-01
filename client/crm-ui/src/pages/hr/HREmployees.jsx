@@ -60,7 +60,7 @@ const HREmployees = () => {
                     .map(u => ({
                         id: u._id,
                         name: u.name,
-                        designation: u.designation || u.role
+                        designation: u.designation || ""
                     }));
                 setManagers(resolvedManagers);
             }

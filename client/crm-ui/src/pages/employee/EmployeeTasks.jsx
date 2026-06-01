@@ -303,9 +303,7 @@ const EmployeeTasks = () => {
                                     <div className="grid grid-cols-2 gap-4 mt-4">
                                         <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
                                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                                {selectedTask.assignedTo?.role ? (
-                                                    selectedTask.assignedTo.role
-                                                ) : "Employee"}
+                                                {selectedTask.assignedTo?.designation || (selectedTask.assignedTo?.role === 'TL' ? 'Team Lead' : (selectedTask.assignedTo?.role === 'qa' || selectedTask.assignedTo?.role === 'QA' ? 'QA' : (selectedTask.assignedTo?.role === 'admin' ? 'Admin' : selectedTask.assignedTo?.role ? selectedTask.assignedTo.role.charAt(0).toUpperCase() + selectedTask.assignedTo.role.slice(1) : "Employee")))}
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">
@@ -320,7 +318,7 @@ const EmployeeTasks = () => {
                                         </div>
                                         <div className="bg-white p-3 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
                                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                                                {selectedTask.assignedQA?.role === 'qa' ? 'QA Engineer' : (selectedTask.assignedQA?.role || 'QA Reviewer')}
+                                                {selectedTask.assignedQA?.designation || (selectedTask.assignedQA?.role === 'qa' || selectedTask.assignedQA?.role === 'QA' ? 'QA' : (selectedTask.assignedQA?.role || 'QA Reviewer'))}
                                             </p>
                                             <div className="flex items-center gap-2">
                                                 <div className="w-7 h-7 rounded-lg bg-indigo-500 text-white flex items-center justify-center text-[10px] font-bold overflow-hidden shrink-0">

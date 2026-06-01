@@ -14,7 +14,7 @@ const Topbar = ({ DashboardTile, role = "admin" }) => {
     
     // Fallback display values if user context isn't ready
     const displayName = user?.name || (role === "teamLead" ? "Team Lead" : role === "developer" ? "Developer" : role === "qa" ? "QA" : "Admin");
-    const displayRole = user?.designation || (user?.role === 'TL' ? 'Team Lead' : (user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1))) || "Role";
+    const displayRole = user?.designation || (user?.role === 'TL' ? 'Team Lead' : (user?.role === 'qa' || user?.role === 'QA' ? 'QA' : (user?.role === 'admin' ? 'Admin' : (user?.role?.charAt(0).toUpperCase() + user?.role?.slice(1))))) || "Role";
     const initial = displayName.charAt(0).toUpperCase();
 
     const toggleMobileSidebar = () => {

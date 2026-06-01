@@ -838,7 +838,7 @@ const ReportsDashboard = ({ focus }) => {
                                                                     </div>
                                                                     <div>
                                                                         <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{item.employee.name}</div>
-                                                                        <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{item.employee.designation || "Employee"}</div>
+                                                                        <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{item.employee.designation || (item.employee.role === 'TL' ? 'Team Lead' : (item.employee.role === 'qa' || item.employee.role === 'QA' ? 'QA' : (item.employee.role === 'admin' ? 'Admin' : (item.employee.role ? item.employee.role.charAt(0).toUpperCase() + item.employee.role.slice(1) : 'Employee'))))}</div>
                                                                     </div>
                                                                 </div>
                                                             </td>
@@ -1094,7 +1094,7 @@ const ReportsDashboard = ({ focus }) => {
                                                 </div>
                                                 <div>
                                                     <h3 className="font-bold text-slate-800 text-base">{perfData.employee.name}</h3>
-                                                    <p className="text-xs font-semibold text-slate-400 mt-0.5">{perfData.employee.designation || "Employee"} • {perfData.employee.department || "Engineering"}</p>
+                                                    <p className="text-xs font-semibold text-slate-400 mt-0.5">{perfData.employee.designation || (perfData.employee.role === 'TL' ? 'Team Lead' : (perfData.employee.role === 'qa' || perfData.employee.role === 'QA' ? 'QA' : (perfData.employee.role === 'admin' ? 'Admin' : (perfData.employee.role ? perfData.employee.role.charAt(0).toUpperCase() + perfData.employee.role.slice(1) : 'Employee'))))} • {perfData.employee.department || "Engineering"}</p>
                                                 </div>
                                             </div>
                                             <button 

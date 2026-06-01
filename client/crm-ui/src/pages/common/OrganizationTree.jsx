@@ -538,7 +538,7 @@ const OrganizationTree = () => {
                                     <MoreVertical className="w-4 h-4" />
                                 </button>
                             </div>
-                            <p className="text-[11px] text-slate-500 font-semibold truncate leading-normal">{formatRole(node.role)}</p>
+                            <p className="text-[11px] text-slate-500 font-semibold truncate leading-normal">{node.designation || formatRole(node.role)}</p>
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-semibold mt-1.5 border ${getDeptColor(node.department).bg} ${getDeptColor(node.department).text} ${getDeptColor(node.department).border}`}>
                                 {node.department || "Engineering"}
                             </span>
@@ -777,9 +777,11 @@ const OrganizationTree = () => {
                     role={selectedProfileUser.role}
                     displayName={selectedProfileUser.name}
                     displayRole={
-                        selectedProfileUser.role === 'TL' ? 'Team Lead' :
-                            selectedProfileUser.role === 'admin' ? 'Administrator' :
-                                selectedProfileUser.role === 'developer' ? 'Developer' : 'QA'
+                        selectedProfileUser.designation || (
+                            selectedProfileUser.role === 'TL' ? 'Team Lead' :
+                                selectedProfileUser.role === 'admin' ? 'Administrator' :
+                                    selectedProfileUser.role === 'developer' ? 'Developer' : 'QA'
+                        )
                     }
                     initial={getInitials(selectedProfileUser.name)}
                 />

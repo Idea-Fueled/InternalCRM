@@ -693,7 +693,7 @@ const HRDashboard = () => {
                                                         </div>
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
-                                                            <p className="text-[11px] font-semibold text-slate-400 truncate mt-0.5">{item.designation || item.role} • {item.department || "Unassigned"}</p>
+                                                            <p className="text-[11px] font-semibold text-slate-400 truncate mt-0.5">{item.designation || (item.role === 'TL' ? 'Team Lead' : (item.role === 'qa' || item.role === 'QA' ? 'QA' : (item.role === 'admin' ? 'Admin' : (item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : 'Employee'))))} • {item.department || "Unassigned"}</p>
                                                         </div>
                                                     </div>
                                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
@@ -715,7 +715,7 @@ const HRDashboard = () => {
                                                         </div>
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-bold text-slate-800 truncate">{item.name}</p>
-                                                            <p className="text-[11px] font-semibold text-slate-450 truncate mt-0.5">{item.designation || item.role} • {item.department || "Unassigned"}</p>
+                                                            <p className="text-[11px] font-semibold text-slate-450 truncate mt-0.5">{item.designation || (item.role === 'TL' ? 'Team Lead' : (item.role === 'qa' || item.role === 'QA' ? 'QA' : (item.role === 'admin' ? 'Admin' : (item.role ? item.role.charAt(0).toUpperCase() + item.role.slice(1) : 'Employee'))))} • {item.department || "Unassigned"}</p>
                                                         </div>
                                                     </div>
                                                     <div className="bg-amber-50 border border-amber-100/60 rounded-xl p-2.5 text-xs text-amber-800 font-semibold space-y-1">

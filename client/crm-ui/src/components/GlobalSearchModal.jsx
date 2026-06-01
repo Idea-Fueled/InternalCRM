@@ -333,7 +333,7 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
                                                         </span>
                                                     )}
                                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getRoleBadgeClass(u.role)}`}>
-                                                        {formatRole(u.role)}
+                                                        {u.designation || formatRole(u.role)}
                                                     </span>
                                                 </div>
                                             </button>
@@ -490,7 +490,7 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
                     user={profileUser}
                     role={profileUser.role}
                     displayName={profileUser.name}
-                    displayRole={formatRole(profileUser.role)}
+                    displayRole={profileUser.designation || formatRole(profileUser.role)}
                     initial={getInitials(profileUser.name)}
                 />
             )}

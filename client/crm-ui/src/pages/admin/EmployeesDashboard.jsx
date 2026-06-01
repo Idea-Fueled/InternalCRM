@@ -211,6 +211,16 @@ const getUserRoleCategory = (user) => {
     return 'employee';
 };
 
+const formatRole = (r) => {
+    if (!r) return 'Employee';
+    const lower = (r || '').toString();
+    if (lower === 'tl' || lower === 'TL') return 'Team Lead';
+    if (lower.toLowerCase() === 'qa') return 'QA';
+    if (lower.toLowerCase() === 'admin') return 'Admin';
+    if (lower.toLowerCase() === 'developer') return 'Developer';
+    return r.charAt(0).toUpperCase() + r.slice(1);
+};
+
 const EmployeesDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const { user } = useAuth();
@@ -361,8 +371,8 @@ const EmployeesDashboard = () => {
                     return {
                         id: u._id,
                         name: u.name,
-                        role: u.designation || u.role,
-                        designation: u.designation || u.role,
+                        role: u.role,
+                        designation: u.designation || "",
                         email: u.email,
                         dept: u.department || "Engineering",
                         lead: u.reportingManagers && u.reportingManagers.length > 0 
@@ -385,7 +395,7 @@ const EmployeesDashboard = () => {
                 });
 
                 // Populate reporting managers: all active employees in searchable multi-select
-                const activeEmployees = allUsers.filter(u => u.status !== 'inactive').map(u => ({ id: u._id, name: u.name, designation: u.designation || u.role }));
+                const activeEmployees = allUsers.filter(u => u.status !== 'inactive').map(u => ({ id: u._id, name: u.name, designation: u.designation || "" }));
                 setTeamLeads(activeEmployees);
             }
         } catch (err) {
@@ -470,13 +480,13 @@ const EmployeesDashboard = () => {
         
         const isSystemAdmin = emp.raw.role === "admin";
         setRoleSelectValue(isSystemAdmin ? "admin" : "custom");
-        setCustomRoleText(isSystemAdmin ? "" : (emp.raw.designation || emp.raw.role));
+        setCustomRoleText(isSystemAdmin ? "" : (emp.raw.designation || ""));
 
         setNewEmployee({
             name: emp.name,
             email: emp.email,
             role: emp.raw.role,
-            designation: emp.raw.designation || emp.raw.role,
+            designation: emp.raw.designation || "",
             department: emp.dept,
             reportingManager: emp.raw.reportingManager?._id || emp.raw.reportingManager || emp.raw.teamLeads?.[0]?._id || emp.raw.teamLeads?.[0] || "",
             reportingManagers: emp.raw.reportingManagers?.map(m => m._id || m) || emp.raw.teamLeads?.map(tl => tl._id || tl) || [],
@@ -868,7 +878,7 @@ const EmployeesDashboard = () => {
                                                 </div>
                                                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize mt-0.5 inline-block ${
                                                     emp.status === 'Inactive' ? 'bg-slate-100 text-slate-500' : 'bg-blue-50 text-blue-600'
-                                                }`}>{emp.designation || (emp.role === 'TL' ? 'Team Lead' : emp.role)}</span>
+                                                }`}>{emp.designation || formatRole(emp.role)}</span>
                                             </div>
                                         </div>
 
@@ -986,7 +996,7 @@ const EmployeesDashboard = () => {
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate capitalize">{emp.designation || (emp.role === 'TL' ? 'Team Lead' : emp.role)}</span>
+                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate capitalize">{emp.designation || formatRole(emp.role)}</span>
                                             </div>
                                         </div>
                                     </div>
