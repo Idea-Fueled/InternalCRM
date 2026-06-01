@@ -13,7 +13,7 @@ export const getUserRoleCategory = (user) => {
     if (designation.includes('qa')) {
         return 'qa';
     }
-    if (designation.includes('team lead') || designation.includes('lead')) {
+    if (designation.includes('team lead') || designation.includes('lead') || designation === 'tl' || user.role === 'TL' || user.role === 'teamLead') {
         return 'TL';
     }
     return 'employee';
