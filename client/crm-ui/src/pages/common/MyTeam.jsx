@@ -288,7 +288,7 @@ const MyTeam = () => {
                                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.role === 'TL' ? 'Team Lead' : (member.role === 'qa' ? 'QA' : member.role)}</p>
+                                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.designation || (member.role === 'TL' ? 'Team Lead' : (member.role === 'qa' ? 'QA' : member.role))}</p>
                                                                 </div>
                                                             </div>
                                                         </div>

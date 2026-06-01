@@ -196,7 +196,29 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto p-6 no-scrollbar space-y-6">
-                    {activeSection === "overview" && (
+                    {/* If viewing an admin profile as a non-admin, show only contact info */}
+                    {viewedIsAdmin && !loggedInIsAdmin ? (
+                        <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Contact Details</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-slate-400 font-bold block">Email Address</span>
+                                    <a href={`mailto:${empRaw.email}`} className="text-xs font-bold text-slate-700 hover:text-blue-600 flex items-center gap-1.5 truncate">
+                                        <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                        {empRaw.email}
+                                    </a>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-[10px] text-slate-400 font-bold block">Phone Number</span>
+                                    <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                        <Phone className="w-3.5 h-3.5 text-slate-400" />
+                                        {empRaw.phone || "Not provided"}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                    activeSection === "overview" && (
                         <>
                             {/* Contact Details */}
                             <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
