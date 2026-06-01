@@ -261,8 +261,8 @@ const HREmployees = () => {
                                             </div>
                                         </div>
 
-                                        {/* Leave Balances Display */}
-                                        <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 text-center">
+                                        {/* Leave Balances Display (Temporarily Commented Out) */}
+                                        {/* <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 text-center">
                                             <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                                                 <span className="text-[9px] font-bold text-slate-400 uppercase">Casual</span>
                                                 <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.casualLeaveBalance ?? 12}</p>
@@ -275,7 +275,7 @@ const HREmployees = () => {
                                                 <span className="text-[9px] font-bold text-slate-400 uppercase">Earned</span>
                                                 <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.earnedLeaveBalance ?? 15}</p>
                                             </div>
-                                        </div>
+                                        </div> */}
 
                                         {/* Inactive details block */}
                                         {isInactiveState && emp.inactiveReason && (

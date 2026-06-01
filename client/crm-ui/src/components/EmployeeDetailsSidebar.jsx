@@ -204,8 +204,8 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                 </div>
                             </div>
 
-                            {/* Leaves section */}
-                            <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                            {/* Leaves section (Temporarily Commented Out) */}
+                            {/* <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
                                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Leave Balances</h4>
                                 <div className="grid grid-cols-3 gap-3">
                                     <div className="bg-blue-50/40 border border-blue-100 p-3.5 rounded-xl text-center">
@@ -224,7 +224,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                         <span className="text-[8px] font-bold text-purple-500 block mt-0.5">days</span>
                                     </div>
                                 </div>
-                            </div>
+                            </div> */}
 
                             {/* Reporting Structure */}
                             <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">

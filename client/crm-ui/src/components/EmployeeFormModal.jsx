@@ -594,8 +594,8 @@ export default function EmployeeFormModal({ isOpen, mode, employee, onClose, onS
                             </div>
                         )}
 
-                        {/* Leave Allocation Fields Section */}
-                        <div className="border-t border-slate-100 pt-4 mt-2">
+                        {/* Leave Allocation Fields Section (Temporarily Commented Out) */}
+                        {/* <div className="border-t border-slate-100 pt-4 mt-2">
                             <span className="text-xs font-black text-slate-700 uppercase tracking-wider">
                                 {mode === 'create' ? 'Allocate Annual Leaves Balances' : 'Modify Annual Leaves Balances'}
                             </span>
@@ -631,7 +631,7 @@ export default function EmployeeFormModal({ isOpen, mode, employee, onClose, onS
                                     />
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Permissions Block - Admin only */}
                         {isAdminRole && (

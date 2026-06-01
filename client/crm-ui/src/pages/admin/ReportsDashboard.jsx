@@ -669,7 +669,7 @@ const ReportsDashboard = ({ focus }) => {
                         </div>
 
                         {/* Performance Summary Cards Row */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                             {/* Card 1: Assigned Tasks */}
                             <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "assigned" ? "all" : "assigned")}
@@ -754,8 +754,8 @@ const ReportsDashboard = ({ focus }) => {
                                 </div>
                             </div>
 
-                            {/* Card 6: Total Leave Days */}
-                            <div 
+                            {/* Card 6: Total Leave Days (Temporarily Commented Out) */}
+                            {/* <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "leaves" ? "all" : "leaves")}
                                 className={`flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
                                     activeCardFilter === "leaves" ? "border-amber-500 ring-2 ring-amber-500/10 shadow-md" : "border-slate-200/60 hover:border-amber-300"
@@ -771,7 +771,7 @@ const ReportsDashboard = ({ focus }) => {
                                     </div>
                                     <div className="text-[10px] text-slate-400 font-bold leading-none">Click to filter table</div>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         {/* Main Grid: Left (Employee Performance Table) & Right (Productivity Charts) */}
@@ -805,14 +805,14 @@ const ReportsDashboard = ({ focus }) => {
                                                     <th className="p-4 font-semibold text-center">Completed</th>
                                                     <th className="p-4 font-semibold text-center">Overdue</th>
                                                     <th className="p-4 font-semibold w-1/4">Completion Rate</th>
-                                                    <th className="p-4 font-semibold text-center">Leaves</th>
+                                                    {/* <th className="p-4 font-semibold text-center">Leaves</th> */}
                                                     <th className="p-4 font-semibold text-right pr-6">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {tableFilteredPerformanceList.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan="8" className="p-8 text-center text-slate-400 font-semibold text-sm">
+                                                        <td colSpan="7" className="p-8 text-center text-slate-400 font-semibold text-sm">
                                                             No employee performance records match the active filters.
                                                         </td>
                                                     </tr>
@@ -888,14 +888,14 @@ const ReportsDashboard = ({ focus }) => {
                                                                 </div>
                                                             </td>
 
-                                                            {/* Leaves Taken */}
-                                                            <td className="p-4 text-center">
+                                                            {/* Leaves Taken (Temporarily Commented Out) */}
+                                                            {/* <td className="p-4 text-center">
                                                                 {item.leavesTakenDays > 0 ? (
                                                                     <span className="font-bold text-amber-600 text-sm">{item.leavesTakenDays}d</span>
                                                                 ) : (
                                                                     <span className="text-slate-300 font-bold text-sm">-</span>
                                                                 )}
-                                                            </td>
+                                                            </td> */}
 
                                                             {/* Availability Status */}
                                                             <td className="p-4 text-right pr-6">
@@ -1001,15 +1001,14 @@ const ReportsDashboard = ({ focus }) => {
                                     </div>
                                 </div>
 
-                                {/* Chart 3: Leave Type Distribution Usage */}
-                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 space-y-4">
+                                {/* Chart 3: Leave Type Distribution Usage (Temporarily Commented Out) */}
+                                {/* <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 space-y-4">
                                     <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider border-b border-slate-100 pb-2">
                                         <Calendar className="w-4 h-4 text-amber-500" />
                                         Leave Usage Analysis
                                     </h3>
 
                                     <div className="space-y-3.5">
-                                        {/* Casual Leave */}
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs font-bold text-slate-600">
                                                 <span>Casual Leaves</span>
@@ -1020,7 +1019,6 @@ const ReportsDashboard = ({ focus }) => {
                                             </div>
                                         </div>
 
-                                        {/* Sick Leave */}
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs font-bold text-slate-600">
                                                 <span>Sick Leaves</span>
@@ -1031,7 +1029,6 @@ const ReportsDashboard = ({ focus }) => {
                                             </div>
                                         </div>
 
-                                        {/* Earned Leave */}
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs font-bold text-slate-600">
                                                 <span>Earned Leaves</span>
@@ -1042,7 +1039,6 @@ const ReportsDashboard = ({ focus }) => {
                                             </div>
                                         </div>
 
-                                        {/* Unpaid Leave */}
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs font-bold text-slate-600">
                                                 <span>Unpaid Leaves</span>
@@ -1053,7 +1049,7 @@ const ReportsDashboard = ({ focus }) => {
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                             </div>
                         </div>
 
@@ -1196,8 +1192,8 @@ const ReportsDashboard = ({ focus }) => {
                                                 </div>
                                             </div>
 
-                                            {/* Leave Usage Metrics Card */}
-                                            <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm space-y-4">
+                                            {/* Leave Usage Metrics Card (Temporarily Commented Out) */}
+                                            {/* <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm space-y-4">
                                                 <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
                                                     <Calendar className="w-4 h-4 text-amber-500" />
                                                     Leave Balance Usage
@@ -1234,7 +1230,7 @@ const ReportsDashboard = ({ focus }) => {
                                                     <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Total Leave Days Taken</span>
                                                     <span className="font-black text-amber-600 text-sm">{perfData.leavesTakenDays} days</span>
                                                 </div>
-                                            </div>
+                                            </div> */}
                                         </div>
 
                                         {/* Footer Action */}

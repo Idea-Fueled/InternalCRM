@@ -15,7 +15,7 @@ const AdminSidebar = ({ role = "admin" }) => {
         return localStorage.getItem("sidebarMinimized") === "true";
     });
     const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
+    // const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
 
     // Profile Modal data
     const userRole = user?.role || (role === "teamLead" ? "TL" : role);
@@ -24,25 +24,25 @@ const AdminSidebar = ({ role = "admin" }) => {
     const displayRole = user?.designation || (userRole === 'TL' ? 'Team Lead' : userRole === 'hr' ? 'HR' : (userRole?.charAt(0).toUpperCase() + userRole?.slice(1))) || "Role";
     const initial = displayName.charAt(0).toUpperCase();
 
-    useEffect(() => {
-        if (user && ["hr", "admin", "TL"].includes(user.role)) {
-            const fetchPendingLeaves = async () => {
-                try {
-                    const res = await leaveService.getLeaves();
-                    if (res.data?.success && Array.isArray(res.data.data)) {
-                        const pending = res.data.data.filter(l => l.status === "Pending");
-                        setPendingLeavesCount(pending.length);
-                    }
-                } catch (err) {
-                    console.error("Failed to fetch pending leaves for sidebar badge:", err);
-                }
-            };
-
-            fetchPendingLeaves();
-            const interval = setInterval(fetchPendingLeaves, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [user]);
+    // useEffect(() => {
+    //     if (user && ["hr", "admin", "TL"].includes(user.role)) {
+    //         const fetchPendingLeaves = async () => {
+    //             try {
+    //                 const res = await leaveService.getLeaves();
+    //                 if (res.data?.success && Array.isArray(res.data.data)) {
+    //                     const pending = res.data.data.filter(l => l.status === "Pending");
+    //                     setPendingLeavesCount(pending.length);
+    //                 }
+    //             } catch (err) {
+    //                 console.error("Failed to fetch pending leaves for sidebar badge:", err);
+    //             }
+    //         };
+    //
+    //         fetchPendingLeaves();
+    //         const interval = setInterval(fetchPendingLeaves, 30000);
+    //         return () => clearInterval(interval);
+    //     }
+    // }, [user]);
 
     useEffect(() => {
         const handleToggle = () => setIsMobileOpen(prev => !prev);
@@ -87,9 +87,9 @@ const AdminSidebar = ({ role = "admin" }) => {
         { path: "/qa/my-team", label: "My Team", role: ["qa"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
         { path: "/hr/my-team", label: "My Team", role: ["hr"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
 
-        // Leaves
-        { path: "/hr/leaves", label: "Leave Management", role: ["hr", "admin", "TL"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
-        { path: "/employee/leaves", label: "My Leaves", role: ["employee", "TL", "qa"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+        // Leaves (Temporarily Commented Out)
+        // { path: "/hr/leaves", label: "Leave Management", role: ["hr", "admin", "TL"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+        // { path: "/employee/leaves", label: "My Leaves", role: ["employee", "TL", "qa"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
 
         // Projects
         { path: "/admin/projects", label: "Projects", permission: "projects.create", orPermission: "projects.update", orRole: ["admin"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
@@ -216,9 +216,7 @@ const AdminSidebar = ({ role = "admin" }) => {
                 <nav className="flex flex-col gap-1 px-1">
                     {!isMinimized && <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1.5 px-3">Main Menu</div>}
                     {currentConfig.tabs.map((item) => {
-                        const itemLabel = item.path === "/hr/leaves" && pendingLeavesCount > 0 
-                            ? `${item.label} (${pendingLeavesCount})` 
-                            : item.label;
+                        const itemLabel = item.label;
                         return (
                             <NavLink
                                 key={item.path}
