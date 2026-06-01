@@ -959,9 +959,9 @@ const EmployeesDashboard = () => {
                                         : 'bg-white border-slate-200/60 hover:shadow-md hover:border-blue-200'
                                 }`}
                             >
-                                <div className="flex flex-col lg:flex-row items-center gap-6 lg:gap-8 w-full">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 items-center gap-6 lg:gap-8 w-full">
                                     {/* Left: Avatar, Name, Role */}
-                                    <div className="flex items-center gap-4 w-full lg:w-1/3">
+                                    <div className="flex items-center gap-4 w-full">
                                         <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden
                                             ${emp.status === 'Inactive' ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'}
                                         `}>
@@ -985,7 +985,7 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     {/* Middle: Dept, Lead, Email */}
-                                    <div className="flex flex-col gap-1 w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8">
+                                    <div className="flex flex-col gap-1 w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8">
                                         <div className="flex items-center gap-2 text-sm">
                                             <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                             <span className="text-slate-700 font-medium">{emp.dept}</span>
@@ -999,8 +999,8 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     {/* Right: Tasks, Status, Actions */}
-                                    <div className="flex items-center justify-between w-full lg:w-1/3 border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8">
-                                        <div className="flex gap-4 items-center">
+                                    <div className="flex items-center justify-between w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8 pr-1.5">
+                                        <div className="flex gap-4 items-center shrink-0">
                                             <div className="flex flex-col items-center">
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tasks</span>
                                                 <div className="flex items-baseline gap-1 mt-0.5">
@@ -1016,11 +1016,11 @@ const EmployeesDashboard = () => {
                                             )}
                                         </div>
 
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                                             <button 
                                                 onClick={() => can('users.update') && handleStatusToggle(emp)}
                                                 disabled={!can('users.update')}
-                                                className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors ${
+                                                className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors shrink-0 ${
                                                     !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
                                                 } ${
                                                     emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
@@ -1030,11 +1030,11 @@ const EmployeesDashboard = () => {
                                             >
                                                 {emp.status}
                                             </button>
-                                            <div className="flex items-center gap-1.5">
+                                            <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0 pr-0.5">
                                                 {can('users.update') && (
                                                     <button 
                                                         onClick={(e) => handleStatusToggle(emp, e)}
-                                                        className={`p-1.5 rounded-lg transition-colors ${
+                                                        className={`p-1.5 rounded-lg transition-colors shrink-0 ${
                                                             emp.status === "Inactive"
                                                                 ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50"
                                                                 : "text-slate-400 hover:text-amber-600 hover:bg-amber-50"
@@ -1042,28 +1042,28 @@ const EmployeesDashboard = () => {
                                                         title={emp.status === "Inactive" ? "Reactivate Employee" : "Mark Inactive"}
                                                     >
                                                         {emp.status === "Inactive" ? (
-                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                                         ) : (
-                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
                                                         )}
                                                     </button>
                                                 )}
                                                 {can('users.update') && (
                                                     <button 
                                                         onClick={(e) => handleEditEmployee(emp, e)}
-                                                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
                                                         title="Edit Employee"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     </button>
                                                 )}
                                                 {can('users.delete') && (
                                                     <button 
                                                         onClick={(e) => handleDeleteEmployee(emp.id, e)}
-                                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
                                                         title="Delete Employee"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                     </button>
                                                 )}
                                             </div>
