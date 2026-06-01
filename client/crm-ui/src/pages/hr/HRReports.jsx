@@ -173,30 +173,30 @@ const HRReports = () => {
     };
 
     return (
-        <div className="flex h-screen bg-[#060B18] text-slate-200 overflow-hidden font-sans">
+        <div className="flex h-screen bg-slate-50/50 text-slate-800 overflow-hidden font-sans">
             <AdminSidebar role="hr" />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto no-scrollbar">
-                <Topbar title="HR Reports Module" />
+                <Topbar DashboardTile="System Reports" role="hr" />
                 
                 <main className="flex-1 p-6 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
                     {/* Header Banner */}
-                    <div className="bg-slate-900/40 border border-slate-800/80 rounded-[24px] p-6 backdrop-blur-md">
-                        <h1 className="text-xl sm:text-2xl font-black text-white">System Reports & Exports</h1>
-                        <p className="text-slate-400 text-xs font-semibold mt-1 font-sans">Generate comprehensive rosters for staff distribution, leave usage records, and project resource workloads.</p>
+                    <div className="bg-white border border-slate-200/60 shadow-sm rounded-[24px] p-6">
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-800">System Reports & Exports</h1>
+                        <p className="text-slate-500 text-xs font-semibold mt-1 font-sans">Generate comprehensive rosters for staff distribution, leave usage records, and project resource workloads.</p>
                     </div>
 
                     {/* Exporters Header Panel */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/20 border border-slate-800/60 rounded-[20px] p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200/60 rounded-[20px] p-4 shadow-sm">
                         {/* Tab Switcher */}
-                        <div className="flex gap-2 bg-slate-950/40 p-1 rounded-xl border border-slate-850">
+                        <div className="flex gap-2 bg-slate-50 p-1 rounded-xl border border-slate-200/60">
                             {["Employees", "Leaves", "Projects"].map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
                                     className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
                                         activeTab === tab
-                                            ? "bg-slate-800 text-white shadow-sm"
-                                            : "text-slate-500 hover:text-slate-300"
+                                            ? "bg-white text-slate-800 shadow-sm border border-slate-200/60"
+                                            : "text-slate-450 hover:text-slate-700"
                                     }`}
                                 >
                                     {tab === "Employees" ? "Employee Roster" : tab === "Leaves" ? "Leaves Log" : "Project Allocations"}
@@ -209,7 +209,7 @@ const HRReports = () => {
                             <button
                                 onClick={handleExportCSV}
                                 disabled={loading}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-650 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm hover:shadow"
                             >
                                 <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
                                 Export CSV
@@ -217,7 +217,7 @@ const HRReports = () => {
                             <button
                                 onClick={handleExportPDF}
                                 disabled={loading}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 hover:border-slate-300 text-slate-650 rounded-xl text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-sm hover:shadow"
                             >
                                 <FileText className="w-4 h-4 text-rose-500" />
                                 Export PDF
@@ -229,15 +229,15 @@ const HRReports = () => {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-3">
                             <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            <span className="text-slate-400 text-xs font-bold">Compiling spreadsheet metrics...</span>
+                            <span className="text-slate-500 text-xs font-bold">Compiling spreadsheet metrics...</span>
                         </div>
                     ) : (
-                        <div className="bg-slate-900/20 border border-slate-800/80 rounded-3xl overflow-hidden backdrop-blur-sm">
+                        <div className="premium-card bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden">
                             <div className="overflow-x-auto no-scrollbar">
                                 {activeTab === "Employees" && (
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="border-b border-slate-800 bg-slate-950/40 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                            <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-500 uppercase tracking-wider">
                                                 <th className="p-4">Staff Member</th>
                                                 <th className="p-4">Email Address</th>
                                                 <th className="p-4">Department</th>
@@ -245,21 +245,21 @@ const HRReports = () => {
                                                 <th className="p-4">Availability</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-850 text-xs font-bold text-slate-300">
+                                        <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-650">
                                             {employees.map(emp => (
-                                                <tr key={emp._id} className="hover:bg-slate-900/10 transition-colors">
+                                                <tr key={emp._id} className="hover:bg-slate-50/70 transition-colors">
                                                     <td className="p-4 flex items-center gap-2.5">
-                                                        <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 overflow-hidden shrink-0">
+                                                        <div className="w-7 h-7 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden shrink-0">
                                                             {emp.profilePic ? <img src={emp.profilePic} alt="" className="w-full h-full object-cover" /> : emp.name?.charAt(0)}
                                                         </div>
-                                                        <span className="text-white">{emp.name}</span>
+                                                        <span className="text-slate-800">{emp.name}</span>
                                                     </td>
-                                                    <td className="p-4 text-slate-400 font-medium font-mono">{emp.email}</td>
+                                                    <td className="p-4 text-slate-500 font-medium font-mono">{emp.email}</td>
                                                     <td className="p-4">{emp.department || "Unassigned"}</td>
-                                                    <td className="p-4 text-slate-400">{emp.designation || emp.role}</td>
+                                                    <td className="p-4 text-slate-500">{emp.designation || emp.role}</td>
                                                     <td className="p-4">
                                                         <span className={`px-2 py-0.5 border rounded-lg text-[9px] font-black uppercase tracking-wider ${
-                                                            emp.status === "inactive" ? "bg-slate-500/10 text-slate-400 border-slate-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                            emp.status === "inactive" ? "bg-slate-50 text-slate-500 border-slate-200" : "bg-emerald-50 text-emerald-600 border-emerald-200"
                                                         }`}>
                                                             {emp.status}
                                                         </span>
@@ -273,7 +273,7 @@ const HRReports = () => {
                                 {activeTab === "Leaves" && (
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="border-b border-slate-800 bg-slate-950/40 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                            <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-500 uppercase tracking-wider">
                                                 <th className="p-4">Employee</th>
                                                 <th className="p-4">Leave Type</th>
                                                 <th className="p-4 text-center">Start Date</th>
@@ -282,24 +282,24 @@ const HRReports = () => {
                                                 <th className="p-4 text-right">Status</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-850 text-xs font-bold text-slate-300">
+                                        <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-650">
                                             {leaves.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="6" className="text-center py-10 text-slate-500">No leave log audits available.</td>
+                                                    <td colSpan="6" className="text-center py-10 text-slate-455">No leave log audits available.</td>
                                                 </tr>
                                             ) : (
                                                 leaves.map(l => (
-                                                    <tr key={l._id} className="hover:bg-slate-900/10 transition-colors">
-                                                        <td className="p-4 text-white">{l.employee?.name || "System Staff"}</td>
-                                                        <td className="p-4 text-slate-400">{l.leaveType}</td>
-                                                        <td className="p-4 text-center text-slate-400 font-mono">{l.startDate ? new Date(l.startDate).toLocaleDateString() : ""}</td>
-                                                        <td className="p-4 text-center text-slate-400 font-mono">{l.endDate ? new Date(l.endDate).toLocaleDateString() : ""}</td>
-                                                        <td className="p-4 text-center text-slate-200 font-mono">{l.totalDays} days</td>
+                                                    <tr key={l._id} className="hover:bg-slate-50/70 transition-colors">
+                                                        <td className="p-4 text-slate-800">{l.employee?.name || "System Staff"}</td>
+                                                        <td className="p-4 text-slate-500">{l.leaveType}</td>
+                                                        <td className="p-4 text-center text-slate-500 font-mono">{l.startDate ? new Date(l.startDate).toLocaleDateString() : ""}</td>
+                                                        <td className="p-4 text-center text-slate-500 font-mono">{l.endDate ? new Date(l.endDate).toLocaleDateString() : ""}</td>
+                                                        <td className="p-4 text-center text-slate-700 font-mono">{l.totalDays} days</td>
                                                         <td className="p-4 text-right">
                                                             <span className={`px-2 py-0.5 border rounded-lg text-[9px] font-black uppercase tracking-wider ${
-                                                                l.status === "Pending" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                                                                l.status === "Approved" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                                                                "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                                                l.status === "Pending" ? "bg-amber-50 text-amber-600 border-amber-200" :
+                                                                l.status === "Approved" ? "bg-emerald-50 text-emerald-600 border-emerald-200" :
+                                                                "bg-rose-50 text-rose-600 border-rose-200"
                                                             }`}>
                                                                 {l.status}
                                                             </span>
@@ -314,7 +314,7 @@ const HRReports = () => {
                                 {activeTab === "Projects" && (
                                     <table className="w-full text-left border-collapse">
                                         <thead>
-                                            <tr className="border-b border-slate-800 bg-slate-950/40 text-[10px] font-black text-slate-500 uppercase tracking-wider">
+                                            <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-500 uppercase tracking-wider">
                                                 <th className="p-4">Project Name</th>
                                                 <th className="p-4">Supervisor Lead</th>
                                                 <th className="p-4 text-center">Allocated Staff</th>
@@ -322,28 +322,28 @@ const HRReports = () => {
                                                 <th className="p-4 text-right">Status</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-slate-850 text-xs font-bold text-slate-300">
+                                        <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-650">
                                             {projects.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="5" className="text-center py-10 text-slate-500">No project allocations logged.</td>
+                                                    <td colSpan="5" className="text-center py-10 text-slate-455">No project allocations logged.</td>
                                                 </tr>
                                             ) : (
                                                 projects.map(p => (
-                                                    <tr key={p._id} className="hover:bg-slate-900/10 transition-colors">
-                                                        <td className="p-4 text-white">{p.projectName}</td>
-                                                        <td className="p-4 text-slate-400">{p.teamLead?.name || "Unassigned"}</td>
-                                                        <td className="p-4 text-center text-slate-400 font-mono">{p.teamMembers?.length || 0} members</td>
+                                                    <tr key={p._id} className="hover:bg-slate-50/70 transition-colors">
+                                                        <td className="p-4 text-slate-800">{p.projectName}</td>
+                                                        <td className="p-4 text-slate-500">{p.teamLead?.name || "Unassigned"}</td>
+                                                        <td className="p-4 text-center text-slate-500 font-mono">{p.teamMembers?.length || 0} members</td>
                                                         <td className="p-4 text-center">
                                                             <div className="flex items-center justify-center gap-2">
-                                                                <span className="font-mono text-slate-300">{p.progress || 0}%</span>
-                                                                <div className="w-16 h-2 bg-slate-950 border border-slate-850 rounded-full overflow-hidden">
+                                                                <span className="font-mono text-slate-700">{p.progress || 0}%</span>
+                                                                <div className="w-16 h-2 bg-slate-100 border border-slate-200/60 rounded-full overflow-hidden">
                                                                     <div className="h-full bg-blue-500 rounded-full" style={{ width: `${p.progress || 0}%` }} />
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="p-4 text-right">
                                                             <span className={`px-2 py-0.5 border rounded-lg text-[9px] font-black uppercase tracking-wider ${
-                                                                p.progress === 100 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                                                                p.progress === 100 ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-blue-50 text-blue-600 border-blue-200"
                                                             }`}>
                                                                 {p.progress === 100 ? "Delivered" : "Active"}
                                                             </span>

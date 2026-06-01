@@ -54,8 +54,8 @@ const SearchableMultiSelectDropdown = ({ options, selectedValues, onChange, plac
         <div ref={dropdownRef} className="relative w-full">
             <div
                 onClick={() => !disabled && setIsOpen(!isOpen)}
-                className={`w-full min-h-[44px] px-3 py-2 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-wrap gap-1.5 items-center cursor-pointer transition-all ${
-                    disabled ? "bg-slate-950 cursor-not-allowed opacity-60" : "focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 hover:border-slate-700"
+                className={`w-full min-h-[44px] px-3 py-2 bg-white border border-slate-200 rounded-xl flex flex-wrap gap-1.5 items-center cursor-pointer transition-all ${
+                    disabled ? "bg-slate-50 cursor-not-allowed opacity-60" : "focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 hover:border-slate-300"
                 }`}
             >
                 {selectedValues.length === 0 && (
@@ -65,12 +65,12 @@ const SearchableMultiSelectDropdown = ({ options, selectedValues, onChange, plac
                     const opt = options.find(o => o.id === id);
                     if (!opt) return null;
                     return (
-                        <span key={id} className="inline-flex items-center gap-1 bg-blue-950/40 text-blue-400 text-xs font-bold px-2 py-1 rounded-md border border-blue-900/40 max-w-[220px] truncate">
+                        <span key={id} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 text-xs font-bold px-2 py-1 rounded-md border border-blue-100 max-w-[220px] truncate">
                             <span className="truncate">{opt.name}</span>
                             <button
                                 type="button"
                                 onClick={(e) => handleRemove(id, e)}
-                                className="text-blue-400 hover:text-blue-200 focus:outline-none shrink-0"
+                                className="text-blue-500 hover:text-blue-700 focus:outline-none shrink-0"
                             >
                                 <X className="w-3 h-3" />
                             </button>
@@ -80,18 +80,18 @@ const SearchableMultiSelectDropdown = ({ options, selectedValues, onChange, plac
             </div>
 
             {isOpen && (
-                <div className="absolute left-0 right-0 mt-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[300px]">
-                    <div className="p-2 border-b border-slate-800 bg-slate-950/40">
+                <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col max-h-[300px]">
+                    <div className="p-2 border-b border-slate-100 bg-slate-50/50">
                         <input
                             type="text"
                             placeholder="Type to search..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full px-3 py-1.5 border border-slate-800 rounded-lg text-sm outline-none bg-slate-900 text-slate-200 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                            className="w-full px-3 py-1.5 border border-slate-200 rounded-lg text-sm outline-none bg-white text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                         />
                     </div>
-                    <div className="overflow-y-auto max-h-[220px] no-scrollbar divide-y divide-slate-800/40">
+                    <div className="overflow-y-auto max-h-[220px] no-scrollbar divide-y divide-slate-100">
                         {filteredOptions.length === 0 ? (
                             <div className="p-4 text-center text-slate-500 text-xs font-medium">No managers found</div>
                         ) : (
@@ -101,19 +101,19 @@ const SearchableMultiSelectDropdown = ({ options, selectedValues, onChange, plac
                                     <div
                                         key={opt.id}
                                         onClick={() => handleToggle(opt.id)}
-                                        className={`flex items-center gap-3 px-4 py-2.5 hover:bg-slate-850 cursor-pointer transition-colors text-sm font-semibold text-slate-300 justify-between ${
-                                            isChecked ? "bg-blue-950/20 text-blue-400" : ""
+                                        className={`flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors text-sm font-semibold text-slate-700 justify-between ${
+                                            isChecked ? "bg-blue-50/50 text-blue-600" : ""
                                         }`}
                                     >
                                         <div className="flex flex-col min-w-0">
                                             <span>{opt.name}</span>
-                                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide mt-0.5">{opt.designation || "Employee"}</span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">{opt.designation || "Employee"}</span>
                                         </div>
                                         <input
                                             type="checkbox"
                                             checked={isChecked}
                                             onChange={() => {}}
-                                            className="w-4 h-4 rounded border-slate-700 text-blue-600 focus:ring-blue-500/20 shrink-0 cursor-pointer"
+                                            className="w-4 h-4 rounded border-slate-350 text-blue-600 focus:ring-blue-500/20 shrink-0 cursor-pointer"
                                         />
                                     </div>
                                 );
@@ -399,17 +399,17 @@ const HREmployees = () => {
     };
 
     return (
-        <div className="flex h-screen bg-[#060B18] text-slate-200 overflow-hidden font-sans">
+        <div className="flex h-screen bg-slate-50/50 text-slate-800 overflow-hidden font-sans">
             <AdminSidebar role="hr" />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto no-scrollbar">
-                <Topbar title="Employee Management" />
+                <Topbar DashboardTile="Employee Management" role="hr" />
                 
                 <main className="flex-1 p-6 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
                     {/* Header bar */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 border border-slate-800/80 rounded-[24px] p-6 backdrop-blur-md">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200/60 shadow-sm rounded-[24px] p-6">
                         <div>
-                            <h1 className="text-xl sm:text-2xl font-black text-white">Employee Roster</h1>
-                            <p className="text-slate-400 text-xs font-semibold mt-1">Configure active staff, adjust leave allocations, and toggle availability profiles.</p>
+                            <h1 className="text-xl sm:text-2xl font-black text-slate-800">Employee Roster</h1>
+                            <p className="text-slate-500 text-xs font-semibold mt-1">Configure active staff, adjust leave allocations, and toggle availability profiles.</p>
                         </div>
                         <button
                             onClick={handleCreateOpen}
@@ -421,15 +421,15 @@ const HREmployees = () => {
                     </div>
 
                     {/* Filters panel */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-900/20 border border-slate-800/60 rounded-[20px] p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white border border-slate-200/60 rounded-[20px] p-4 shadow-sm">
                         <div className="relative">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <input
                                 type="text"
                                 placeholder="Search by name or email..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 transition-all placeholder:text-slate-600"
+                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-slate-400"
                             />
                         </div>
                         
@@ -437,7 +437,7 @@ const HREmployees = () => {
                             <select
                                 value={selectedDept}
                                 onChange={(e) => setSelectedDept(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 cursor-pointer"
                             >
                                 <option value="All">All Departments</option>
                                 {departments.map(d => (
@@ -450,7 +450,7 @@ const HREmployees = () => {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value)}
-                                className="w-full px-3 py-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 cursor-pointer"
                             >
                                 <option value="all">All Availability Statuses</option>
                                 <option value="active">Active Staff</option>
@@ -463,13 +463,13 @@ const HREmployees = () => {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 gap-3">
                             <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                            <span className="text-slate-400 text-xs font-bold">Synchronizing staff listings...</span>
+                            <span className="text-slate-500 text-xs font-bold">Synchronizing staff listings...</span>
                         </div>
                     ) : filteredEmployees.length === 0 ? (
-                        <div className="text-center py-20 bg-slate-900/10 border border-slate-800/40 rounded-3xl p-6">
-                            <Users className="w-12 h-12 text-slate-700 mx-auto mb-3" />
-                            <h3 className="text-sm font-bold text-slate-400">No staff members found</h3>
-                            <p className="text-slate-600 text-xs mt-1">Try relaxing your search terms or filter constraints.</p>
+                        <div className="text-center py-20 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
+                            <Users className="w-12 h-12 text-slate-350 mx-auto mb-3" />
+                            <h3 className="text-sm font-bold text-slate-550">No staff members found</h3>
+                            <p className="text-slate-450 text-xs mt-1">Try relaxing your search terms or filter constraints.</p>
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -480,13 +480,13 @@ const HREmployees = () => {
                                 return (
                                     <div 
                                         key={emp._id} 
-                                        className={`relative overflow-hidden bg-slate-900/35 border rounded-2xl p-5 backdrop-blur-sm group hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between min-h-[220px] ${
-                                            isInactiveState ? "border-slate-800/50 opacity-75" : "border-slate-800"
+                                        className={`relative overflow-hidden premium-card p-5 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between min-h-[220px] ${
+                                            isInactiveState ? "border-slate-200/50 opacity-75 bg-slate-50/50" : "bg-white"
                                         }`}
                                     >
                                         <div className="flex gap-4 items-start">
                                             {/* Photo */}
-                                            <div className="w-12 h-12 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-center text-sm font-bold text-slate-300 overflow-hidden shrink-0">
+                                            <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-sm font-bold text-slate-600 overflow-hidden shrink-0">
                                                 {emp.profilePic ? (
                                                     <img src={emp.profilePic} alt="" className="w-full h-full object-cover" />
                                                 ) : initials}
@@ -495,22 +495,22 @@ const HREmployees = () => {
                                             {/* Details */}
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-1.5">
-                                                    <h3 className="text-sm font-black text-white truncate leading-none">{emp.name}</h3>
+                                                    <h3 className="text-sm font-black text-slate-800 truncate leading-none">{emp.name}</h3>
                                                     {isInactiveState && (
-                                                        <span className="px-1.5 py-0.5 bg-slate-800 border border-slate-700/60 rounded text-[9px] font-black text-slate-400 uppercase shrink-0">
+                                                        <span className="px-1.5 py-0.5 bg-slate-100 border border-slate-200 rounded text-[9px] font-black text-slate-500 uppercase shrink-0">
                                                             Inactive
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-[11px] font-bold text-slate-400 truncate mt-1">{emp.designation || emp.role}</p>
+                                                <p className="text-[11px] font-bold text-slate-500 truncate mt-1">{emp.designation || emp.role}</p>
                                                 
                                                 <div className="flex flex-col gap-1 mt-3">
-                                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold truncate">
-                                                        <Mail className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-550 font-semibold truncate">
+                                                        <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                         <span className="truncate">{emp.email}</span>
                                                     </div>
-                                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold truncate">
-                                                        <Building className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                                                    <div className="flex items-center gap-1.5 text-[10px] text-slate-550 font-semibold truncate">
+                                                        <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                                                         <span className="truncate">{emp.department || "Unassigned"}</span>
                                                     </div>
                                                 </div>
@@ -518,25 +518,25 @@ const HREmployees = () => {
                                         </div>
 
                                         {/* Leave Balances Display */}
-                                        <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/40 text-center">
-                                            <div className="bg-slate-950/40 p-1.5 rounded-xl border border-slate-850">
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase">Casual</span>
-                                                <p className="text-xs font-black text-slate-300 font-mono mt-0.5">{emp.casualLeaveBalance ?? 12}</p>
+                                        <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 text-center">
+                                            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Casual</span>
+                                                <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.casualLeaveBalance ?? 12}</p>
                                             </div>
-                                            <div className="bg-slate-950/40 p-1.5 rounded-xl border border-slate-850">
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase">Sick</span>
-                                                <p className="text-xs font-black text-slate-300 font-mono mt-0.5">{emp.sickLeaveBalance ?? 10}</p>
+                                            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Sick</span>
+                                                <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.sickLeaveBalance ?? 10}</p>
                                             </div>
-                                            <div className="bg-slate-950/40 p-1.5 rounded-xl border border-slate-850">
-                                                <span className="text-[9px] font-bold text-slate-500 uppercase">Earned</span>
-                                                <p className="text-xs font-black text-slate-300 font-mono mt-0.5">{emp.earnedLeaveBalance ?? 15}</p>
+                                            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Earned</span>
+                                                <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.earnedLeaveBalance ?? 15}</p>
                                             </div>
                                         </div>
 
                                         {/* Inactive details block */}
                                         {isInactiveState && emp.inactiveReason && (
-                                            <div className="mt-3 p-3 bg-slate-950/50 border border-slate-850 rounded-xl text-[10px] leading-relaxed text-slate-400">
-                                                <div className="flex items-center gap-1 text-slate-300 font-black mb-1">
+                                            <div className="mt-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] leading-relaxed text-slate-650">
+                                                <div className="flex items-center gap-1 text-slate-700 font-black mb-1">
                                                     <BadgeInfo className="w-3.5 h-3.5 text-slate-500" />
                                                     <span>Reason & Period:</span>
                                                 </div>
@@ -550,20 +550,20 @@ const HREmployees = () => {
                                         )}
 
                                         {/* Action buttons (symmetrical and inside card bounds) */}
-                                        <div className="flex gap-2 mt-4 pt-3 border-t border-slate-800/40 justify-end">
+                                        <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 justify-end">
                                             <button
                                                 onClick={() => handleStatusOpen(emp)}
                                                 className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
                                                     isInactiveState 
-                                                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500 hover:text-white"
-                                                        : "bg-slate-800 text-slate-400 border-slate-700/60 hover:bg-slate-700 hover:text-slate-100"
+                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                                                        : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800"
                                                 }`}
                                             >
                                                 {isInactiveState ? "Activate" : "Deactivate"}
                                             </button>
                                             <button
                                                 onClick={() => handleEditOpen(emp)}
-                                                className="px-3 py-1.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
+                                                className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
                                             >
                                                 Edit
                                             </button>
@@ -578,14 +578,14 @@ const HREmployees = () => {
 
             {/* Create Modal */}
             {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-[#0b1120] border border-slate-800 rounded-[28px] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar relative animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/20">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white border border-slate-200 rounded-[24px] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar relative animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
-                                <h3 className="text-base font-black text-white">Onboard New Employee</h3>
+                                <h3 className="text-base font-black text-slate-800">Onboard New Employee</h3>
                                 <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Initialize a new availability profile and configure initial leaves.</p>
                             </div>
-                            <button onClick={() => setIsCreateModalOpen(false)} className="p-1.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-all">
+                            <button onClick={() => setIsCreateModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-650 transition-all">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -595,14 +595,14 @@ const HREmployees = () => {
                             <div className="flex flex-col items-center gap-3">
                                 <div 
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-20 h-20 rounded-3xl bg-slate-900 border-2 border-dashed border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-850/30 overflow-hidden relative group transition-all"
+                                    className="w-20 h-20 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-100 transition-all overflow-hidden relative group"
                                 >
                                     {imagePreview ? (
                                         <img src={imagePreview} alt="" className="w-full h-full object-cover" />
                                     ) : (
                                         <>
-                                            <Camera className="w-6 h-6 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                                            <span className="text-[9px] text-slate-500 font-bold mt-1">Upload</span>
+                                            <Camera className="w-6 h-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                            <span className="text-[9px] text-slate-400 font-bold mt-1">Upload</span>
                                         </>
                                     )}
                                 </div>
@@ -617,47 +617,47 @@ const HREmployees = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
+                                    <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Full Name *</label>
                                     <input
                                         type="text"
                                         required
                                         placeholder="John Doe"
                                         value={formInput.name}
                                         onChange={(e) => setFormInput({ ...formInput, name: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-750 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email Address *</label>
+                                    <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Email Address *</label>
                                     <input
                                         type="email"
                                         required
                                         placeholder="john@ideafueled.com"
                                         value={formInput.email}
                                         onChange={(e) => setFormInput({ ...formInput, email: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-750 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                                    <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Phone Number</label>
                                     <input
                                         type="tel"
                                         placeholder="+1 555-0199"
                                         value={formInput.phone}
                                         onChange={(e) => setFormInput({ ...formInput, phone: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Department *</label>
+                                    <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Department *</label>
                                     <select
                                         required
                                         value={formInput.department}
                                         onChange={(e) => setFormInput({ ...formInput, department: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                                     >
                                         <option value="">Select Department...</option>
                                         {departments.map(d => (
@@ -669,23 +669,23 @@ const HREmployees = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Designation *</label>
+                                    <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Designation *</label>
                                     <input
                                         type="text"
                                         required
                                         placeholder="Senior React Developer"
                                         value={formInput.designation}
                                         onChange={(e) => setFormInput({ ...formInput, designation: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Role Category *</label>
+                                    <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Role Category *</label>
                                     <select
                                         required
                                         value={formInput.role}
                                         onChange={(e) => setFormInput({ ...formInput, role: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                                     >
                                         <option value="developer">Developer (Employee)</option>
                                         <option value="TL">Team Lead</option>
@@ -697,7 +697,7 @@ const HREmployees = () => {
 
                             {/* Multi-Select Reporting Managers */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Reporting Managers (Multi-Select)</label>
+                                <label className="text-[11px] font-bold text-slate-550 uppercase tracking-wider">Reporting Managers (Multi-Select)</label>
                                 <SearchableMultiSelectDropdown
                                     options={managers}
                                     selectedValues={formInput.reportingManagers}
@@ -707,8 +707,8 @@ const HREmployees = () => {
                             </div>
 
                             {/* Leave Allocation Sliders */}
-                            <div className="border-t border-slate-800/60 pt-4 mt-2">
-                                <span className="text-xs font-black text-slate-300 uppercase tracking-wider">Allocate Annual Leaves Balances</span>
+                            <div className="border-t border-slate-100 pt-4 mt-2">
+                                <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Allocate Annual Leaves Balances</span>
                                 <div className="grid grid-cols-3 gap-4 mt-3">
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Casual Leave</label>
@@ -717,7 +717,7 @@ const HREmployees = () => {
                                             min="0"
                                             value={formInput.casualLeaveBalance}
                                             onChange={(e) => setFormInput({ ...formInput, casualLeaveBalance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 font-mono text-center"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono text-center"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -727,7 +727,7 @@ const HREmployees = () => {
                                             min="0"
                                             value={formInput.sickLeaveBalance}
                                             onChange={(e) => setFormInput({ ...formInput, sickLeaveBalance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 font-mono text-center"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono text-center"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -737,17 +737,17 @@ const HREmployees = () => {
                                             min="0"
                                             value={formInput.earnedLeaveBalance}
                                             onChange={(e) => setFormInput({ ...formInput, earnedLeaveBalance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 font-mono text-center"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono text-center"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 justify-end pt-4 border-t border-slate-800/60 bg-slate-950/20 -mx-6 -mb-6 p-6">
+                            <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 p-6">
                                 <button
                                     type="button"
                                     onClick={() => setIsCreateModalOpen(false)}
-                                    className="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all"
+                                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 bg-white rounded-xl text-xs font-bold transition-all"
                                 >
                                     Cancel
                                 </button>
@@ -765,14 +765,14 @@ const HREmployees = () => {
 
             {/* Edit Modal */}
             {isEditModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-[#0b1120] border border-slate-800 rounded-[28px] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar relative animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/20">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white border border-slate-200 rounded-[24px] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar relative animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
-                                <h3 className="text-base font-black text-white">Modify Employee Details</h3>
+                                <h3 className="text-base font-black text-slate-800">Modify Employee Details</h3>
                                 <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Edit profiles and adjust numerical annual leave limits.</p>
                             </div>
-                            <button onClick={() => setIsEditModalOpen(false)} className="p-1.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-all">
+                            <button onClick={() => setIsEditModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-655 transition-all">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -782,14 +782,14 @@ const HREmployees = () => {
                             <div className="flex flex-col items-center gap-3">
                                 <div 
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-20 h-20 rounded-3xl bg-slate-900 border-2 border-dashed border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-850/30 overflow-hidden relative group transition-all"
+                                    className="w-20 h-20 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-slate-100 transition-all overflow-hidden relative group"
                                 >
                                     {imagePreview ? (
                                         <img src={imagePreview} alt="" className="w-full h-full object-cover" />
                                     ) : (
                                         <>
-                                            <Camera className="w-6 h-6 text-slate-500 group-hover:text-blue-400 transition-colors" />
-                                            <span className="text-[9px] text-slate-500 font-bold mt-1">Upload</span>
+                                            <Camera className="w-6 h-6 text-slate-400 group-hover:text-blue-500 transition-colors" />
+                                            <span className="text-[9px] text-slate-400 font-bold mt-1">Upload</span>
                                         </>
                                     )}
                                 </div>
@@ -804,44 +804,44 @@ const HREmployees = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
+                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Full Name *</label>
                                     <input
                                         type="text"
                                         required
                                         value={formInput.name}
                                         onChange={(e) => setFormInput({ ...formInput, name: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Email Address *</label>
+                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Email Address *</label>
                                     <input
                                         type="email"
                                         required
                                         value={formInput.email}
                                         onChange={(e) => setFormInput({ ...formInput, email: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
+                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Phone Number</label>
                                     <input
                                         type="tel"
                                         value={formInput.phone}
                                         onChange={(e) => setFormInput({ ...formInput, phone: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Department *</label>
+                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Department *</label>
                                     <select
                                         required
                                         value={formInput.department}
                                         onChange={(e) => setFormInput({ ...formInput, department: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                                     >
                                         <option value="">Select Department...</option>
                                         {departments.map(d => (
@@ -853,22 +853,22 @@ const HREmployees = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Designation *</label>
+                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Designation *</label>
                                     <input
                                         type="text"
                                         required
                                         value={formInput.designation}
                                         onChange={(e) => setFormInput({ ...formInput, designation: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Role Category *</label>
+                                    <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Role Category *</label>
                                     <select
                                         required
                                         value={formInput.role}
                                         onChange={(e) => setFormInput({ ...formInput, role: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                                     >
                                         <option value="developer">Developer (Employee)</option>
                                         <option value="TL">Team Lead</option>
@@ -880,7 +880,7 @@ const HREmployees = () => {
 
                             {/* Multi-Select Reporting Managers */}
                             <div className="space-y-1.5">
-                                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Reporting Managers (Multi-Select)</label>
+                                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Reporting Managers (Multi-Select)</label>
                                 <SearchableMultiSelectDropdown
                                     options={managers.filter(m => m.id !== selectedEmployee?._id)} // Exclude self
                                     selectedValues={formInput.reportingManagers}
@@ -890,8 +890,8 @@ const HREmployees = () => {
                             </div>
 
                             {/* Leave Allocation Sliders */}
-                            <div className="border-t border-slate-800/60 pt-4 mt-2">
-                                <span className="text-xs font-black text-slate-300 uppercase tracking-wider">Modify Annual Leaves Balances</span>
+                            <div className="border-t border-slate-100 pt-4 mt-2">
+                                <span className="text-xs font-black text-slate-700 uppercase tracking-wider">Modify Annual Leaves Balances</span>
                                 <div className="grid grid-cols-3 gap-4 mt-3">
                                     <div className="space-y-1.5">
                                         <label className="text-[10px] font-bold text-slate-500 uppercase">Casual Leave</label>
@@ -900,7 +900,7 @@ const HREmployees = () => {
                                             min="0"
                                             value={formInput.casualLeaveBalance}
                                             onChange={(e) => setFormInput({ ...formInput, casualLeaveBalance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 font-mono text-center"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono text-center"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -910,7 +910,7 @@ const HREmployees = () => {
                                             min="0"
                                             value={formInput.sickLeaveBalance}
                                             onChange={(e) => setFormInput({ ...formInput, sickLeaveBalance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 font-mono text-center"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono text-center"
                                         />
                                     </div>
                                     <div className="space-y-1.5">
@@ -920,17 +920,17 @@ const HREmployees = () => {
                                             min="0"
                                             value={formInput.earnedLeaveBalance}
                                             onChange={(e) => setFormInput({ ...formInput, earnedLeaveBalance: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 font-mono text-center"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 font-mono text-center"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 justify-end pt-4 border-t border-slate-800/60 bg-slate-950/20 -mx-6 -mb-6 p-6">
+                            <div className="flex gap-3 justify-end pt-4 border-t border-slate-100 bg-slate-50/50 -mx-6 -mb-6 p-6">
                                 <button
                                     type="button"
                                     onClick={() => setIsEditModalOpen(false)}
-                                    className="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all"
+                                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-800 bg-white rounded-xl text-xs font-bold transition-all"
                                 >
                                     Cancel
                                 </button>
@@ -948,16 +948,16 @@ const HREmployees = () => {
 
             {/* Status (Activate / Deactivate) Modal */}
             {isStatusModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-[#0b1120] border border-slate-800 rounded-[28px] shadow-2xl w-full max-w-md relative animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/20">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white border border-slate-200 rounded-[24px] shadow-2xl w-full max-w-md relative animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                             <div>
-                                <h3 className="text-base font-black text-white">
+                                <h3 className="text-base font-black text-slate-800">
                                     {statusInput.status === "inactive" ? "Mark Employee Inactive" : "Restore Active Status"}
                                 </h3>
                                 <p className="text-[10px] font-semibold text-slate-500 mt-0.5">Toggle availability profiles inside the organizational hierarchy.</p>
                             </div>
-                            <button onClick={() => setIsStatusModalOpen(false)} className="p-1.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-all">
+                            <button onClick={() => setIsStatusModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-655 transition-all">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -965,46 +965,46 @@ const HREmployees = () => {
                         <form onSubmit={handleStatusSubmit} className="p-6 space-y-4">
                             {statusInput.status === "inactive" ? (
                                 <>
-                                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex gap-3 text-amber-400">
-                                        <AlertCircle className="w-5 h-5 shrink-0" />
+                                    <div className="p-4 bg-amber-50 border border-amber-250 rounded-2xl flex gap-3 text-amber-700">
+                                        <AlertCircle className="w-5 h-5 shrink-0 text-amber-500" />
                                         <div className="text-[11px] leading-relaxed">
                                             <span className="font-bold">Important Notice:</span> Department and Team Lead mappings remain assigned. Their name in rosters will show an Inactive indicator tag.
                                         </div>
                                     </div>
                                     
                                     <div className="space-y-1.5">
-                                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Inactivity Reason *</label>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Inactivity Reason *</label>
                                         <textarea
                                             required
                                             rows="3"
                                             placeholder="Medical leave, Sabbatical, Family emergency, etc..."
                                             value={statusInput.inactiveReason}
                                             onChange={(e) => setStatusInput({ ...statusInput, inactiveReason: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 resize-none"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-755 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none"
                                         />
                                     </div>
 
                                     <div className="space-y-1.5">
-                                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Inactive Until (Optional)</label>
+                                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Inactive Until (Optional)</label>
                                         <input
                                             type="date"
                                             value={statusInput.inactiveUntil}
                                             onChange={(e) => setStatusInput({ ...statusInput, inactiveUntil: e.target.value })}
-                                            className="w-full px-3 py-2 bg-slate-900/60 border border-slate-850 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-650 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                                         />
                                     </div>
                                 </>
                             ) : (
-                                <p className="text-xs text-slate-400 leading-relaxed">
-                                    Are you sure you want to mark <span className="text-white font-bold">{selectedEmployee?.name}</span> as Active again? This will restore their system permissions immediately.
+                                <p className="text-xs text-slate-650 leading-relaxed">
+                                    Are you sure you want to mark <span className="text-slate-800 font-bold">{selectedEmployee?.name}</span> as Active again? This will restore their system permissions immediately.
                                 </p>
                             )}
 
-                            <div className="flex gap-3 justify-end pt-4 border-t border-slate-800/60">
+                            <div className="flex gap-3 justify-end pt-4 border-t border-slate-100">
                                 <button
                                     type="button"
                                     onClick={() => setIsStatusModalOpen(false)}
-                                    className="px-4 py-2 border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl text-xs font-bold transition-all"
+                                    className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-850 bg-white rounded-xl text-xs font-bold transition-all"
                                 >
                                     Cancel
                                 </button>
