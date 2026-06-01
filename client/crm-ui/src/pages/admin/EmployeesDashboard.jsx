@@ -876,10 +876,12 @@ const EmployeesDashboard = () => {
                                                 <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                                 <span className="font-medium text-slate-600 truncate">{emp.dept}</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5">
-                                                <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                                <span className="truncate">Lead: <span className="font-semibold text-slate-600">{emp.lead}</span></span>
-                                            </div>
+                                            {emp.raw.role !== 'admin' && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <svg className="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                    <span className="truncate">Lead: <span className="font-semibold text-slate-600">{emp.lead}</span></span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Task stats */}
@@ -989,8 +991,12 @@ const EmployeesDashboard = () => {
                                         <div className="flex items-center gap-2 text-sm">
                                             <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                             <span className="text-slate-700 font-medium">{emp.dept}</span>
-                                            <span className="text-slate-300">•</span>
-                                            <span className="text-slate-500 truncate">Lead: {emp.lead}</span>
+                                            {emp.raw.role !== 'admin' && (
+                                                <>
+                                                    <span className="text-slate-300">•</span>
+                                                    <span className="text-slate-500 truncate">Lead: {emp.lead}</span>
+                                                </>
+                                            )}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm mt-1">
                                             <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
