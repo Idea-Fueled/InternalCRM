@@ -520,10 +520,10 @@ export default function EmployeeFormModal({ isOpen, mode, employee, onClose, onS
                                     }}
                                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
                                 >
-                                    <option value="developer">Developer (Employee)</option>
+                                    <option value="developer">Employee</option>
                                     <option value="TL">Team Lead</option>
-                                    <option value="qa">QA Engineer</option>
-                                    <option value="hr">HR Executive</option>
+                                    <option value="qa">QA</option>
+                                    <option value="hr">HR</option>
                                     {isAdminRole && <option value="admin">Admin</option>}
                                 </select>
                             </div>

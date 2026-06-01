@@ -72,62 +72,64 @@ const EmployeeLeaves = () => {
         }
     };
 
+    const userRole = user?.role || "employee";
+
     return (
-        <div className="flex h-screen bg-[#060B18] text-slate-200 overflow-hidden font-sans">
-            <AdminSidebar role={user?.role === "TL" ? "teamLead" : user?.role === "qa" ? "qa" : "employee"} />
+        <div className="flex h-screen bg-slate-50/50 text-slate-800 overflow-hidden font-sans">
+            <AdminSidebar role={userRole === "TL" ? "teamLead" : userRole === "qa" ? "qa" : "employee"} />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto no-scrollbar">
-                <Topbar title="My Leave Panel" />
+                <Topbar DashboardTile="Leave Center" role={userRole === "TL" ? "teamLead" : userRole === "qa" ? "qa" : "employee"} />
                 
-                <main className="flex-1 p-6 sm:p-8 space-y-8 max-w-6xl w-full mx-auto">
+                <main className="flex-1 p-6 sm:p-8 space-y-6 max-w-6xl w-full mx-auto">
                     {/* Header Banner */}
-                    <div className="bg-slate-900/40 border border-slate-800/80 rounded-[24px] p-6 backdrop-blur-md">
-                        <h1 className="text-xl sm:text-2xl font-black text-white">Leave Center</h1>
-                        <p className="text-slate-400 text-xs font-semibold mt-1 font-sans">Apply for annual leave, view numerical balances, and track approvals.</p>
+                    <div className="bg-white border border-slate-200/60 shadow-sm rounded-[24px] p-6">
+                        <h1 className="text-xl sm:text-2xl font-black text-slate-800">Leave Center</h1>
+                        <p className="text-slate-500 text-xs font-semibold mt-1">Apply for annual leave, view numerical balances, and track approvals.</p>
                     </div>
 
                     {/* Balance Cards Grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="bg-slate-900/35 border border-slate-800/80 rounded-2xl p-5 text-center backdrop-blur-sm relative overflow-hidden">
+                        <div className="bg-white border border-slate-200/60 shadow-sm rounded-2xl p-5 text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 right-0 h-1 bg-blue-500/80 rounded-full" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Casual Leave</span>
-                            <p className="text-2xl font-black text-white mt-1.5 font-mono">{user?.casualLeaveBalance ?? 12}</p>
-                            <span className="text-[9px] text-slate-500 font-semibold block mt-1">days remaining</span>
+                            <p className="text-2xl font-black text-slate-800 mt-1.5 font-mono">{user?.casualLeaveBalance ?? 12}</p>
+                            <span className="text-[9px] text-slate-450 font-bold block mt-1">days remaining</span>
                         </div>
-                        <div className="bg-slate-900/35 border border-slate-800/80 rounded-2xl p-5 text-center backdrop-blur-sm relative overflow-hidden">
+                        <div className="bg-white border border-slate-200/60 shadow-sm rounded-2xl p-5 text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500/80 rounded-full" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Sick Leave</span>
-                            <p className="text-2xl font-black text-white mt-1.5 font-mono">{user?.sickLeaveBalance ?? 10}</p>
-                            <span className="text-[9px] text-slate-500 font-semibold block mt-1">days remaining</span>
+                            <p className="text-2xl font-black text-slate-800 mt-1.5 font-mono">{user?.sickLeaveBalance ?? 10}</p>
+                            <span className="text-[9px] text-slate-450 font-bold block mt-1">days remaining</span>
                         </div>
-                        <div className="bg-slate-900/35 border border-slate-800/80 rounded-2xl p-5 text-center backdrop-blur-sm relative overflow-hidden">
+                        <div className="bg-white border border-slate-200/60 shadow-sm rounded-2xl p-5 text-center relative overflow-hidden">
                             <div className="absolute top-0 left-0 right-0 h-1 bg-indigo-500/80 rounded-full" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Earned Leave</span>
-                            <p className="text-2xl font-black text-white mt-1.5 font-mono">{user?.earnedLeaveBalance ?? 15}</p>
-                            <span className="text-[9px] text-slate-500 font-semibold block mt-1">days remaining</span>
+                            <p className="text-2xl font-black text-slate-800 mt-1.5 font-mono">{user?.earnedLeaveBalance ?? 15}</p>
+                            <span className="text-[9px] text-slate-450 font-bold block mt-1">days remaining</span>
                         </div>
-                        <div className="bg-slate-900/35 border border-slate-800/80 rounded-2xl p-5 text-center backdrop-blur-sm relative overflow-hidden">
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-500/80 rounded-full" />
+                        <div className="bg-white border border-slate-200/60 shadow-sm rounded-2xl p-5 text-center relative overflow-hidden">
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-400 rounded-full" />
                             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Unpaid Leave</span>
-                            <p className="text-2xl font-black text-slate-400 mt-1.5 font-mono">∞</p>
-                            <span className="text-[9px] text-slate-500 font-semibold block mt-1">Unlimited</span>
+                            <p className="text-2xl font-black text-slate-700 mt-1.5 font-mono">∞</p>
+                            <span className="text-[9px] text-slate-450 font-bold block mt-1">Unlimited</span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                         {/* Application Form */}
-                        <div className="lg:col-span-1 bg-slate-900/35 border border-slate-800/80 rounded-[28px] p-6 backdrop-blur-sm">
-                            <div className="flex items-center gap-2 mb-6 border-b border-slate-800 pb-3">
-                                <Send className="w-4 h-4 text-blue-400" />
-                                <h3 className="text-sm font-black text-white uppercase tracking-wider">Apply for Leave</h3>
+                        <div className="lg:col-span-1 bg-white border border-slate-200/60 rounded-[28px] p-6 shadow-sm">
+                            <div className="flex items-center gap-2 mb-6 border-b border-slate-100 pb-3">
+                                <Send className="w-4 h-4 text-blue-500" />
+                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">Apply for Leave</h3>
                             </div>
                             
                             <form onSubmit={handleApplySubmit} className="space-y-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Leave Type *</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Leave Type *</label>
                                     <select
                                         value={formInput.leaveType}
                                         onChange={(e) => setFormInput({ ...formInput, leaveType: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer font-bold"
                                     >
                                         <option value="Casual Leave">Casual Leave (Limited)</option>
                                         <option value="Sick Leave">Sick Leave (Limited)</option>
@@ -137,36 +139,36 @@ const EmployeeLeaves = () => {
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Start Date *</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Start Date *</label>
                                     <input
                                         type="date"
                                         required
                                         value={formInput.startDate}
                                         onChange={(e) => setFormInput({ ...formInput, startDate: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer font-bold"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">End Date *</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">End Date *</label>
                                     <input
                                         type="date"
                                         required
                                         value={formInput.endDate}
                                         onChange={(e) => setFormInput({ ...formInput, endDate: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-300 focus:border-blue-500 cursor-pointer"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer font-bold"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reason *</label>
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Reason *</label>
                                     <textarea
                                         required
                                         rows="4"
                                         placeholder="Brief details regarding leave reason..."
                                         value={formInput.reason}
                                         onChange={(e) => setFormInput({ ...formInput, reason: e.target.value })}
-                                        className="w-full px-3.5 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs outline-none text-slate-200 focus:border-blue-500 resize-none"
+                                        className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs outline-none text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 resize-none font-medium"
                                     />
                                 </div>
 
@@ -182,42 +184,44 @@ const EmployeeLeaves = () => {
 
                         {/* Leave History list */}
                         <div className="lg:col-span-2 space-y-4">
-                            <div className="flex items-center gap-2 mb-2 border-b border-slate-800 pb-3">
-                                <Calendar className="w-4 h-4 text-emerald-400" />
-                                <h3 className="text-sm font-black text-white uppercase tracking-wider">My Leave History</h3>
+                            <div className="flex items-center gap-2 mb-2 border-b border-slate-200 pb-3">
+                                <Calendar className="w-4 h-4 text-blue-600" />
+                                <h3 className="text-xs font-black text-slate-800 uppercase tracking-wider">My Leave History</h3>
                             </div>
                             
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20 gap-3">
                                     <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                                    <span className="text-slate-400 text-xs font-semibold">Retrieving history...</span>
+                                    <span className="text-slate-500 text-xs font-bold">Retrieving history...</span>
                                 </div>
                             ) : leaves.length === 0 ? (
-                                <div className="text-center py-16 bg-slate-900/10 border border-slate-800/40 rounded-3xl p-6">
-                                    <Calendar className="w-12 h-12 text-slate-700 mx-auto mb-3" />
+                                <div className="text-center py-16 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
+                                    <Calendar className="w-12 h-12 text-slate-400 mx-auto mb-3" />
                                     <h3 className="text-xs font-bold text-slate-500">No leave applications found</h3>
-                                    <p className="text-slate-600 text-[10px] mt-1">Applications you file in the future will be documented here.</p>
+                                    <p className="text-slate-450 text-[10px] mt-1">Applications you file in the future will be documented here.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     {leaves.map(l => (
-                                        <div key={l._id} className="p-4 bg-slate-900/35 border border-slate-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                        <div key={l._id} className="p-4 bg-white border border-slate-200/60 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:scale-[1.005] duration-200 transition-all">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-black text-white">{l.leaveType}</span>
-                                                    <span className="font-mono text-[10px] font-bold text-slate-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850">{l.totalDays} days</span>
+                                                    <span className="text-xs font-black text-slate-800">{l.leaveType}</span>
+                                                    <span className="font-mono text-[10px] font-bold text-slate-600 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">{l.totalDays} days</span>
                                                 </div>
-                                                <p className="text-[10px] font-semibold text-slate-500">
+                                                <p className="text-[10px] font-bold text-slate-500">
                                                     Period: {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()}
                                                 </p>
-                                                <p className="text-[10px] italic text-slate-400 mt-1">"{l.reason}"</p>
+                                                <div className="p-2.5 bg-slate-50/50 border border-slate-100 rounded-lg mt-2 text-[10px] font-medium text-slate-600 italic">
+                                                    "{l.reason}"
+                                                </div>
                                             </div>
 
                                             <div className="flex items-center gap-3 shrink-0">
                                                 <span className={`px-2 py-0.5 border rounded-lg text-[9px] font-black uppercase tracking-wider ${
-                                                    l.status === "Pending" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
-                                                    l.status === "Approved" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
-                                                    "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                                    l.status === "Pending" ? "bg-amber-55 text-amber-600 border-amber-200" :
+                                                    l.status === "Approved" ? "bg-emerald-55 text-emerald-600 border-emerald-250" :
+                                                    "bg-rose-55 text-rose-600 border-rose-200"
                                                 }`}>
                                                     {l.status}
                                                 </span>

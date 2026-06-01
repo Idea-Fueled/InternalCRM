@@ -162,7 +162,21 @@ export const getAllProjects = async (req, res, next) => {
 
         // Role-based filtering
         if (role === "TL") {
-            query.teamLead = _id;
+            // Find all team members of this Team Lead
+            const teamMembersList = await User.find({
+                $or: [
+                    { reportingManagers: _id },
+                    { reportingManager: _id },
+                    { teamLeads: _id }
+                ]
+            }).select("_id");
+            const teamMemberIds = teamMembersList.map(member => member._id);
+
+            query.$or = [
+                { teamLead: _id },
+                { teamMembers: _id },
+                { teamMembers: { $in: teamMemberIds } }
+            ];
         } else if (role !== "admin" && role !== "hr") {
             query.teamMembers = _id;
         }
@@ -222,7 +236,24 @@ export const getProjectById = async (req, res, next) => {
         const isMember = project.teamMembers?.some(m => m._id?.toString() === _id.toString() || m.toString() === _id.toString());
         const isAdminUser = role === "admin";
 
-        if (!isAdminUser && !isLead && !isMember) {
+        // Hierarchy rule check for Team Lead
+        let isTLOfProjectMember = false;
+        if (role === "TL") {
+            const projectMemberIds = project.teamMembers.map(m => m._id || m);
+            const teamMembersInProject = await User.find({
+                _id: { $in: projectMemberIds },
+                $or: [
+                    { reportingManagers: _id },
+                    { reportingManager: _id },
+                    { teamLeads: _id }
+                ]
+            });
+            if (teamMembersInProject.length > 0) {
+                isTLOfProjectMember = true;
+            }
+        }
+
+        if (!isAdminUser && !isLead && !isMember && !isTLOfProjectMember) {
             return res.status(403).json({
                 success: false,
                 message: "Unauthorized Access: You are not assigned to this project."
@@ -240,7 +271,7 @@ export const getProjectById = async (req, res, next) => {
             const isAssignedDev = task.assignedTo?._id?.toString() === _id.toString() || task.assignedTo?.toString() === _id.toString();
             const isAssignedQA = task.assignedQA?._id?.toString() === _id.toString() || task.assignedQA?.toString() === _id.toString();
             
-            const isSecuredTaskRole = isAdminUser || isLead || isAssignedDev || isAssignedQA;
+            const isSecuredTaskRole = isAdminUser || isLead || isTLOfProjectMember || isAssignedDev || isAssignedQA;
             
             const taskObj = task.toObject();
             if (!isSecuredTaskRole) {

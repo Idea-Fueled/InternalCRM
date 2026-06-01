@@ -13,6 +13,7 @@ import {
 import { exportPDF } from "../../utils/pdfExport";
 import StatDetailModal from "../../components/StatDetailModal";
 import EmployeeFormModal from "../../components/EmployeeFormModal";
+import EmployeeDetailsSidebar from "../../components/EmployeeDetailsSidebar";
 
 const getInactivityDaysLeft = (inactiveUntil) => {
     if (!inactiveUntil) return "Indefinite";
@@ -1321,6 +1322,12 @@ const EmployeesDashboard = () => {
                 title={statModal.title} 
                 data={statModal.data} 
                 type={statModal.type} 
+            />
+
+            <EmployeeDetailsSidebar
+                isOpen={!!selectedEmployee}
+                employee={selectedEmployee}
+                onClose={() => setSelectedEmployee(null)}
             />
         </div>
     );

@@ -22,7 +22,7 @@ router.patch("/adjust-balance", protectRoute, isHR, adjustBalances);
 // Get HR dashboard metrics & graphs (HR & Admin only)
 router.get("/hr-stats", protectRoute, isHR, getHRStats);
 
-// Update status of a pending leave request (HR & Admin only)
-router.patch("/:id/status", protectRoute, isHR, updateLeaveStatus);
+// Update status of a pending leave request (HR, Admin & TL)
+router.patch("/:id/status", protectRoute, updateLeaveStatus);
 
 export default router;

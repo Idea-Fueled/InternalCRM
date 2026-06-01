@@ -18,6 +18,7 @@ const getInactivityDaysLeft = (inactiveUntil) => {
 };
 
 import EmployeeFormModal from "../../components/EmployeeFormModal";
+import EmployeeDetailsSidebar from "../../components/EmployeeDetailsSidebar";
 
 const HREmployees = () => {
     const { user: currentUser } = useAuth();
@@ -34,6 +35,7 @@ const HREmployees = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [selectedEmployeeForDetails, setSelectedEmployeeForDetails] = useState(null);
 
     // Inactivity form inputs
     const [statusInput, setStatusInput] = useState({
@@ -221,7 +223,8 @@ const HREmployees = () => {
                                 return (
                                     <div 
                                         key={emp._id} 
-                                        className={`relative overflow-hidden premium-card p-5 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between min-h-[220px] ${
+                                        onClick={() => setSelectedEmployeeForDetails(emp)}
+                                        className={`relative overflow-hidden premium-card p-5 hover:scale-[1.01] transition-all duration-300 flex flex-col justify-between min-h-[220px] cursor-pointer ${
                                             isInactiveState ? "border-slate-200/50 opacity-75 bg-slate-50/50" : "bg-white"
                                         }`}
                                     >
@@ -293,7 +296,7 @@ const HREmployees = () => {
                                         {/* Action buttons (symmetrical and inside card bounds) */}
                                         <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 justify-end">
                                             <button
-                                                onClick={() => handleStatusOpen(emp)}
+                                                onClick={(e) => { e.stopPropagation(); handleStatusOpen(emp); }}
                                                 className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
                                                     isInactiveState 
                                                         ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
@@ -303,7 +306,7 @@ const HREmployees = () => {
                                                 {isInactiveState ? "Activate" : "Deactivate"}
                                             </button>
                                             <button
-                                                onClick={() => handleEditOpen(emp)}
+                                                onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
                                                 className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
                                             >
                                                 Edit
@@ -410,6 +413,12 @@ const HREmployees = () => {
                     </div>
                 </div>
             )}
+
+            <EmployeeDetailsSidebar
+                isOpen={!!selectedEmployeeForDetails}
+                employee={selectedEmployeeForDetails}
+                onClose={() => setSelectedEmployeeForDetails(null)}
+            />
         </div>
     );
 };

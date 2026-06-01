@@ -4,6 +4,7 @@ import logoImg from "../../assets/IF-white.png";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "sonner";
 import ProfileModal from "../ProfileModal";
+import { leaveService } from "../../api/services";
 
 const AdminSidebar = ({ role = "admin" }) => {
     const navigate = useNavigate();
@@ -14,6 +15,7 @@ const AdminSidebar = ({ role = "admin" }) => {
         return localStorage.getItem("sidebarMinimized") === "true";
     });
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [pendingLeavesCount, setPendingLeavesCount] = useState(0);
 
     // Profile Modal data
     const userRole = user?.role || (role === "teamLead" ? "TL" : role);
@@ -21,6 +23,26 @@ const AdminSidebar = ({ role = "admin" }) => {
     const displayName = user?.name || (userRole === "TL" ? "Team Lead" : userRole === "qa" ? "QA" : userRole === "hr" ? "HR" : isEmployee ? (userRole?.charAt(0).toUpperCase() + userRole?.slice(1)) : "Admin");
     const displayRole = user?.designation || (userRole === 'TL' ? 'Team Lead' : userRole === 'hr' ? 'HR' : (userRole?.charAt(0).toUpperCase() + userRole?.slice(1))) || "Role";
     const initial = displayName.charAt(0).toUpperCase();
+
+    useEffect(() => {
+        if (user && ["hr", "admin", "TL"].includes(user.role)) {
+            const fetchPendingLeaves = async () => {
+                try {
+                    const res = await leaveService.getLeaves();
+                    if (res.data?.success && Array.isArray(res.data.data)) {
+                        const pending = res.data.data.filter(l => l.status === "Pending");
+                        setPendingLeavesCount(pending.length);
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch pending leaves for sidebar badge:", err);
+                }
+            };
+
+            fetchPendingLeaves();
+            const interval = setInterval(fetchPendingLeaves, 30000);
+            return () => clearInterval(interval);
+        }
+    }, [user]);
 
     useEffect(() => {
         const handleToggle = () => setIsMobileOpen(prev => !prev);
@@ -66,12 +88,12 @@ const AdminSidebar = ({ role = "admin" }) => {
         { path: "/hr/my-team", label: "My Team", role: ["hr"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg> },
 
         // Leaves
-        { path: "/hr/leaves", label: "Leave Management", role: ["hr"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
+        { path: "/hr/leaves", label: "Leave Management", role: ["hr", "admin", "TL"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
         { path: "/employee/leaves", label: "My Leaves", role: ["employee", "TL", "qa"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg> },
 
         // Projects
         { path: "/admin/projects", label: "Projects", permission: "projects.create", orPermission: "projects.update", orRole: ["admin"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
-        { path: "/teamLead/projects", label: "Projects", role: ["TL"], exceptPermission: "projects.create", icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
+        { path: "/teamLead/projects", label: "Projects", role: ["TL"], exceptPermission: ["projects.create", "projects.update"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
         { path: "/employee/projects", label: "Projects", role: ["employee"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
         { path: "/qa/projects", label: "Projects", role: ["qa"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg> },
 
@@ -90,8 +112,6 @@ const AdminSidebar = ({ role = "admin" }) => {
         { path: "/employee/reports", label: "Reports", role: ["employee"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
         { path: "/qa/reports", label: "Reports", role: ["qa"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg> },
         
-        // Notifications Module for HR
-        { path: "/hr/notifications", label: "Notifications", role: ["hr"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg> },
 
         // Trash & Audit Logs
         { path: "/admin/trash", label: "Trash", permission: "trash.view", orRole: ["admin"], icon: <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg> },
@@ -128,8 +148,11 @@ const AdminSidebar = ({ role = "admin" }) => {
         }
 
         // 1. Check if the tab is excluded because of a specific granted permission (e.g. TL upgraded to admin menu)
-        if (tab.exceptPermission && userPermissions.includes(tab.exceptPermission)) {
-            return false;
+        if (tab.exceptPermission) {
+            const excepts = Array.isArray(tab.exceptPermission) ? tab.exceptPermission : [tab.exceptPermission];
+            if (excepts.some(perm => userPermissions.includes(perm))) {
+                return false;
+            }
         }
 
         // 2. If it has a specific permission requirement, let them see it if they have it (or if they are admin)
@@ -192,17 +215,22 @@ const AdminSidebar = ({ role = "admin" }) => {
 
                 <nav className="flex flex-col gap-1 px-1">
                     {!isMinimized && <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1.5 px-3">Main Menu</div>}
-                    {currentConfig.tabs.map((item) => (
-                        <NavLink
-                            key={item.path}
-                            to={item.path}
-                            className={({ isActive }) => `flex items-center gap-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group ${isMinimized ? 'justify-center px-0' : 'px-3'} ${isActive ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30 font-semibold transform scale-[1.01]' : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-100'}`}
-                            title={isMinimized ? item.label : ""}
-                        >
-                            <span className={`transition-colors ${isMinimized ? 'ml-0' : ''}`}>{item.icon}</span>
-                            {!isMinimized && <span className="whitespace-nowrap text-sm">{item.label}</span>}
-                        </NavLink>
-                    ))}
+                    {currentConfig.tabs.map((item) => {
+                        const itemLabel = item.path === "/hr/leaves" && pendingLeavesCount > 0 
+                            ? `${item.label} (${pendingLeavesCount})` 
+                            : item.label;
+                        return (
+                            <NavLink
+                                key={item.path}
+                                to={item.path}
+                                className={({ isActive }) => `flex items-center gap-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer group ${isMinimized ? 'justify-center px-0' : 'px-3'} ${isActive ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/30 font-semibold transform scale-[1.01]' : 'hover:bg-slate-800/60 text-slate-400 hover:text-slate-100'}`}
+                                title={isMinimized ? itemLabel : ""}
+                            >
+                                <span className={`transition-colors ${isMinimized ? 'ml-0' : ''}`}>{item.icon}</span>
+                                {!isMinimized && <span className="whitespace-nowrap text-sm">{itemLabel}</span>}
+                            </NavLink>
+                        );
+                    })}
                 </nav>
             </div>
 

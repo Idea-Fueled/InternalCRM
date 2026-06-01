@@ -33,7 +33,7 @@ const ReportsDashboard = () => {
                 
                 const allProjects = projRes.data.projects || [];
                 let scopedProjects = [];
-                if (user?.role === "admin") {
+                if (user?.role === "admin" || user?.role === "hr") {
                     scopedProjects = allProjects;
                 } else if (user?.role === "TL") {
                     scopedProjects = allProjects.filter(p => p.teamLead?._id === user._id || p.teamLead === user._id);
@@ -252,7 +252,7 @@ const ReportsDashboard = () => {
 
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
-            <AdminSidebar role={user?.role === 'TL' ? 'teamLead' : (user?.role === 'qa' ? 'qa' : (user?.role === 'admin' ? 'admin' : 'employee'))} />
+            <AdminSidebar role={user?.role === 'TL' ? 'teamLead' : (user?.role === 'qa' ? 'qa' : (user?.role === 'admin' ? 'admin' : (user?.role === 'hr' ? 'hr' : 'employee')))} />
             <div className="flex-1 flex flex-col h-screen overflow-hidden">
                 <Topbar DashboardTile="Reports" />
                 

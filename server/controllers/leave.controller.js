@@ -136,8 +136,35 @@ export const updateLeaveStatus = async (req, res) => {
             return res.status(400).json({ success: false, message: "This leave request has already been processed!" });
         }
 
+        const { role, _id } = req.user;
+        const leaveApplicant = leave.employee;
+        
+        let isAuthorized = role === "admin" || role === "hr";
+        if (role === "TL") {
+            // Check if the applicant is a member of the TL's team
+            const applicantIdStr = String(leaveApplicant._id || leaveApplicant);
+            // The TL can't approve their own leave request (only admin or hr can)
+            if (applicantIdStr !== String(_id)) {
+                const teamMember = await User.findOne({
+                    _id: leaveApplicant._id,
+                    $or: [
+                        { reportingManagers: _id },
+                        { reportingManager: _id },
+                        { teamLeads: _id }
+                    ]
+                });
+                if (teamMember) {
+                    isAuthorized = true;
+                }
+            }
+        }
+
+        if (!isAuthorized) {
+            return res.status(403).json({ success: false, message: "Unauthorized - Only Admins, HRs, or the applicant's Team Lead can process this leave request." });
+        }
+
         leave.status = status;
-        leave.processedBy = req.user._id;
+        leave.processedBy = _id;
         leave.processedAt = new Date();
 
         // Deduct balances if approved and limited
@@ -184,8 +211,18 @@ export const getScopedLeaves = async (req, res) => {
         const { role, _id } = req.user;
         let query = {};
 
-        // Employees can only see their own leave requests
-        if (role !== "admin" && role !== "hr") {
+        if (role === "TL") {
+            // Find all team members of this Team Lead
+            const teamMembersList = await User.find({
+                $or: [
+                    { reportingManagers: _id },
+                    { reportingManager: _id },
+                    { teamLeads: _id }
+                ]
+            }).select("_id");
+            const teamMemberIds = teamMembersList.map(member => member._id);
+            query.employee = { $in: [_id, ...teamMemberIds] };
+        } else if (role !== "admin" && role !== "hr") {
             query.employee = _id;
         }
 

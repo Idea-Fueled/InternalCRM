@@ -103,7 +103,7 @@ const App = () => {
       },
       {
         path: "/hr/leaves",
-        element: <ProtectedRoute allowedRoles={["hr", "admin"]}><HRLeaveManagement /></ProtectedRoute>
+        element: <ProtectedRoute allowedRoles={["hr", "admin", "TL"]}><HRLeaveManagement /></ProtectedRoute>
       },
       {
         path: "/hr/organization-tree",

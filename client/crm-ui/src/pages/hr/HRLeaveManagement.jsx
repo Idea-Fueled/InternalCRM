@@ -3,6 +3,7 @@ import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { leaveService, userService } from "../../api/services";
 import { toast } from "sonner";
+import { useAuth } from "../../context/AuthContext";
 import { 
     Calendar, CheckCircle2, XCircle, Clock, Info, 
     ChevronRight, ArrowUpRight, ArrowDownRight, Edit2, Users,
@@ -10,6 +11,8 @@ import {
 } from "lucide-react";
 
 const HRLeaveManagement = () => {
+    const { user } = useAuth();
+    const userRole = user?.role || "hr";
     const [leaves, setLeaves] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -109,9 +112,9 @@ const HRLeaveManagement = () => {
 
     return (
         <div className="flex h-screen bg-slate-50/50 text-slate-800 overflow-hidden font-sans">
-            <AdminSidebar role="hr" />
+            <AdminSidebar role={userRole === "TL" ? "teamLead" : userRole === "admin" ? "admin" : "hr"} />
             <div className="flex-1 flex flex-col min-w-0 overflow-y-auto no-scrollbar">
-                <Topbar DashboardTile="Leave Management" role="hr" />
+                <Topbar DashboardTile="Leave Management" role={userRole === "TL" ? "teamLead" : userRole === "admin" ? "admin" : "hr"} />
                 
                 <main className="flex-1 p-6 sm:p-8 space-y-6 max-w-7xl w-full mx-auto">
                     {/* Header Banner */}
@@ -122,7 +125,9 @@ const HRLeaveManagement = () => {
 
                     {/* Tab Selection */}
                     <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-px">
-                        {["Pending", "Approved", "Rejected", "Balances"].map(tab => (
+                        {["Pending", "Approved", "Rejected", "Balances"]
+                            .filter(tab => tab !== "Balances" || (userRole !== "TL" && userRole !== "teamLead"))
+                            .map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => { setActiveTab(tab); setSearchQuery(""); }}
