@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 
 const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, initial }) => {
-    const { user: currentUser, updateUserProfile } = useAuth();
+    const { user: currentUser, updateUserProfile, logout } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
     const [isLoadingRelations, setIsLoadingRelations] = useState(false);
@@ -80,6 +80,17 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
         }
     };
 
+    const handleLogout = async () => {
+        try {
+            await logout();
+            toast.success("Logged out successfully");
+            onClose();
+        } catch (error) {
+            console.error("Logout failed:", error);
+            toast.error("Failed to logout. Please try again.");
+        }
+    };
+
     const getUserRoleCategory = (u) => {
         if (!u) return 'employee';
         const role = (u.role || '').toLowerCase();
@@ -100,6 +111,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
     // --- Dynamic Relations Calculations ---
     const userRole = user?.role || role;
     const canSeeReason = currentUser?.role === 'admin' || currentUser?.role === 'TL';
+    const isMyProfile = user && currentUser && (getIdString(user._id) === getIdString(currentUser._id) || user.email === currentUser.email);
 
     // Helper to get initials
     const getInitials = (name) => {
@@ -325,7 +337,7 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                                 <Calendar className="w-4 h-4" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 mb-0.5">Joined CRM</p>
+                                <p className="text-[10px] font-bold text-slate-400 mb-0.5">Created CRM</p>
                                 <p className="text-sm font-semibold text-slate-700">
                                     {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' }) : "N/A"}
                                 </p>
@@ -485,12 +497,21 @@ const ProfileModal = ({ isOpen, onClose, user, role, displayName, displayRole, i
                         )}
                     </div>
 
-                    <button 
-                        onClick={onClose}
-                        className="w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all duration-200 active:scale-[0.98] bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
-                    >
-                        Close Profile
-                    </button>
+                    {isMyProfile ? (
+                        <button 
+                            onClick={handleLogout}
+                            className="w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all duration-200 active:scale-[0.98] bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-100 cursor-pointer border-none"
+                        >
+                            Logout
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={onClose}
+                            className="w-full mt-8 py-3 text-white font-bold text-sm rounded-xl transition-all duration-200 active:scale-[0.98] bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 cursor-pointer border-none"
+                        >
+                            Close Profile
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

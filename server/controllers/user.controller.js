@@ -223,6 +223,7 @@ export const loginController = async (req, res) => {
                 profilePic: user.profilePic,
                 teamLeads: user.teamLeads || [],
                 teamMembers: user.teamMembers || [],
+                createdAt: user.createdAt,
                 permissions: user.role === 'admin'
                     ? DEFAULT_ROLE_PERMISSIONS.admin
                     : (user.permissions || [])
@@ -259,6 +260,7 @@ export const getCurrentUser = (req, res) => {
                 profilePic: user.profilePic || "",
                 teamLeads: user.teamLeads || [],
                 teamMembers: user.teamMembers || [],
+                createdAt: user.createdAt,
                 permissions: user.role === 'admin'
                     ? DEFAULT_ROLE_PERMISSIONS.admin
                     : (user.permissions || [])
