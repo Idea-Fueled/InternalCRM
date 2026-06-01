@@ -145,7 +145,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                     </span>
                                 )}
                             </div>
-                            {!isAdmin && (
+                            {!viewedIsAdmin && (
                             <p className="text-xs font-bold text-slate-500 mt-1.5 flex items-center gap-1.5">
                                 <span className="text-slate-800">{empRaw.designation || "Developer"}</span>
                                 <span className="text-slate-300">•</span>
@@ -174,7 +174,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                 <div className="flex border-b border-slate-200 bg-white px-6 shrink-0">
                     {[
                         { id: "overview", label: "Overview", icon: <User className="w-4 h-4" /> },
-                        ...(!isAdmin ? [
+                        ...(!viewedIsAdmin ? [
                             { id: "projects", label: `Projects (${projects.length})`, icon: <Folder className="w-4 h-4" /> },
                             { id: "tasks", label: `Tasks (${tasks.length})`, icon: <ClipboardList className="w-4 h-4" /> }
                         ] : [])
@@ -242,7 +242,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                             </div> */}
 
                             {/* Reporting Structure (hidden for admins) */}
-                            {!isAdmin && (
+                            {!viewedIsAdmin && (
                             <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
                                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">Reporting Structure</h4>
                                 <div className="space-y-3">
