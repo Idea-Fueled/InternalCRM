@@ -673,88 +673,104 @@ const ReportsDashboard = ({ focus }) => {
                             {/* Card 1: Assigned Tasks */}
                             <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "assigned" ? "all" : "assigned")}
-                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                className={`flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
                                     activeCardFilter === "assigned" ? "border-blue-500 ring-2 ring-blue-500/10 shadow-md" : "border-slate-200/60 hover:border-blue-300"
                                 }`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Assigned Tasks</span>
-                                    <Briefcase className="w-4 h-4 text-slate-450" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider leading-tight">Assigned Tasks</span>
+                                    <Briefcase className="w-4 h-4 text-slate-450 shrink-0" />
                                 </div>
-                                <div className="text-2xl font-black text-slate-800">{totalAssignedTasksAgg}</div>
-                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
+                                <div className="space-y-1">
+                                    <div className="text-2xl font-black text-slate-800 leading-none">{totalAssignedTasksAgg}</div>
+                                    <div className="text-[10px] text-slate-400 font-bold leading-none">Click to filter table</div>
+                                </div>
                             </div>
 
                             {/* Card 2: Completed Tasks */}
                             <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "completed" ? "all" : "completed")}
-                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                className={`flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
                                     activeCardFilter === "completed" ? "border-emerald-500 ring-2 ring-emerald-500/10 shadow-md" : "border-slate-200/60 hover:border-emerald-300"
                                 }`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Completed Tasks</span>
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider leading-tight">Completed Tasks</span>
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                                 </div>
-                                <div className="text-2xl font-black text-emerald-600">{totalCompletedTasksAgg}</div>
-                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
+                                <div className="space-y-1">
+                                    <div className="text-2xl font-black text-emerald-600 leading-none">{totalCompletedTasksAgg}</div>
+                                    <div className="text-[10px] text-slate-400 font-bold leading-none">Click to filter table</div>
+                                </div>
                             </div>
 
                             {/* Card 3: Overdue Tasks */}
                             <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "overdue" ? "all" : "overdue")}
-                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                className={`flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
                                     activeCardFilter === "overdue" ? "border-rose-500 ring-2 ring-rose-500/10 shadow-md" : "border-slate-200/60 hover:border-rose-300"
                                 }`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Overdue Tasks</span>
-                                    <AlertCircle className="w-4 h-4 text-rose-550" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider leading-tight">Overdue Tasks</span>
+                                    <AlertCircle className="w-4 h-4 text-rose-550 shrink-0" />
                                 </div>
-                                <div className="text-2xl font-black text-rose-600">{totalOverdueTasksAgg}</div>
-                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
+                                <div className="space-y-1">
+                                    <div className="text-2xl font-black text-rose-600 leading-none">{totalOverdueTasksAgg}</div>
+                                    <div className="text-[10px] text-slate-400 font-bold leading-none">Click to filter table</div>
+                                </div>
                             </div>
 
                             {/* Card 4: Completion Rate */}
                             <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "rate" ? "all" : "rate")}
-                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                className={`flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
                                     activeCardFilter === "rate" ? "border-indigo-500 ring-2 ring-indigo-500/10 shadow-md" : "border-slate-200/60 hover:border-indigo-300"
                                 }`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Completion Rate</span>
-                                    <Target className="w-4 h-4 text-indigo-500" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider leading-tight">Completion Rate</span>
+                                    <Target className="w-4 h-4 text-indigo-500 shrink-0" />
                                 </div>
-                                <div className="text-2xl font-black text-indigo-600">{avgCompletionRateAgg}%</div>
-                                <div className="text-[10px] text-slate-400 font-bold mt-1">Rate &lt; 80% filters</div>
+                                <div className="space-y-1">
+                                    <div className="text-2xl font-black text-indigo-600 leading-none">{avgCompletionRateAgg}%</div>
+                                    <div className="text-[10px] text-slate-400 font-bold leading-none">Rate &lt; 80% filters</div>
+                                </div>
                             </div>
 
                             {/* Card 5: Average Completion Time */}
                             <div 
-                                className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 transition-all hover:shadow"
+                                className="flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 transition-all hover:scale-[1.02] hover:border-blue-300 hover:shadow"
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Avg Completion Time</span>
-                                    <Clock className="w-4 h-4 text-blue-500" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider leading-tight">Avg Completion Time</span>
+                                    <Clock className="w-4 h-4 text-blue-500 shrink-0" />
                                 </div>
-                                <div className="text-2xl font-black text-blue-600">{avgCompletionTimeAgg} <span className="text-xs font-semibold text-slate-400">days</span></div>
-                                <div className="text-[10px] text-slate-450 font-bold mt-1">Task timeline velocity</div>
+                                <div className="space-y-1">
+                                    <div className="text-2xl font-black text-blue-600 leading-none">
+                                        {avgCompletionTimeAgg}<span className="text-xs font-semibold text-slate-400 ml-0.5">days</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-450 font-bold leading-none">Task timeline velocity</div>
+                                </div>
                             </div>
 
                             {/* Card 6: Total Leave Days */}
                             <div 
                                 onClick={() => setActiveCardFilter(activeCardFilter === "leaves" ? "all" : "leaves")}
-                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                className={`flex flex-col justify-between h-28 bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
                                     activeCardFilter === "leaves" ? "border-amber-500 ring-2 ring-amber-500/10 shadow-md" : "border-slate-200/60 hover:border-amber-300"
                                 }`}
                             >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Leaves Taken</span>
-                                    <Calendar className="w-4 h-4 text-amber-500" />
+                                <div className="flex items-start justify-between gap-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider leading-tight">Leaves Taken</span>
+                                    <Calendar className="w-4 h-4 text-amber-500 shrink-0" />
                                 </div>
-                                <div className="text-2xl font-black text-amber-600">{totalLeaveDaysAgg} <span className="text-xs font-semibold text-slate-400">days</span></div>
-                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
+                                <div className="space-y-1">
+                                    <div className="text-2xl font-black text-amber-600 leading-none">
+                                        {totalLeaveDaysAgg}<span className="text-xs font-semibold text-slate-400 ml-0.5">days</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-400 font-bold leading-none">Click to filter table</div>
+                                </div>
                             </div>
                         </div>
 
