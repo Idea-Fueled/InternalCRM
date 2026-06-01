@@ -5,7 +5,7 @@ import { userService, taskService, projectService, leaveService, departmentServi
 import { exportPDF, exportOverallReport } from "../../utils/pdfExport";
 import { 
     Download, ChevronLeft, ChevronRight, FolderOpen, AlertCircle,
-    Users, UserCheck, UserX, CheckCircle2, Clock, Calendar, BarChart3, Activity, Briefcase
+    Users, UserCheck, UserX, CheckCircle2, Clock, Calendar, BarChart3, Activity, Briefcase, Target
 } from "lucide-react";
 import StatDetailModal from "../../components/StatDetailModal";
 import { useAuth } from "../../context/AuthContext";
@@ -24,6 +24,10 @@ const ReportsDashboard = ({ focus }) => {
     const [fromDate, setFromDate] = useState("2026-04-01");
     const [toDate, setToDate] = useState("2026-05-31");
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
+    const [selectedEmployeeId, setSelectedEmployeeId] = useState("All");
+    const [activeCardFilter, setActiveCardFilter] = useState("all");
+    const [performanceSidebarUser, setPerformanceSidebarUser] = useState(null);
+    const [isPerformanceSidebarOpen, setIsPerformanceSidebarOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -61,227 +65,281 @@ const ReportsDashboard = ({ focus }) => {
         fetchData();
     }, [user]);
 
-    // HR Focused Calculations
-    const filteredUsers = users.filter(u => {
-        const matchesDept = selectedDept === "All" || (u.department || "Engineering").toLowerCase() === selectedDept.toLowerCase();
-        const hireDate = u.createdAt ? new Date(u.createdAt) : null;
-        const to = toDate ? new Date(toDate) : null;
-        if (hireDate && to) {
-            to.setHours(23, 59, 59, 999);
-            if (hireDate > to) return false;
-        }
-        return matchesDept;
+    // HR Employee Performance & Productivity Calculations
+    const dropdownEmployeesList = users.filter(u => {
+        if (u.role === "admin") return false;
+        if (selectedDept === "All") return true;
+        return (u.department || "Engineering").toLowerCase() === selectedDept.toLowerCase();
     });
 
-    const filteredLeaves = leaves.filter(l => {
-        const empDept = l.employee?.department || "Engineering";
-        const matchesDept = selectedDept === "All" || empDept.toLowerCase() === selectedDept.toLowerCase();
-        if (!matchesDept) return false;
+    const hrEmployees = users.filter(u => {
+        if (u.role === "admin") return false;
+        if (selectedDept === "All") return true;
+        return (u.department || "Engineering").toLowerCase() === selectedDept.toLowerCase();
+    });
 
-        const leaveStart = new Date(l.startDate);
-        const leaveEnd = new Date(l.endDate);
-        const from = fromDate ? new Date(fromDate) : null;
-        const to = toDate ? new Date(toDate) : null;
+    const employeePerformanceData = hrEmployees.map(emp => {
+        // Filter tasks for this employee within date range
+        const empTasks = tasks.filter(t => {
+            const isAssigned = (t.assignedTo?._id || t.assignedTo) === emp._id;
+            if (!isAssigned) return false;
+            
+            const taskDate = t.updatedAt ? new Date(t.updatedAt) : new Date();
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate ? new Date(toDate) : null;
+            if (from) {
+                from.setHours(0, 0, 0, 0);
+                if (taskDate < from) return false;
+            }
+            if (to) {
+                to.setHours(23, 59, 59, 999);
+                if (taskDate > to) return false;
+            }
+            return true;
+        });
 
-        if (from) {
-            from.setHours(0, 0, 0, 0);
-            if (leaveEnd < from) return false;
-        }
-        if (to) {
-            to.setHours(23, 59, 59, 999);
-            if (leaveStart > to) return false;
+        const assignedCount = empTasks.length;
+        const completedTasks = empTasks.filter(t => t.status === "Completed" || t.status === "Done");
+        const completedCount = completedTasks.length;
+        
+        const overdueTasks = empTasks.filter(t => {
+            const isDone = t.status === "Completed" || t.status === "Done";
+            if (isDone) return false;
+            if (!t.endDate) return false;
+            return new Date(t.endDate) < new Date();
+        });
+        const overdueCount = overdueTasks.length;
+        const completionRate = assignedCount > 0 ? Math.round((completedCount / assignedCount) * 100) : 0;
+
+        // Completion times
+        let totalDaysForTasks = 0;
+        completedTasks.forEach(t => {
+            const start = t.createdAt ? new Date(t.createdAt) : new Date();
+            const end = t.updatedAt ? new Date(t.updatedAt) : new Date();
+            const diffMs = Math.abs(end - start);
+            const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)) || 1;
+            totalDaysForTasks += diffDays;
+        });
+        const avgCompletionTime = completedCount > 0 ? (totalDaysForTasks / completedCount).toFixed(1) : "0.0";
+
+        // Leaves taken for this employee in date range
+        const empLeaves = leaves.filter(l => {
+            const isEmp = (l.employee?._id || l.employee) === emp._id;
+            if (!isEmp) return false;
+            if (l.status !== "Approved") return false;
+            
+            const leaveStart = new Date(l.startDate);
+            const leaveEnd = new Date(l.endDate);
+            const from = fromDate ? new Date(fromDate) : null;
+            const to = toDate ? new Date(toDate) : null;
+            if (from) {
+                from.setHours(0, 0, 0, 0);
+                if (leaveEnd < from) return false;
+            }
+            if (to) {
+                to.setHours(23, 59, 59, 999);
+                if (leaveStart > to) return false;
+            }
+            return true;
+        });
+        const leavesTakenDays = empLeaves.reduce((sum, l) => sum + (Number(l.totalDays) || 0), 0);
+
+        // Behavior Metrics
+        let beforeDeadline = 0;
+        let onDeadline = 0;
+        let afterDeadline = 0;
+        completedTasks.forEach(t => {
+            if (!t.endDate) {
+                beforeDeadline++;
+                return;
+            }
+            const due = new Date(t.endDate);
+            due.setHours(0,0,0,0);
+            
+            const finished = new Date(t.updatedAt);
+            finished.setHours(0,0,0,0);
+            
+            if (finished < due) {
+                beforeDeadline++;
+            } else if (finished.getTime() === due.getTime()) {
+                onDeadline++;
+            } else {
+                afterDeadline++;
+            }
+        });
+
+        const leavesBreakdown = {
+            casual: empLeaves.filter(l => l.leaveType === "Casual Leave").reduce((sum, l) => sum + (Number(l.totalDays) || 0), 0),
+            sick: empLeaves.filter(l => l.leaveType === "Sick Leave").reduce((sum, l) => sum + (Number(l.totalDays) || 0), 0),
+            earned: empLeaves.filter(l => l.leaveType === "Earned Leave").reduce((sum, l) => sum + (Number(l.totalDays) || 0), 0),
+            unpaid: empLeaves.filter(l => l.leaveType === "Unpaid Leave").reduce((sum, l) => sum + (Number(l.totalDays) || 0), 0),
+        };
+
+        return {
+            employee: emp,
+            assignedCount,
+            completedCount,
+            overdueCount,
+            completionRate,
+            avgCompletionTime,
+            leavesTakenDays,
+            beforeDeadline,
+            onDeadline,
+            afterDeadline,
+            leavesBreakdown,
+            status: emp.status || "Active"
+        };
+    });
+
+    const activePerformanceList = employeePerformanceData.filter(item => {
+        if (selectedEmployeeId !== "All" && item.employee._id !== selectedEmployeeId) {
+            return false;
         }
         return true;
     });
 
-    const newJoineesList = filteredUsers.filter(u => {
-        if (!u.createdAt) return false;
-        const created = new Date(u.createdAt);
-        const from = fromDate ? new Date(fromDate) : null;
-        const to = toDate ? new Date(toDate) : null;
-        if (from) from.setHours(0,0,0,0);
-        if (to) to.setHours(23,59,59,999);
-        return (!from || created >= from) && (!to || created <= to);
+    const tableFilteredPerformanceList = activePerformanceList.filter(item => {
+        if (activeCardFilter === "assigned") return item.assignedCount > 0;
+        if (activeCardFilter === "completed") return item.completedCount > 0;
+        if (activeCardFilter === "overdue") return item.overdueCount > 0;
+        if (activeCardFilter === "rate") return item.completionRate < 80;
+        if (activeCardFilter === "leaves") return item.leavesTakenDays > 0;
+        return true;
     });
-    const newJoineesCount = newJoineesList.length;
 
-    const activeApprovedLeaves = filteredLeaves.filter(l => {
-        if (l.status !== "Approved") return false;
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const leaveStart = new Date(l.startDate);
-        const leaveEnd = new Date(l.endDate);
-        return leaveStart <= today && leaveEnd >= today;
-    });
-    const employeesOnLeaveCount = activeApprovedLeaves.length;
-    const onLeaveEmployeesData = activeApprovedLeaves.map(l => l.employee).filter(Boolean);
+    // Aggregates
+    const totalAssignedTasksAgg = activePerformanceList.reduce((sum, item) => sum + item.assignedCount, 0);
+    const totalCompletedTasksAgg = activePerformanceList.reduce((sum, item) => sum + item.completedCount, 0);
+    const totalOverdueTasksAgg = activePerformanceList.reduce((sum, item) => sum + item.overdueCount, 0);
+    
+    const avgCompletionRateAgg = activePerformanceList.length > 0 
+        ? Math.round(activePerformanceList.reduce((sum, item) => sum + item.completionRate, 0) / activePerformanceList.length) 
+        : 0;
 
-    const casualCount = filteredLeaves.filter(l => l.leaveType === "Casual Leave").length;
-    const sickCount = filteredLeaves.filter(l => l.leaveType === "Sick Leave").length;
-    const earnedCount = filteredLeaves.filter(l => l.leaveType === "Earned Leave").length;
-    const unpaidCount = filteredLeaves.filter(l => l.leaveType === "Unpaid Leave").length;
+    const completedTasksWithTimes = activePerformanceList.filter(item => Number(item.avgCompletionTime) > 0);
+    const avgCompletionTimeAgg = completedTasksWithTimes.length > 0
+        ? (completedTasksWithTimes.reduce((sum, item) => sum + Number(item.avgCompletionTime), 0) / completedTasksWithTimes.length).toFixed(1)
+        : "0.0";
 
-    const totalLeavesCount = casualCount + sickCount + earnedCount + unpaidCount;
-    const getPct = (cnt) => totalLeavesCount > 0 ? Math.round((cnt / totalLeavesCount) * 100) : 0;
+    const totalLeaveDaysAgg = activePerformanceList.reduce((sum, item) => sum + item.leavesTakenDays, 0);
 
-    const deptWiseCounts = departments.map(d => {
-        const deptUsers = users.filter(u => (u.department || "").toLowerCase() === d.name.toLowerCase());
-        const active = deptUsers.filter(u => u.status !== "inactive").length;
-        const inactive = deptUsers.filter(u => u.status === "inactive").length;
-        return {
-            name: d.name,
-            total: deptUsers.length,
-            active,
-            inactive
-        };
-    }).sort((a,b) => b.total - a.total);
+    const totalBeforeDeadlineAgg = activePerformanceList.reduce((sum, item) => sum + item.beforeDeadline, 0);
+    const totalOnDeadlineAgg = activePerformanceList.reduce((sum, item) => sum + item.onDeadline, 0);
+    const totalAfterDeadlineAgg = activePerformanceList.reduce((sum, item) => sum + item.afterDeadline, 0);
+    const totalTasksCompletedAgg = totalBeforeDeadlineAgg + totalOnDeadlineAgg + totalAfterDeadlineAgg;
 
-    const hrActivities = [];
-    filteredUsers.forEach(u => {
-        if (u.createdAt) {
-            hrActivities.push({
-                id: `user-create-${u._id}`,
-                user: {
-                    name: u.name,
-                    initials: u.name?.charAt(0) || "U",
-                    color: "bg-indigo-100 text-indigo-700",
-                    profilePic: u.profilePic
-                },
-                subject: u.name,
-                action: "New Employee Created",
-                note: `Assigned as ${u.designation || u.role} in ${u.department || "Engineering"} Department.`,
-                time: new Date(u.createdAt).toLocaleDateString(),
-                timestamp: new Date(u.createdAt)
+    const beforeDeadlinePct = totalTasksCompletedAgg > 0 ? Math.round((totalBeforeDeadlineAgg / totalTasksCompletedAgg) * 100) : 0;
+    const onDeadlinePct = totalTasksCompletedAgg > 0 ? Math.round((totalOnDeadlineAgg / totalTasksCompletedAgg) * 100) : 0;
+    const afterDeadlinePct = totalTasksCompletedAgg > 0 ? Math.round((totalAfterDeadlineAgg / totalTasksCompletedAgg) * 100) : 0;
+
+    const totalCasualLeavesAgg = activePerformanceList.reduce((sum, item) => sum + item.leavesBreakdown.casual, 0);
+    const totalSickLeavesAgg = activePerformanceList.reduce((sum, item) => sum + item.leavesBreakdown.sick, 0);
+    const totalEarnedLeavesAgg = activePerformanceList.reduce((sum, item) => sum + item.leavesBreakdown.earned, 0);
+    const totalUnpaidLeavesAgg = activePerformanceList.reduce((sum, item) => sum + item.leavesBreakdown.unpaid, 0);
+
+    const getCompletionTrendData = () => {
+        const from = fromDate ? new Date(fromDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const to = toDate ? new Date(toDate) : new Date();
+        const diffMs = to - from;
+        const intervalMs = diffMs / 5;
+        
+        const trendPoints = [];
+        for (let i = 0; i < 5; i++) {
+            const startInterval = new Date(from.getTime() + i * intervalMs);
+            const endInterval = new Date(from.getTime() + (i + 1) * intervalMs);
+            
+            let segmentCompleted = 0;
+            activePerformanceList.forEach(item => {
+                const empTasks = tasks.filter(t => (t.assignedTo?._id || t.assignedTo) === item.employee._id);
+                const completedInInterval = empTasks.filter(t => {
+                    const isDone = t.status === "Completed" || t.status === "Done";
+                    if (!isDone) return false;
+                    const completionDate = t.updatedAt ? new Date(t.updatedAt) : new Date();
+                    return completionDate >= startInterval && completionDate <= endInterval;
+                });
+                segmentCompleted += completedInInterval.length;
             });
+            
+            const label = `${startInterval.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})}`;
+            trendPoints.push({ label, value: segmentCompleted });
         }
-        if (u.status === "inactive" && u.updatedAt) {
-            hrActivities.push({
-                id: `user-inactive-${u._id}`,
-                user: {
-                    name: u.name,
-                    initials: u.name?.charAt(0) || "U",
-                    color: "bg-rose-100 text-rose-700",
-                    profilePic: u.profilePic
-                },
-                subject: u.name,
-                action: "Employee Inactivated",
-                note: u.inactiveReason || "Marked as inactive in system backlog.",
-                time: new Date(u.updatedAt).toLocaleDateString(),
-                timestamp: new Date(u.updatedAt)
-            });
-        }
-    });
-    filteredLeaves.forEach(l => {
-        if (l.createdAt) {
-            hrActivities.push({
-                id: `leave-apply-${l._id}`,
-                user: {
-                    name: l.employee?.name || "System",
-                    initials: l.employee?.name?.charAt(0) || "S",
-                    color: "bg-blue-100 text-blue-700",
-                    profilePic: l.employee?.profilePic
-                },
-                subject: l.employee?.name || "Employee",
-                action: `Leave Applied (${l.status})`,
-                note: `${l.totalDays} days of ${l.leaveType}. Reason: ${l.reason}`,
-                time: new Date(l.createdAt).toLocaleDateString(),
-                timestamp: new Date(l.createdAt)
-            });
-        }
-        if (l.processedAt && (l.status === "Approved" || l.status === "Rejected")) {
-            hrActivities.push({
-                id: `leave-process-${l._id}`,
-                user: {
-                    name: l.processedBy?.name || "HR/Admin",
-                    initials: l.processedBy?.name?.charAt(0) || "A",
-                    color: l.status === "Approved" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700",
-                    profilePic: l.processedBy?.profilePic
-                },
-                subject: l.employee?.name || "Employee",
-                action: l.status === "Approved" ? "Leave Approved" : "Leave Rejected",
-                note: `${l.totalDays} days of ${l.leaveType} processed.`,
-                time: new Date(l.processedAt).toLocaleDateString(),
-                timestamp: new Date(l.processedAt)
-            });
-        }
-    });
-    const recentHrActivities = hrActivities
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 15);
+        return trendPoints;
+    };
+    const trendData = getCompletionTrendData();
 
+    // PDF Handlers
     const handleExportOverallHRReport = () => {
         const sections = [
             {
-                title: "Employee Overview Metrics",
-                columns: ["Metric", "Count"],
+                title: "Employee Performance Metrics Summary",
+                columns: ["Metric", "Value"],
                 data: [
-                    ["Total Employees", filteredUsers.length],
-                    ["Active Employees", filteredUsers.filter(u => u.status !== "inactive").length],
-                    ["Inactive Employees", filteredUsers.filter(u => u.status === "inactive").length],
-                    ["New Joinees", newJoineesCount],
-                    ["Employees on Leave", employeesOnLeaveCount]
+                    ["Total Assigned Tasks", totalAssignedTasksAgg],
+                    ["Completed Tasks", totalCompletedTasksAgg],
+                    ["Overdue Tasks", totalOverdueTasksAgg],
+                    ["Avg Completion Rate", `${avgCompletionRateAgg}%`],
+                    ["Avg Completion Time", `${avgCompletionTimeAgg} days`],
+                    ["Total Leave Days Taken", totalLeaveDaysAgg]
                 ]
             },
             {
-                title: "Department Breakdown",
-                columns: ["Department Name", "Total Employees", "Active", "Inactive"],
-                data: deptWiseCounts.map(d => [d.name, d.total, d.active, d.inactive])
+                title: "Individual Performance Breakdown",
+                columns: ["Employee Name", "Department", "Assigned", "Completed", "Overdue", "Completion %", "Leaves Taken"],
+                data: activePerformanceList.map(item => [
+                    item.employee.name,
+                    item.employee.department || "Engineering",
+                    item.assignedCount,
+                    item.completedCount,
+                    item.overdueCount,
+                    `${item.completionRate}%`,
+                    item.leavesTakenDays
+                ])
             },
             {
-                title: "Leave Analytics Breakdown",
-                columns: ["Leave Category", "Total Applications"],
+                title: "Deadline Adherence",
+                columns: ["Adherence Category", "Tasks Count", "Percentage"],
                 data: [
-                    ["Pending Leaves", filteredLeaves.filter(l => l.status === "Pending").length],
-                    ["Approved Leaves", filteredLeaves.filter(l => l.status === "Approved").length],
-                    ["Rejected Leaves", filteredLeaves.filter(l => l.status === "Rejected").length],
-                    ["Casual Leaves Type", casualCount],
-                    ["Sick Leaves Type", sickCount],
-                    ["Earned Leaves Type", earnedCount],
-                    ["Unpaid Leaves Type", unpaidCount]
+                    ["Before Deadline", totalBeforeDeadlineAgg, `${beforeDeadlinePct}%`],
+                    ["On Deadline", totalOnDeadlineAgg, `${onDeadlinePct}%`],
+                    ["After Deadline", totalAfterDeadlineAgg, `${afterDeadlinePct}%`]
                 ]
             },
             {
-                title: "Workforce Distribution",
-                columns: ["Workforce Role", "Count"],
+                title: "Leaves Breakdown",
+                columns: ["Leave Category", "Total Days Taken"],
                 data: [
-                    ["Team Lead Count", filteredUsers.filter(u => u.role === "TL").length],
-                    ["QA Reviewer Count", filteredUsers.filter(u => u.role === "qa").length],
-                    ["HR Executive Count", filteredUsers.filter(u => u.role === "hr").length],
-                    ["Employee/Developer Count", filteredUsers.filter(u => u.role === "developer" || u.role === "employee").length]
+                    ["Casual Leaves", totalCasualLeavesAgg],
+                    ["Sick Leaves", totalSickLeavesAgg],
+                    ["Earned Leaves", totalEarnedLeavesAgg],
+                    ["Unpaid Leaves", totalUnpaidLeavesAgg]
                 ]
             }
         ];
 
         exportOverallReport({
-            title: `HR Workforce Analytics - ${selectedDept === "All" ? "All Departments" : selectedDept}`,
-            filename: `hr_workforce_report_${new Date().getTime()}.pdf`,
+            title: `HR Employee Performance Report - ${selectedDept === "All" ? "All Departments" : selectedDept}`,
+            filename: `hr_performance_report_${new Date().getTime()}.pdf`,
             sections
         });
     };
 
     const handleExportHRActivity = () => {
-        const columns = ["User", "Action", "Detail", "Date"];
-        const data = recentHrActivities.map(a => [
-            a.subject,
-            a.action,
-            a.note,
-            a.time
+        const columns = ["Employee", "Assigned Tasks", "Completed Tasks", "Overdue", "Completion %", "Leaves"];
+        const data = activePerformanceList.map(item => [
+            item.employee.name,
+            item.assignedCount,
+            item.completedCount,
+            item.overdueCount,
+            `${item.completionRate}%`,
+            item.leavesTakenDays
         ]);
         exportPDF({
-            title: "HR Activity Log Report",
-            filename: `hr_activity_log_${new Date().getTime()}.pdf`,
+            title: "Employee Productivity Scorecard",
+            filename: `employee_productivity_scorecard_${new Date().getTime()}.pdf`,
             columns,
             data
         });
     };
-
-    const hrInsights = [
-        { label: "Total Employees", value: filteredUsers.length, data: filteredUsers, color: "text-slate-800", bg: "bg-white", dot: "bg-slate-400" },
-        { label: "Active Employees", value: filteredUsers.filter(u => u.status !== "inactive").length, data: filteredUsers.filter(u => u.status !== "inactive"), color: "text-emerald-600", bg: "bg-white", dot: "bg-emerald-500" },
-        { label: "Inactive Employees", value: filteredUsers.filter(u => u.status === "inactive").length, data: filteredUsers.filter(u => u.status === "inactive"), color: "text-rose-600", bg: "bg-white", dot: "bg-rose-500" },
-        { label: "New Joinees", value: newJoineesCount, data: newJoineesList, color: "text-blue-600", bg: "bg-white", dot: "bg-blue-500" },
-        { label: "Employees On Leave", value: employeesOnLeaveCount, data: onLeaveEmployeesData, color: "text-amber-600", bg: "bg-white", dot: "bg-amber-500" }
-    ];
 
     const filteredTasks = !selectedProjectId ? [] : tasks.filter(t => {
         const matchesProject = selectedProjectId === "All" || t.project?._id === selectedProjectId;
@@ -503,34 +561,72 @@ const ReportsDashboard = ({ focus }) => {
     if (activeFocus === "hr") {
         return (
             <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
-                <AdminSidebar role="hr" />
+                <AdminSidebar role={user?.role === 'admin' ? 'admin' : 'hr'} />
                 <div className="flex-1 flex flex-col h-screen overflow-hidden">
-                    <Topbar DashboardTile="Workforce Analytics" />
+                    <Topbar DashboardTile="Employee Performance Review" />
                     
                     <main className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto">
+                        
                         {/* Header Section */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                             <div>
-                                <h1 className="dashboard-heading">Workforce & Employee Analytics</h1>
-                                <p className="dashboard-subheading">Data snapshot for {new Date().toLocaleDateString()}</p>
+                                <h1 className="dashboard-heading text-2xl font-black tracking-tight text-slate-800">Employee Performance & Productivity</h1>
+                                <p className="dashboard-subheading text-xs font-semibold text-slate-400 mt-1">Review organizational task completion timelines, deadline adherence, and leave patterns.</p>
                             </div>
-                            <button 
-                                onClick={handleExportOverallHRReport}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
-                            >
-                                <Download className="w-4 h-4" /> Export Overall HR Report
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button 
+                                    onClick={handleExportHRActivity}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-650 hover:bg-slate-50 rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
+                                >
+                                    <Download className="w-4 h-4 text-slate-450" /> Export Scorecard
+                                </button>
+                                <button 
+                                    onClick={handleExportOverallHRReport}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
+                                >
+                                    <Download className="w-4 h-4" /> Export Overall PDF
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Filter Bar */}
+                        {/* Top Filters */}
                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60 flex flex-wrap lg:flex-nowrap items-center gap-4">
+                            
+                            {/* Employee Filter */}
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Employee</label>
+                                <div className="relative">
+                                    <select 
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none"
+                                        value={selectedEmployeeId}
+                                        onChange={(e) => {
+                                            setSelectedEmployeeId(e.target.value);
+                                            setActiveCardFilter("all"); 
+                                        }}
+                                    >
+                                        <option value="All">All Employees</option>
+                                        {dropdownEmployeesList.map(u => (
+                                            <option key={u._id} value={u._id}>{u.name}</option>
+                                        ))}
+                                    </select>
+                                    <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Department Filter */}
                             <div className="flex-1 min-w-[200px]">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">Department</label>
                                 <div className="relative">
                                     <select 
                                         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold rounded-xl focus:ring-2 focus:ring-blue-500/20 outline-none transition text-sm cursor-pointer appearance-none"
                                         value={selectedDept}
-                                        onChange={(e) => setSelectedDept(e.target.value)}
+                                        onChange={(e) => {
+                                            setSelectedDept(e.target.value);
+                                            setSelectedEmployeeId("All"); 
+                                            setActiveCardFilter("all"); 
+                                        }}
                                     >
                                         <option value="All">All Departments</option>
                                         {departments.map(d => (
@@ -542,7 +638,9 @@ const ReportsDashboard = ({ focus }) => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="flex-1 min-w-[200px]">
+
+                            {/* From Date */}
+                            <div className="flex-1 min-w-[150px]">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">From Date</label>
                                 <input 
                                     type="date" 
@@ -551,7 +649,9 @@ const ReportsDashboard = ({ focus }) => {
                                     onChange={(e) => setFromDate(e.target.value)}
                                 />
                             </div>
-                            <div className="flex-1 min-w-[200px]">
+
+                            {/* To Date */}
+                            <div className="flex-1 min-w-[150px]">
                                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">To Date</label>
                                 <input 
                                     type="date" 
@@ -562,362 +662,565 @@ const ReportsDashboard = ({ focus }) => {
                             </div>
                         </div>
 
-                        {/* Employee Overview Stats */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xs font-bold text-slate-850 uppercase tracking-wider flex items-center gap-2">
-                                    <Users className="w-4 h-4 text-blue-500" />
-                                    Employee Overview
-                                </h2>
+                        {/* Performance Summary Cards Row */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                            {/* Card 1: Assigned Tasks */}
+                            <div 
+                                onClick={() => setActiveCardFilter(activeCardFilter === "assigned" ? "all" : "assigned")}
+                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                    activeCardFilter === "assigned" ? "border-blue-500 ring-2 ring-blue-500/10 shadow-md" : "border-slate-200/60 hover:border-blue-300"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Assigned Tasks</span>
+                                    <Briefcase className="w-4 h-4 text-slate-450" />
+                                </div>
+                                <div className="text-2xl font-black text-slate-800">{totalAssignedTasksAgg}</div>
+                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
                             </div>
-                            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-                                {hrInsights.map((stat, i) => (
-                                    <div 
-                                        key={i} 
-                                        onClick={() => setStatModal({ isOpen: true, title: stat.label, data: stat.data, type: "employee" })} 
-                                        className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 hover:shadow-md transition-all cursor-pointer hover:scale-[1.02] hover:border-blue-300"
-                                    >
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className={`w-2.5 h-2.5 rounded-full ${stat.dot}`}></div>
-                                                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</span>
-                                            </div>
-                                            {stat.label === "Total Employees" && <Users className="w-4 h-4 text-slate-400" />}
-                                            {stat.label === "Active Employees" && <UserCheck className="w-4 h-4 text-emerald-500" />}
-                                            {stat.label === "Inactive Employees" && <UserX className="w-4 h-4 text-rose-500" />}
-                                            {stat.label === "New Joinees" && <Calendar className="w-4 h-4 text-blue-500" />}
-                                            {stat.label === "Employees On Leave" && <Clock className="w-4 h-4 text-amber-500" />}
-                                        </div>
-                                        <div className={`text-3xl font-black ${stat.color}`}>{stat.value}</div>
-                                    </div>
-                                ))}
+
+                            {/* Card 2: Completed Tasks */}
+                            <div 
+                                onClick={() => setActiveCardFilter(activeCardFilter === "completed" ? "all" : "completed")}
+                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                    activeCardFilter === "completed" ? "border-emerald-500 ring-2 ring-emerald-500/10 shadow-md" : "border-slate-200/60 hover:border-emerald-300"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Completed Tasks</span>
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                </div>
+                                <div className="text-2xl font-black text-emerald-600">{totalCompletedTasksAgg}</div>
+                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
+                            </div>
+
+                            {/* Card 3: Overdue Tasks */}
+                            <div 
+                                onClick={() => setActiveCardFilter(activeCardFilter === "overdue" ? "all" : "overdue")}
+                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                    activeCardFilter === "overdue" ? "border-rose-500 ring-2 ring-rose-500/10 shadow-md" : "border-slate-200/60 hover:border-rose-300"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Overdue Tasks</span>
+                                    <AlertCircle className="w-4 h-4 text-rose-550" />
+                                </div>
+                                <div className="text-2xl font-black text-rose-600">{totalOverdueTasksAgg}</div>
+                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
+                            </div>
+
+                            {/* Card 4: Completion Rate */}
+                            <div 
+                                onClick={() => setActiveCardFilter(activeCardFilter === "rate" ? "all" : "rate")}
+                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                    activeCardFilter === "rate" ? "border-indigo-500 ring-2 ring-indigo-500/10 shadow-md" : "border-slate-200/60 hover:border-indigo-300"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Completion Rate</span>
+                                    <Target className="w-4 h-4 text-indigo-500" />
+                                </div>
+                                <div className="text-2xl font-black text-indigo-600">{avgCompletionRateAgg}%</div>
+                                <div className="text-[10px] text-slate-400 font-bold mt-1">Rate &lt; 80% filters</div>
+                            </div>
+
+                            {/* Card 5: Average Completion Time */}
+                            <div 
+                                className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200/60 transition-all hover:shadow"
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Avg Completion Time</span>
+                                    <Clock className="w-4 h-4 text-blue-500" />
+                                </div>
+                                <div className="text-2xl font-black text-blue-600">{avgCompletionTimeAgg} <span className="text-xs font-semibold text-slate-400">days</span></div>
+                                <div className="text-[10px] text-slate-450 font-bold mt-1">Task timeline velocity</div>
+                            </div>
+
+                            {/* Card 6: Total Leave Days */}
+                            <div 
+                                onClick={() => setActiveCardFilter(activeCardFilter === "leaves" ? "all" : "leaves")}
+                                className={`bg-white rounded-2xl p-4 shadow-sm border transition-all cursor-pointer hover:scale-[1.02] ${
+                                    activeCardFilter === "leaves" ? "border-amber-500 ring-2 ring-amber-500/10 shadow-md" : "border-slate-200/60 hover:border-amber-300"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[10px] font-black text-slate-405 uppercase tracking-wider">Leaves Taken</span>
+                                    <Calendar className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="text-2xl font-black text-amber-600">{totalLeaveDaysAgg} <span className="text-xs font-semibold text-slate-400">days</span></div>
+                                <div className="text-[10px] text-slate-400 font-bold mt-1">Click to filter table</div>
                             </div>
                         </div>
 
-                        {/* Middle Layout Grid: Leave Analytics & Department Analytics (Left) and Workforce Distribution (Right) */}
+                        {/* Main Grid: Left (Employee Performance Table) & Right (Productivity Charts) */}
                         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                             
-                            {/* Leave & Department Analytics (Left 2 cols) */}
-                            <div className="xl:col-span-2 space-y-6">
-                                
-                                {/* Leave Analytics Card */}
-                                <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/60 space-y-6">
-                                    <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                                        <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm uppercase tracking-wider">
-                                            <Clock className="w-4 h-4 text-amber-500" />
-                                            Leave Analytics
-                                        </h3>
-                                        <span className="text-xs font-bold bg-amber-50 text-amber-600 px-2.5 py-1 rounded-lg border border-amber-100/60">
-                                            {filteredLeaves.length} Total Requests
-                                        </span>
-                                    </div>
-
-                                    {/* Sub-grid of statuses */}
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="bg-amber-50/50 border border-amber-100/60 rounded-xl p-4 text-center">
-                                            <span className="block text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">Pending</span>
-                                            <div className="text-2xl font-black text-amber-600">
-                                                {filteredLeaves.filter(l => l.status === "Pending").length}
-                                            </div>
-                                        </div>
-                                        <div className="bg-emerald-50/50 border border-emerald-100/60 rounded-xl p-4 text-center">
-                                            <span className="block text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Approved</span>
-                                            <div className="text-2xl font-black text-emerald-600">
-                                                {filteredLeaves.filter(l => l.status === "Approved").length}
-                                            </div>
-                                        </div>
-                                        <div className="bg-rose-50/50 border border-rose-100/60 rounded-xl p-4 text-center">
-                                            <span className="block text-[10px] font-bold text-rose-600 uppercase tracking-wider mb-1">Rejected</span>
-                                            <div className="text-2xl font-black text-rose-600">
-                                                {filteredLeaves.filter(l => l.status === "Rejected").length}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Leave Type Distribution */}
-                                    <div className="space-y-4">
-                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Leave Type Distribution</h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            {/* Casual Leave */}
-                                            <div className="space-y-1.5">
-                                                <div className="flex justify-between text-xs font-bold text-slate-600">
-                                                    <span>Casual Leave</span>
-                                                    <span>{casualCount} ({getPct(casualCount)}%)</span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 rounded-full h-2">
-                                                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${getPct(casualCount)}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* Sick Leave */}
-                                            <div className="space-y-1.5">
-                                                <div className="flex justify-between text-xs font-bold text-slate-600">
-                                                    <span>Sick Leave</span>
-                                                    <span>{sickCount} ({getPct(sickCount)}%)</span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 rounded-full h-2">
-                                                    <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${getPct(sickCount)}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* Earned Leave */}
-                                            <div className="space-y-1.5">
-                                                <div className="flex justify-between text-xs font-bold text-slate-600">
-                                                    <span>Earned Leave</span>
-                                                    <span>{earnedCount} ({getPct(earnedCount)}%)</span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 rounded-full h-2">
-                                                    <div className="bg-amber-500 h-2 rounded-full" style={{ width: `${getPct(earnedCount)}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* Unpaid Leave */}
-                                            <div className="space-y-1.5">
-                                                <div className="flex justify-between text-xs font-bold text-slate-600">
-                                                    <span>Unpaid Leave</span>
-                                                    <span>{unpaidCount} ({getPct(unpaidCount)}%)</span>
-                                                </div>
-                                                <div className="w-full bg-slate-100 rounded-full h-2">
-                                                    <div className="bg-rose-500 h-2 rounded-full" style={{ width: `${getPct(unpaidCount)}%` }}></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                            {/* Left Panel: Performance Table (2/3 cols) */}
+                            <div className="xl:col-span-2 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-blue-500" />
+                                        Employee Productivity & Performance Review
+                                    </h2>
+                                    {activeCardFilter !== "all" && (
+                                        <button 
+                                            onClick={() => setActiveCardFilter("all")}
+                                            className="px-2.5 py-1 bg-blue-50 text-blue-600 font-bold text-[11px] rounded-lg border border-blue-100/60 hover:bg-blue-100 transition-colors border-none cursor-pointer"
+                                        >
+                                            Clear Card Filter: <span className="uppercase">{activeCardFilter}</span>
+                                        </button>
+                                    )}
                                 </div>
 
-                                {/* Department Analytics Card */}
                                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-                                    <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                                        <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm uppercase tracking-wider">
-                                            <BarChart3 className="w-4 h-4 text-blue-500" />
-                                            Department Analytics
-                                        </h3>
-                                        <span className="text-xs font-bold text-slate-400">
-                                            Active vs Inactive Distribution
-                                        </span>
-                                    </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
-                                                <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                    <th className="p-4 pl-6 font-semibold">Department</th>
-                                                    <th className="p-4 font-semibold text-center">Total Staff</th>
-                                                    <th className="p-4 font-semibold text-center">Active / Inactive</th>
-                                                    <th className="p-4 font-semibold w-1/3">Staffing Ratio</th>
-                                                    <th className="p-4 font-semibold text-right pr-6">New Joinees</th>
+                                                <tr className="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-450 uppercase tracking-wider">
+                                                    <th className="p-4 pl-6 font-semibold">Employee</th>
+                                                    <th className="p-4 font-semibold">Department</th>
+                                                    <th className="p-4 font-semibold text-center">Assigned</th>
+                                                    <th className="p-4 font-semibold text-center">Completed</th>
+                                                    <th className="p-4 font-semibold text-center">Overdue</th>
+                                                    <th className="p-4 font-semibold w-1/4">Completion Rate</th>
+                                                    <th className="p-4 font-semibold text-center">Leaves</th>
+                                                    <th className="p-4 font-semibold text-right pr-6">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
-                                                {deptWiseCounts.map((dept, i) => {
-                                                    const activePct = dept.total > 0 ? Math.round((dept.active / dept.total) * 100) : 0;
-                                                    const deptNewJoinees = newJoineesList.filter(u => (u.department || "Engineering").toLowerCase() === dept.name.toLowerCase()).length;
-                                                    return (
-                                                        <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
+                                                {tableFilteredPerformanceList.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="8" className="p-8 text-center text-slate-400 font-semibold text-sm">
+                                                            No employee performance records match the active filters.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    tableFilteredPerformanceList.map((item, i) => (
+                                                        <tr 
+                                                            key={i} 
+                                                            onClick={() => {
+                                                                setPerformanceSidebarUser(item.employee);
+                                                                setIsPerformanceSidebarOpen(true);
+                                                            }}
+                                                            className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
+                                                        >
+                                                            {/* Name and Designation */}
                                                             <td className="p-4 pl-6">
-                                                                <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">
-                                                                    {dept.name}
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
+                                                                        {item.employee.profilePic ? (
+                                                                            <img src={item.employee.profilePic} alt={item.employee.name} className="w-full h-full object-cover" />
+                                                                        ) : (
+                                                                            item.employee.name?.charAt(0) || "U"
+                                                                        )}
+                                                                    </div>
+                                                                    <div>
+                                                                        <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{item.employee.name}</div>
+                                                                        <div className="text-[10px] font-semibold text-slate-400 mt-0.5">{item.employee.designation || "Employee"}</div>
+                                                                    </div>
                                                                 </div>
                                                             </td>
-                                                            <td className="p-4 text-center">
-                                                                <span className="inline-flex px-2.5 py-1 bg-slate-50 text-slate-700 font-bold text-xs rounded-lg">
-                                                                    {dept.total}
-                                                                </span>
+
+                                                            {/* Department */}
+                                                            <td className="p-4 text-xs font-semibold text-slate-500">
+                                                                {item.employee.department || "Engineering"}
                                                             </td>
+
+                                                            {/* Assigned Tasks */}
                                                             <td className="p-4 text-center">
-                                                                <div className="flex items-center justify-center gap-1.5">
-                                                                    <span className="text-xs font-bold text-emerald-600">{dept.active}A</span>
-                                                                    <span className="text-slate-300">/</span>
-                                                                    <span className="text-xs font-bold text-rose-600">{dept.inactive}I</span>
-                                                                </div>
+                                                                <span className="font-bold text-slate-700 text-sm">{item.assignedCount}</span>
                                                             </td>
+
+                                                            {/* Completed Tasks */}
+                                                            <td className="p-4 text-center">
+                                                                {item.completedCount > 0 ? (
+                                                                    <span className="inline-flex px-2 py-0.5 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-lg">
+                                                                        {item.completedCount}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-300 font-bold text-sm">-</span>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Overdue Tasks */}
+                                                            <td className="p-4 text-center">
+                                                                {item.overdueCount > 0 ? (
+                                                                    <span className="inline-flex px-2 py-0.5 bg-rose-50 text-rose-600 font-bold text-xs rounded-lg border border-rose-100/60">
+                                                                        {item.overdueCount}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-slate-350 font-semibold text-sm">-</span>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Completion Rate progress */}
                                                             <td className="p-4">
                                                                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-1">
-                                                                    <span>{activePct}% Active</span>
+                                                                    <span>{item.completionRate}%</span>
                                                                 </div>
                                                                 <div className="w-full bg-slate-100 rounded-full h-1.5">
                                                                     <div 
-                                                                        className="bg-emerald-500 h-1.5 rounded-full" 
-                                                                        style={{ width: `${activePct}%` }}
+                                                                        className={`h-1.5 rounded-full ${item.completionRate < 50 ? 'bg-rose-450' : item.completionRate < 80 ? 'bg-amber-450' : 'bg-emerald-500'}`}
+                                                                        style={{ width: `${item.completionRate}%` }}
                                                                     ></div>
                                                                 </div>
                                                             </td>
-                                                            <td className="p-4 text-right pr-6">
-                                                                {deptNewJoinees > 0 ? (
-                                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 font-bold text-[11px] rounded-full border border-blue-100">
-                                                                        +{deptNewJoinees} new
-                                                                    </span>
+
+                                                            {/* Leaves Taken */}
+                                                            <td className="p-4 text-center">
+                                                                {item.leavesTakenDays > 0 ? (
+                                                                    <span className="font-bold text-amber-600 text-sm">{item.leavesTakenDays}d</span>
                                                                 ) : (
-                                                                    <span className="text-slate-300 text-sm font-semibold">-</span>
+                                                                    <span className="text-slate-300 font-bold text-sm">-</span>
                                                                 )}
                                                             </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Workforce Distribution (Right 1 col) */}
-                            <div className="xl:col-span-1 space-y-4">
-                                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                                    <Briefcase className="w-4 h-4 text-blue-500" />
-                                    Workforce Distribution
-                                </h2>
-                                <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-6 shadow-lg shadow-blue-900/20 text-white relative overflow-hidden h-[calc(100%-2rem)] min-h-[350px] flex flex-col justify-between hover:shadow-xl transition-all duration-300">
-                                    {/* Decor */}
-                                    <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-[40px] pointer-events-none"></div>
-                                    <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[40px] pointer-events-none"></div>
-                                    
-                                    <div className="relative z-10 flex-1 flex flex-col justify-between space-y-6">
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10 shrink-0">
-                                                    Designation Focus
-                                                </span>
-                                                <h3 className="text-2xl font-black tracking-tight mt-2">Roles Overview</h3>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4 flex-1 flex flex-col justify-center">
-                                            {/* Team Leads */}
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-xs font-bold text-blue-100">
-                                                    <span>Team Leads (TL)</span>
-                                                    <span>{filteredUsers.filter(u => u.role === "TL").length}</span>
-                                                </div>
-                                                <div className="w-full bg-black/20 rounded-full h-1.5">
-                                                    <div className="bg-white h-1.5 rounded-full" style={{ width: `${filteredUsers.length > 0 ? (filteredUsers.filter(u => u.role === "TL").length / filteredUsers.length) * 100 : 0}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* QA Reviewers */}
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-xs font-bold text-blue-100">
-                                                    <span>QA Reviewers</span>
-                                                    <span>{filteredUsers.filter(u => u.role === "qa").length}</span>
-                                                </div>
-                                                <div className="w-full bg-black/20 rounded-full h-1.5">
-                                                    <div className="bg-white h-1.5 rounded-full" style={{ width: `${filteredUsers.length > 0 ? (filteredUsers.filter(u => u.role === "qa").length / filteredUsers.length) * 100 : 0}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* HR Executives */}
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-xs font-bold text-blue-100">
-                                                    <span>HR Executives</span>
-                                                    <span>{filteredUsers.filter(u => u.role === "hr").length}</span>
-                                                </div>
-                                                <div className="w-full bg-black/20 rounded-full h-1.5">
-                                                    <div className="bg-white h-1.5 rounded-full" style={{ width: `${filteredUsers.length > 0 ? (filteredUsers.filter(u => u.role === "hr").length / filteredUsers.length) * 100 : 0}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* Developers & Employees */}
-                                            <div className="space-y-1">
-                                                <div className="flex justify-between text-xs font-bold text-blue-100">
-                                                    <span>Developers & Employees</span>
-                                                    <span>{filteredUsers.filter(u => u.role === "developer" || u.role === "employee").length}</span>
-                                                </div>
-                                                <div className="w-full bg-black/20 rounded-full h-1.5">
-                                                    <div className="bg-white h-1.5 rounded-full" style={{ width: `${filteredUsers.length > 0 ? (filteredUsers.filter(u => u.role === "developer" || u.role === "employee").length / filteredUsers.length) * 100 : 0}%` }}></div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="border-t border-white/10 pt-4 flex items-center justify-between text-xs font-semibold text-blue-200">
-                                            <span>Active Departments</span>
-                                            <span>{departments.length} Depts</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Recent HR Activity Log */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                                    <Activity className="w-4 h-4 text-blue-500" />
-                                    Recent HR Activity Log
-                                </h2>
-                                <button 
-                                    onClick={handleExportHRActivity}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition shadow-sm cursor-pointer border-none"
-                                >
-                                    <Download className="w-3.5 h-3.5" /> Export Activity Log
-                                </button>
-                            </div>
-                            
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
-                                {recentHrActivities.length === 0 ? (
-                                    <div className="p-8 text-center text-slate-400 font-semibold text-sm">
-                                        No recent HR activities logged in this filter scope.
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
-                                            <thead>
-                                                <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                    <th className="p-4 pl-6 font-semibold">User</th>
-                                                    <th className="p-4 font-semibold">Action</th>
-                                                    <th className="p-4 font-semibold">Details</th>
-                                                    <th className="p-4 font-semibold text-right pr-6">Date</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-slate-100">
-                                                {recentHrActivities.map((act) => (
-                                                    <tr key={act.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                        <td className="p-4 pl-6">
-                                                            <div className="flex items-center gap-2.5">
-                                                                <div className={`w-8 h-8 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-xs shadow-sm overflow-hidden ${act.user.color}`}>
-                                                                    {act.user.profilePic ? (
-                                                                        <img src={act.user.profilePic} alt={act.user.name} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        act.user.initials
-                                                                    )}
-                                                                </div>
-                                                                <span className="font-bold text-slate-700 text-sm group-hover:text-blue-600 transition-colors">
-                                                                    {act.user.name}
+                                                            {/* Availability Status */}
+                                                            <td className="p-4 text-right pr-6">
+                                                                <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-lg border ${
+                                                                    item.status === 'inactive' ? 'bg-slate-50 text-slate-450 border-slate-100' : 'bg-emerald-50/50 text-emerald-600 border-emerald-100/60'
+                                                                }`}>
+                                                                    {item.status === 'inactive' ? 'Inactive' : 'Active'}
                                                                 </span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-4">
-                                                            <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${
-                                                                act.action.includes('Approved') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                                act.action.includes('Rejected') ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                                                act.action.includes('Created') ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
-                                                                act.action.includes('Inactivated') ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                                'bg-blue-50 text-blue-600 border-blue-100'
-                                                            }`}>
-                                                                {act.action}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-4 text-sm text-slate-500 font-medium min-w-[200px]" title={act.note}>
-                                                            {act.note}
-                                                        </td>
-                                                        <td className="p-4 text-xs font-semibold text-slate-400 text-right pr-6 whitespace-nowrap">
-                                                            {act.time}
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
-                                )}
+                                </div>
+                            </div>
+
+                            {/* Right Panel: Advanced Productivity & Adherence Charts (1/3 col) */}
+                            <div className="xl:col-span-1 space-y-6">
+                                
+                                {/* Chart 1: Deadline Adherence */}
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 space-y-4">
+                                    <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider border-b border-slate-100 pb-2">
+                                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                        Deadline Adherence Chart
+                                    </h3>
+                                    
+                                    {totalTasksCompletedAgg === 0 ? (
+                                        <div className="text-center py-6 text-xs text-slate-400 font-semibold">
+                                            No completed tasks available to chart deadline adherence.
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4">
+                                            {/* Stacked Bar container */}
+                                            <div className="w-full bg-slate-100 h-6 rounded-xl overflow-hidden flex relative group cursor-pointer shadow-inner">
+                                                <div 
+                                                    className="bg-emerald-500 h-full hover:brightness-95 transition-all" 
+                                                    style={{ width: `${beforeDeadlinePct}%` }}
+                                                    title={`Before Deadline: ${totalBeforeDeadlineAgg} tasks (${beforeDeadlinePct}%)`}
+                                                />
+                                                <div 
+                                                    className="bg-amber-400 h-full hover:brightness-95 transition-all" 
+                                                    style={{ width: `${onDeadlinePct}%` }}
+                                                    title={`On Deadline: ${totalOnDeadlineAgg} tasks (${onDeadlinePct}%)`}
+                                                />
+                                                <div 
+                                                    className="bg-rose-500 h-full hover:brightness-95 transition-all" 
+                                                    style={{ width: `${afterDeadlinePct}%` }}
+                                                    title={`After Deadline: ${totalAfterDeadlineAgg} tasks (${afterDeadlinePct}%)`}
+                                                />
+                                            </div>
+
+                                            {/* Labels with percentages and values */}
+                                            <div className="grid grid-cols-3 gap-2 pt-1">
+                                                <div className="text-center">
+                                                    <span className="block w-2.5 h-2.5 rounded-full bg-emerald-500 mx-auto mb-1"></span>
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">Before</span>
+                                                    <div className="text-xs font-black text-slate-700">{beforeDeadlinePct}% <span className="font-semibold text-[10px] text-slate-400">({totalBeforeDeadlineAgg})</span></div>
+                                                </div>
+                                                <div className="text-center border-x border-slate-100">
+                                                    <span className="block w-2.5 h-2.5 rounded-full bg-amber-400 mx-auto mb-1"></span>
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">On Time</span>
+                                                    <div className="text-xs font-black text-slate-700">{onDeadlinePct}% <span className="font-semibold text-[10px] text-slate-400">({totalOnDeadlineAgg})</span></div>
+                                                </div>
+                                                <div className="text-center">
+                                                    <span className="block w-2.5 h-2.5 rounded-full bg-rose-500 mx-auto mb-1"></span>
+                                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">Late</span>
+                                                    <div className="text-xs font-black text-slate-700">{afterDeadlinePct}% <span className="font-semibold text-[10px] text-slate-400">({totalAfterDeadlineAgg})</span></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Chart 2: Task Completion Trend */}
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 space-y-4 font-sans relative">
+                                    <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider border-b border-slate-100 pb-2">
+                                        <Activity className="w-4 h-4 text-blue-500" />
+                                        Task Completion Trend
+                                    </h3>
+
+                                    {/* Custom vertical bar graph chart */}
+                                    <div className="flex items-end justify-between h-28 pt-4 px-2">
+                                        {trendData.map((pt, index) => {
+                                            const maxVal = Math.max(...trendData.map(p => p.value)) || 1;
+                                            const heightPct = Math.round((pt.value / maxVal) * 100);
+                                            return (
+                                                <div key={index} className="flex flex-col items-center flex-1 group cursor-pointer">
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute bg-slate-850 text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-lg -translate-y-9 pointer-events-none z-20">
+                                                        {pt.value} Completed
+                                                    </div>
+                                                    <div 
+                                                        className="w-8 bg-blue-500 group-hover:bg-blue-600 rounded-t-lg transition-all duration-500 relative"
+                                                        style={{ height: `${Math.max(8, heightPct)}%` }}
+                                                    >
+                                                        <div className="absolute top-1 left-0 right-0 text-[9px] text-center font-bold text-white opacity-80">{pt.value}</div>
+                                                    </div>
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase mt-2 text-center truncate w-full max-w-[65px]">{pt.label}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Chart 3: Leave Type Distribution Usage */}
+                                <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/60 space-y-4">
+                                    <h3 className="font-bold text-slate-800 flex items-center gap-2 text-xs uppercase tracking-wider border-b border-slate-100 pb-2">
+                                        <Calendar className="w-4 h-4 text-amber-500" />
+                                        Leave Usage Analysis
+                                    </h3>
+
+                                    <div className="space-y-3.5">
+                                        {/* Casual Leave */}
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs font-bold text-slate-600">
+                                                <span>Casual Leaves</span>
+                                                <span className="font-black text-slate-700">{totalCasualLeavesAgg} days</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-2">
+                                                <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${totalLeaveDaysAgg > 0 ? (totalCasualLeavesAgg / totalLeaveDaysAgg) * 100 : 0}%` }}></div>
+                                            </div>
+                                        </div>
+
+                                        {/* Sick Leave */}
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs font-bold text-slate-600">
+                                                <span>Sick Leaves</span>
+                                                <span className="font-black text-slate-700">{totalSickLeavesAgg} days</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-2">
+                                                <div className="bg-emerald-500 h-2 rounded-full" style={{ width: `${totalLeaveDaysAgg > 0 ? (totalSickLeavesAgg / totalLeaveDaysAgg) * 100 : 0}%` }}></div>
+                                            </div>
+                                        </div>
+
+                                        {/* Earned Leave */}
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs font-bold text-slate-600">
+                                                <span>Earned Leaves</span>
+                                                <span className="font-black text-slate-700">{totalEarnedLeavesAgg} days</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-2">
+                                                <div className="bg-amber-550 h-2 rounded-full" style={{ width: `${totalLeaveDaysAgg > 0 ? (totalEarnedLeavesAgg / totalLeaveDaysAgg) * 100 : 0}%` }}></div>
+                                            </div>
+                                        </div>
+
+                                        {/* Unpaid Leave */}
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs font-bold text-slate-600">
+                                                <span>Unpaid Leaves</span>
+                                                <span className="font-black text-slate-700">{totalUnpaidLeavesAgg} days</span>
+                                            </div>
+                                            <div className="w-full bg-slate-100 rounded-full h-2">
+                                                <div className="bg-rose-500 h-2 rounded-full" style={{ width: `${totalLeaveDaysAgg > 0 ? (totalUnpaidLeavesAgg / totalLeaveDaysAgg) * 100 : 0}%` }}></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+
+                        {/* Employee Performance Drawer */}
+                        {isPerformanceSidebarOpen && performanceSidebarUser && (() => {
+                            const perfData = employeePerformanceData.find(item => item.employee._id === performanceSidebarUser._id) || {
+                                employee: performanceSidebarUser,
+                                assignedCount: 0, completedCount: 0, overdueCount: 0, completionRate: 0, avgCompletionTime: "0.0", leavesTakenDays: 0,
+                                beforeDeadline: 0, onDeadline: 0, afterDeadline: 0,
+                                leavesBreakdown: { casual: 0, sick: 0, earned: 0, unpaid: 0 }
+                            };
+                            const pendingCount = Math.max(0, perfData.assignedCount - perfData.completedCount);
+
+                            return (
+                                <>
+                                    {/* Backdrop */}
+                                    <div 
+                                        className="fixed inset-0 bg-slate-950/40 backdrop-blur-[3px] z-50 transition-opacity duration-300"
+                                        onClick={() => setIsPerformanceSidebarOpen(false)}
+                                    />
+                                    
+                                    {/* Sidebar Container */}
+                                    <div className="fixed inset-y-0 right-0 w-full max-w-md bg-slate-50 shadow-2xl border-l border-slate-200/80 z-50 flex flex-col h-full animate-in slide-in-from-right duration-300 font-sans text-slate-800">
+                                        {/* Header */}
+                                        <div className="bg-white px-6 py-5 border-b border-slate-100 flex items-center justify-between shadow-sm">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-lg shadow-sm overflow-hidden flex-shrink-0">
+                                                    {perfData.employee.profilePic ? (
+                                                        <img src={perfData.employee.profilePic} alt={perfData.employee.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        perfData.employee.name?.charAt(0) || "U"
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-slate-800 text-base">{perfData.employee.name}</h3>
+                                                    <p className="text-xs font-semibold text-slate-400 mt-0.5">{perfData.employee.designation || "Employee"} • {perfData.employee.department || "Engineering"}</p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                onClick={() => setIsPerformanceSidebarOpen(false)}
+                                                className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-650 rounded-xl transition cursor-pointer border-none"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+
+                                        {/* Body Content */}
+                                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                                            {/* General Summary Card */}
+                                            <div className="bg-white p-4 rounded-xl border border-slate-200/60 shadow-sm space-y-3">
+                                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Employee Overview</h4>
+                                                <div className="grid grid-cols-2 gap-4 text-xs">
+                                                    <div>
+                                                        <span className="text-slate-450 font-medium">Reporting Manager</span>
+                                                        <div className="font-bold text-slate-700 mt-0.5">{perfData.employee.reportingManager?.name || perfData.employee.reportingManager || "Not Assigned"}</div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-slate-455 font-medium">Availability Status</span>
+                                                        <div className="mt-0.5">
+                                                            <span className={`inline-flex px-2 py-0.5 text-[10px] font-bold rounded-full ${perfData.employee.status === "inactive" ? "bg-rose-50 text-rose-600 border border-rose-100" : "bg-emerald-50 text-emerald-600 border border-emerald-100"}`}>
+                                                                {perfData.employee.status === "inactive" ? "Inactive" : "Active"}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Productivity Metrics Card */}
+                                            <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm space-y-4">
+                                                <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                                                    <Target className="w-4 h-4 text-blue-500" />
+                                                    Productivity & Tasks
+                                                </h4>
+                                                
+                                                {/* Summary grid */}
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    <div className="bg-slate-50 p-2.5 rounded-lg text-center">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Assigned</span>
+                                                        <div className="text-lg font-black text-slate-700 mt-0.5">{perfData.assignedCount}</div>
+                                                    </div>
+                                                    <div className="bg-emerald-50/40 p-2.5 rounded-lg text-center">
+                                                        <span className="text-[10px] font-bold text-emerald-600 uppercase">Completed</span>
+                                                        <div className="text-lg font-black text-emerald-700 mt-0.5">{perfData.completedCount}</div>
+                                                    </div>
+                                                    <div className="bg-rose-50/40 p-2.5 rounded-lg text-center">
+                                                        <span className="text-[10px] font-bold text-rose-600 uppercase">Overdue</span>
+                                                        <div className="text-lg font-black text-rose-700 mt-0.5">{perfData.overdueCount}</div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Extra calculations */}
+                                                <div className="space-y-3 pt-2">
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-slate-500 font-medium">Pending Tasks</span>
+                                                        <span className="font-bold text-slate-700">{pendingCount}</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-slate-500 font-medium">Task Completion Rate</span>
+                                                        <span className="font-bold text-blue-600">{perfData.completionRate}%</span>
+                                                    </div>
+                                                    <div className="w-full bg-slate-100 rounded-full h-2">
+                                                        <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${perfData.completionRate}%` }}></div>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs pt-1">
+                                                        <span className="text-slate-500 font-medium">Avg Completion Time</span>
+                                                        <span className="font-bold text-slate-700">{perfData.avgCompletionTime} days</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Deadline Adherence Metrics Card */}
+                                            <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm space-y-4">
+                                                <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                                                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                                                    Behavior & Deadline Adherence
+                                                </h4>
+
+                                                <div className="space-y-3">
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-slate-500 font-medium">Completed Before Deadline</span>
+                                                        <span className="inline-flex px-2 py-0.5 bg-emerald-50 text-emerald-600 font-bold rounded-lg">{perfData.beforeDeadline} tasks</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-slate-500 font-medium">Completed On Deadline</span>
+                                                        <span className="inline-flex px-2 py-0.5 bg-amber-50 text-amber-600 font-bold rounded-lg">{perfData.onDeadline} tasks</span>
+                                                    </div>
+                                                    <div className="flex justify-between items-center text-xs">
+                                                        <span className="text-slate-500 font-medium">Completed After Deadline</span>
+                                                        <span className="inline-flex px-2 py-0.5 bg-rose-50 text-rose-600 font-bold rounded-lg">{perfData.afterDeadline} tasks</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Leave Usage Metrics Card */}
+                                            <div className="bg-white p-5 rounded-xl border border-slate-200/60 shadow-sm space-y-4">
+                                                <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
+                                                    <Calendar className="w-4 h-4 text-amber-500" />
+                                                    Leave Balance Usage
+                                                </h4>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="bg-slate-50 p-3 rounded-lg flex items-center justify-between">
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Casual Leaves</span>
+                                                            <span className="text-sm font-black text-slate-700">{perfData.leavesBreakdown.casual} days</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 p-3 rounded-lg flex items-center justify-between">
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Sick Leaves</span>
+                                                            <span className="text-sm font-black text-slate-700">{perfData.leavesBreakdown.sick} days</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 p-3 rounded-lg flex items-center justify-between">
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Earned Leaves</span>
+                                                            <span className="text-sm font-black text-slate-700">{perfData.leavesBreakdown.earned} days</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="bg-slate-50 p-3 rounded-lg flex items-center justify-between">
+                                                        <div>
+                                                            <span className="text-[10px] font-bold text-slate-400 uppercase block">Unpaid Leaves</span>
+                                                            <span className="text-sm font-black text-slate-700">{perfData.leavesBreakdown.unpaid} days</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex justify-between items-center text-xs pt-1 border-t border-slate-100 pt-3">
+                                                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">Total Leave Days Taken</span>
+                                                    <span className="font-black text-amber-600 text-sm">{perfData.leavesTakenDays} days</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Footer Action */}
+                                        <div className="bg-white p-4 border-t border-slate-100 shadow-inner flex items-center justify-end">
+                                            <button 
+                                                onClick={() => setIsPerformanceSidebarOpen(false)}
+                                                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs uppercase tracking-wider transition cursor-pointer border-none"
+                                            >
+                                                Close Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </main>
                 </div>
-                
-                <StatDetailModal 
-                    isOpen={statModal.isOpen} 
-                    onClose={() => setStatModal({ ...statModal, isOpen: false })} 
-                    title={statModal.title} 
-                    data={statModal.data} 
-                    type={statModal.type} 
-                />
             </div>
         );
     }
