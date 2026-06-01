@@ -289,7 +289,7 @@ export const getAllUsers = async (req, res) => {
         
         const isOrgTree = orgTree === 'true' || orgTree === true || String(orgTree).toLowerCase() === 'true';
 
-        if (userRole !== 'admin') {
+        if (userRole !== 'admin' && userRole !== 'hr') {
             const userDept = req.user.department || "";
             const managers = req.user.reportingManagers || [];
             
@@ -301,7 +301,9 @@ export const getAllUsers = async (req, res) => {
             ];
 
             if (userDept) {
-                orConditions.push({ department: userDept });
+                orConditions.push({ 
+                    department: { $regex: new RegExp(`^${userDept.trim()}$`, 'i') } 
+                });
             }
             if (managers.length > 0) {
                 orConditions.push({ _id: { $in: managers } });
