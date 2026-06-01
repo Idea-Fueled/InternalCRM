@@ -959,7 +959,7 @@ const EmployeesDashboard = () => {
                                         : 'bg-white border-slate-200/60 hover:shadow-md hover:border-blue-200'
                                 }`}
                             >
-                                <div className="grid grid-cols-1 lg:grid-cols-3 items-center gap-6 lg:gap-8 w-full">
+                                <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1.2fr_1.7fr] items-center gap-6 lg:gap-8 w-full">
                                     {/* Left: Avatar, Name, Role */}
                                     <div className="flex items-center gap-4 w-full">
                                         <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden
@@ -985,7 +985,7 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     {/* Middle: Dept, Lead, Email */}
-                                    <div className="flex flex-col gap-1 w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8">
+                                    <div className="flex flex-col gap-1 w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
                                         <div className="flex items-center gap-2 text-sm">
                                             <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                             <span className="text-slate-700 font-medium">{emp.dept}</span>
@@ -999,7 +999,7 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     {/* Right: Tasks, Status, Actions */}
-                                    <div className="flex items-center justify-between w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-8 pr-1.5">
+                                    <div className="flex items-center justify-between w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-5 pr-3">
                                         <div className="flex gap-4 items-center shrink-0">
                                             <div className="flex flex-col items-center">
                                                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tasks</span>
