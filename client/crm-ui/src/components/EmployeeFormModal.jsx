@@ -254,6 +254,12 @@ export default function EmployeeFormModal({ isOpen, mode, employee, onClose, onS
             
             if (mode === "edit" && employee) {
                 const empRaw = employee.raw || employee;
+                const empRoleCategory = getUserRoleCategory(empRaw);
+                if (!isAdminRole && empRoleCategory === 'admin') {
+                    toast.error("Access denied. Only administrators can modify admin accounts.");
+                    onClose();
+                    return;
+                }
                 setFormInput({
                     name: empRaw.name || "",
                     email: empRaw.email || "",

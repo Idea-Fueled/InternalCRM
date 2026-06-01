@@ -522,6 +522,16 @@ export const changeUserPassword = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
+        // Non-admin users cannot change password for admin accounts
+        if (req.user?.role !== 'admin') {
+            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Access denied. Only administrators can change password for admin accounts."
+                });
+            }
+        }
+
         const hashed = await hashPassword(newPassword);
         user.password = hashed;
         await user.save();
@@ -583,6 +593,15 @@ export const deleteUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
         
+        // Non-admin users cannot delete/deactivate admin accounts
+        if (req.user?.role !== 'admin') {
+            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
+                return res.status(403).json({
+                    message: "Access denied. Only administrators can delete or deactivate admin accounts."
+                });
+            }
+        }
+
         user.isActive = false;
         await user.save();
         return res.status(200).json({ message: "User deleted successfully!", data: user })
@@ -597,6 +616,15 @@ export const restoreUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
         
+        // Non-admin users cannot restore admin accounts
+        if (req.user?.role !== 'admin') {
+            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
+                return res.status(403).json({
+                    message: "Access denied. Only administrators can restore admin accounts."
+                });
+            }
+        }
+
         user.isActive = true;
         await user.save();
         return res.status(200).json({ message: "User restored successfully!", data: user })
@@ -608,8 +636,19 @@ export const restoreUser = async (req, res) => {
 export const hardDeleteUser = async (req, res) => {
     try {
         const { _id } = req.params;
-        const user = await User.findByIdAndDelete(_id);
+        const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
+
+        // Non-admin users cannot permanently delete admin accounts
+        if (req.user?.role !== 'admin') {
+            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
+                return res.status(403).json({
+                    message: "Access denied. Only administrators can permanently delete admin accounts."
+                });
+            }
+        }
+
+        await User.findByIdAndDelete(_id);
 
         // Clean up Cloudinary if profile pic exists
         if (user.profilePicPublicId) {
