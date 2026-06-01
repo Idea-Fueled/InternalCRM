@@ -932,29 +932,29 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                         {/* Comments Feed */}
                                         <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1.5 scrollbar-thin">
                                             {(project.notes || []).map((note, idx) => (
-                                                <div key={idx} className="flex gap-2.5 items-start">
-                                                    <div className="w-7 h-7 rounded bg-indigo-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm overflow-hidden">
+                                                <div key={idx} className="flex gap-3 items-center w-full">
+                                                    <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm overflow-hidden">
                                                         {note.author?.profilePic ? (
                                                             <img src={note.author.profilePic} alt="" className="w-full h-full object-cover" />
                                                         ) : (
                                                             note.author?.name?.charAt(0) || "U"
                                                         )}
                                                     </div>
-                                                    <div className="flex-1 bg-slate-50/60 border border-slate-100/50 p-3 rounded-2xl space-y-1">
-                                                        <div className="flex items-center justify-between">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span className="text-xs font-black text-slate-800">{note.author?.name || "System User"}</span>
-                                                                <span className={`px-1.5 py-0.2 rounded text-[7px] font-semibold ${
-                                                                    note.author?.role === "admin" ? "bg-rose-50 text-rose-600 border border-rose-100" :
-                                                                    note.author?.role === "TL" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                                                    "bg-blue-50 text-blue-600 border border-blue-100"
+                                                    <div className="flex-1 bg-slate-50/50 border border-slate-100/60 p-3.5 rounded-2xl space-y-1.5 min-w-0">
+                                                        <div className="flex items-center justify-between w-full">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <span className="text-xs font-bold text-slate-800 truncate">{note.author?.name || "System User"}</span>
+                                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shrink-0 ${
+                                                                    note.author?.role === "admin" ? "bg-rose-50/80 text-rose-600 border border-rose-100/50" :
+                                                                    note.author?.role === "TL" ? "bg-amber-50/80 text-amber-600 border-amber-100/50" :
+                                                                    "bg-blue-50/80 text-blue-600 border border-blue-100/50"
                                                                 }`}>
                                                                     {note.author?.role === "TL" ? "TL" : note.author?.role || "Member"}
                                                                 </span>
                                                             </div>
-                                                            <span className="text-[8px] font-black text-slate-400">{formatDate(note.createdAt)}</span>
+                                                            <span className="text-[9px] font-semibold text-slate-400 shrink-0">{formatDate(note.createdAt)}</span>
                                                         </div>
-                                                        <p className="text-[11px] font-semibold text-slate-650 leading-relaxed">
+                                                        <p className="text-[11px] font-semibold text-slate-500 leading-relaxed m-0 text-left">
                                                             {note.text}
                                                         </p>
                                                     </div>
