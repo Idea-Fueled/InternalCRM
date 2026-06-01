@@ -987,15 +987,16 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     {/* Middle: Dept, Lead, Email */}
-                                    <div className="flex flex-col gap-1 w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                            <span className="text-slate-700 font-medium">{emp.dept}</span>
+                                    <div className="flex flex-col gap-1.5 w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
+                                        <div className="flex items-center justify-between text-sm w-full gap-4">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                                                <span className="text-slate-700 font-semibold truncate">{emp.dept}</span>
+                                            </div>
                                             {emp.raw.role !== 'admin' && (
-                                                <>
-                                                    <span className="text-slate-300">•</span>
-                                                    <span className="text-slate-500 truncate">Lead: {emp.lead}</span>
-                                                </>
+                                                <span className="text-[10px] font-bold bg-slate-100 text-slate-650 px-2 py-0.5 rounded-md border border-slate-200/60 shrink-0 truncate max-w-[150px]" title={emp.lead}>
+                                                    Lead: {emp.lead}
+                                                </span>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm mt-1">
