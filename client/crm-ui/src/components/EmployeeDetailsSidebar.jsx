@@ -217,8 +217,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                 </div>
                             </div>
                         </div>
-                    ) : (
-                    activeSection === "overview" && (
+                    ) : activeSection === "overview" ? (
                         <>
                             {/* Contact Details */}
                             <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
@@ -314,7 +313,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                 </div>
                             )}
                         </>
-                    )}
+                    ) : null}
 
                     {activeSection === "projects" && (
                         <div className="space-y-4">
