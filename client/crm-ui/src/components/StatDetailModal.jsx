@@ -33,11 +33,12 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
 
     const renderItem = (item, index) => {
         if (type === 'employee') {
+            const profilePicUrl = item.profilePic || item.raw?.profilePic;
             return (
                 <div key={item._id || index} className="flex items-center justify-between p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors last:border-0">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-700 uppercase text-xs overflow-hidden">
-                            {item.profilePic ? <img src={item.profilePic} alt={item.name} className="w-full h-full object-cover" /> : item.name?.charAt(0) || 'U'}
+                            {profilePicUrl ? <img src={profilePicUrl} alt={item.name} className="w-full h-full object-cover" /> : item.name?.charAt(0) || 'U'}
                         </div>
                         <div>
                             <p className="text-sm font-bold text-slate-800">{item.name}</p>
