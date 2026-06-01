@@ -21,8 +21,14 @@ const ReportsDashboard = ({ focus }) => {
     const [departments, setDepartments] = useState([]);
     const [selectedDept, setSelectedDept] = useState("All");
     const [selectedProjectId, setSelectedProjectId] = useState("");
-    const [fromDate, setFromDate] = useState("2026-04-01");
-    const [toDate, setToDate] = useState("2026-05-31");
+    const [fromDate, setFromDate] = useState(() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 30);
+        return d.toISOString().split('T')[0];
+    });
+    const [toDate, setToDate] = useState(() => {
+        return new Date().toISOString().split('T')[0];
+    });
     const [statModal, setStatModal] = useState({ isOpen: false, title: "", data: [], type: "" });
     const [selectedEmployeeId, setSelectedEmployeeId] = useState("All");
     const [activeCardFilter, setActiveCardFilter] = useState("all");
@@ -1045,6 +1051,15 @@ const ReportsDashboard = ({ focus }) => {
                             };
                             const pendingCount = Math.max(0, perfData.assignedCount - perfData.completedCount);
 
+                            const getManagerName = (emp) => {
+                                if (!emp.reportingManager) return "Not Assigned";
+                                if (typeof emp.reportingManager === "object" && emp.reportingManager.name) {
+                                    return emp.reportingManager.name;
+                                }
+                                const manager = users.find(u => u._id === emp.reportingManager);
+                                return manager ? manager.name : "Not Assigned";
+                            };
+
                             return (
                                 <>
                                     {/* Backdrop */}
@@ -1086,7 +1101,7 @@ const ReportsDashboard = ({ focus }) => {
                                                 <div className="grid grid-cols-2 gap-4 text-xs">
                                                     <div>
                                                         <span className="text-slate-450 font-medium">Reporting Manager</span>
-                                                        <div className="font-bold text-slate-700 mt-0.5">{perfData.employee.reportingManager?.name || perfData.employee.reportingManager || "Not Assigned"}</div>
+                                                        <div className="font-bold text-slate-700 mt-0.5">{getManagerName(perfData.employee)}</div>
                                                     </div>
                                                     <div>
                                                         <span className="text-slate-455 font-medium">Availability Status</span>
