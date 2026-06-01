@@ -10,7 +10,7 @@ import { sendWelcomeEmail } from "../utils/email.js";
 
 export const registerUser = async (req, res, next) => {
     try {
-        let { name, email, password, role, designation, department, reportingManager, status } = req.body;
+        let { name, email, password, role, designation, department, reportingManager, status, phone, casualLeaveBalance, sickLeaveBalance, earnedLeaveBalance } = req.body;
         const incomingTeamLeads = req.body.teamLeads || req.body['teamLeads[]'];
 
         if (!name || !email || !role) {
@@ -105,7 +105,11 @@ export const registerUser = async (req, res, next) => {
             teamLeads: finalTeamLeads,
             profilePic,
             profilePicPublicId,
-            permissions
+            permissions,
+            phone: phone || "",
+            casualLeaveBalance: casualLeaveBalance !== undefined ? Number(casualLeaveBalance) : 12,
+            sickLeaveBalance: sickLeaveBalance !== undefined ? Number(sickLeaveBalance) : 10,
+            earnedLeaveBalance: earnedLeaveBalance !== undefined ? Number(earnedLeaveBalance) : 15
         });
 
         // Generate setup password token (expires in 24 hours)
