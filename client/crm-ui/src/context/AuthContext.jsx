@@ -18,10 +18,12 @@ export const AuthProvider = ({ children }) => {
                 setUser(res.data.user);
             } else {
                 setUser(null);
+                localStorage.removeItem("token");
             }
         } catch (err) {
             console.log("Authentication check failed:", err.response?.status || "Network error");
             setUser(null);
+            localStorage.removeItem("token");
         } finally {
             setLoading(false);
         }
@@ -38,6 +40,7 @@ export const AuthProvider = ({ children }) => {
                 if (error.response?.status === 401) {
                     console.log("Global 401 unauthorized detected, resetting user state...");
                     setUser(null);
+                    localStorage.removeItem("token");
                 }
                 return Promise.reject(error);
             }
@@ -50,12 +53,16 @@ export const AuthProvider = ({ children }) => {
     const login = async (formData) => {
         try {
             const res = await authService.login(formData);
+            if (res.data?.token) {
+                localStorage.setItem("token", res.data.token);
+            }
             if (res.data?.user) {
                 setUser(res.data.user);
             }
             return res;
         } catch (error) {
             setUser(null);
+            localStorage.removeItem("token");
             throw error;
         }
     };
@@ -67,7 +74,7 @@ export const AuthProvider = ({ children }) => {
             console.error("Logout error:", err);
         } finally {
             setUser(null);
-            // No forced redirect here, App.jsx or ProtectedRoute will handle it
+            localStorage.removeItem("token");
         }
     };
 
