@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { authService } from "../api/services";
+import axiosInstance from "../api/axiosInstance";
 
 const AuthContext = createContext();
 
@@ -29,6 +30,22 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         checkAuth();
     }, [checkAuth]);
+
+    useEffect(() => {
+        const interceptor = axiosInstance.interceptors.response.use(
+            (response) => response,
+            (error) => {
+                if (error.response?.status === 401) {
+                    console.log("Global 401 unauthorized detected, resetting user state...");
+                    setUser(null);
+                }
+                return Promise.reject(error);
+            }
+        );
+        return () => {
+            axiosInstance.interceptors.response.eject(interceptor);
+        };
+    }, []);
 
     const login = async (formData) => {
         try {
