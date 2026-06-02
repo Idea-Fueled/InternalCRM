@@ -1144,7 +1144,7 @@ const AdminDashboard = () => {
                     ) : (
                         <div className="space-y-6">
                             {/* KPIs Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 2xl:grid-cols-8 gap-6">
+                            <div className="grid grid-cols-2 sm:grid-cols-4 min-[1750px]:grid-cols-8 gap-6">
                                 {kpis.map((kpi, i) => (
                                     <div key={i} onClick={kpi.onClick} className={`premium-stat-card ${kpi.border} flex flex-col sm:flex-row sm:items-center items-start gap-3 sm:gap-4 p-4 sm:p-5 h-[115px] sm:h-[90px] w-full justify-start cursor-pointer`}>
                                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${kpi.bg} ${kpi.color}`}>
