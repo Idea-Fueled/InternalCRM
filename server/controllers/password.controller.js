@@ -28,6 +28,28 @@ export const forgotPassword = async (req, res) => {
             });
         }
 
+        if (user.isActive === false) {
+            return res.status(400).json({
+                success: false,
+                message: 'Your account has been deactivated. Please contact the management team.'
+            });
+        }
+
+        // Auto-reactivation check for temporary inactivity
+        if (user.status === 'inactive' && user.inactiveUntil && new Date() > new Date(user.inactiveUntil)) {
+            user.status = 'free';
+            user.inactiveUntil = null;
+            user.inactiveReason = '';
+            await user.save();
+        }
+
+        if (user.status === 'inactive') {
+            return res.status(400).json({
+                success: false,
+                message: 'Your account is currently marked as inactive. Please contact your administrator for access.'
+            });
+        }
+
         // Generate a cryptographically secure raw token
         const rawToken = crypto.randomBytes(32).toString('hex');
 
