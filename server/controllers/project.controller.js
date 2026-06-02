@@ -127,19 +127,19 @@ export const createProject = async (req, res, next) => {
             const members = await User.find({ _id: { $in: parsedTeamMembers } });
             for (const member of members) {
                 if (member._id.toString() !== req.user._id.toString() && member._id.toString() !== teamLead.toString()) {
-                    const roleLabel = member.role === 'qa' ? 'QA' : (member.role || 'Employee');
+                    const assignmentRoleStr = member.role === 'qa' ? 'a QA' : 'a member of this project';
                     await createNotification({
                         recipient: member._id,
                         sender: req.user._id,
                         title: "New Project Assignment",
-                        message: `New project "${projectName}" has been created and you have been assigned as a ${roleLabel}.`,
+                        message: `New project "${projectName}" has been created and you have been assigned as ${assignmentRoleStr}.`,
                         type: "project",
                         category: "assignment",
                         link: `/projects/${savedProject._id}`
-					});
-				}
-			}
-		}
+                    });
+                }
+            }
+        }
 
         return res.status(201).json({
             success: true,
