@@ -17,6 +17,9 @@ export default function ForgotPassword() {
         setSubmitted(true);
         if (!email.trim()) return;
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.trim())) return;
+
         try {
             setLoading(true);
             const res = await authService.forgotPassword(email.trim().toLowerCase());
@@ -90,13 +93,20 @@ export default function ForgotPassword() {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     autoFocus
-                                    className={`w-full pl-11 pr-5 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm text-sm
-                                        ${submitted && !email.trim() ? 'border-red-400 bg-red-50/40' : 'border-slate-200/80 bg-slate-50/50'}`}
+                                    className={`w-full pl-11 pr-5 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-300 shadow-sm text-sm
+                                        ${submitted && (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) 
+                                            ? 'border-red-500 bg-red-50/30 focus:ring-red-500/10 focus:border-red-500' 
+                                            : 'border-slate-200/80 bg-slate-50/50 focus:ring-blue-500/10 focus:border-blue-500'}`}
                                 />
                             </div>
                             {submitted && !email.trim() && (
-                                <p className="text-red-500 text-xs font-semibold ml-1 animate-in fade-in slide-in-from-top-1">
-                                    Email is required.
+                                <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                                    Email is required!
+                                </p>
+                            )}
+                            {submitted && email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()) && (
+                                <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                                    Please enter a valid email address!
                                 </p>
                             )}
                         </div>

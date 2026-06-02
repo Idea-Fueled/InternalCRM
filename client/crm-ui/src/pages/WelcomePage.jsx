@@ -41,8 +41,9 @@ export default function WelcomePage() {
         
         const email = formData.email.trim();
         const password = formData.password.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if (!email || !password) {
+        if (!email || !emailRegex.test(email) || !password) {
             return;
         }
 
@@ -104,12 +105,17 @@ export default function WelcomePage() {
                                 placeholder="name@ideafueled.com"
                                 value={formData.email}
                                 onChange={handleChange}
-                                className={`w-full pl-11 pr-5 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm text-sm
-                                    ${submitted && !formData.email ? 'border-red-500 bg-red-50/30' : 'border-slate-200/80 bg-slate-50/50'}`}
+                                className={`w-full pl-11 pr-5 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-300 shadow-sm text-sm
+                                    ${submitted && (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) 
+                                        ? 'border-red-500 bg-red-50/30 focus:ring-red-500/10 focus:border-red-500' 
+                                        : 'border-slate-200/80 bg-slate-50/50 focus:ring-blue-500/10 focus:border-blue-500'}`}
                             />
                         </div>
-                        {submitted && !formData.email && (
+                        {submitted && !formData.email.trim() && (
                             <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Email is required!</p>
+                        )}
+                        {submitted && formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim()) && (
+                            <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Please enter a valid email address!</p>
                         )}
                     </div>
 
@@ -124,8 +130,10 @@ export default function WelcomePage() {
                                 placeholder="••••••••"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className={`w-full pl-11 pr-12 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all duration-300 shadow-sm text-sm
-                                    ${submitted && !formData.password ? 'border-red-500 bg-red-50/30' : 'border-slate-200/80 bg-slate-50/50'}`}
+                                className={`w-full pl-11 pr-12 py-4 rounded-2xl border text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:ring-4 transition-all duration-300 shadow-sm text-sm
+                                    ${submitted && !formData.password.trim() 
+                                        ? 'border-red-500 bg-red-50/30 focus:ring-red-500/10 focus:border-red-500' 
+                                        : 'border-slate-200/80 bg-slate-50/50 focus:ring-blue-500/10 focus:border-blue-500'}`}
                             />
                             <button
                                 type="button"
@@ -135,7 +143,7 @@ export default function WelcomePage() {
                                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
-                        {submitted && !formData.password && (
+                        {submitted && !formData.password.trim() && (
                             <p className="text-red-500 text-xs font-semibold ml-1 mt-1 animate-in fade-in slide-in-from-top-1">Password is required!</p>
                         )}
                         <div className="flex justify-end pt-1">
