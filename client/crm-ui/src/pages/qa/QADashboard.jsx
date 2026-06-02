@@ -778,7 +778,8 @@ const QADashboard = () => {
                                         <div className="flex items-center gap-2">
                                             <button 
                                                 onClick={handleExportQueue}
-                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-colors shadow-sm"
+                                                disabled={filteredTasks.length === 0}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-xs font-semibold hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors shadow-sm"
                                             >
                                                 <Download className="w-3.5 h-3.5" />
                                                 Export

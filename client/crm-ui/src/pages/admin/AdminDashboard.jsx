@@ -1120,7 +1120,8 @@ const AdminDashboard = () => {
                         <div className="flex gap-3">
                             <button 
                                 onClick={handleExportDashboard}
-                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all-300 shadow-sm flex items-center gap-2"
+                                disabled={!dashboardData}
+                                className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-all-300 shadow-sm flex items-center gap-2"
                             >
                                 <Download className="w-4 h-4" />
                                 Export Report

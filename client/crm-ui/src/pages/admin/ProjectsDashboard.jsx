@@ -368,7 +368,8 @@ const ProjectsDashboard = () => {
                                 <>
                                     <button 
                                         onClick={handleExport} 
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition shadow-sm text-sm"
+                                        disabled={filteredProjects.length === 0}
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition shadow-sm text-sm"
                                     >
                                         <Download className="w-4 h-4" />
                                         Export

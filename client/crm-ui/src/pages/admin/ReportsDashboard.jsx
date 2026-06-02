@@ -582,13 +582,15 @@ const ReportsDashboard = ({ focus }) => {
                             <div className="flex items-center gap-3">
                                 <button 
                                     onClick={handleExportHRActivity}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-650 hover:bg-slate-50 rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
+                                    disabled={activePerformanceList.length === 0}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-655 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
                                 >
                                     <Download className="w-4 h-4 text-slate-450" /> Export Scorecard
                                 </button>
                                 <button 
                                     onClick={handleExportOverallHRReport}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
+                                    disabled={activePerformanceList.length === 0}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-600 rounded-xl text-xs font-bold uppercase tracking-wider transition shadow-sm cursor-pointer border-none"
                                 >
                                     <Download className="w-4 h-4" /> Export Overall PDF
                                 </button>
@@ -1344,7 +1346,8 @@ const ReportsDashboard = ({ focus }) => {
                             </h2>
                             <button 
                                 onClick={handleExportOverallReport}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 transition shadow-sm"
+                                disabled={tasks.length === 0}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition shadow-sm"
                             >
                                 <Download className="w-3.5 h-3.5" /> Export Overall Report
                             </button>

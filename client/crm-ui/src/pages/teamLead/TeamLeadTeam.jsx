@@ -219,7 +219,8 @@ const TeamLeadTeam = () => {
                         <div className="flex items-center gap-3">
                             <button 
                                 onClick={handleExportTeam}
-                                className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition shadow-sm"
+                                disabled={filteredTeam.length === 0}
+                                className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold text-sm rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition shadow-sm"
                             >
                                 <Download className="w-4 h-4 mr-2" />
                                 Export PDF
