@@ -213,6 +213,7 @@ export const loginController = async (req, res) => {
         return res.status(200).json({
             message: "Login successful!",
             user: {
+                _id: user._id,
                 id: user._id,
                 email: user.email,
                 name: user.name,
@@ -220,7 +221,8 @@ export const loginController = async (req, res) => {
                 designation: user.designation || user.role,
                 reportingManager: user.reportingManager,
                 reportingManagers: user.reportingManagers || [],
-                profilePic: user.profilePic,
+                department: user.department || null,
+                profilePic: user.profilePic || "",
                 teamLeads: user.teamLeads || [],
                 teamMembers: user.teamMembers || [],
                 createdAt: user.createdAt,

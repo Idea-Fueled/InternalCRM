@@ -33,8 +33,9 @@ export const AuthProvider = ({ children }) => {
     const login = async (formData) => {
         try {
             const res = await authService.login(formData);
-            // After successful login, wait for checkAuth to populate user state
-            await checkAuth(); 
+            if (res.data?.user) {
+                setUser(res.data.user);
+            }
             return res;
         } catch (error) {
             setUser(null);
