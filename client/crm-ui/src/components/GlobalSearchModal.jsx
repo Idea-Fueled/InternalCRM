@@ -166,22 +166,18 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
         } else if (item.type === "task") {
             const projectObj = item.data.project;
             const projectName = projectObj?.projectName || projectObj?.name || (typeof projectObj === "string" ? projectObj : "");
-            const taskId = item.data._id || item.data.id;
             
             const role = currentUser?.role || "employee";
             const kanbanPath = getKanbanPath(role);
             
-            if (taskId) {
-                const queryParams = new URLSearchParams();
-                if (projectName) {
-                    queryParams.set("project", projectName);
-                }
-                queryParams.set("taskId", taskId);
-                
-                setTimeout(() => {
-                    navigate(`${kanbanPath}?${queryParams.toString()}`);
-                }, 150);
+            const queryParams = new URLSearchParams();
+            if (projectName) {
+                queryParams.set("project", projectName);
             }
+            
+            setTimeout(() => {
+                navigate(`${kanbanPath}?${queryParams.toString()}`);
+            }, 150);
         }
     };
 
