@@ -9,6 +9,38 @@ import { Plus, Search, Filter, X, Calendar, Paperclip, FileText } from 'lucide-r
 import { useAuth } from '../../context/AuthContext';
 import usePermission from '../../hooks/usePermission';
 
+const getUserLabel = (m) => {
+    if (!m) return "";
+    const designation = m.designation || (
+        m.role === 'TL' || m.role === 'tl' ? 'Team Lead' :
+        m.role === 'qa' || m.role === 'QA' ? 'QA' :
+        m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1).toLowerCase() :
+        'Employee'
+    );
+    return `${m.name} (${designation})`;
+};
+
+const isUserQA = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "qa" || designationLower.includes("qa");
+};
+
+const isUserTL = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "tl" || roleLower === "teamlead" || roleLower === "team_lead" || designationLower.includes("lead");
+};
+
+const isUserAdmin = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "admin" || designationLower.includes("admin");
+};
+
 const KanbanDashboard = () => {
     const { user } = useAuth();
     const { can } = usePermission();
@@ -62,6 +94,12 @@ const KanbanDashboard = () => {
     }, []);
 
     useEffect(() => {
+        setNewTask(prev => ({
+            ...prev,
+            assignedTo: '',
+            assignedQA: ''
+        }));
+
         if (!newTask.project) {
             setProjectMembers([]);
             return;
@@ -202,7 +240,7 @@ const KanbanDashboard = () => {
                                         <select value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })}
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
                                             <option value="">Unassigned</option>
-                                            {projectMembers.filter(m => m.role === 'developer').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                            {projectMembers.filter(m => m.status !== "inactive" && !isUserTL(m) && !isUserQA(m) && !isUserAdmin(m)).map(u => <option key={u._id} value={u._id}>{getUserLabel(u)}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -212,7 +250,7 @@ const KanbanDashboard = () => {
                                         <select value={newTask.assignedQA} onChange={e => setNewTask({ ...newTask, assignedQA: e.target.value })}
                                             className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition cursor-pointer text-slate-700 font-medium">
                                             <option value="">Unassigned</option>
-                                            {projectMembers.filter(m => m.role === 'qa').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                            {projectMembers.filter(m => m.status !== "inactive" && isUserQA(m)).map(u => <option key={u._id} value={u._id}>{getUserLabel(u)}</option>)}
                                         </select>
                                     </div>
                                 </div>

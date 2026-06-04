@@ -13,6 +13,38 @@ import { taskService, projectService } from '../api/services';
 import usePermission from '../hooks/usePermission';
 import { useAuth } from '../context/AuthContext';
 
+const getUserLabel = (m) => {
+    if (!m) return "";
+    const designation = m.designation || (
+        m.role === 'TL' || m.role === 'tl' ? 'Team Lead' :
+        m.role === 'qa' || m.role === 'QA' ? 'QA' :
+        m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1).toLowerCase() :
+        'Employee'
+    );
+    return `${m.name} (${designation})`;
+};
+
+const isUserQA = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "qa" || designationLower.includes("qa");
+};
+
+const isUserTL = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "tl" || roleLower === "teamlead" || roleLower === "team_lead" || designationLower.includes("lead");
+};
+
+const isUserAdmin = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "admin" || designationLower.includes("admin");
+};
+
 const COLUMNS = [
     { id: 'New',        title: 'New',        color: 'bg-slate-100',   dot: 'bg-slate-400',   dragOver: 'ring-slate-400',   icon: Clock        },
     { id: 'In Progress',title: 'In Progress', color: 'bg-blue-50',    dot: 'bg-blue-500',    dragOver: 'ring-blue-400',    icon: PlayCircle   },
@@ -1340,14 +1372,14 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5">Assignee</label>
                                         <select value={editTaskData.assignedTo} onChange={e => setEditTaskData({...editTaskData, assignedTo: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer">
                                             <option value="">Unassigned</option>
-                                            {projectMembers.filter(m => !['admin', 'TL', 'qa'].includes(m.role)).map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                            {projectMembers.filter(m => m.status !== "inactive" && !isUserTL(m) && !isUserQA(m) && !isUserAdmin(m)).map(u => <option key={u._id} value={u._id}>{getUserLabel(u)}</option>)}
                                         </select>
                                     </div>
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5">Assigned QA</label>
                                         <select value={editTaskData.assignedQA} onChange={e => setEditTaskData({...editTaskData, assignedQA: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-blue-500 transition-all outline-none cursor-pointer">
                                             <option value="">Unassigned</option>
-                                            {projectMembers.filter(m => m.role === 'qa').map(u => <option key={u._id} value={u._id}>{u.name}</option>)}
+                                            {projectMembers.filter(m => m.status !== "inactive" && isUserQA(m)).map(u => <option key={u._id} value={u._id}>{getUserLabel(u)}</option>)}
                                         </select>
                                     </div>
                                 </div>

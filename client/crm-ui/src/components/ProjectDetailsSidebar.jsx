@@ -11,6 +11,38 @@ import {
 } from "lucide-react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 
+const getUserLabel = (m) => {
+    if (!m) return "";
+    const designation = m.designation || (
+        m.role === 'TL' || m.role === 'tl' ? 'Team Lead' :
+        m.role === 'qa' || m.role === 'QA' ? 'QA' :
+        m.role ? m.role.charAt(0).toUpperCase() + m.role.slice(1).toLowerCase() :
+        'Employee'
+    );
+    return `${m.name} (${designation})`;
+};
+
+const isUserQA = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "qa" || designationLower.includes("qa");
+};
+
+const isUserTL = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "tl" || roleLower === "teamlead" || roleLower === "team_lead" || designationLower.includes("lead");
+};
+
+const isUserAdmin = (m) => {
+    if (!m) return false;
+    const roleLower = (m.role || "").toLowerCase();
+    const designationLower = (m.designation || "").toLowerCase();
+    return roleLower === "admin" || designationLower.includes("admin");
+};
+
 const ProjectDetailsSidebar = ({ projectId, onClose }) => {
     const { user } = useAuth();
     const [searchParams] = useSearchParams();
@@ -1310,9 +1342,9 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 >
                                     <option value="">Unassigned</option>
                                     {(project.teamMembers || [])
-                                        .filter(m => m.role === "developer" && m.status !== "inactive")
+                                        .filter(m => m.status !== "inactive" && !isUserTL(m) && !isUserQA(m) && !isUserAdmin(m))
                                         .map(m => (
-                                            <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
+                                            <option key={m._id} value={m._id}>{getUserLabel(m)}</option>
                                         ))
                                     }
                                 </select>
@@ -1328,9 +1360,9 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                 >
                                     <option value="">Unassigned</option>
                                     {(project.teamMembers || [])
-                                        .filter(m => m.role === "qa" && m.status !== "inactive")
+                                        .filter(m => m.status !== "inactive" && isUserQA(m))
                                         .map(m => (
-                                            <option key={m._id} value={m._id}>{m.name} ({m.email})</option>
+                                            <option key={m._id} value={m._id}>{getUserLabel(m)}</option>
                                         ))
                                     }
                                 </select>
