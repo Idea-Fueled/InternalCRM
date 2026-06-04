@@ -127,7 +127,7 @@ export const createProject = async (req, res, next) => {
             const members = await User.find({ _id: { $in: parsedTeamMembers } });
             for (const member of members) {
                 if (member._id.toString() !== req.user._id.toString() && member._id.toString() !== teamLead.toString()) {
-                    const assignmentRoleStr = member.role === 'qa' ? 'a QA' : 'a member of this project';
+                    const assignmentRoleStr = member.role === 'qa' ? 'a QA' : 'a member';
                     await createNotification({
                         recipient: member._id,
                         sender: req.user._id,
