@@ -5,11 +5,28 @@ import {
 } from "lucide-react";
 import { searchService } from "../api/services";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import ProfileModal from "./ProfileModal";
 import ProjectDetailsSidebar from "./ProjectDetailsSidebar";
 
 const GlobalSearchModal = ({ isOpen, onClose }) => {
     const { user: currentUser } = useAuth();
+    const navigate = useNavigate();
+
+    const getKanbanPath = (role) => {
+        switch (role) {
+            case "admin":
+            case "hr":
+                return "/admin/kanban";
+            case "TL":
+                return "/teamLead/kanban";
+            case "qa":
+                return "/qa/kanban";
+            case "employee":
+            default:
+                return "/employee/kanban";
+        }
+    };
     const [query, setQuery] = useState("");
     const [results, setResults] = useState({ users: [], projects: [], tasks: [] });
     const [loading, setLoading] = useState(false);
@@ -147,10 +164,23 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
         } else if (item.type === "project") {
             setTimeout(() => setSelectedProjectId(item.data._id), 150);
         } else if (item.type === "task") {
-            // Open the project sidebar for the task's project
-            const projectId = item.data.project?._id || item.data.project;
-            if (projectId) {
-                setTimeout(() => setSelectedProjectId(projectId), 150);
+            const projectObj = item.data.project;
+            const projectName = projectObj?.projectName || projectObj?.name || (typeof projectObj === "string" ? projectObj : "");
+            const taskId = item.data._id || item.data.id;
+            
+            const role = currentUser?.role || "employee";
+            const kanbanPath = getKanbanPath(role);
+            
+            if (taskId) {
+                const queryParams = new URLSearchParams();
+                if (projectName) {
+                    queryParams.set("project", projectName);
+                }
+                queryParams.set("taskId", taskId);
+                
+                setTimeout(() => {
+                    navigate(`${kanbanPath}?${queryParams.toString()}`);
+                }, 150);
             }
         }
     };
