@@ -1460,7 +1460,7 @@ const ReportsDashboard = ({ focus }) => {
                                                     <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
                                                         <td className="p-4 pl-6">
                                                             <div className="flex items-center gap-3">
-                                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm border border-white overflow-hidden ${dev.color}`}>
+                                                                <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm border border-white overflow-hidden ${dev.color}`}>
                                                                     {dev.profilePic ? (
                                                                         <img src={dev.profilePic} alt={dev.name} className="w-full h-full object-cover" />
                                                                     ) : (
