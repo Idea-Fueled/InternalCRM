@@ -542,8 +542,12 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
 
     // Task detail sidebar
     const [selectedTask, setSelectedTask] = useState(null);
+    const [closedTaskId, setClosedTaskId] = useState(null);
 
     const handleCloseDetails = () => {
+        if (selectedTask) {
+            setClosedTaskId(String(selectedTask._id || selectedTask.id));
+        }
         setSelectedTask(null);
         if (searchParams.has('taskId')) {
             const nextParams = new URLSearchParams(searchParams);
@@ -851,10 +855,14 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     const [projectFilter, setProjectFilter] = useState(initialProject);
 
     useEffect(() => {
-        if (projectFilter === 'All') searchParams.delete('project');
-        else searchParams.set('project', projectFilter);
-        setSearchParams(searchParams, { replace: true });
-    }, [projectFilter]);
+        const urlProject = searchParams.get('project') || 'All';
+        if (urlProject !== projectFilter) {
+            const nextParams = new URLSearchParams(searchParams);
+            if (projectFilter === 'All') nextParams.delete('project');
+            else nextParams.set('project', projectFilter);
+            setSearchParams(nextParams, { replace: true });
+        }
+    }, [projectFilter, searchParams]);
 
     useEffect(() => {
         const urlProject = searchParams.get('project') || 'All';
@@ -864,6 +872,9 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     useEffect(() => {
         const taskIdParam = searchParams.get('taskId');
         if (taskIdParam && accessibleTasks && accessibleTasks.length > 0) {
+            if (taskIdParam === closedTaskId) {
+                return;
+            }
             const taskToSelect = accessibleTasks.find(t => String(t._id || t.id) === taskIdParam);
             if (taskToSelect) {
                 const taskProj = String(taskToSelect.project?.projectName || taskToSelect.project?.name || taskToSelect.project || '');
@@ -872,8 +883,10 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                 }
                 setSelectedTask(taskToSelect);
             }
+        } else if (!taskIdParam) {
+            setClosedTaskId(null);
         }
-    }, [searchParams, accessibleTasks]);
+    }, [searchParams, accessibleTasks, projectFilter, closedTaskId]);
 
     const filteredTasks = (accessibleTasks || []).filter(t => {
         const matchesSearch  = !searchQuery || (
