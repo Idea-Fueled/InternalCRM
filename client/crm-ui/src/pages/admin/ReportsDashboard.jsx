@@ -10,6 +10,30 @@ import {
 import StatDetailModal from "../../components/StatDetailModal";
 import { useAuth } from "../../context/AuthContext";
 
+const getUserDesignation = (emp) => {
+    if (!emp) return "Employee";
+    const rawDesignation = emp.designation || "";
+    const rawRole = emp.role || "";
+    
+    if (rawDesignation) {
+        const lower = rawDesignation.trim().toLowerCase();
+        if (lower === "employee") return "Employee";
+        if (lower === "admin") return "Admin";
+        if (lower === "qa") return "QA";
+        if (lower === "tl") return "Team Lead";
+        return rawDesignation;
+    }
+    
+    const roleLower = rawRole.trim().toLowerCase();
+    if (roleLower === "tl" || roleLower === "teamlead") return "Team Lead";
+    if (roleLower === "qa") return "QA";
+    if (roleLower === "admin") return "Admin";
+    if (roleLower === "developer") return "Developer";
+    if (roleLower === "employee") return "Employee";
+    
+    return "Employee";
+};
+
 const ReportsDashboard = ({ focus }) => {
     const { user } = useAuth();
     const activeFocus = focus || (user?.role === 'hr' ? 'hr' : 'project');
@@ -398,34 +422,64 @@ const ReportsDashboard = ({ focus }) => {
 
     const activeProject = selectedProjectId === "All" ? projects[0] : projects.find(p => p._id === selectedProjectId);
 
-    const developers = users
+    const employeeReportList = users
         .filter(u => {
-            if (u.role !== "developer") return false;
+            if (u.role === "admin") return false;
+
+            // Role Hierarchy Scoping
+            if (user?.role === "admin" || user?.role === "hr") {
+                // View all employees
+            } else if (user?.role === "TL") {
+                // View only employees assigned under that Team Lead
+                const isDirectReport = u.reportingManagers?.some(m => String(m._id || m) === String(user?._id)) ||
+                                       String(u.reportingManager?._id || u.reportingManager) === String(user?._id) ||
+                                       u.teamLeads?.some(tl => String(tl._id || tl) === String(user?._id));
+                if (!isDirectReport) return false;
+            } else {
+                // Employee / QA / others: View only personal performance metrics
+                if (String(u._id) !== String(user?._id)) return false;
+            }
+
             if (selectedProjectId === "All") return true;
             // Show if user is in project team or has tasks in this project
             const isMember = activeProject?.teamMembers?.some(m => (m._id || m) === u._id);
-            const hasTasks = tasks.some(t => t.project?._id === selectedProjectId && t.assignedTo?._id === u._id);
+            const hasTasks = tasks.some(t => t.project?._id === selectedProjectId && (t.assignedTo?._id || t.assignedTo) === u._id);
             return isMember || hasTasks;
         })
-        .map(dev => {
-            const devTasks = filteredTasks.filter(t => t.assignedTo?._id === dev._id);
+        .map(emp => {
+            const devTasks = filteredTasks.filter(t => (t.assignedTo?._id || t.assignedTo) === emp._id);
             const completed = devTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
             const total = devTasks.length;
             const performance = total > 0 ? Math.round((completed / total) * 100) : 0;
             const overdue = devTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
             
+            // First Assigned & Last Active Dates
+            const allEmpTasks = tasks.filter(t => (t.assignedTo?._id || t.assignedTo) === emp._id && (selectedProjectId === "All" || t.project?._id === selectedProjectId));
+            let firstTaskDate = "-";
+            let lastActiveDate = "-";
+            if (allEmpTasks.length > 0) {
+                const createdDates = allEmpTasks.map(t => new Date(t.createdAt)).filter(d => !isNaN(d));
+                const updatedDates = allEmpTasks.map(t => new Date(t.updatedAt || t.createdAt)).filter(d => !isNaN(d));
+                if (createdDates.length > 0) {
+                    firstTaskDate = new Date(Math.min(...createdDates)).toLocaleDateString();
+                }
+                if (updatedDates.length > 0) {
+                    lastActiveDate = new Date(Math.max(...updatedDates)).toLocaleDateString();
+                }
+            }
+
             return {
-                name: dev.name,
-                initials: dev.name?.charAt(0) || "U",
-                role: "Developer",
+                name: emp.name,
+                initials: emp.name?.charAt(0) || "U",
+                role: getUserDesignation(emp),
                 total,
                 completed,
                 overdue,
                 performance,
-                firstTask: devTasks.length > 0 ? "Assigned" : "-",
-                lastActivity: devTasks.length > 0 ? "Active" : "Idle",
+                firstTask: firstTaskDate,
+                lastActivity: lastActiveDate,
                 color: "bg-indigo-100 text-indigo-700",
-                profilePic: dev.profilePic
+                profilePic: emp.profilePic
             };
         });
 
@@ -465,9 +519,9 @@ const ReportsDashboard = ({ focus }) => {
                 data: insights.map(s => [s.label, s.value])
             },
             {
-                title: "Developer Performance",
-                columns: ["Developer Name", "Total Tasks", "Completed", "Overdue", "Performance %"],
-                data: developers.map(d => [d.name, d.total, d.completed, d.overdue, `${d.performance}%`])
+                title: "Employee Performance",
+                columns: ["Employee Name", "Total Tasks", "Completed", "Overdue", "Performance %"],
+                data: employeeReportList.map(d => [d.name, d.total, d.completed, d.overdue, `${d.performance}%`])
             },
             {
                 title: "Recent Activity Log",
@@ -515,8 +569,8 @@ const ReportsDashboard = ({ focus }) => {
     };
 
     const handleExportPerformance = () => {
-        const columns = ["Developer Name", "Total Tasks", "Completed", "Overdue", "Performance %"];
-        const data = developers.map(d => [
+        const columns = ["Employee Name", "Total Tasks", "Completed", "Overdue", "Performance %"];
+        const data = employeeReportList.map(d => [
             d.name,
             d.total,
             d.completed,
@@ -524,8 +578,8 @@ const ReportsDashboard = ({ focus }) => {
             `${d.performance}%`
         ]);
         exportPDF({
-            title: "Developer Performance Report",
-            filename: `dev_performance_${new Date().getTime()}.pdf`,
+            title: "Employee Performance Report",
+            filename: `employee_performance_${new Date().getTime()}.pdf`,
             columns,
             data
         });
@@ -1317,7 +1371,7 @@ const ReportsDashboard = ({ focus }) => {
                             </div>
                             <h2 className="text-2xl font-black text-slate-800 tracking-tight">Select a Project to View Reports</h2>
                             <p className="text-slate-500 font-semibold text-sm max-w-md mt-2 leading-relaxed">
-                                Get a complete operational overview of task completion timelines, developer performance metrics, and system-wide activity logs. Select one of your assigned projects to load analytics.
+                                Get a complete operational overview of task completion timelines, employee performance metrics, and system-wide activity logs. Select one of your assigned projects to load analytics.
                             </p>
                             
                             {projects.length > 0 && (
@@ -1368,12 +1422,12 @@ const ReportsDashboard = ({ focus }) => {
                     {/* Two Column Layout: Dev Performance & Project Report */}
                     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
                         
-                        {/* Developer Performance */}
+                        {/* Employee Performance */}
                         <div className="xl:col-span-2 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
                                     <svg className="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                                    Developer Performance
+                                    Employee Performance
                                 </h2>
                                 <button 
                                     onClick={handleExportPerformance}
@@ -1387,65 +1441,73 @@ const ReportsDashboard = ({ focus }) => {
                                     <table className="w-full text-left border-collapse">
                                         <thead>
                                             <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                <th className="p-4 pl-6 font-semibold">Developer</th>
+                                                <th className="p-4 pl-6 font-semibold">Employee</th>
                                                 <th className="p-4 font-semibold text-center">Tasks (Done/Total)</th>
                                                 <th className="p-4 font-semibold text-center">Overdue</th>
-                                                <th className="p-4 font-semibold w-1/4">Performance</th>
+                                                <th className="p-4 font-semibold w-1/4">Performance %</th>
                                                 <th className="p-4 font-semibold">Activity</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
-                                            {developers.map((dev, i) => (
-                                                <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
-                                                    <td className="p-4 pl-6">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm border border-white overflow-hidden ${dev.color}`}>
-                                                                {dev.profilePic ? (
-                                                                    <img src={dev.profilePic} alt={dev.name} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    dev.initials
-                                                                )}
-                                                            </div>
-                                                            <div>
-                                                                <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{dev.name}</div>
-                                                                <div className="text-[11px] font-semibold text-slate-400 mt-0.5">{dev.role}</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        <div className="inline-flex items-baseline gap-1 bg-slate-50 px-2 py-1 rounded-lg">
-                                                            <span className="font-bold text-slate-800 text-sm">{dev.completed}</span>
-                                                            <span className="text-xs font-semibold text-slate-400">/{dev.total}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 text-center">
-                                                        {dev.overdue > 0 ? (
-                                                            <span className="inline-flex px-2 py-1 bg-red-50 text-red-600 font-bold text-xs rounded-lg border border-red-100">
-                                                                {dev.overdue}
-                                                            </span>
-                                                        ) : (
-                                                            <span className="text-slate-300 font-bold text-sm">-</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1.5">
-                                                            <span>{dev.performance}%</span>
-                                                        </div>
-                                                        <div className="w-full bg-slate-100 rounded-full h-2">
-                                                            <div 
-                                                                className={`h-2 rounded-full ${dev.performance < 50 ? 'bg-amber-400' : dev.performance < 80 ? 'bg-blue-500' : 'bg-emerald-500'}`}
-                                                                style={{ width: `${dev.performance}%` }}
-                                                            ></div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-xs text-slate-600 font-medium whitespace-nowrap"><span className="text-slate-400">First:</span> {dev.firstTask}</span>
-                                                            <span className="text-xs text-slate-600 font-medium whitespace-nowrap"><span className="text-slate-400">Last:</span> {dev.lastActivity}</span>
-                                                        </div>
+                                            {employeeReportList.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" className="p-8 text-center text-slate-400 font-semibold text-sm">
+                                                        No employee performance data available.
                                                     </td>
                                                 </tr>
-                                            ))}
+                                            ) : (
+                                                employeeReportList.map((dev, i) => (
+                                                    <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
+                                                        <td className="p-4 pl-6">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm border border-white overflow-hidden ${dev.color}`}>
+                                                                    {dev.profilePic ? (
+                                                                        <img src={dev.profilePic} alt={dev.name} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        dev.initials
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <div className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{dev.name}</div>
+                                                                    <div className="text-[11px] font-semibold text-slate-400 mt-0.5">{dev.role}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            <div className="inline-flex items-baseline gap-1 bg-slate-50 px-2 py-1 rounded-lg">
+                                                                <span className="font-bold text-slate-800 text-sm">{dev.completed}</span>
+                                                                <span className="text-xs font-semibold text-slate-400">/{dev.total}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4 text-center">
+                                                            {dev.overdue > 0 ? (
+                                                                <span className="inline-flex px-2 py-1 bg-red-50 text-red-600 font-bold text-xs rounded-lg border border-red-100">
+                                                                    {dev.overdue}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-slate-300 font-bold text-sm">-</span>
+                                                            )}
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1.5">
+                                                                <span>{dev.performance}%</span>
+                                                            </div>
+                                                            <div className="w-full bg-slate-200 rounded-full h-2">
+                                                                <div 
+                                                                    className={`h-2 rounded-full ${dev.performance < 50 ? 'bg-amber-400' : dev.performance < 80 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                                                                    style={{ width: `${dev.performance}%` }}
+                                                                ></div>
+                                                            </div>
+                                                        </td>
+                                                        <td className="p-4">
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-xs text-slate-600 font-medium whitespace-nowrap"><span className="text-slate-400">First:</span> {dev.firstTask}</span>
+                                                                <span className="text-xs text-slate-600 font-medium whitespace-nowrap"><span className="text-slate-400">Last:</span> {dev.lastActivity}</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
