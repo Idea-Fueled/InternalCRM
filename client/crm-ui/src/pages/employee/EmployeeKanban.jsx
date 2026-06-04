@@ -35,7 +35,7 @@ const EmployeeKanban = () => {
             <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
                 <Topbar DashboardTile="Kanban Board" role="employee" />
 
-                <main className="flex-1 p-6 md:p-8 flex flex-col overflow-hidden">
+                <main className="flex-1 p-6 md:p-8 flex flex-col overflow-y-auto">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 shrink-0">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Task Board</h1>

@@ -963,8 +963,8 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                     <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             ) : (
-                <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4 kanban-scrollbar">
-                    <div className="flex gap-4 h-full min-w-max px-2">
+                <div className="w-full overflow-x-auto overflow-y-hidden pb-4 kanban-scrollbar">
+                    <div className="flex gap-4 min-h-[550px] min-w-max px-2 items-stretch">
                         {COLUMNS.map(col => {
                             const colTasks = filteredTasks.filter(t => t.status === col.id);
                             const isOver   = dragOverCol === col.id;
@@ -995,7 +995,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                     )}
 
                                     {/* Tasks List */}
-                                    <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-3 custom-scrollbar">
+                                    <div className="flex-1 px-3 pb-3 space-y-3">
                                         {colTasks.map(task => {
                                             const overdue  = isOverdue(task);
                                             const hist     = getHistory(task);
