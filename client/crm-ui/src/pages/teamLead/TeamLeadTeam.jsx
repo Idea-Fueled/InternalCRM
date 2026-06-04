@@ -7,7 +7,7 @@ import { userService, taskService } from '../../api/services';
 import { 
   Search, Filter, Users, CheckCircle2, Clock, AlertCircle, 
   MoreVertical, X, Calendar, Activity, Briefcase, Download,
-  UserCheck, Mail, User, Phone
+  UserCheck, Mail, User, Phone, Building
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
@@ -481,10 +481,28 @@ const TeamLeadTeam = () => {
                                                     />
                                                 </div>
                                             </div>
-                                        ) : null}
+                                        ) : (
+                                            /* Contact Info block for Admin */
+                                            <div className="space-y-2.5 text-xs font-semibold text-slate-500 border-t border-slate-100 pt-4 mt-2">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                    <span className="truncate text-slate-650" title={member.email}>{member.email}</span>
+                                                </div>
+                                                {member.phone && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                        <span className="text-slate-650">{member.phone}</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    <Building className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                    <span className="text-slate-650 capitalize">{member.department || "Administration"}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     
-                                    {getUserRoleCategory(member) !== 'admin' && (
+                                    {getUserRoleCategory(member) !== 'admin' ? (
                                         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
                                             <div className="flex items-center gap-4 text-xs font-semibold">
                                                 <div className="flex flex-col">
@@ -500,6 +518,13 @@ const TeamLeadTeam = () => {
                                                     <span className="text-rose-600">{member.stats.overdue}</span>
                                                 </div>
                                             </div>
+                                        </div>
+                                    ) : (
+                                        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center text-xs font-bold text-slate-500">
+                                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">System Role</span>
+                                            <span className="text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider">
+                                                Corporate Admin
+                                            </span>
                                         </div>
                                     )}
                                 </div>
