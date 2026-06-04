@@ -543,6 +543,15 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
     // Task detail sidebar
     const [selectedTask, setSelectedTask] = useState(null);
 
+    const handleCloseDetails = () => {
+        setSelectedTask(null);
+        if (searchParams.has('taskId')) {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete('taskId');
+            setSearchParams(nextParams, { replace: true });
+        }
+    };
+
     // Edit Task State
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingTask,     setEditingTask]     = useState(null);
@@ -1201,7 +1210,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
             {/* ─── Task Detail Sidebar ───────────────────────────────────────── */}
             {selectedTask && (
                 <div className="absolute inset-0 z-50 flex justify-end">
-                    <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={() => setSelectedTask(null)} />
+                    <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={handleCloseDetails} />
                     <div className="w-full max-w-md bg-white h-full shadow-2xl relative z-10 flex flex-col animate-in slide-in-from-right duration-300 border-l border-slate-200">
                         {/* Drawer Header */}
                         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
@@ -1213,7 +1222,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                                     {getProject(selectedTask)}
                                 </span>
                             </div>
-                            <button onClick={() => setSelectedTask(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+                            <button onClick={handleCloseDetails} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
@@ -1334,7 +1343,7 @@ const KanbanBoard = ({ tasks, setTasks, searchQuery, loading, role }) => {
                         {/* Drawer Footer */}
                         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end shrink-0">
                             <button
-                                onClick={() => setSelectedTask(null)}
+                                onClick={handleCloseDetails}
                                 className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
                             >Close</button>
                         </div>
