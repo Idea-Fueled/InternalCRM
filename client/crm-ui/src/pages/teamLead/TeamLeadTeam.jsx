@@ -450,7 +450,7 @@ const TeamLeadTeam = () => {
                                                 {member.availability}
                                             </span>
                                         </div>
-
+                                        
                                         {member.status === 'Inactive' ? (
                                             <div className="mb-5 p-2.5 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1">
                                                 <div className="flex items-start gap-1 min-w-0">
@@ -464,7 +464,7 @@ const TeamLeadTeam = () => {
                                                     </span>
                                                 </div>
                                             </div>
-                                        ) : (
+                                        ) : getUserRoleCategory(member) !== 'admin' ? (
                                             /* Performance Bar */
                                             <div className="space-y-2">
                                                 <div className="flex justify-between items-center text-xs font-semibold">
@@ -481,25 +481,27 @@ const TeamLeadTeam = () => {
                                                     />
                                                 </div>
                                             </div>
-                                        )}
+                                        ) : null}
                                     </div>
                                     
-                                    <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
-                                        <div className="flex items-center gap-4 text-xs font-semibold">
-                                            <div className="flex flex-col">
-                                                <span className="text-slate-400 uppercase tracking-wider text-[9px]">Total</span>
-                                                <span className="text-slate-700">{member.stats.total}</span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-emerald-500 uppercase tracking-wider text-[9px]">Done</span>
-                                                <span className="text-emerald-700">{member.stats.completed}</span>
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-rose-400 uppercase tracking-wider text-[9px]">Overdue</span>
-                                                <span className="text-rose-600">{member.stats.overdue}</span>
+                                    {getUserRoleCategory(member) !== 'admin' && (
+                                        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
+                                            <div className="flex items-center gap-4 text-xs font-semibold">
+                                                <div className="flex flex-col">
+                                                    <span className="text-slate-400 uppercase tracking-wider text-[9px]">Total</span>
+                                                    <span className="text-slate-700">{member.stats.total}</span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-emerald-500 uppercase tracking-wider text-[9px]">Done</span>
+                                                    <span className="text-emerald-700">{member.stats.completed}</span>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-rose-400 uppercase tracking-wider text-[9px]">Overdue</span>
+                                                    <span className="text-rose-600">{member.stats.overdue}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             );
                         })}

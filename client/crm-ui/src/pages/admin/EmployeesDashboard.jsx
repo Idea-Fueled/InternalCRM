@@ -1022,21 +1022,25 @@ const EmployeesDashboard = () => {
 
                                     {/* Right: Tasks, Status, Actions */}
                                     <div className="flex items-center justify-between w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-5 pr-3">
-                                        <div className="flex gap-4 items-center shrink-0">
-                                            <div className="flex flex-col items-center">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tasks</span>
-                                                <div className="flex items-baseline gap-1 mt-0.5">
-                                                    <span className="text-sm font-bold text-slate-800">{emp.tasks.done}</span>
-                                                    <span className="text-xs text-slate-400">/{emp.tasks.total}</span>
+                                        {emp.raw.role !== 'admin' ? (
+                                            <div className="flex gap-4 items-center shrink-0">
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tasks</span>
+                                                    <div className="flex items-baseline gap-1 mt-0.5">
+                                                        <span className="text-sm font-bold text-slate-800">{emp.tasks.done}</span>
+                                                        <span className="text-xs text-slate-400">/{emp.tasks.total}</span>
+                                                    </div>
                                                 </div>
+                                                {emp.tasks.overdue > 0 && (
+                                                    <div className="flex flex-col items-center pl-4 border-l border-slate-100">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Overdue</span>
+                                                        <span className="text-sm font-bold text-red-600 mt-0.5">{emp.tasks.overdue}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            {emp.tasks.overdue > 0 && (
-                                                <div className="flex flex-col items-center pl-4 border-l border-slate-100">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Overdue</span>
-                                                    <span className="text-sm font-bold text-red-600 mt-0.5">{emp.tasks.overdue}</span>
-                                                </div>
-                                            )}
-                                        </div>
+                                        ) : (
+                                            <div className="shrink-0" />
+                                        )}
 
                                         <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                                             {!(emp.raw.role === 'admin' && user?.role !== 'admin') && (
