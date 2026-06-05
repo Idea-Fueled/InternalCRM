@@ -43,26 +43,33 @@ const getUserRoleCategory = (u) => {
 const canViewPerformanceMetrics = (currentUser, targetUser) => {
     if (!currentUser || !targetUser) return false;
     
+    const myId = String(currentUser._id || currentUser.id);
+    const targetId = String(targetUser._id || targetUser.id);
+    
+    // 1. Own profile metrics are always visible
+    if (myId === targetId) {
+        return true;
+    }
+    
     const currentRole = currentUser.role;
     const targetRoleCat = getUserRoleCategory(targetUser);
     
-    // 1. Admin can see everyone's metrics
+    // 2. Admin can see everyone's metrics
     if (currentRole === 'admin') {
         return true;
     }
     
-    // 2. HR can see everyone's metrics except admin
+    // 3. HR can see everyone's metrics except admin
     if (currentRole === 'hr') {
         return targetRoleCat !== 'admin';
     }
     
-    // 3. Team Leads can only see metrics of their direct reports (and target cannot be admin, hr, or TL)
+    // 4. Team Leads can only see metrics of their direct reports (and target cannot be admin, hr, or TL)
     if (currentRole === 'TL') {
         if (targetRoleCat === 'admin' || targetRoleCat === 'hr' || targetRoleCat === 'TL') {
             return false;
         }
         
-        const myId = String(currentUser._id || currentUser.id);
         const targetRM = targetUser.reportingManager;
         const targetRMs = targetUser.reportingManagers || [];
         const targetTLs = targetUser.teamLeads || [];
@@ -75,9 +82,9 @@ const canViewPerformanceMetrics = (currentUser, targetUser) => {
         return isDirectReport;
     }
     
-    // 4. Employees & QA can only see metrics of employee roles (not admin, hr, TL)
+    // 5. Employees & QA can only see their own metrics (which is handled by own profile check)
     if (currentRole === 'employee' || currentRole === 'qa') {
-        return targetRoleCat !== 'admin' && targetRoleCat !== 'hr' && targetRoleCat !== 'TL';
+        return false;
     }
     
     return false;

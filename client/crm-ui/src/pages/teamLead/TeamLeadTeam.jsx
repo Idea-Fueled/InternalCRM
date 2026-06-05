@@ -64,12 +64,52 @@ const getUserRoleCategory = (u) => {
 
 const canViewPerformanceMetrics = (currentUser, targetUser) => {
     if (!currentUser || !targetUser) return false;
+    
+    const myId = String(currentUser._id || currentUser.id);
+    const targetId = String(targetUser._id || targetUser.id);
+    
+    // 1. Own profile metrics are always visible
+    if (myId === targetId) {
+        return true;
+    }
+    
+    const currentRole = currentUser.role;
     const targetRoleCat = getUserRoleCategory(targetUser);
-    // Team Leads cannot see metrics for admin, hr, or other TLs
-    if (targetRoleCat === 'admin' || targetRoleCat === 'hr' || targetRoleCat === 'TL') {
+    
+    // 2. Admin can see everyone's metrics
+    if (currentRole === 'admin') {
+        return true;
+    }
+    
+    // 3. HR can see everyone's metrics except admin
+    if (currentRole === 'hr') {
+        return targetRoleCat !== 'admin';
+    }
+    
+    // 4. Team Leads can only see metrics of their direct reports (and target cannot be admin, hr, or TL)
+    if (currentRole === 'TL') {
+        if (targetRoleCat === 'admin' || targetRoleCat === 'hr' || targetRoleCat === 'TL') {
+            return false;
+        }
+        
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+        
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+            
+        return isDirectReport;
+    }
+    
+    // 5. Employees & QA can only see their own metrics (which is handled by own profile check)
+    if (currentRole === 'employee' || currentRole === 'qa') {
         return false;
     }
-    return true;
+    
+    return false;
 };
 
 const TeamLeadTeam = () => {
