@@ -23,6 +23,34 @@ const formatDateTime = (dt) => {
     });
 };
 
+const getUserDesignationLabel = (m) => {
+    if (!m) return "";
+    const designation = m.designation || "";
+    const role = m.role || "";
+    
+    const titleCase = (str) => {
+        if (!str) return "";
+        return str.split(" ")
+                  .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+    };
+
+    if (designation && designation.trim() !== "" && designation.toLowerCase() !== role.toLowerCase()) {
+        return titleCase(designation.trim());
+    }
+
+    const resolvedRole = role.toLowerCase();
+    if (resolvedRole === "admin") return "Admin";
+    if (resolvedRole === "tl" || resolvedRole === "teamlead" || resolvedRole === "team_lead") return "Technical Team Lead";
+    if (resolvedRole === "qa") return "Senior QA";
+    if (resolvedRole === "hr") return "HR Executive";
+    if (resolvedRole === "developer") return "Developer";
+    if (resolvedRole === "employee") return "Employee";
+    
+    if (designation) return titleCase(designation);
+    return titleCase(role);
+};
+
 const PRIORITY_COLORS = {
     'Low':      'bg-slate-100 text-slate-600 border border-slate-200/50',
     'Medium':   'bg-blue-100 text-blue-700 border border-blue-200/50',
@@ -196,8 +224,8 @@ const TimelineEntry = ({ entry, canDeleteNote = false, onDeleteNote = null, canD
                         </div>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                             <span className="text-xs font-semibold text-slate-700">{isRestricted ? 'Restricted' : (entry.changedBy?.name || 'Unknown')}</span>
-                            {entry.changedBy?.role && !isRestricted && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 capitalize">{entry.changedBy.role}</span>
+                            {(entry.changedBy?.role || entry.changedBy?.designation) && !isRestricted && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">{getUserDesignationLabel(entry.changedBy)}</span>
                             )}
                             {entry.changedAt && <span className="text-[10px] text-slate-400">{formatDateTime(entry.changedAt)}</span>}
                         </div>

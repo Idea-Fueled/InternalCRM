@@ -7,7 +7,7 @@ export const getMyNotifications = async (req, res) => {
             recipient: req.user._id,
             isDeleted: false 
         })
-        .populate("sender", "name role")
+        .populate("sender", "name role designation")
         .sort({ createdAt: -1 })
         .limit(20);
 
@@ -136,4 +136,39 @@ export const createNotification = async ({ recipient, sender, title, message, ty
     } catch (error) {
         console.error("Error creating notification:", error);
     }
+};
+
+export const getUserNotificationLabel = (user) => {
+    if (!user) return "";
+    
+    const rawDesignation = user.designation || "";
+    const role = user.role || "";
+    
+    const titleCase = (str) => {
+        if (!str) return "";
+        return str.split(" ")
+                  .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+    };
+
+    let designationLabel = "";
+    if (rawDesignation && rawDesignation.trim() !== "") {
+        designationLabel = titleCase(rawDesignation.trim());
+    } else {
+        const resolvedRole = role.toLowerCase();
+        if (resolvedRole === "admin") {
+            designationLabel = "Admin";
+        } else if (resolvedRole === "tl" || resolvedRole === "teamlead" || resolvedRole === "team_lead") {
+            designationLabel = "Technical Team Lead";
+        } else if (resolvedRole === "qa") {
+            designationLabel = "Senior QA";
+        } else if (resolvedRole === "hr") {
+            designationLabel = "HR Executive";
+        }
+    }
+
+    if (designationLabel) {
+        return designationLabel + " ";
+    }
+    return "";
 };

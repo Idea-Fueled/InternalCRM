@@ -24,6 +24,34 @@ const getUserLabel = (m) => {
     return `${m.name} (${designation})`;
 };
 
+const getUserDesignationLabel = (m) => {
+    if (!m) return "";
+    const designation = m.designation || "";
+    const role = m.role || "";
+    
+    const titleCase = (str) => {
+        if (!str) return "";
+        return str.split(" ")
+                  .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+    };
+
+    if (designation && designation.trim() !== "" && designation.toLowerCase() !== role.toLowerCase()) {
+        return titleCase(designation.trim());
+    }
+
+    const resolvedRole = role.toLowerCase();
+    if (resolvedRole === "admin") return "Admin";
+    if (resolvedRole === "tl" || resolvedRole === "teamlead" || resolvedRole === "team_lead") return "Technical Team Lead";
+    if (resolvedRole === "qa") return "Senior QA";
+    if (resolvedRole === "hr") return "HR Executive";
+    if (resolvedRole === "developer") return "Developer";
+    if (resolvedRole === "employee") return "Employee";
+    
+    if (designation) return titleCase(designation);
+    return titleCase(role);
+};
+
 const isUserQA = (m) => {
     if (!m) return false;
     const roleLower = (m.role || "").toLowerCase();
@@ -403,9 +431,9 @@ const TimelineEntry = ({ entry, idx }) => {
                             <span className="text-xs font-semibold text-slate-700">
                                 {isRestricted ? 'Restricted' : (entry.changedBy?.name || 'Unknown')}
                             </span>
-                            {entry.changedBy?.role && !isRestricted && (
-                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 capitalize">
-                                    {entry.changedBy.role}
+                            {(entry.changedBy?.role || entry.changedBy?.designation) && !isRestricted && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500">
+                                    {getUserDesignationLabel(entry.changedBy)}
                                 </span>
                             )}
                             {entry.changedAt && (

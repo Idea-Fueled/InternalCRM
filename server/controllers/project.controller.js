@@ -1,5 +1,5 @@
 import Project from "../models/project.schema.js";
-import { createNotification } from "./notification.controller.js";
+import { createNotification, getUserNotificationLabel } from "./notification.controller.js";
 import User from "../models/user.schema.js";
 import { Task } from "../models/task.schema.js";
 import { createAuditLog } from "./auditLog.controller.js";
@@ -123,7 +123,7 @@ export const createProject = async (req, res, next) => {
                     recipient: admin._id,
                     sender: req.user._id,
                     title: "New Project Created",
-                    message: `${projectName} has been created by ${req.user.name}`,
+                    message: `${projectName} has been created by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "creation",
                     link: `/projects/${savedProject._id}`
@@ -272,7 +272,7 @@ export const getProjectById = async (req, res, next) => {
         const tasks = await Task.find({ project: id, isDeleted: false })
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name email role profilePic");
+            .populate("statusHistory.changedBy", "name email role designation profilePic");
 
         // Filter task notes and attachments according to rules:
         // "When task status changes and notes/attachments are added: Visibility must be limited only to: Assigned Developer, Assigned QA, Project Team Lead, Admin"
@@ -441,7 +441,7 @@ export const updateProject = async (req, res, next) => {
                     recipient: recipientId,
                     sender: req.user._id,
                     title: "Project Updated",
-                    message: `${updatedProject.projectName} details have been updated by ${req.user.name}`,
+                    message: `${updatedProject.projectName} details have been updated by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "update",
                     link: `/projects/${updatedProject._id}`
@@ -501,7 +501,7 @@ export const deleteProject = async (req, res, next) => {
                     recipient: recipientId,
                     sender: req.user._id,
                     title: "Project Deleted",
-                    message: `${deletedProject.projectName} has been moved to trash by ${req.user.name}`,
+                    message: `${deletedProject.projectName} has been moved to trash by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "deletion",
                     link: `/trash`
@@ -657,7 +657,7 @@ export const addProjectNote = async (req, res) => {
                     recipient: recipientId,
                     sender: _id,
                     title: "New Project Comment/Note",
-                    message: `A new comment/note has been added to project "${project.projectName}" by ${req.user.name}`,
+                    message: `A new comment/note has been added to project "${project.projectName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "update",
                     link: `/projects/${project._id}`
@@ -751,7 +751,7 @@ export const uploadProjectAttachments = async (req, res) => {
                     recipient: recipientId,
                     sender: _id,
                     title: "New Project Attachment",
-                    message: `${newAttachments.length} new file(s) uploaded to project "${project.projectName}" by ${req.user.name}`,
+                    message: `${newAttachments.length} new file(s) uploaded to project "${project.projectName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "update",
                     link: `/projects/${project._id}`
@@ -884,7 +884,7 @@ export const deleteProjectNote = async (req, res) => {
             .populate("notes.author", "name email role profilePic");
 
         // Record Audit Log
-        const details = `Comment/Note "${note.text.substring(0, 40)}${note.text.length > 40 ? '...' : ''}" was deleted by ${req.user.name} (${role})`;
+        const details = `Comment/Note "${note.text.substring(0, 40)}${note.text.length > 40 ? '...' : ''}" was deleted by ${getUserNotificationLabel(req.user)}${req.user.name}`;
         await createAuditLog({
             req,
             itemType: "Note",
@@ -909,7 +909,7 @@ export const deleteProjectNote = async (req, res) => {
                     recipient: recipientId,
                     sender: _id,
                     title: "Project Comment/Note Deleted",
-                    message: `A note was deleted from project "${project.projectName}" by ${req.user.name} (${role})`,
+                    message: `A note was deleted from project "${project.projectName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "delete",
                     link: `/projects/${project._id}`
@@ -972,7 +972,7 @@ export const deleteProjectAttachment = async (req, res) => {
             .populate("attachments.uploadedBy", "name email role profilePic");
 
         // Record Audit Log
-        const details = `Attachment "${attachment.filename}" was deleted from project "${project.projectName}" by ${req.user.name} (${role})`;
+        const details = `Attachment "${attachment.filename}" was deleted from project "${project.projectName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`;
         await createAuditLog({
             req,
             itemType: "Attachment",
@@ -997,7 +997,7 @@ export const deleteProjectAttachment = async (req, res) => {
                     recipient: recipientId,
                     sender: _id,
                     title: "Project Attachment Deleted",
-                    message: `File "${attachment.filename}" was deleted from project "${project.projectName}" by ${req.user.name} (${role})`,
+                    message: `File "${attachment.filename}" was deleted from project "${project.projectName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "project",
                     category: "delete",
                     link: `/projects/${project._id}`

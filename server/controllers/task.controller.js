@@ -1,5 +1,5 @@
 import { Task } from "../models/task.schema.js";
-import { createNotification } from "./notification.controller.js";
+import { createNotification, getUserNotificationLabel } from "./notification.controller.js";
 import User from "../models/user.schema.js";
 import Project from "../models/project.schema.js";
 import { createAuditLog } from "./auditLog.controller.js";
@@ -218,7 +218,7 @@ export const createTask = async (req, res) => {
             .populate("assignedTo", "name email profilePic")
             .populate("assignedQA", "name email profilePic")
             .populate("assignedBy", "name email profilePic")
-            .populate("statusHistory.changedBy", "name role")
+            .populate("statusHistory.changedBy", "name role designation")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
@@ -269,7 +269,7 @@ export const createTask = async (req, res) => {
                         recipient: admin._id,
                         sender: req.user._id,
                         title: "New Task Created",
-                        message: `${populatedTask.taskName} has been created in ${populatedTask.project?.projectName || 'Project'} by ${req.user.name}`,
+                        message: `${populatedTask.taskName} has been created in ${populatedTask.project?.projectName || 'Project'} by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                         type: "task",
                         category: "creation",
                         link: `/projects/${populatedTask.project?._id}?taskId=${populatedTask._id}`
@@ -335,7 +335,7 @@ export const getAllTasks = async (req, res) => {
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role")
+            .populate("statusHistory.changedBy", "name role designation")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic")
             .sort({ createdAt: -1 });
@@ -367,7 +367,7 @@ export const getSingleTask = async (req, res) => {
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("statusHistory.changedBy", "name role designation profilePic")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
@@ -466,7 +466,7 @@ export const updateTask = async (req, res) => {
                     recipient: recipientId,
                     sender: req.user._id,
                     title: "Task Updated",
-                    message: `${updatedTask.taskName} has been updated by ${req.user.name}`,
+                    message: `${updatedTask.taskName} has been updated by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "task",
                     category: "update",
                     link: `/projects/${updatedTask.project?._id}?taskId=${updatedTask._id}&projectName=${encodeURIComponent(projName)}`
@@ -586,7 +586,7 @@ export const updateTaskStatus = async (req, res) => {
         .populate("project", "projectName name status teamLead")
         .populate("assignedTo", "name email profilePic")
         .populate("assignedQA", "name email profilePic")
-        .populate("statusHistory.changedBy", "name role profilePic")
+        .populate("statusHistory.changedBy", "name role designation profilePic")
         .populate("attachments.uploadedBy", "name email role profilePic")
         .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
@@ -606,22 +606,22 @@ export const updateTaskStatus = async (req, res) => {
 
             // Explicit QA Approval / Rejection detection
             let customTitle = "Task Status Updated";
-            let customMsg = `${taskName} in ${projectName} moved to ${status} by ${senderName}`;
+            let customMsg = `${taskName} in ${projectName} moved to ${status} by ${getUserNotificationLabel(req.user)}${senderName}`;
             let category = "status_change";
 
             if (taskToUpdate.status === "QA Review") {
                 if (status === "Completed") {
                     customTitle = "QA Task Approved";
-                    customMsg = `Task "${taskName}" has been APPROVED by QA ${senderName} in project "${projectName}".`;
+                    customMsg = `Task "${taskName}" has been APPROVED by ${getUserNotificationLabel(req.user)}${senderName} in project "${projectName}".`;
                     category = "qa_approval";
                 } else if (status === "In Progress") {
                     customTitle = "QA Task Rejected";
-                    customMsg = `Task "${taskName}" was REJECTED by QA ${senderName} in "${projectName}". Reason: ${notes || "No comments provided"}`;
+                    customMsg = `Task "${taskName}" was REJECTED by ${getUserNotificationLabel(req.user)}${senderName} in "${projectName}". Reason: ${notes || "No comments provided"}`;
                     category = "qa_rejection";
                 }
             } else if (status === "QA Review") {
                 customTitle = "QA Review Request";
-                customMsg = `Task "${taskName}" in project "${projectName}" has been submitted for QA Review by Developer ${senderName}.`;
+                customMsg = `Task "${taskName}" in project "${projectName}" has been submitted for QA Review by ${getUserNotificationLabel(req.user)}${senderName}.`;
                 category = "qa_review";
             }
 
@@ -761,7 +761,7 @@ export const deleteTask = async (req, res) => {
                     recipient: recipientId,
                     sender: req.user._id,
                     title: "Task Deleted",
-                    message: `${populatedTask.taskName} has been moved to trash by ${req.user.name}`,
+                    message: `${populatedTask.taskName} has been moved to trash by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "task",
                     category: "deletion",
                     link: `/trash`
@@ -859,7 +859,7 @@ export const getTasksByProject = async (req, res) => {
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("statusHistory.changedBy", "name role designation profilePic")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic")
             .sort({ createdAt: -1 });
@@ -908,7 +908,7 @@ export const getTasksByUser = async (req, res) => {
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("statusHistory.changedBy", "name role designation profilePic")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic")
             .sort({ createdAt: -1 });
@@ -1001,12 +1001,12 @@ export const deleteTaskHistoryNote = async (req, res) => {
             .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email profilePic")
             .populate("assignedQA", "name email profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("statusHistory.changedBy", "name role designation profilePic")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         // Record Audit Log
-        const details = `Task transition comment "${deletedNoteText.substring(0, 40)}${deletedNoteText.length > 40 ? '...' : ''}" on task "${task.taskName}" was deleted by ${req.user.name} (${role})`;
+        const details = `Task transition comment "${deletedNoteText.substring(0, 40)}${deletedNoteText.length > 40 ? '...' : ''}" on task "${task.taskName}" was deleted by ${getUserNotificationLabel(req.user)}${req.user.name}`;
         await createAuditLog({
             req,
             itemType: "Note",
@@ -1031,7 +1031,7 @@ export const deleteTaskHistoryNote = async (req, res) => {
                     recipient: recipientId,
                     sender: _id,
                     title: "Task Comment/Note Deleted",
-                    message: `A note was deleted from task "${task.taskName}" by ${req.user.name} (${role})`,
+                    message: `A note was deleted from task "${task.taskName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "task",
                     category: "delete",
                     link: `/projects/${task.project}?taskId=${task._id}`
@@ -1121,12 +1121,12 @@ export const deleteTaskAttachment = async (req, res) => {
             .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email profilePic")
             .populate("assignedQA", "name email profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("statusHistory.changedBy", "name role designation profilePic")
             .populate("attachments.uploadedBy", "name email role profilePic")
             .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         // Record Audit Log
-        const details = `Attachment "${attachment.filename}" was deleted from task "${task.taskName}" by ${req.user.name} (${role})`;
+        const details = `Attachment "${attachment.filename}" was deleted from task "${task.taskName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`;
         await createAuditLog({
             req,
             itemType: "Attachment",
@@ -1151,7 +1151,7 @@ export const deleteTaskAttachment = async (req, res) => {
                     recipient: recipientId,
                     sender: _id,
                     title: "Task Attachment Deleted",
-                    message: `File "${attachment.filename}" was deleted from task "${task.taskName}" by ${req.user.name} (${role})`,
+                    message: `File "${attachment.filename}" was deleted from task "${task.taskName}" by ${getUserNotificationLabel(req.user)}${req.user.name}`,
                     type: "task",
                     category: "delete",
                     link: `/projects/${task.project}?taskId=${task._id}`

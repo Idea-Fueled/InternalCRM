@@ -9,6 +9,34 @@ import {
     ArrowRight, MessageSquare, Trash, Sparkles
 } from "lucide-react";
 
+const getUserDesignationLabel = (m) => {
+    if (!m) return "";
+    const designation = m.designation || "";
+    const role = m.role || "";
+    
+    const titleCase = (str) => {
+        if (!str) return "";
+        return str.split(" ")
+                  .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(" ");
+    };
+
+    if (designation && designation.trim() !== "" && designation.toLowerCase() !== role.toLowerCase()) {
+        return titleCase(designation.trim());
+    }
+
+    const resolvedRole = role.toLowerCase();
+    if (resolvedRole === "admin") return "Admin";
+    if (resolvedRole === "tl" || resolvedRole === "teamlead" || resolvedRole === "team_lead") return "Technical Team Lead";
+    if (resolvedRole === "qa") return "Senior QA";
+    if (resolvedRole === "hr") return "HR Executive";
+    if (resolvedRole === "developer") return "Developer";
+    if (resolvedRole === "employee") return "Employee";
+    
+    if (designation) return titleCase(designation);
+    return titleCase(role);
+};
+
 const HRNotifications = () => {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
@@ -177,7 +205,7 @@ const HRNotifications = () => {
                                             </div>
                                             <p className="text-[11px] font-medium text-slate-500 mt-1 leading-relaxed">{notif.message}</p>
                                             <div className="flex items-center gap-3 mt-3 text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider">
-                                                <span>Sender: {notif.sender?.name || "System"}</span>
+                                                <span>Sender: {notif.sender ? `${getUserDesignationLabel(notif.sender)} ${notif.sender.name}`.trim() : "System"}</span>
                                                 <span>•</span>
                                                 <span>{new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                             </div>
