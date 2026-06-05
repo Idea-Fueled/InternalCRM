@@ -11,6 +11,7 @@ import {
     Users, Briefcase, CheckCircle2, Clock, Play, AlertCircle, ListTodo, ShieldAlert,
     TrendingUp, Plus, Download, Activity, BarChart3
 } from "lucide-react";
+import { getProjectStatus, getProjectStatusDetails } from "../../utils/projectStatus";
 
 // Reusable Card Component
 const Card = ({ children, className = "" }) => (
@@ -1374,6 +1375,10 @@ const AdminDashboard = () => {
                                             const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : (proj.status === "Completed" ? 100 : 0);
                                             const color = progress === 100 ? "bg-emerald-500" : progress > 50 ? "bg-blue-500" : "bg-indigo-500";
                                             
+                                            const projectWithTasks = { ...proj, tasks: projTasks };
+                                            const status = getProjectStatus(projectWithTasks);
+                                            const statusDetails = getProjectStatusDetails(status);
+
                                             return (
                                                 <div key={proj._id || i} className="group hover:bg-slate-50/40 p-3 rounded-xl transition border border-transparent hover:border-slate-100">
                                                     <div className="flex justify-between items-center text-sm mb-2.5">
@@ -1381,13 +1386,10 @@ const AdminDashboard = () => {
                                                             <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150 truncate">
                                                                 {proj.projectName}
                                                             </span>
-                                                            {proj.status !== 'Active' && proj.status && (
-                                                                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
-                                                                    proj.status === 'Completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                                                                }`}>
-                                                                    {proj.status}
-                                                                </span>
-                                                            )}
+                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                                                                <span>{statusDetails.emoji}</span>
+                                                                <span>{statusDetails.label}</span>
+                                                            </span>
                                                         </div>
                                                         <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500 shrink-0">
                                                             <span>{completedCount}/{totalCount} tasks</span>

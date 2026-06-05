@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ProfileModal from "./ProfileModal";
 import ProjectDetailsSidebar from "./ProjectDetailsSidebar";
+import { getProjectStatus, getProjectStatusDetails } from "../utils/projectStatus";
 
 const GlobalSearchModal = ({ isOpen, onClose }) => {
     const { user: currentUser } = useAuth();
@@ -410,8 +411,9 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
                                                             {p.priority}
                                                         </span>
                                                     )}
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${getStatusBadgeClass(p.status)}`}>
-                                                        {p.status}
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                                                        <span>{statusDetails.emoji}</span>
+                                                        <span>{statusDetails.label}</span>
                                                     </span>
                                                 </div>
                                             </button>

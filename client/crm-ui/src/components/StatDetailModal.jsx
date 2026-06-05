@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, User, Briefcase, CheckSquare, Clock, AlertTriangle } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
+import { getProjectStatus, getProjectStatusDetails } from '../utils/projectStatus';
 
 const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -51,16 +52,19 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
         }
 
         if (type === 'project') {
+            const status = getProjectStatus(item);
+            const statusDetails = getProjectStatusDetails(status);
             return (
                 <div 
                     key={item._id || index} 
                     onClick={() => handleItemClick(item)}
-                    className="flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-indigo-50/50 hover:border-l-indigo-500 transition-all last:border-b-0 cursor-pointer group border-l-4 border-l-transparent"
+                    className={`flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-slate-50 transition-all last:border-b-0 cursor-pointer group border-l-4 ${statusDetails.borderClass}`}
                 >
                     <div className="flex items-center justify-between">
                         <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{item.projectName}</p>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${item.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
-                            {item.status || 'Active'}
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                            <span>{statusDetails.emoji}</span>
+                            <span>{statusDetails.label}</span>
                         </span>
                     </div>
                     <p className="text-xs text-slate-500">

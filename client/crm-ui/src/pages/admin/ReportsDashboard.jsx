@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import { userService, taskService, projectService, leaveService, departmentService } from "../../api/services";
-import { exportPDF, exportOverallReport } from "../../utils/pdfExport";
+import { exportPDF } from "../../utils/pdfExport";
+import { getProjectStatus, getProjectStatusDetails } from "../../utils/projectStatus";
 import { 
     Download, ChevronLeft, ChevronRight, FolderOpen, AlertCircle,
     Users, UserCheck, UserX, CheckCircle2, Clock, Calendar, BarChart3, Activity, Briefcase, Target
@@ -1556,78 +1557,85 @@ const ReportsDashboard = ({ focus }) => {
                                 <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-[40px] pointer-events-none"></div>
                                 <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-400/20 rounded-full blur-[40px] pointer-events-none"></div>
                                 
-                                <div className="relative z-10 flex-1 flex flex-col justify-between">
-                                    {projectReport ? (
-                                        <>
-                                            <div className="flex items-start justify-between mb-4">
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex items-center gap-2 mb-3">
-                                                        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-lg text-[10px] font-bold uppercase tracking-wider border border-white/10 shrink-0">
-                                                            {activeProject?.status || "Active"}
-                                                        </span>
+                                <div className="relative z-10 flex-1 flex flex-col justify-between">                                    {projectReport ? (() => {
+                                        const activeProjectTasks = tasks.filter(t => t.project?._id === activeProject?._id || t.project === activeProject?._id);
+                                        const status = getProjectStatus({ ...activeProject, tasks: activeProjectTasks });
+                                        const statusDetails = getProjectStatusDetails(status);
+                                        return (
+                                            <>
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center gap-2 mb-3">
+                                                            <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${statusDetails.badgeClass} shrink-0`}>
+                                                                {statusDetails.emoji} {statusDetails.label}
+                                                            </span>
+                                                        </div>
+                                                        <h3 className="text-2xl font-black tracking-tight truncate" title={projectReport.name}>{projectReport.name}</h3>
+                                                        <div className="flex items-center gap-2 mt-2 text-blue-100 text-sm font-semibold">
+                                                            <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                                            Lead: {projectReport.lead}
+                                                        </div>
                                                     </div>
-                                                    <h3 className="text-2xl font-black tracking-tight truncate" title={projectReport.name}>{projectReport.name}</h3>
-                                                    <div className="flex items-center gap-2 mt-2 text-blue-100 text-sm font-semibold">
-                                                        <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                                        Lead: {projectReport.lead}
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-4 my-auto border-y border-white/10 py-5">
+                                                    <div>
+                                                        <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Timeline</span>
+                                                        <div className="text-xs font-bold">{projectReport.start}</div>
+                                                        <div className="text-xs font-bold opacity-80">{projectReport.end}</div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Tasks</span>
+                                                        <div className="text-xl font-bold">{projectReport.completedTasks}<span className="text-sm opacity-70">/{projectReport.totalTasks}</span></div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-4 my-auto border-y border-white/10 py-5">
-                                                <div>
-                                                    <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Timeline</span>
-                                                    <div className="text-xs font-bold">{projectReport.start}</div>
-                                                    <div className="text-xs font-bold opacity-80">{projectReport.end}</div>
-                                                </div>
-                                                <div>
-                                                    <span className="block text-[10px] font-bold text-blue-200 uppercase tracking-wider mb-1">Tasks</span>
-                                                    <div className="text-xl font-bold">{projectReport.completedTasks}<span className="text-sm opacity-70">/{projectReport.totalTasks}</span></div>
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-4">
-                                                <div className="flex justify-between items-end mb-2">
-                                                    <span className="text-xs font-bold text-blue-100 tracking-wide uppercase">Completion</span>
-                                                    <span className="text-2xl font-black">{projectReport.progress}%</span>
-                                                </div>
-                                                <div className="w-full bg-black/20 rounded-full h-2.5 backdrop-blur-sm border border-white/10">
-                                                    <div className="bg-white h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-500" style={{ width: `${projectReport.progress}%` }}></div>
-                                                </div>
-                                            </div>
-
-                                            {/* Slider Navigation */}
-                                            {projects.length > 1 && (
-                                                <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
-                                                    <button 
-                                                        onClick={handleSlidePrev}
-                                                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white border border-white/5 active:scale-95 cursor-pointer"
-                                                        title="Previous Project"
-                                                    >
-                                                        <ChevronLeft className="w-4 h-4" />
-                                                    </button>
-                                                    <div className="flex items-center gap-1">
-                                                        {projects.map((p, idx) => (
-                                                            <button
-                                                                key={p._id}
-                                                                onClick={() => setSelectedProjectId(p._id)}
-                                                                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                                                                    idx === currentProjectIndex ? 'w-4 bg-white' : 'bg-white/40 hover:bg-white/60'
-                                                                }`}
-                                                            />
-                                                        ))}
+                                                <div className="mt-4">
+                                                    <div className="flex justify-between items-end mb-2">
+                                                        <span className="text-xs font-bold text-blue-100 tracking-wide uppercase">Completion</span>
+                                                        <span className="text-2xl font-black">{projectReport.progress}%</span>
                                                     </div>
-                                                    <button 
-                                                        onClick={handleSlideNext}
-                                                        className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white border border-white/5 active:scale-95 cursor-pointer"
-                                                        title="Next Project"
-                                                    >
-                                                        <ChevronRight className="w-4 h-4" />
-                                                    </button>
+                                                    <div className="w-full bg-black/20 rounded-full h-2.5 backdrop-blur-sm border border-white/10">
+                                                        <div className="bg-white h-2.5 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] transition-all duration-500" style={{ width: `${projectReport.progress}%` }}></div>
+                                                    </div>
                                                 </div>
-                                            )}
-                                        </>
-                                    ) : (
+
+                                                {/* Slider Navigation */}
+                                                {projects.length > 1 && (
+                                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
+                                                        <button 
+                                                            type="button"
+                                                            onClick={handleSlidePrev}
+                                                            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white border border-white/5 active:scale-95 cursor-pointer"
+                                                            title="Previous Project"
+                                                        >
+                                                            <ChevronLeft className="w-4 h-4" />
+                                                        </button>
+                                                        <div className="flex items-center gap-1">
+                                                            {projects.map((p, idx) => (
+                                                                <button
+                                                                    key={p._id}
+                                                                    type="button"
+                                                                    onClick={() => setSelectedProjectId(p._id)}
+                                                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                                                                        idx === currentProjectIndex ? 'w-4 bg-white' : 'bg-white/40 hover:bg-white/60'
+                                                                    }`}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={handleSlideNext}
+                                                            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-white border border-white/5 active:scale-95 cursor-pointer"
+                                                            title="Next Project"
+                                                        >
+                                                            <ChevronRight className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })() : (
                                         <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                                             <div className="w-12 h-12 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center mb-3 animate-pulse">
                                                 <FolderOpen className="w-6 h-6 text-blue-100" />

@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import usePermission from "../../hooks/usePermission";
 import ProjectDetailsSidebar from "../../components/ProjectDetailsSidebar";
+import { getProjectStatus, getProjectStatusDetails } from "../../utils/projectStatus";
 
 const ProjectsDashboard = () => {
     const { user } = useAuth();
@@ -97,31 +98,7 @@ const ProjectsDashboard = () => {
             const res = await projectService.getAllProjects();
             
             const formatted = (res.data.projects || []).map(p => {
-                const totalTasks = p.tasks?.length || 0;
-                const completedTasks = p.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
-                
-                const currentDate = new Date();
-                currentDate.setHours(0, 0, 0, 0);
-                const deadline = p.endDate ? new Date(p.endDate) : null;
-                if (deadline) deadline.setHours(0, 0, 0, 0);
-                const start = p.startDate ? new Date(p.startDate) : null;
-                if (start) start.setHours(0, 0, 0, 0);
-
-                const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
-
-                let timelineTag = "In Progress";
-                if (start && start > currentDate) {
-                    timelineTag = "Upcoming";
-                } else if (isCompleted) {
-                    timelineTag = "Completed";
-                } else if (deadline) {
-                    const timeDiff = deadline.getTime() - currentDate.getTime();
-                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                    if (daysDiff < 0) {
-                        timelineTag = "Overdue";
-                    }
-                }
-                
+                const timelineTag = getProjectStatus(p);
                 return { ...p, timelineTag };
             });
             
@@ -522,39 +499,8 @@ const ProjectsDashboard = () => {
                                 const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A";
                                 const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
 
-                                const currentDate = new Date();
-                                currentDate.setHours(0, 0, 0, 0);
-                                const deadline = project.endDate ? new Date(project.endDate) : null;
-                                if (deadline) deadline.setHours(0, 0, 0, 0);
-                                const start = project.startDate ? new Date(project.startDate) : null;
-                                if (start) start.setHours(0, 0, 0, 0);
-
-                                let bgClass = "bg-white hover:border-blue-300 border-slate-200/60";
-                                let timelineTag = "In Progress";
-                                let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
-
-                                if (start && start > currentDate) {
-                                    bgClass = "bg-purple-50 border-purple-200 hover:border-purple-400 hover:shadow-purple-100/50";
-                                    timelineTag = "Upcoming";
-                                    timelineClass = "bg-purple-100 text-purple-700 border-purple-200";
-                                } else if (isCompleted) {
-                                    bgClass = "bg-emerald-50 border-emerald-200 hover:border-emerald-400 hover:shadow-emerald-100/50";
-                                    timelineTag = "Completed";
-                                    timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
-                                } else if (deadline) {
-                                    const timeDiff = deadline.getTime() - currentDate.getTime();
-                                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                                    
-                                    if (daysDiff < 0) {
-                                        bgClass = "bg-rose-50 border-rose-200 hover:border-rose-400 hover:shadow-rose-100/50";
-                                        timelineTag = "Overdue";
-                                        timelineClass = "bg-rose-100 text-rose-700 border-rose-200";
-                                    } else if (daysDiff <= 3) {
-                                        bgClass = "bg-orange-50 border-orange-200 hover:border-orange-400 hover:shadow-orange-100/50";
-                                        timelineTag = "Due Soon";
-                                        timelineClass = "bg-orange-100 text-orange-700 border-orange-200";
-                                    }
-                                }
+                                const status = getProjectStatus(project);
+                                const statusDetails = getProjectStatusDetails(status);
 
                                 return (
                                     <div 
@@ -562,22 +508,19 @@ const ProjectsDashboard = () => {
                                         onClick={() => {
                                             setSelectedProjectId(project._id);
                                         }}
-                                        className={`group rounded-3xl p-6 flex flex-col gap-5 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
+                                        className={`group rounded-3xl p-6 flex flex-col gap-5 border-y border-r border-l-[5px] ${statusDetails.borderClass} border-slate-200/60 bg-white hover:shadow-md transition-all duration-300 cursor-pointer`}
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex flex-col gap-1.5">
-                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-fit">{project._id.slice(-6).toUpperCase()}</span>
-                                                <h3 className="text-lg font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
+                                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-fit shrink-0">{project._id.slice(-6).toUpperCase()}</span>
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 shrink-0`}>
+                                                        <span>{statusDetails.emoji}</span>
+                                                        <span>{statusDetails.label}</span>
+                                                    </span>
+                                                </div>
+                                                <h3 className="text-lg font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors mt-1">{project.projectName}</h3>
                                             </div>
-                                            {project.status !== 'Active' && (
-                                                <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border whitespace-nowrap ${
-                                                    project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                    project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                    'bg-slate-50 text-slate-500 border-slate-200'
-                                                }`}>
-                                                    {project.status}
-                                                </span>
-                                            )}
                                         </div>
 
                                         <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed">{project.description}</p>
@@ -676,6 +619,9 @@ const ProjectsDashboard = () => {
                                             const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A";
                                             const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
 
+                                            const status = getProjectStatus(project);
+                                            const statusDetails = getProjectStatusDetails(status);
+
                                             return (
                                                 <tr 
                                                     key={project._id || i}
@@ -684,8 +630,12 @@ const ProjectsDashboard = () => {
                                                 >
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{project._id.slice(-6).toUpperCase()}</span>
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">{project._id.slice(-6).toUpperCase()}</span>
+                                                                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 shrink-0`}>
+                                                                    <span>{statusDetails.emoji}</span>
+                                                                    <span>{statusDetails.label}</span>
+                                                                </span>
                                                                 <h3 className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
                                                             </div>
                                                             <p className="text-xs text-slate-400 mt-1 truncate pr-4" title={project.description}>{project.description}</p>

@@ -122,6 +122,7 @@ import {
     LayoutList, Download, X, Paperclip, MessageSquare, Plus, FileText,
     Image as ImageIcon, Archive, Eye, Trash2, Edit3, Send, Check, AlertTriangle, ShieldAlert
 } from "lucide-react";
+import { getProjectStatus, getProjectStatusDetails } from "../../utils/projectStatus";
 
 const getUserLabel = (m) => {
     if (!m) return "";
@@ -717,6 +718,10 @@ const ProjectDetails = () => {
     const isAuthorizedToManage = isAdmin || isProjectTL;
     const timelineEvents = getTimelineEvents();
 
+    const projectWithTasks = project ? { ...project, tasks } : null;
+    const currentStatus = getProjectStatus(projectWithTasks);
+    const statusDetails = getProjectStatusDetails(currentStatus);
+
     return (
         <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
             <AdminSidebar role={sidebarRole} />
@@ -740,16 +745,10 @@ const ProjectDetails = () => {
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div className="space-y-3 max-w-3xl">
                                     <div className="flex flex-wrap gap-2 items-center">
-                                        {project.status !== 'Active' && (
-                                            <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
-                                                project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                                project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                                project.status === "At Risk" ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                                "bg-slate-50 text-slate-600 border-slate-200"
-                                            }`}>
-                                                {project.status}
-                                            </span>
-                                        )}
+                                        <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${statusDetails.badgeClass} flex items-center gap-1.5`}>
+                                            <span>{statusDetails.emoji}</span>
+                                            <span>{statusDetails.label}</span>
+                                        </span>
                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${
                                             project.priority === "Critical" ? "bg-rose-50 text-rose-600 border-rose-100 animate-pulse" :
                                             project.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :

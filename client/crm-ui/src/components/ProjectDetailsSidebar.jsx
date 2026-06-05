@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { FilePreviewModal, isPreviewSupported, formatAttachmentDate, isImageFile, isPdfFile } from "./FileAttachmentUX";
+import { getProjectStatus, getProjectStatusDetails } from "../utils/projectStatus";
 
 const AttachmentRow = ({ file, onDelete = null, onPreview }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -692,16 +693,16 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                     ) : project ? (
                         <div className="flex-1 mr-4 space-y-2">
                             <div className="flex flex-wrap gap-2 items-center">
-                                {project.status !== 'Active' && (
-                                    <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
-                                        project.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                        project.status === "On Track" ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                        project.status === "At Risk" ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                        "bg-slate-50 text-slate-600 border-slate-200"
-                                    }`}>
-                                        {project.status}
-                                    </span>
-                                )}
+                                {(() => {
+                                    const status = getProjectStatus(project);
+                                    const statusDetails = getProjectStatusDetails(status);
+                                    return (
+                                        <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                                            <span>{statusDetails.emoji}</span>
+                                            <span>{statusDetails.label}</span>
+                                        </span>
+                                    );
+                                })()}
                                 <span className={`px-2.5 py-0.5 rounded-lg text-[9px] font-semibold border ${
                                     project.priority === "Critical" ? "bg-rose-50 text-rose-600 border-rose-100 animate-pulse" :
                                     project.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :

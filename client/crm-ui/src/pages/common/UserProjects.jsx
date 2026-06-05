@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { exportPDF } from '../../utils/pdfExport';
 import StatDetailModal from '../../components/StatDetailModal';
+import { getProjectStatus, getProjectStatusDetails } from '../../utils/projectStatus';
 
 const UserProjects = ({ role = "developer" }) => {
     const formatDate = (dateString) => {
@@ -37,28 +38,7 @@ const UserProjects = ({ role = "developer" }) => {
                 const totalTasks = p.tasks?.length || 0;
                 const completedTasks = p.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
                 const overdueTasks = p.tasks?.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length || 0;
-                
-                const currentDate = new Date();
-                currentDate.setHours(0, 0, 0, 0);
-                const deadline = p.endDate ? new Date(p.endDate) : null;
-                if (deadline) deadline.setHours(0, 0, 0, 0);
-                const start = p.startDate ? new Date(p.startDate) : null;
-                if (start) start.setHours(0, 0, 0, 0);
-
-                const isCompleted = totalTasks > 0 && completedTasks === totalTasks;
-
-                let timelineTag = "In Progress";
-                if (start && start > currentDate) {
-                    timelineTag = "Upcoming";
-                } else if (isCompleted) {
-                    timelineTag = "Completed";
-                } else if (deadline) {
-                    const timeDiff = deadline.getTime() - currentDate.getTime();
-                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                    if (daysDiff < 0) {
-                        timelineTag = "Overdue";
-                    }
-                }
+                const timelineTag = getProjectStatus(p);
 
                 return {
                     ...p,
@@ -519,63 +499,26 @@ const UserProjects = ({ role = "developer" }) => {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                             {filteredProjects.map((p) => {
-                                const currentDate = new Date();
-                                currentDate.setHours(0, 0, 0, 0);
-                                const deadline = p.endDate ? new Date(p.endDate) : null;
-                                if (deadline) deadline.setHours(0, 0, 0, 0);
-                                const start = p.startDate ? new Date(p.startDate) : null;
-                                if (start) start.setHours(0, 0, 0, 0);
-
-                                const isCompleted = p.totalTasks > 0 && p.progress === 100;
-
-                                let bgClass = "bg-white hover:shadow-blue-900/5 border-slate-200/60";
-                                let timelineTag = "In Progress";
-                                let timelineClass = "bg-blue-50 text-blue-600 border-blue-200";
-
-                                if (start && start > currentDate) {
-                                    bgClass = "bg-purple-50 border-purple-200 hover:shadow-purple-900/10";
-                                    timelineTag = "Upcoming";
-                                    timelineClass = "bg-purple-100 text-purple-700 border-purple-200";
-                                } else if (isCompleted) {
-                                    bgClass = "bg-emerald-50 border-emerald-200 hover:shadow-emerald-900/10";
-                                    timelineTag = "Completed";
-                                    timelineClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
-                                } else if (deadline) {
-                                    const timeDiff = deadline.getTime() - currentDate.getTime();
-                                    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-                                    
-                                    if (daysDiff < 0) {
-                                        bgClass = "bg-rose-50 border-rose-200 hover:shadow-rose-900/10";
-                                        timelineTag = "Overdue";
-                                        timelineClass = "bg-rose-100 text-rose-700 border-rose-200";
-                                    } else if (daysDiff <= 3) {
-                                        bgClass = "bg-orange-50 border-orange-200 hover:shadow-orange-900/10";
-                                        timelineTag = "Due Soon";
-                                        timelineClass = "bg-orange-100 text-orange-700 border-orange-200";
-                                    }
-                                }
+                                const status = getProjectStatus(p);
+                                const statusDetails = getProjectStatusDetails(status);
 
                                 return (
                                 <div 
                                     key={p.id}
                                     onClick={() => setSelectedProject(p)}
-                                    className={`rounded-3xl p-6 shadow-sm border hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden ${bgClass}`}
+                                    className={`rounded-3xl p-6 shadow-sm border-y border-r border-l-[5px] ${statusDetails.borderClass} border-slate-200/60 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden`}
                                 >
-                                    <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full -z-0 opacity-0 group-hover:opacity-10 transition-opacity ${p.status === 'Active' ? 'bg-emerald-500' : 'bg-blue-500'}`}></div>
+                                    <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full -z-0 opacity-0 group-hover:opacity-10 transition-opacity bg-blue-500`}></div>
                                     
                                     <div className="relative z-10">
                                         <div className="flex items-start justify-between mb-4">
-                                            <div className={`p-3 rounded-2xl ${p.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'} transition-colors group-hover:bg-white group-hover:shadow-lg`}>
+                                            <div className={`p-3 rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-white group-hover:shadow-lg`}>
                                                 <LayoutList className="w-6 h-6" />
                                             </div>
                                             <div className="flex flex-wrap gap-2 items-center">
-                                                {p.status !== 'Active' && (
-                                                    <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border bg-blue-50 text-blue-600 border-blue-100">
-                                                        {p.status}
-                                                    </span>
-                                                )}
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${timelineClass}`}>
-                                                    {timelineTag}
+                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                                                    <span>{statusDetails.emoji}</span>
+                                                    <span>{statusDetails.label}</span>
                                                 </span>
                                             </div>
                                         </div>
