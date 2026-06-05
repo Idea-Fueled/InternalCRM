@@ -307,14 +307,19 @@ const ProjectsDashboard = () => {
 
     const handleExport = () => {
         const columns = ["Project Name", "Team Lead", "Status", "Progress", "Start Date", "End Date"];
-        const data = filteredProjects.map(p => [
-            p.projectName,
-            p.teamLead?.name || "Unassigned",
-            p.status,
-            `${p.status === "Completed" ? 100 : 50}%`,
-            p.startDate ? new Date(p.startDate).toLocaleDateString() : "N/A",
-            p.endDate ? new Date(p.endDate).toLocaleDateString() : "N/A"
-        ]);
+        const data = filteredProjects.map(p => {
+            const total = p.tasks?.length || 0;
+            const completed = p.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
+            const progressVal = total > 0 ? Math.round((completed / total) * 100) : 0;
+            return [
+                p.projectName,
+                p.teamLead?.name || "Unassigned",
+                p.status,
+                `${progressVal}%`,
+                p.startDate ? new Date(p.startDate).toLocaleDateString() : "N/A",
+                p.endDate ? new Date(p.endDate).toLocaleDateString() : "N/A"
+            ];
+        });
         exportPDF({
             title: "Project Master List",
             filename: `projects_report_${new Date().getTime()}.pdf`,

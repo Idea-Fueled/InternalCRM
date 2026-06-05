@@ -135,8 +135,24 @@ const TeamLeadTeam = () => {
                     });
                     
                     const teamMembers = filteredUsers.map((u, i) => {
-                        const userTasks = allTasks.filter(t => t.assignedTo?._id === u._id);
-                        const completed = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
+                        const isQA = getUserRoleCategory(u) === 'qa';
+                        const userTasks = allTasks.filter(t => {
+                            const uid = isQA ? (t.assignedQA?._id || t.assignedQA) : (t.assignedTo?._id || t.assignedTo);
+                            return String(uid) === String(u._id);
+                        });
+                        const completed = userTasks.filter(t => {
+                            if (isQA) {
+                                if (["Completed", "Done"].includes(t.status)) return true;
+                                const history = t.statusHistory || [];
+                                let hasBeenInQA = false;
+                                for (const h of history) {
+                                    if (h.status === 'QA Review') hasBeenInQA = true;
+                                    else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                                }
+                                return false;
+                            }
+                            return t.status === "Completed" || t.status === "Done";
+                        }).length;
                         const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
                         
                         const pending = userTasks.length - completed;
@@ -685,11 +701,32 @@ const TeamLeadTeam = () => {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reviewed Tasks</span>
-                                                    <span className="text-xl font-bold text-emerald-700 mt-1 block">{selectedMember.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0}</span>
+                                                    <span className="text-xl font-bold text-emerald-700 mt-1 block">{selectedMember.stats.completed}</span>
                                                 </div>
                                                 <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pending Reviews</span>
-                                                    <span className="text-xl font-bold text-amber-700 mt-1 block">{selectedMember.tasks?.filter(t => t.status === "Testing" || t.status === "In Progress").length || 0}</span>
+                                                    <span className="text-xl font-bold text-amber-700 mt-1 block">{selectedMember.stats.total - selectedMember.stats.completed}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* QA Performance Bar */}
+                                            <div className="space-y-2 pt-2">
+                                                <div className="flex justify-between items-center text-xs font-semibold">
+                                                    <span className="text-slate-500">QA Review Progress</span>
+                                                    <span className="text-slate-800">
+                                                        {selectedMember.stats.total > 0 
+                                                            ? Math.round((selectedMember.stats.completed / selectedMember.stats.total) * 100) 
+                                                            : 0}%
+                                                    </span>
+                                                </div>
+                                                <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                    <div 
+                                                        className={`h-full rounded-full transition-all duration-1000 ${
+                                                            (selectedMember.stats.total > 0 ? (selectedMember.stats.completed / selectedMember.stats.total) * 100 : 0) > 80 ? 'bg-emerald-500' : 
+                                                            (selectedMember.stats.total > 0 ? (selectedMember.stats.completed / selectedMember.stats.total) * 100 : 0) > 40 ? 'bg-blue-500' : 'bg-amber-500'
+                                                        }`}
+                                                        style={{ width: `${selectedMember.stats.total > 0 ? Math.round((selectedMember.stats.completed / selectedMember.stats.total) * 100) : 0}%` }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

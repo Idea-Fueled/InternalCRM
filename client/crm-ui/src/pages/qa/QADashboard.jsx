@@ -595,6 +595,33 @@ const QADashboard = () => {
                                                     </div>
                                                 ))}
                                             </div>
+                                            
+                                            {/* QA Performance Progress Bar Card */}
+                                            {(() => {
+                                                const totalAssignedQATasks = dashboardMetrics.pending + dashboardMetrics.approved + dashboardMetrics.rejected;
+                                                const qaPerformancePct = totalAssignedQATasks > 0 ? Math.round((dashboardMetrics.totalReviews / totalAssignedQATasks) * 100) : 0;
+                                                return (
+                                                    <div className="w-full mt-6 pt-5 border-t border-slate-100">
+                                                        <div className="flex justify-between items-center text-xs font-bold text-slate-700 mb-2">
+                                                            <span className="flex items-center gap-1.5 text-slate-500">
+                                                                <ShieldCheck className="w-4 h-4 text-emerald-500" />
+                                                                QA Review Performance
+                                                            </span>
+                                                            <span>{qaPerformancePct}%</span>
+                                                        </div>
+                                                        <div className="bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                                            <div 
+                                                                className={`h-full rounded-full transition-all duration-1000 bg-gradient-to-r from-emerald-400 to-emerald-500`}
+                                                                style={{ width: `${qaPerformancePct}%` }}
+                                                            />
+                                                        </div>
+                                                        <div className="flex justify-between items-center mt-2 text-[10px] font-semibold text-slate-400">
+                                                            <span>{dashboardMetrics.totalReviews} Reviewed</span>
+                                                            <span>{totalAssignedQATasks} Total Assigned</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     );
                                 })() : (

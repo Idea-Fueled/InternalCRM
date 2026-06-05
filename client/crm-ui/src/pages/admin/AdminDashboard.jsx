@@ -1424,13 +1424,26 @@ const AdminDashboard = () => {
                                     </div>
                                     <div className="flex-1 overflow-y-auto divide-y divide-slate-100 custom-scrollbar">
                                         {users.filter(u => u.role !== "admin").slice(0, 6).map((member, i) => {
+                                            const isQA = member.role === 'qa' || member.role === 'QA' || (member.designation && member.designation.toLowerCase().includes('qa'));
                                             const memberTasks = allTasks.filter(t => {
-                                                const uid = t.assignedTo?._id || t.assignedTo;
-                                                return uid === member._id;
+                                                const uid = isQA ? (t.assignedQA?._id || t.assignedQA) : (t.assignedTo?._id || t.assignedTo);
+                                                return String(uid) === String(member._id);
                                             });
                                             
                                             const activeCount = memberTasks.filter(t => !["Completed", "Done"].includes(t.status)).length;
-                                            const completedCount = memberTasks.filter(t => ["Completed", "Done"].includes(t.status)).length;
+                                            const completedCount = memberTasks.filter(t => {
+                                                if (isQA) {
+                                                    if (["Completed", "Done"].includes(t.status)) return true;
+                                                    const history = t.statusHistory || [];
+                                                    let hasBeenInQA = false;
+                                                    for (const h of history) {
+                                                        if (h.status === 'QA Review') hasBeenInQA = true;
+                                                        else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                                                    }
+                                                    return false;
+                                                }
+                                                return ["Completed", "Done"].includes(t.status);
+                                            }).length;
                                             const totalAssigned = memberTasks.length;
                                             const completionRate = totalAssigned > 0 ? Math.round((completedCount / totalAssigned) * 100) : 0;
                                             

@@ -52,12 +52,31 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
         // Fetch Tasks
         try {
             setLoadingTasks(true);
-            const res = await taskService.getTasksByUser(empRaw._id);
-            if (res.data?.success && Array.isArray(res.data.data)) {
-                setTasks(res.data.data);
+            const empRoleCat = getUserRoleCategory(empRaw);
+            const isQA = empRoleCat === 'qa';
+            const isTL = empRoleCat === 'TL';
+            const empId = empRaw._id.toString();
+            const res = await taskService.getAllTasks();
+            let allFetchedTasks = [];
+            if (res.data?.success && Array.isArray(res.data.tasks)) {
+                allFetchedTasks = res.data.tasks;
             } else if (Array.isArray(res.data)) {
-                setTasks(res.data);
+                allFetchedTasks = res.data;
             }
+            const filtered = allFetchedTasks.filter(t => {
+                if (isQA) {
+                    const uid = t.assignedQA?._id || t.assignedQA;
+                    return String(uid) === empId;
+                } else if (isTL) {
+                    const isLeadOfProject = t.project && (t.project.teamLead?._id?.toString() === empId || t.project.teamLead?.toString() === empId);
+                    const isAssignedToMe = (t.assignedTo?._id || t.assignedTo) === empId;
+                    return isLeadOfProject || isAssignedToMe;
+                } else {
+                    const uid = t.assignedTo?._id || t.assignedTo;
+                    return String(uid) === empId;
+                }
+            });
+            setTasks(filtered);
         } catch (err) {
             console.error("Failed to load employee tasks:", err);
             toast.error("Failed to retrieve active tasks.");
@@ -335,41 +354,94 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                         )}
                                     </div>
                                 </div>
-                            ) : viewedRoleCat === 'TL' ? (
-                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
-                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                                        <Layers className="w-4 h-4 text-purple-500" />
-                                        Team & Project Metrics
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Active Projects</span>
-                                            <span className="text-lg font-bold text-purple-700 mt-1 block">{projects.length}</span>
-                                        </div>
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Department Tasks</span>
-                                            <span className="text-lg font-bold text-emerald-700 mt-1 block">{tasks.length}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : viewedRoleCat === 'qa' ? (
-                                <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
-                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                                        <CheckCircle className="w-4 h-4 text-emerald-500" />
-                                        QA Review Metrics
-                                    </h4>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Audits Conducted</span>
-                                            <span className="text-lg font-bold text-emerald-700 mt-1 block">{tasks.filter(t => t.status === "Completed" || t.status === "Done").length}</span>
-                                        </div>
-                                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
-                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pending Reviews</span>
-                                            <span className="text-lg font-bold text-amber-700 mt-1 block">{tasks.filter(t => t.status === "Testing" || t.status === "In Progress").length}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : viewedRoleCat === 'hr' ? (
+                            ) : viewedRoleCat === 'TL' ? (() => {
+                const completedTeamCount = tasks.filter(t => t.status === "Completed" || t.status === "Done").length;
+                const tlProgressVal = tasks.length > 0 ? Math.round((completedTeamCount / tasks.length) * 100) : 0;
+                
+                return (
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                            <Layers className="w-4 h-4 text-purple-500" />
+                            Team & Project Metrics
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Active Projects</span>
+                                <span className="text-lg font-bold text-purple-700 mt-1 block">{projects.length}</span>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Managed Tasks</span>
+                                <span className="text-lg font-bold text-emerald-700 mt-1 block">{tasks.length}</span>
+                            </div>
+                        </div>
+                        
+                        {/* TL Progress Bar */}
+                        <div className="space-y-2 pt-2">
+                            <div className="flex justify-between items-center text-xs font-semibold">
+                                <span className="text-slate-500">Team Progress</span>
+                                <span className="text-slate-800">{tlProgressVal}%</span>
+                            </div>
+                            <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-1000 ${
+                                        tlProgressVal > 80 ? 'bg-emerald-500' : 
+                                        tlProgressVal > 40 ? 'bg-blue-500' : 'bg-amber-500'
+                                    }`}
+                                    style={{ width: `${tlProgressVal}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+            })() : viewedRoleCat === 'qa' ? (() => {
+                const qaCompletedCount = tasks.filter(t => {
+                    if (["Completed", "Done"].includes(t.status)) return true;
+                    const history = t.statusHistory || [];
+                    let hasBeenInQA = false;
+                    for (const h of history) {
+                        if (h.status === 'QA Review') hasBeenInQA = true;
+                        else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                    }
+                    return false;
+                }).length;
+                const qaProgressVal = tasks.length > 0 ? Math.round((qaCompletedCount / tasks.length) * 100) : 0;
+                
+                return (
+                    <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
+                        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                            <CheckCircle className="w-4 h-4 text-emerald-500" />
+                            QA Review Metrics
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reviewed Tasks</span>
+                                <span className="text-lg font-bold text-emerald-700 mt-1 block">{qaCompletedCount}</span>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-center">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Pending Reviews</span>
+                                <span className="text-lg font-bold text-amber-700 mt-1 block">{tasks.length - qaCompletedCount}</span>
+                            </div>
+                        </div>
+                        
+                        {/* QA Progress Bar */}
+                        <div className="space-y-2 pt-2">
+                            <div className="flex justify-between items-center text-xs font-semibold">
+                                <span className="text-slate-500">QA Review Progress</span>
+                                <span className="text-slate-800">{qaProgressVal}%</span>
+                            </div>
+                            <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-1000 ${
+                                        qaProgressVal > 80 ? 'bg-emerald-500' : 
+                                        qaProgressVal > 40 ? 'bg-blue-500' : 'bg-amber-500'
+                                    }`}
+                                    style={{ width: `${qaProgressVal}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+            })() : viewedRoleCat === 'hr' ? (
                                 <div className="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-4">
                                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 flex items-center gap-1.5">
                                         <User className="w-4 h-4 text-pink-500" />
@@ -398,6 +470,27 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                         <div className="bg-rose-50/50 p-3 rounded-xl border border-rose-100 text-center">
                                             <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wider block">Pending</span>
                                             <span className="text-base font-bold text-rose-700 mt-0.5 block">{tasks.filter(t => t.status !== "Completed" && t.status !== "Done").length}</span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Developer Progress Bar */}
+                                    <div className="space-y-2 pt-2">
+                                        <div className="flex justify-between items-center text-xs font-semibold">
+                                            <span className="text-slate-500">Task Completion</span>
+                                            <span className="text-slate-800">
+                                                {tasks.length > 0 
+                                                    ? Math.round((tasks.filter(t => t.status === "Completed" || t.status === "Done").length / tasks.length) * 100) 
+                                                    : 0}%
+                                            </span>
+                                        </div>
+                                        <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                                            <div 
+                                                className={`h-full rounded-full transition-all duration-1000 ${
+                                                    (tasks.length > 0 ? (tasks.filter(t => t.status === "Completed" || t.status === "Done").length / tasks.length) * 100 : 0) > 80 ? 'bg-emerald-500' : 
+                                                    (tasks.length > 0 ? (tasks.filter(t => t.status === "Completed" || t.status === "Done").length / tasks.length) * 100 : 0) > 40 ? 'bg-blue-500' : 'bg-amber-500'
+                                                }`}
+                                                style={{ width: `${tasks.length > 0 ? Math.round((tasks.filter(t => t.status === "Completed" || t.status === "Done").length / tasks.length) * 100) : 0}%` }}
+                                            />
                                         </div>
                                     </div>
                                 </div>

@@ -109,9 +109,12 @@ const ReportsDashboard = ({ focus }) => {
     });
 
     const employeePerformanceData = hrEmployees.map(emp => {
+        const isQA = emp.role === 'qa' || emp.role === 'QA' || (emp.designation && emp.designation.toLowerCase().includes('qa'));
         // Filter tasks for this employee within date range
         const empTasks = tasks.filter(t => {
-            const isAssigned = (t.assignedTo?._id || t.assignedTo) === emp._id;
+            const isAssigned = isQA 
+                ? (t.assignedQA?._id || t.assignedQA) === emp._id
+                : (t.assignedTo?._id || t.assignedTo) === emp._id;
             if (!isAssigned) return false;
             
             const taskDate = t.updatedAt ? new Date(t.updatedAt) : new Date();
@@ -129,11 +132,32 @@ const ReportsDashboard = ({ focus }) => {
         });
 
         const assignedCount = empTasks.length;
-        const completedTasks = empTasks.filter(t => t.status === "Completed" || t.status === "Done");
-        const completedCount = completedTasks.length;
+        const completedCount = empTasks.filter(t => {
+            if (isQA) {
+                if (["Completed", "Done"].includes(t.status)) return true;
+                const history = t.statusHistory || [];
+                let hasBeenInQA = false;
+                for (const h of history) {
+                    if (h.status === 'QA Review') hasBeenInQA = true;
+                    else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                }
+                return false;
+            }
+            return t.status === "Completed" || t.status === "Done";
+        }).length;
         
         const overdueTasks = empTasks.filter(t => {
-            const isDone = t.status === "Completed" || t.status === "Done";
+            const isDone = isQA
+                ? (["Completed", "Done"].includes(t.status) || (() => {
+                    const history = t.statusHistory || [];
+                    let hasBeenInQA = false;
+                    for (const h of history) {
+                        if (h.status === 'QA Review') hasBeenInQA = true;
+                        else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                    }
+                    return false;
+                })())
+                : (t.status === "Completed" || t.status === "Done");
             if (isDone) return false;
             if (!t.endDate) return false;
             return new Date(t.endDate) < new Date();
@@ -442,19 +466,46 @@ const ReportsDashboard = ({ focus }) => {
 
             if (selectedProjectId === "All") return true;
             // Show if user is in project team or has tasks in this project
+            const isQA = u.role === 'qa' || u.role === 'QA' || (u.designation && u.designation.toLowerCase().includes('qa'));
             const isMember = activeProject?.teamMembers?.some(m => (m._id || m) === u._id);
-            const hasTasks = tasks.some(t => t.project?._id === selectedProjectId && (t.assignedTo?._id || t.assignedTo) === u._id);
+            const hasTasks = tasks.some(t => t.project?._id === selectedProjectId && (isQA ? (t.assignedQA?._id || t.assignedQA) === u._id : (t.assignedTo?._id || t.assignedTo) === u._id));
             return isMember || hasTasks;
         })
         .map(emp => {
-            const devTasks = filteredTasks.filter(t => (t.assignedTo?._id || t.assignedTo) === emp._id);
-            const completed = devTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
+            const isQA = emp.role === 'qa' || emp.role === 'QA' || (emp.designation && emp.designation.toLowerCase().includes('qa'));
+            const devTasks = filteredTasks.filter(t => isQA ? (t.assignedQA?._id || t.assignedQA) === emp._id : (t.assignedTo?._id || t.assignedTo) === emp._id);
+            const completed = devTasks.filter(t => {
+                if (isQA) {
+                    if (["Completed", "Done"].includes(t.status)) return true;
+                    const history = t.statusHistory || [];
+                    let hasBeenInQA = false;
+                    for (const h of history) {
+                        if (h.status === 'QA Review') hasBeenInQA = true;
+                        else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                    }
+                    return false;
+                }
+                return t.status === "Completed" || t.status === "Done";
+            }).length;
             const total = devTasks.length;
             const performance = total > 0 ? Math.round((completed / total) * 100) : 0;
-            const overdue = devTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
+            const overdue = devTasks.filter(t => {
+                const isDone = isQA
+                    ? (["Completed", "Done"].includes(t.status) || (() => {
+                        const history = t.statusHistory || [];
+                        let hasBeenInQA = false;
+                        for (const h of history) {
+                            if (h.status === 'QA Review') hasBeenInQA = true;
+                            else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                        }
+                        return false;
+                    })())
+                    : (t.status === "Completed" || t.status === "Done");
+                return !isDone && t.endDate && new Date(t.endDate) < new Date();
+            }).length;
             
             // First Assigned & Last Active Dates
-            const allEmpTasks = tasks.filter(t => (t.assignedTo?._id || t.assignedTo) === emp._id && (selectedProjectId === "All" || t.project?._id === selectedProjectId));
+            const allEmpTasks = tasks.filter(t => (isQA ? (t.assignedQA?._id || t.assignedQA) === emp._id : (t.assignedTo?._id || t.assignedTo) === emp._id) && (selectedProjectId === "All" || t.project?._id === selectedProjectId));
             let firstTaskDate = "-";
             let lastActiveDate = "-";
             if (allEmpTasks.length > 0) {

@@ -95,8 +95,24 @@ const TeamLeadDashboard = () => {
                     const teamUsers = allUsers.filter(u => u.role === "developer" || u.role === "qa");
                     
                     computedMembers = teamUsers.map((u, i) => {
-                        const userTasks = allTasksFetched.filter(t => t.assignedTo?._id === u._id);
-                        const completed = userTasks.filter(t => t.status === "Completed" || t.status === "Done").length;
+                        const isQA = u.role === 'qa' || u.role === 'QA' || (u.designation && u.designation.toLowerCase().includes('qa'));
+                        const userTasks = allTasksFetched.filter(t => {
+                            const uid = isQA ? (t.assignedQA?._id || t.assignedQA) : (t.assignedTo?._id || t.assignedTo);
+                            return String(uid) === String(u._id);
+                        });
+                        const completed = userTasks.filter(t => {
+                            if (isQA) {
+                                if (["Completed", "Done"].includes(t.status)) return true;
+                                const history = t.statusHistory || [];
+                                let hasBeenInQA = false;
+                                for (const h of history) {
+                                    if (h.status === 'QA Review') hasBeenInQA = true;
+                                    else if (h.status === 'In Progress' && hasBeenInQA) return true;
+                                }
+                                return false;
+                            }
+                            return t.status === "Completed" || t.status === "Done";
+                        }).length;
                         const overdue = userTasks.filter(t => t.endDate && new Date(t.endDate) < new Date() && t.status !== "Completed" && t.status !== "Done").length;
                         const total = userTasks.length;
                         const pending = total - completed;
