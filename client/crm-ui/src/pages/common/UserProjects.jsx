@@ -518,15 +518,15 @@ const UserProjects = ({ role = "developer" }) => {
                                 >
                                     <div className="relative z-10 flex flex-col gap-4">
                                         <div className="flex items-start justify-between">
-                                            <div className="flex flex-col gap-1 flex-1 min-w-0">
-                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-white/75 border border-slate-200/50 px-2 py-0.5 rounded-full w-fit shrink-0">{p.id.slice(-6).toUpperCase()}</span>
-                                                <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate mt-1.5">{p.name}</h3>
-                                                <div className="mt-1">
+                                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{p.name}</h3>
                                                     <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 w-fit shrink-0`}>
                                                         <span>{statusDetails.emoji}</span>
                                                         <span>{statusDetails.label}</span>
                                                     </span>
                                                 </div>
+                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-white/75 border border-slate-200/50 px-2 py-0.5 rounded-full w-fit shrink-0 mt-0.5">{p.id.slice(-6).toUpperCase()}</span>
                                             </div>
                                         </div>
 
