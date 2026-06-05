@@ -132,7 +132,7 @@ const ReportsDashboard = ({ focus }) => {
         });
 
         const assignedCount = empTasks.length;
-        const completedCount = empTasks.filter(t => {
+        const completedTasks = empTasks.filter(t => {
             if (isQA) {
                 if (["Completed", "Done"].includes(t.status)) return true;
                 const history = t.statusHistory || [];
@@ -144,7 +144,8 @@ const ReportsDashboard = ({ focus }) => {
                 return false;
             }
             return t.status === "Completed" || t.status === "Done";
-        }).length;
+        });
+        const completedCount = completedTasks.length;
         
         const overdueTasks = empTasks.filter(t => {
             const isDone = isQA
