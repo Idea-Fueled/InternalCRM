@@ -10,6 +10,19 @@ import { toast } from 'sonner';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import { FilePreviewModal, isPreviewSupported, getFileIcon, isImageFile, formatAttachmentDate } from './FileAttachmentUX';
 
+const formatDateTime = (dt) => {
+    if (!dt) return "";
+    const d = new Date(dt);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleString([], {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
 const PRIORITY_COLORS = {
     'Low':      'bg-slate-100 text-slate-600 border border-slate-200/50',
     'Medium':   'bg-blue-100 text-blue-700 border border-blue-200/50',
