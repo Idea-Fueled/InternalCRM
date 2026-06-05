@@ -1663,12 +1663,12 @@ const ReportsDashboard = ({ focus }) => {
                                 <table className="w-full text-left border-collapse table-fixed">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                                            <th className="px-6 py-4 w-[20%] font-bold">User</th>
+                                            <th className="px-6 py-4 w-[18%] font-bold">User</th>
                                             <th className="px-6 py-4 w-[20%] font-bold">Task</th>
-                                            <th className="px-6 py-4 w-[15%] font-bold">Action</th>
-                                            <th className="px-6 py-4 w-[25%] font-bold">Note</th>
-                                            <th className="px-6 py-4 w-[10%] font-bold">File</th>
-                                            <th className="px-6 py-4 w-[10%] font-bold text-right pr-6">Time</th>
+                                            <th className="px-6 py-4 w-[12%] font-bold">Action</th>
+                                            <th className="px-6 py-4 w-[20%] font-bold">Note</th>
+                                            <th className="px-6 py-4 w-[18%] font-bold">File</th>
+                                            <th className="px-6 py-4 w-[12%] font-bold">Time</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -1707,7 +1707,7 @@ const ReportsDashboard = ({ focus }) => {
                                                         }} 
                                                     />
                                                 </td>
-                                                <td className="px-6 py-4 text-xs font-semibold text-slate-400 whitespace-nowrap text-right pr-6">{act.time}</td>
+                                                <td className="px-6 py-4 text-xs font-semibold text-slate-400 whitespace-nowrap">{act.time}</td>
                                             </tr>
                                         ))}
                                     </tbody>

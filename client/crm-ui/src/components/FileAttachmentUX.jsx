@@ -242,7 +242,7 @@ export const FileAttachmentBadge = ({ attachments = [], legacyUrl = null, onPrev
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg cursor-pointer hover:bg-slate-200 hover:text-blue-600 transition-colors whitespace-nowrap overflow-hidden max-w-full"
             >
                 <Paperclip className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                <span className="truncate max-w-[90px]">
+                <span className="truncate max-w-[140px]">
                     {isMulti ? `${fileList.length} Files` : firstFile.filename}
                 </span>
             </span>
