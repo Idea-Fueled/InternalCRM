@@ -21,6 +21,26 @@ import {
 } from 'lucide-react';
 import StatDetailModal from '../../components/StatDetailModal';
 
+const getUserRoleCategory = (u) => {
+    if (!u) return 'employee';
+    const role = (u.role || '').toLowerCase();
+    const designation = (u.designation || '').toLowerCase();
+    if (role === 'admin' || designation === 'admin') {
+        return 'admin';
+    }
+    if (role === 'hr' || designation.includes('hr')) {
+        return 'hr';
+    }
+    const checkText = designation || role;
+    if (checkText.includes('qa')) {
+        return 'qa';
+    }
+    if (checkText.includes('team lead') || checkText.includes('lead') || role === 'tl') {
+        return 'TL';
+    }
+    return 'employee';
+};
+
 const TeamLeadDashboard = () => {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -92,7 +112,10 @@ const TeamLeadDashboard = () => {
                 let computedMembers = [];
                 if (usersRes.data?.success) {
                     const allUsers = usersRes.data.data || [];
-                    const teamUsers = allUsers.filter(u => u.role === "developer" || u.role === "qa");
+                    const teamUsers = allUsers.filter(u => {
+                        const cat = getUserRoleCategory(u);
+                        return cat === "employee" || cat === "qa";
+                    });
                     
                     computedMembers = teamUsers.map((u, i) => {
                         const isQA = u.role === 'qa' || u.role === 'QA' || (u.designation && u.designation.toLowerCase().includes('qa'));
