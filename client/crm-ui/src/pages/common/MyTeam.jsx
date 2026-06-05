@@ -20,6 +20,69 @@ const AVAILABILITY_COLORS = {
     'Overloaded': 'bg-rose-100 text-rose-700 border-rose-200'
 };
 
+const getUserRoleCategory = (u) => {
+    if (!u) return 'employee';
+    const role = (u.role || '').toLowerCase();
+    const designation = (u.designation || '').toLowerCase();
+    if (role === 'admin' || designation === 'admin') {
+        return 'admin';
+    }
+    if (role === 'hr' || designation.includes('hr')) {
+        return 'hr';
+    }
+    const checkText = designation || role;
+    if (checkText.includes('qa')) {
+        return 'qa';
+    }
+    if (checkText.includes('team lead') || checkText.includes('lead') || role === 'tl') {
+        return 'TL';
+    }
+    return 'employee';
+};
+
+const canViewPerformanceMetrics = (currentUser, targetUser) => {
+    if (!currentUser || !targetUser) return false;
+    
+    const currentRole = currentUser.role;
+    const targetRoleCat = getUserRoleCategory(targetUser);
+    
+    // 1. Admin can see everyone's metrics
+    if (currentRole === 'admin') {
+        return true;
+    }
+    
+    // 2. HR can see everyone's metrics except admin
+    if (currentRole === 'hr') {
+        return targetRoleCat !== 'admin';
+    }
+    
+    // 3. Team Leads can only see metrics of their direct reports (and target cannot be admin, hr, or TL)
+    if (currentRole === 'TL') {
+        if (targetRoleCat === 'admin' || targetRoleCat === 'hr' || targetRoleCat === 'TL') {
+            return false;
+        }
+        
+        const myId = String(currentUser._id || currentUser.id);
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+        
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+            
+        return isDirectReport;
+    }
+    
+    // 4. Employees & QA can only see metrics of employee roles (not admin, hr, TL)
+    if (currentRole === 'employee' || currentRole === 'qa') {
+        return targetRoleCat !== 'admin' && targetRoleCat !== 'hr' && targetRoleCat !== 'TL';
+    }
+    
+    return false;
+};
+
 const MyTeam = () => {
     const { user } = useAuth();
     const [loading, setLoading] = useState(true);
@@ -264,9 +327,8 @@ const MyTeam = () => {
                                         <Users className="w-4 h-4 text-indigo-500" />
                                         {user?.role === 'TL' ? "My Team Members" : "My Teammates"}
                                     </h3>
-                                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-black">{teammates.length} Total</span>
+                                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{teammates.length}</span>
                                 </div>
-                                
                                 {teammates.length > 0 ? (
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
                                         {teammates.map(member => {
@@ -274,6 +336,7 @@ const MyTeam = () => {
                                                 ? Math.round((member.stats.completed / member.stats.total) * 100) 
                                                 : 0;
                                             const isSelf = member.id === user?._id;
+                                            const showMetrics = canViewPerformanceMetrics(user, member);
                                             
                                             return (
                                                 <div 
@@ -291,7 +354,7 @@ const MyTeam = () => {
                                                     )}
                                                     
                                                     <div className="p-5 flex-1">
-                                                        <div className="flex justify-between items-start mb-4">
+                                                        <div className="flex justify-between items-start">
                                                             <div className="flex items-center gap-4">
                                                                 <div className="relative">
                                                                     <div className={`w-12 h-12 rounded-full ${member.avatarColor} text-white flex items-center justify-center font-bold text-lg shadow-sm overflow-hidden`}>
@@ -314,68 +377,82 @@ const MyTeam = () => {
                                                                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
                                                                         )}
                                                                     </div>
-                                                                    <p className="text-xs font-medium text-slate-500 capitalize">{member.designation || formatRole(member.role)}</p>
+                                                                    <p className="text-xs font-medium text-slate-500 capitalize">
+                                                                        {member.designation || formatRole(member.role)}
+                                                                        {member.department && (
+                                                                            <>
+                                                                                <span className="text-slate-300 mx-1.5">•</span>
+                                                                                <span className="text-slate-450">{member.department}</span>
+                                                                            </>
+                                                                        )}
+                                                                    </p>
                                                                 </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="mb-5 flex flex-wrap gap-2 items-center">
-                                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[member.availability]}`}>
-                                                                {member.availability}
-                                                            </span>
-                                                        </div>
-
-                                                        {member.status === 'Inactive' ? (
-                                                            <div className="p-2.5 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1">
-                                                                {(user?.role === 'admin' || user?.role === 'TL') && (
-                                                                    <div className="flex items-start gap-1 min-w-0">
-                                                                        <span className="font-bold text-slate-700 shrink-0">Reason:</span>
-                                                                        <span className="truncate italic text-slate-600">{member.inactiveReason || "None specified"}</span>
-                                                                    </div>
-                                                                )}
-                                                                <div className="flex items-center gap-1 shrink-0">
-                                                                    <span className="font-bold text-slate-700">Duration:</span>
-                                                                    <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-[10px]">
-                                                                        {member.inactiveUntil ? `${getInactivityDaysLeft(member.inactiveUntil)}` : "Indefinite"}
+                                                        {showMetrics && (
+                                                            <>
+                                                                <div className="my-4 flex flex-wrap gap-2 items-center">
+                                                                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[member.availability]}`}>
+                                                                        {member.availability}
                                                                     </span>
                                                                 </div>
-                                                            </div>
-                                                        ) : (
-                                                            /* Performance Bar */
-                                                            <div className="space-y-2">
-                                                                <div className="flex justify-between items-center text-xs font-semibold">
-                                                                    <span className="text-slate-500">Task Completion</span>
-                                                                    <span className="text-slate-800">{completionRatio}%</span>
-                                                                </div>
-                                                                <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
-                                                                    <div 
-                                                                        className={`h-full rounded-full transition-all duration-1000 ${
-                                                                            completionRatio > 80 ? 'bg-emerald-500' : 
-                                                                            completionRatio > 40 ? 'bg-blue-500' : 'bg-amber-500'
-                                                                        }`}
-                                                                        style={{ width: `${completionRatio}%` }}
-                                                                    />
-                                                                </div>
-                                                            </div>
+
+                                                                {member.status === 'Inactive' ? (
+                                                                    <div className="p-2.5 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1">
+                                                                        {(user?.role === 'admin' || user?.role === 'TL') && (
+                                                                            <div className="flex items-start gap-1 min-w-0">
+                                                                                <span className="font-bold text-slate-700 shrink-0">Reason:</span>
+                                                                                <span className="truncate italic text-slate-600">{member.inactiveReason || "None specified"}</span>
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="flex items-center gap-1 shrink-0">
+                                                                            <span className="font-bold text-slate-700">Duration:</span>
+                                                                            <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold text-[10px]">
+                                                                                {member.inactiveUntil ? `${getInactivityDaysLeft(member.inactiveUntil)}` : "Indefinite"}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    /* Performance Bar */
+                                                                    <div className="space-y-2">
+                                                                        <div className="flex justify-between items-center text-xs font-semibold">
+                                                                            <span className="text-slate-500">Task Completion</span>
+                                                                            <span className="text-slate-800">{completionRatio}%</span>
+                                                                        </div>
+                                                                        <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
+                                                                            <div 
+                                                                                className={`h-full rounded-full transition-all duration-1000 ${
+                                                                                    completionRatio > 80 ? 'bg-emerald-500' : 
+                                                                                    completionRatio > 40 ? 'bg-blue-500' : 'bg-amber-500'
+                                                                                }`}
+                                                                                style={{ width: `${completionRatio}%` }}
+                                                                            />
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
                                                     
-                                                    <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
-                                                        <div className="flex items-center gap-4 text-xs font-semibold">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-slate-400 uppercase tracking-wider text-[9px]">Total</span>
-                                                                <span className="text-slate-700">{member.stats.total}</span>
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-emerald-500 uppercase tracking-wider text-[9px]">Done</span>
-                                                                <span className="text-emerald-700">{member.stats.completed}</span>
-                                                            </div>
-                                                            <div className="flex flex-col">
-                                                                <span className="text-rose-400 uppercase tracking-wider text-[9px]">Overdue</span>
-                                                                <span className="text-rose-600">{member.stats.overdue}</span>
+                                                    {showMetrics && (
+                                                        <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
+                                                            <div className="flex items-center gap-4 text-xs font-semibold">
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-slate-400 uppercase tracking-wider text-[9px]">Total</span>
+                                                                    <span className="text-slate-700">{member.stats.total}</span>
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-emerald-500 uppercase tracking-wider text-[9px]">Done</span>
+                                                                    <span className="text-emerald-700">{member.stats.completed}</span>
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-rose-400 uppercase tracking-wider text-[9px]">Overdue</span>
+                                                                    <span className="text-rose-600">{member.stats.overdue}</span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}

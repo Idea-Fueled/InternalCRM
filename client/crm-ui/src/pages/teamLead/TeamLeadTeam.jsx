@@ -62,6 +62,16 @@ const getUserRoleCategory = (u) => {
     return 'employee';
 };
 
+const canViewPerformanceMetrics = (currentUser, targetUser) => {
+    if (!currentUser || !targetUser) return false;
+    const targetRoleCat = getUserRoleCategory(targetUser);
+    // Team Leads cannot see metrics for admin, hr, or other TLs
+    if (targetRoleCat === 'admin' || targetRoleCat === 'hr' || targetRoleCat === 'TL') {
+        return false;
+    }
+    return true;
+};
+
 const TeamLeadTeam = () => {
     const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -461,11 +471,13 @@ const TeamLeadTeam = () => {
                                             </button>
                                         </div>
 
-                                        <div className="mb-5 flex flex-wrap gap-2 items-center">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[member.availability]}`}>
-                                                {member.availability}
-                                            </span>
-                                        </div>
+                                        {canViewPerformanceMetrics(user, member) && (
+                                            <div className="mb-5 flex flex-wrap gap-2 items-center">
+                                                <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border ${AVAILABILITY_COLORS[member.availability]}`}>
+                                                    {member.availability}
+                                                </span>
+                                            </div>
+                                        )}
                                         
                                         {member.status === 'Inactive' ? (
                                             <div className="mb-5 p-2.5 bg-slate-100/50 border border-slate-200/40 rounded-xl text-xs space-y-1">
@@ -480,8 +492,8 @@ const TeamLeadTeam = () => {
                                                     </span>
                                                 </div>
                                             </div>
-                                        ) : getUserRoleCategory(member) !== 'admin' ? (
-                                            /* Performance Bar */
+                                        ) : canViewPerformanceMetrics(user, member) ? (
+                                            /* Performance Bar - only for direct reports (employees/QA) */
                                             <div className="space-y-2">
                                                 <div className="flex justify-between items-center text-xs font-semibold">
                                                     <span className="text-slate-500">Task Completion</span>
@@ -498,7 +510,7 @@ const TeamLeadTeam = () => {
                                                 </div>
                                             </div>
                                         ) : (
-                                            /* Contact Info block for Admin */
+                                            /* Contact Info block for Admin/HR/TL - no metrics */
                                             <div className="space-y-2.5 text-xs font-semibold text-slate-500 border-t border-slate-100 pt-4 mt-2">
                                                 <div className="flex items-center gap-2 min-w-0">
                                                     <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -518,7 +530,7 @@ const TeamLeadTeam = () => {
                                         )}
                                     </div>
                                     
-                                    {getUserRoleCategory(member) !== 'admin' ? (
+                                    {canViewPerformanceMetrics(user, member) ? (
                                         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center">
                                             <div className="flex items-center gap-4 text-xs font-semibold">
                                                 <div className="flex flex-col">
@@ -539,7 +551,7 @@ const TeamLeadTeam = () => {
                                         <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 rounded-b-2xl flex justify-between items-center text-xs font-bold text-slate-500">
                                             <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">System Role</span>
                                             <span className="text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider">
-                                                Corporate Admin
+                                                {getUserRoleCategory(member) === 'admin' ? 'Corporate Admin' : getUserRoleCategory(member) === 'hr' ? 'HR Executive' : 'Team Lead'}
                                             </span>
                                         </div>
                                     )}
@@ -629,12 +641,13 @@ const TeamLeadTeam = () => {
                                     </div>
                                 )}
 
-                                {getUserRoleCategory(selectedMember) === 'admin' ? (
+                                {!canViewPerformanceMetrics(user, selectedMember) ? (
+                                    /* Basic profile info only for Admin/HR/TL - no performance metrics */
                                     <div className="space-y-6">
                                         <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
                                             <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
                                                 <User className="w-4 h-4 text-blue-500" />
-                                                Admin Information
+                                                {getUserRoleCategory(selectedMember) === 'admin' ? 'Admin' : getUserRoleCategory(selectedMember) === 'hr' ? 'HR' : 'Team Lead'} Information
                                             </h3>
                                             <div className="space-y-3.5 text-xs font-semibold text-slate-650 leading-relaxed">
                                                 <div>
@@ -643,7 +656,7 @@ const TeamLeadTeam = () => {
                                                 </div>
                                                 <div>
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Designation</span>
-                                                    <span className="text-slate-800 mt-1 block font-bold">{selectedMember.designation || "Corporate Administrator"}</span>
+                                                    <span className="text-slate-800 mt-1 block font-bold">{selectedMember.designation || formatRole(selectedMember.role)}</span>
                                                 </div>
                                                 <div>
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Department</span>
@@ -662,31 +675,6 @@ const TeamLeadTeam = () => {
                                                     <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] mt-1 border ${selectedMember.status === "Inactive" ? "bg-slate-100 text-slate-500 border-slate-200" : "bg-emerald-50 text-emerald-700 border-emerald-100"}`}>
                                                         {selectedMember.status}
                                                     </span>
-                                                </div>
-                                                {selectedMember.reportingManager && (
-                                                    <div>
-                                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Reporting Manager</span>
-                                                        <span className="text-slate-800 mt-1 block">{selectedMember.reportingManager?.name || selectedMember.reportingManager}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : getUserRoleCategory(selectedMember) === 'TL' ? (
-                                    <div className="space-y-6">
-                                        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
-                                            <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
-                                                <Activity className="w-4 h-4 text-purple-500" />
-                                                Team & Project Metrics
-                                            </h3>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Managed Tasks</span>
-                                                    <span className="text-xl font-bold text-purple-700 mt-1 block">{selectedMember.tasks?.length || 0}</span>
-                                                </div>
-                                                <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Completed</span>
-                                                    <span className="text-xl font-bold text-emerald-700 mt-1 block">{selectedMember.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -728,19 +716,6 @@ const TeamLeadTeam = () => {
                                                         style={{ width: `${selectedMember.stats.total > 0 ? Math.round((selectedMember.stats.completed / selectedMember.stats.total) * 100) : 0}%` }}
                                                     />
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : getUserRoleCategory(selectedMember) === 'hr' ? (
-                                    <div className="space-y-6">
-                                        <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-150 space-y-4">
-                                            <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest border-b border-slate-200/50 pb-2 flex items-center gap-2">
-                                                <Users className="w-4 h-4 text-pink-500" />
-                                                HR Management Metrics
-                                            </h3>
-                                            <div className="bg-white p-4 rounded-xl border border-slate-150 text-center">
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Roster Access</span>
-                                                <span className="text-xl font-bold text-pink-700 mt-1 block">Active HR Executive</span>
                                             </div>
                                         </div>
                                     </div>

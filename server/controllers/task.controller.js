@@ -3,6 +3,50 @@ import { createNotification } from "./notification.controller.js";
 import User from "../models/user.schema.js";
 import Project from "../models/project.schema.js";
 import { createAuditLog } from "./auditLog.controller.js";
+import { getUserRoleCategory } from "../middlewares/auth.middleware.js";
+
+const canViewPerformanceMetrics = (requestUser, targetUser) => {
+    if (!requestUser || !targetUser) return false;
+
+    const requestRole = requestUser.role; // Already resolved in protectRoute middleware
+    const targetRole = getUserRoleCategory(targetUser);
+
+    // 1. Admin can see everyone's metrics
+    if (requestRole === 'admin') {
+        return true;
+    }
+
+    // 2. HR can see everyone's metrics except admin
+    if (requestRole === 'hr') {
+        return targetRole !== 'admin';
+    }
+
+    // 3. Team Leads can only see metrics of their direct reports (and target cannot be admin, hr, or TL)
+    if (requestRole === 'TL') {
+        if (targetRole === 'admin' || targetRole === 'hr' || targetRole === 'TL') {
+            return false;
+        }
+
+        const myId = String(requestUser._id || requestUser.id);
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+
+        return isDirectReport;
+    }
+
+    // 4. Employees & QA can only see metrics of employee roles (not admin, hr, TL)
+    if (requestRole === 'employee' || requestRole === 'qa') {
+        return targetRole !== 'admin' && targetRole !== 'hr' && targetRole !== 'TL';
+    }
+
+    return false;
+};
 
 // ─── Hierarchy-Based Visibility Helper ────────────────────────────────────────
 // Filters statusHistory entries so that notes, attachments, and screenshotLinks
@@ -835,6 +879,23 @@ export const getTasksByProject = async (req, res) => {
 export const getTasksByUser = async (req, res) => {
     try {
         const { userId } = req.params;
+        
+        // Fetch target user first to verify permissions
+        const targetUser = await User.findById(userId);
+        if (!targetUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        if (!canViewPerformanceMetrics(req.user, targetUser)) {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied. You do not have permission to view performance metrics for this user."
+            });
+        }
+
         const tasks = await Task.find({ assignedTo: userId, isDeleted: false })
             .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email role profilePic")
