@@ -140,7 +140,7 @@ const TeamLeadDashboard = () => {
                         const total = userTasks.length;
                         const pending = total - completed;
                         const status = u.status === "inactive" ? "Inactive" : (pending === 0 ? "Free" : "Busy");
-                        const workload = total > 0 ? Math.round((pending / total) * 100) : 0;
+                        const workload = total > 0 ? Math.round((completed / total) * 100) : 0;
                         const colors = ['bg-blue-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-orange-500', 'bg-slate-500'];
                         
                         return {
@@ -540,7 +540,7 @@ const TeamLeadDashboard = () => {
                                                 <th className="px-6 py-3 font-bold">Staff Member</th>
                                                 <th className="px-6 py-3 font-bold">Workload Status</th>
                                                 <th className="px-6 py-3 font-bold text-center">Metrics</th>
-                                                <th className="px-6 py-3 font-bold">Load Indicator</th>
+                                                <th className="px-6 py-3 font-bold">Task Completion</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -590,8 +590,8 @@ const TeamLeadDashboard = () => {
                                                                 <div className="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden">
                                                                     <div 
                                                                         className={`h-full rounded-full ${
-                                                                            member.workload > 80 ? 'bg-rose-500' : 
-                                                                            member.workload > 50 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                                            member.workload > 80 ? 'bg-emerald-500' : 
+                                                                            member.workload > 40 ? 'bg-blue-500' : 'bg-rose-500'
                                                                         }`}
                                                                         style={{ width: `${member.workload}%` }}
                                                                     />
