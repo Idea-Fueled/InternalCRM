@@ -692,6 +692,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                         </div>
                     ) : project ? (
                         <div className="flex-1 mr-4 space-y-2">
+                            <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-snug line-clamp-1">{project.projectName}</h2>
                             <div className="flex flex-wrap gap-2 items-center">
                                 {(() => {
                                     const status = getProjectStatus(project);
@@ -712,7 +713,6 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     {project.priority || "Medium"} Priority
                                 </span>
                             </div>
-                            <h2 className="text-xl font-bold text-slate-800 tracking-tight leading-snug line-clamp-1">{project.projectName}</h2>
                             
                             {/* Short completion details */}
                             <div className="w-full flex items-center gap-3 pt-1">

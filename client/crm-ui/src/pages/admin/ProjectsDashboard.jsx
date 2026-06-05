@@ -508,18 +508,18 @@ const ProjectsDashboard = () => {
                                         onClick={() => {
                                             setSelectedProjectId(project._id);
                                         }}
-                                        className={`group rounded-3xl p-6 flex flex-col gap-5 border-y border-r border-l-[5px] ${statusDetails.borderClass} border-slate-200/60 bg-white hover:shadow-md transition-all duration-300 cursor-pointer`}
+                                        className={`group rounded-3xl p-6 flex flex-col gap-5 border-y border-r border-l-[5px] ${statusDetails.borderClass} hover:shadow-md transition-all duration-300 cursor-pointer ${statusDetails.bgClass}`}
                                     >
                                         <div className="flex items-start justify-between">
-                                            <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full w-fit shrink-0">{project._id.slice(-6).toUpperCase()}</span>
-                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 shrink-0`}>
+                                            <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-white/75 border border-slate-200/50 px-2 py-0.5 rounded-full w-fit shrink-0">{project._id.slice(-6).toUpperCase()}</span>
+                                                <h3 className="text-lg font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors mt-1.5">{project.projectName}</h3>
+                                                <div className="mt-1">
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 w-fit shrink-0`}>
                                                         <span>{statusDetails.emoji}</span>
                                                         <span>{statusDetails.label}</span>
                                                     </span>
                                                 </div>
-                                                <h3 className="text-lg font-bold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors mt-1">{project.projectName}</h3>
                                             </div>
                                         </div>
 
@@ -626,19 +626,17 @@ const ProjectsDashboard = () => {
                                                 <tr 
                                                     key={project._id || i}
                                                     onClick={() => setSelectedProjectId(project._id)}
-                                                    className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                                                    className={`transition-colors group cursor-pointer ${statusDetails.bgClass}`}
                                                 >
                                                     <td className="px-6 py-4">
-                                                        <div className="flex flex-col min-w-0">
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full shrink-0">{project._id.slice(-6).toUpperCase()}</span>
-                                                                <span className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 shrink-0`}>
-                                                                    <span>{statusDetails.emoji}</span>
-                                                                    <span>{statusDetails.label}</span>
-                                                                </span>
-                                                                <h3 className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
-                                                            </div>
-                                                            <p className="text-xs text-slate-400 mt-1 truncate pr-4" title={project.description}>{project.description}</p>
+                                                        <div className="flex flex-col min-w-0 items-start gap-1.5">
+                                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-white/75 border border-slate-200/50 px-2 py-0.5 rounded-full w-fit shrink-0">{project._id.slice(-6).toUpperCase()}</span>
+                                                            <h3 className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
+                                                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 w-fit shrink-0`}>
+                                                                <span>{statusDetails.emoji}</span>
+                                                                <span>{statusDetails.label}</span>
+                                                            </span>
+                                                            <p className="text-xs text-slate-400 mt-1 truncate pr-4 w-full" title={project.description}>{project.description}</p>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">

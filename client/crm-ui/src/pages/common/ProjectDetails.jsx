@@ -744,6 +744,7 @@ const ProjectDetails = () => {
                         <div className="relative z-10 space-y-6">
                             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                                 <div className="space-y-3 max-w-3xl">
+                                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{project.projectName}</h1>
                                     <div className="flex flex-wrap gap-2 items-center">
                                         <span className={`px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border ${statusDetails.badgeClass} flex items-center gap-1.5`}>
                                             <span>{statusDetails.emoji}</span>
@@ -758,7 +759,6 @@ const ProjectDetails = () => {
                                             {project.priority || "Medium"} Priority
                                         </span>
                                     </div>
-                                    <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{project.projectName}</h1>
                                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-bold text-slate-400">
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-3.5 h-3.5" />

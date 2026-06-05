@@ -130,6 +130,7 @@ const UserProjects = ({ role = "developer" }) => {
     });
 
     if (selectedProject) {
+        const statusDetails = getProjectStatusDetails(selectedProject.timelineTag || getProjectStatus(selectedProject));
         return (
             <div className="flex min-h-screen bg-slate-50/50 font-sans text-slate-800">
                 <AdminSidebar role={role} />
@@ -154,12 +155,19 @@ const UserProjects = ({ role = "developer" }) => {
                                         <div className="flex items-start justify-between mb-6">
                                             <div>
                                                 <h1 className="dashboard-heading">{selectedProject.name}</h1>
-                                                <div className="flex items-center gap-3 mt-3">
-                                                    {selectedProject.status !== 'Active' && (
-                                                        <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border bg-blue-50 text-blue-600 border-blue-100">
-                                                            {selectedProject.status}
-                                                        </span>
-                                                    )}
+                                                <div className="flex flex-wrap gap-2 items-center mt-3">
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 w-fit shrink-0`}>
+                                                        <span>{statusDetails.emoji}</span>
+                                                        <span>{statusDetails.label}</span>
+                                                    </span>
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${
+                                                        selectedProject.priority === "Critical" ? "bg-rose-50 text-rose-600 border-rose-100 animate-pulse" :
+                                                        selectedProject.priority === "High" ? "bg-orange-50 text-orange-600 border-orange-100" :
+                                                        selectedProject.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                                        "bg-slate-50 text-slate-500 border-slate-100"
+                                                    } flex items-center gap-1 w-fit shrink-0`}>
+                                                        {selectedProject.priority || "Medium"} Priority
+                                                    </span>
                                                     <span className="text-slate-400 text-xs font-medium flex items-center gap-1">
                                                         <Calendar className="w-3.5 h-3.5" />
                                                         Created {formatDate(selectedProject.createdAt)}
@@ -506,43 +514,41 @@ const UserProjects = ({ role = "developer" }) => {
                                 <div 
                                     key={p.id}
                                     onClick={() => setSelectedProject(p)}
-                                    className={`rounded-3xl p-6 shadow-sm border-y border-r border-l-[5px] ${statusDetails.borderClass} border-slate-200/60 bg-white hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer group relative overflow-hidden`}
+                                    className={`rounded-3xl p-6 border-y border-r border-l-[5px] ${statusDetails.borderClass} hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 cursor-pointer group relative ${statusDetails.bgClass}`}
                                 >
-                                    <div className={`absolute top-0 right-0 w-24 h-24 rounded-bl-full -z-0 opacity-0 group-hover:opacity-10 transition-opacity bg-blue-500`}></div>
-                                    
-                                    <div className="relative z-10">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className={`p-3 rounded-2xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-white group-hover:shadow-lg`}>
-                                                <LayoutList className="w-6 h-6" />
-                                            </div>
-                                            <div className="flex flex-wrap gap-2 items-center">
-                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${statusDetails.badgeClass} flex items-center gap-1`}>
-                                                    <span>{statusDetails.emoji}</span>
-                                                    <span>{statusDetails.label}</span>
-                                                </span>
+                                    <div className="relative z-10 flex flex-col gap-4">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex flex-col gap-1 flex-1 min-w-0">
+                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-white/75 border border-slate-200/50 px-2 py-0.5 rounded-full w-fit shrink-0">{p.id.slice(-6).toUpperCase()}</span>
+                                                <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate mt-1.5">{p.name}</h3>
+                                                <div className="mt-1">
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold border ${statusDetails.badgeClass} flex items-center gap-1 w-fit shrink-0`}>
+                                                        <span>{statusDetails.emoji}</span>
+                                                        <span>{statusDetails.label}</span>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors truncate mb-1">{p.name}</h3>
-                                        <p className="text-xs font-semibold text-slate-400 mb-6 flex items-center gap-1.5">
+                                        <p className="text-xs font-semibold text-slate-400 flex items-center gap-1.5 leading-relaxed">
                                             <Clock className="w-3.5 h-3.5" />
                                             Due {formatDate(p.endDate)}
                                         </p>
 
-                                        <div className="space-y-2 mb-6">
+                                        <div className="space-y-2">
                                             <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                                 <span>Progress</span>
                                                 <span className="text-slate-700">{p.progress}%</span>
                                             </div>
                                             <div className="w-full bg-slate-200 rounded-full h-1.5">
                                                 <div 
-                                                    className={`h-1.5 rounded-full transition-all duration-500 ${p.status === 'Active' ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                                                    className={`h-1.5 rounded-full transition-all duration-500 ${p.progress < 30 ? 'bg-amber-400' : p.progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
                                                     style={{ width: `${p.progress}%` }}
                                                 ></div>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                                        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                             <div className="flex -space-x-2" onClick={(e) => e.stopPropagation()}>
                                                 {p.members.slice(0, 3).map((m, i) => (
                                                     <div key={m.id} className={`w-7 h-7 rounded-lg border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm overflow-hidden ${i === 0 ? 'bg-blue-600 text-white' : i === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'}`}>

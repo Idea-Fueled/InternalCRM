@@ -1380,24 +1380,24 @@ const AdminDashboard = () => {
                                             const statusDetails = getProjectStatusDetails(status);
 
                                             return (
-                                                <div key={proj._id || i} className="group hover:bg-slate-50/40 p-3 rounded-xl transition border border-transparent hover:border-slate-100">
-                                                    <div className="flex justify-between items-center text-sm mb-2.5">
-                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                <div key={proj._id || i} className={`group p-3 rounded-xl transition border border-transparent ${statusDetails.bgClass}`}>
+                                                    <div className="flex justify-between items-start text-sm mb-2.5 gap-4">
+                                                        <div className="flex flex-col items-start gap-1 min-w-0">
                                                             <span className="font-extrabold text-slate-800 tracking-tight text-sm group-hover:text-blue-600 transition duration-150 truncate">
                                                                 {proj.projectName}
                                                             </span>
-                                                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                                                            <span className={`text-[9px] font-bold px-2.5 py-0.5 rounded-full shrink-0 border ${statusDetails.badgeClass} flex items-center gap-1 mt-0.5`}>
                                                                 <span>{statusDetails.emoji}</span>
                                                                 <span>{statusDetails.label}</span>
                                                             </span>
                                                         </div>
-                                                        <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500 shrink-0">
+                                                        <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-500 shrink-0 mt-0.5">
                                                             <span>{completedCount}/{totalCount} tasks</span>
                                                             <span className="text-slate-300">•</span>
                                                             <span className="text-slate-700">{progress}%</span>
                                                         </div>
                                                     </div>
-                                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                                                    <div className="w-full h-2 bg-slate-200/50 rounded-full overflow-hidden">
                                                         <div className={`h-full ${color} rounded-full transition-all duration-1000 ease-out`} style={{ width: `${progress}%` }}></div>
                                                     </div>
                                                 </div>

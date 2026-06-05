@@ -384,16 +384,18 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
                                     </div>
                                     {results.projects.map((p, idx) => {
                                         const globalIdx = projectStartIndex + idx;
+                                        const status = getProjectStatus(p);
+                                        const statusDetails = getProjectStatusDetails(status);
                                         return (
                                             <button
                                                 key={p._id}
                                                 data-index={globalIdx}
                                                 onClick={() => handleSelect({ type: "project", data: p })}
                                                 onMouseEnter={() => setActiveIndex(globalIdx)}
-                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-100 group ${
+                                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-100 group border ${
                                                     activeIndex === globalIdx
-                                                        ? "bg-blue-50 border border-blue-100"
-                                                        : "hover:bg-slate-50 border border-transparent"
+                                                        ? `${statusDetails.bgClass}`
+                                                        : "hover:bg-slate-50 border-transparent"
                                                 }`}
                                             >
                                                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -401,9 +403,15 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-bold text-slate-700 truncate">{p.projectName}</p>
-                                                    <p className="text-[11px] text-slate-400 truncate">
-                                                        {p.clientName ? `Client: ${p.clientName}` : p.teamLead?.name ? `Lead: ${p.teamLead.name}` : "No description"}
-                                                    </p>
+                                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${statusDetails.badgeClass} flex items-center gap-1 shrink-0`}>
+                                                            <span>{statusDetails.emoji}</span>
+                                                            <span>{statusDetails.label}</span>
+                                                        </span>
+                                                        <p className="text-[11px] text-slate-400 truncate">
+                                                            {p.clientName ? `Client: ${p.clientName}` : p.teamLead?.name ? `Lead: ${p.teamLead.name}` : ""}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 flex-shrink-0">
                                                     {p.priority && (
@@ -411,10 +419,6 @@ const GlobalSearchModal = ({ isOpen, onClose }) => {
                                                             {p.priority}
                                                         </span>
                                                     )}
-                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${statusDetails.badgeClass} flex items-center gap-1`}>
-                                                        <span>{statusDetails.emoji}</span>
-                                                        <span>{statusDetails.label}</span>
-                                                    </span>
                                                 </div>
                                             </button>
                                         );

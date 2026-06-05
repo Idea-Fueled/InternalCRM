@@ -58,16 +58,16 @@ const StatDetailModal = ({ isOpen, onClose, title, data, type }) => {
                 <div 
                     key={item._id || index} 
                     onClick={() => handleItemClick(item)}
-                    className={`flex flex-col gap-1 p-3 border-b border-slate-100 hover:bg-slate-50 transition-all last:border-b-0 cursor-pointer group border-l-4 ${statusDetails.borderClass}`}
+                    className={`flex flex-col gap-1 p-3.5 border-b border-slate-100 transition-all last:border-b-0 cursor-pointer group border-l-4 ${statusDetails.borderClass} ${statusDetails.bgClass}`}
                 >
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col items-start gap-1">
                         <p className="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{item.projectName}</p>
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${statusDetails.badgeClass} flex items-center gap-1`}>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${statusDetails.badgeClass} flex items-center gap-1 mt-0.5`}>
                             <span>{statusDetails.emoji}</span>
                             <span>{statusDetails.label}</span>
                         </span>
                     </div>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 mt-1">
                         {item.description || 'No description'}
                     </p>
                     <div className="flex justify-between items-center mt-1">

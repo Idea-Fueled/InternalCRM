@@ -41,8 +41,9 @@ export const getProjectStatusDetails = (status) => {
                 label: "Upcoming",
                 color: "grey",
                 emoji: "🩶",
-                badgeClass: "bg-slate-100 text-slate-600 border-slate-200",
-                borderClass: "border-l-slate-400",
+                badgeClass: "bg-slate-200/60 text-slate-700 border-slate-300",
+                borderClass: "border-l-slate-400 border-slate-200",
+                bgClass: "bg-slate-50/70 hover:bg-slate-100/70 border-slate-200",
                 textClass: "text-slate-500",
                 dotColor: "bg-slate-400"
             };
@@ -51,8 +52,9 @@ export const getProjectStatusDetails = (status) => {
                 label: "Completed",
                 color: "green",
                 emoji: "🟢",
-                badgeClass: "bg-emerald-50 text-emerald-600 border-emerald-200",
-                borderClass: "border-l-emerald-500",
+                badgeClass: "bg-emerald-100/60 text-emerald-700 border-emerald-250",
+                borderClass: "border-l-emerald-500 border-emerald-200/80",
+                bgClass: "bg-emerald-50/40 hover:bg-emerald-50/70 border-emerald-100",
                 textClass: "text-emerald-600",
                 dotColor: "bg-emerald-500"
             };
@@ -61,8 +63,9 @@ export const getProjectStatusDetails = (status) => {
                 label: "Overdue",
                 color: "red",
                 emoji: "🔴",
-                badgeClass: "bg-rose-50 text-rose-600 border-rose-200",
-                borderClass: "border-l-rose-500",
+                badgeClass: "bg-rose-100/60 text-rose-700 border-rose-250",
+                borderClass: "border-l-rose-500 border-rose-200/80",
+                bgClass: "bg-rose-50/40 hover:bg-rose-50/70 border-rose-100",
                 textClass: "text-rose-600",
                 dotColor: "bg-rose-500"
             };
@@ -72,10 +75,13 @@ export const getProjectStatusDetails = (status) => {
                 label: "In Progress",
                 color: "blue",
                 emoji: "🔵",
-                badgeClass: "bg-blue-50 text-blue-600 border-blue-200",
-                borderClass: "border-l-blue-500",
+                badgeClass: "bg-blue-100/60 text-blue-700 border-blue-250",
+                borderClass: "border-l-blue-500 border-blue-200/80",
+                bgClass: "bg-blue-50/40 hover:bg-blue-50/70 border-blue-100",
                 textClass: "text-blue-600",
                 dotColor: "bg-blue-500"
             };
     }
 };
+
+
