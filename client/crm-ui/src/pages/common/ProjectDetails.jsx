@@ -935,7 +935,9 @@ const ProjectDetails = () => {
                                                                 </div>
                                                                 <div className="flex flex-col leading-tight">
                                                                     <span className="text-[11px] font-bold text-slate-700">{task.assignedTo?.name || "Unassigned"}</span>
-                                                                    <span className="text-[8px] font-bold text-slate-500">Developer</span>
+                                                                    {task.assignedTo && (
+                                                                        <span className="text-[8px] font-bold text-slate-400">{task.assignedTo.designation || "Developer"}</span>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                             {/* QA */}
@@ -950,7 +952,7 @@ const ProjectDetails = () => {
                                                                     </div>
                                                                     <div className="flex flex-col leading-tight">
                                                                         <span className="text-[11px] font-bold text-slate-700">{task.assignedQA.name}</span>
-                                                                        <span className="text-[8px] font-bold text-slate-500">QA Reviewer</span>
+                                                                        <span className="text-[8px] font-bold text-slate-400">{task.assignedQA.designation || "Senior QA"}</span>
                                                                     </div>
                                                                 </div>
                                                             )}

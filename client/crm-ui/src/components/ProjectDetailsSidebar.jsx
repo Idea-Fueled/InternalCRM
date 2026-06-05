@@ -968,10 +968,10 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                             <table className="w-full text-left border-collapse table-fixed">
                                                 <thead className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                                                     <tr>
-                                                        <th className="px-6 py-4 font-bold w-[32%]">Task Summary</th>
-                                                        <th className="px-6 py-4 font-bold w-[24%]">Workflow</th>
-                                                        <th className="px-6 py-4 font-bold w-[32%]">Assignees</th>
-                                                        <th className="px-6 py-4 font-bold w-[12%] text-center">Action</th>
+                                                        <th className="px-6 py-4 font-bold w-[40%]">Task Summary</th>
+                                                        <th className="px-6 py-4 font-bold w-[25%]">Workflow</th>
+                                                        <th className="px-6 py-4 font-bold w-[25%]">Assignees</th>
+                                                        <th className="px-6 py-4 font-bold w-[10%] text-center">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -996,31 +996,51 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                                                         task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
                                                                         task.priority === "High" ? "bg-orange-50 text-orange-600 border border-orange-100" :
-                                                                        task.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                                                        task.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
                                                                         "bg-slate-50 text-slate-550 border border-slate-100"
                                                                     }`}>
                                                                         {task.priority}
                                                                     </span>
                                                                     <span className={`px-1.5 py-0.2 rounded-lg text-[8px] font-semibold ${
-                                                                        task.status === "Completed" ? "bg-emerald-50 text-emerald-600 border border-emerald-100" :
-                                                                        task.status === "QA Review" ? "bg-indigo-50 text-indigo-600 border border-indigo-100" :
-                                                                        task.status === "In Progress" ? "bg-blue-50 text-blue-600 border border-blue-100" :
-                                                                        "bg-slate-50 text-slate-600 border border-slate-200"
+                                                                        task.status === "Completed" ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                                        task.status === "QA Review" ? "bg-indigo-50 text-indigo-600 border-indigo-100" :
+                                                                        task.status === "In Progress" ? "bg-blue-50 text-blue-600 border-blue-100" :
+                                                                        "bg-slate-50 text-slate-600 border-slate-200"
                                                                     }`}>
                                                                         {task.status}
                                                                     </span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                <div className="flex flex-col gap-1.5">
-                                                                    <div className="flex items-center gap-1.5">
-                                                                        <span className="text-[9px] font-bold text-slate-500 w-7 shrink-0">Dev:</span>
-                                                                        <span className="text-xs font-bold text-slate-800 truncate max-w-[100px]">{task.assignedTo?.name || "Unassigned"}</span>
+                                                                <div className="flex flex-col gap-2">
+                                                                    <div className="flex items-center gap-2 min-w-0">
+                                                                        <div className="w-5 h-5 rounded bg-blue-50 flex items-center justify-center text-[9px] font-black text-blue-600 border border-blue-100 overflow-hidden shrink-0">
+                                                                            {task.assignedTo?.profilePic ? (
+                                                                                <img src={task.assignedTo.profilePic} alt="" className="w-full h-full object-cover" />
+                                                                            ) : (
+                                                                                task.assignedTo?.name?.charAt(0) || "U"
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex flex-col leading-tight min-w-0">
+                                                                            <span className="text-[11px] font-bold text-slate-700 truncate max-w-[120px]">{task.assignedTo?.name || "Unassigned"}</span>
+                                                                            {task.assignedTo && (
+                                                                                <span className="text-[8px] font-bold text-slate-400 truncate max-w-[120px]">{task.assignedTo.designation || "Developer"}</span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                     {task.assignedQA && (
-                                                                        <div className="flex items-center gap-1.5">
-                                                                            <span className="text-[9px] font-bold text-slate-500 w-7 shrink-0">QA:</span>
-                                                                            <span className="text-xs font-bold text-slate-800 truncate max-w-[100px]">{task.assignedQA.name}</span>
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <div className="w-5 h-5 rounded bg-indigo-50 flex items-center justify-center text-[9px] font-bold text-indigo-600 border border-indigo-100 overflow-hidden shrink-0">
+                                                                                {task.assignedQA.profilePic ? (
+                                                                                    <img src={task.assignedQA.profilePic} alt="" className="w-full h-full object-cover" />
+                                                                                ) : (
+                                                                                    task.assignedQA.name?.charAt(0) || "Q"
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex flex-col leading-tight min-w-0">
+                                                                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-[120px]">{task.assignedQA.name}</span>
+                                                                                <span className="text-[8px] font-bold text-slate-400 truncate max-w-[120px]">{task.assignedQA.designation || "Senior QA"}</span>
+                                                                            </div>
                                                                         </div>
                                                                     )}
                                                                 </div>

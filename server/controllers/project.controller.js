@@ -270,8 +270,8 @@ export const getProjectById = async (req, res, next) => {
         }
 
         const tasks = await Task.find({ project: id, isDeleted: false })
-            .populate("assignedTo", "name email role profilePic")
-            .populate("assignedQA", "name email role profilePic")
+            .populate("assignedTo", "name email role designation profilePic")
+            .populate("assignedQA", "name email role designation profilePic")
             .populate("statusHistory.changedBy", "name email role designation profilePic");
 
         // Filter task notes and attachments according to rules:
