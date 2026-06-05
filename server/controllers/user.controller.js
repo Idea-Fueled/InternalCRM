@@ -8,6 +8,50 @@ import { DEFAULT_ROLE_PERMISSIONS } from "../middlewares/permission.middleware.j
 import crypto from "crypto";
 import { sendWelcomeEmail } from "../utils/email.js";
 
+const canManageUser = (requestUser, targetUser) => {
+    if (!requestUser || !targetUser) return false;
+
+    const requestRole = requestUser.role; // Already resolved in protectRoute middleware
+    const targetRole = getUserRoleCategory(targetUser);
+
+    // 1. Only admins can manage admin accounts
+    if (targetRole === 'admin') {
+        return requestRole === 'admin';
+    }
+
+    // 2. QA and Employees can never manage anyone
+    if (requestRole === 'qa' || requestRole === 'employee') {
+        return false;
+    }
+
+    // 3. HR can manage any non-admin
+    if (requestRole === 'hr') {
+        return true;
+    }
+
+    // 4. Team Leads can only manage their own team members, and not other Team Leads or Admins
+    if (requestRole === 'TL') {
+        if (targetRole === 'TL') {
+            return false;
+        }
+
+        // Check if target is a team member
+        const myId = String(requestUser._id || requestUser.id);
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+
+        return isDirectReport;
+    }
+
+    return false;
+};
+
 export const registerUser = async (req, res, next) => {
     try {
         let { name, email, password, role, designation, department, reportingManager, status, phone, casualLeaveBalance, sickLeaveBalance, earnedLeaveBalance } = req.body;
@@ -400,13 +444,14 @@ export const updateUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
-        // Non-admin users (such as HR) cannot modify admin accounts or promote to admin
+        if (!canManageUser(req.user, user)) {
+            return res.status(403).json({
+                message: "Access denied. You do not have permission to manage this user."
+            });
+        }
+
+        // Block non-admins from promoting anyone to admin
         if (req.user?.role !== 'admin') {
-            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
-                return res.status(403).json({
-                    message: "Access denied. Only administrators can modify admin accounts."
-                });
-            }
             if (otherData.role === 'admin' || (otherData.designation && otherData.designation.toLowerCase().includes('admin'))) {
                 return res.status(403).json({
                     message: "Access denied. Non-administrators cannot promote users to administrators."
@@ -531,14 +576,11 @@ export const changeUserPassword = async (req, res) => {
             return res.status(404).json({ success: false, message: "User not found." });
         }
 
-        // Non-admin users cannot change password for admin accounts
-        if (req.user?.role !== 'admin') {
-            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
-                return res.status(403).json({
-                    success: false,
-                    message: "Access denied. Only administrators can change password for admin accounts."
-                });
-            }
+        if (!canManageUser(req.user, user)) {
+            return res.status(403).json({
+                success: false,
+                message: "Access denied. You do not have permission to change password for this user."
+            });
         }
 
         const hashed = await hashPassword(newPassword);
@@ -602,13 +644,10 @@ export const deleteUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
         
-        // Non-admin users cannot delete/deactivate admin accounts
-        if (req.user?.role !== 'admin') {
-            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
-                return res.status(403).json({
-                    message: "Access denied. Only administrators can delete or deactivate admin accounts."
-                });
-            }
+        if (!canManageUser(req.user, user)) {
+            return res.status(403).json({
+                message: "Access denied. You do not have permission to delete or deactivate this user."
+            });
         }
 
         user.isActive = false;
@@ -625,13 +664,10 @@ export const restoreUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
         
-        // Non-admin users cannot restore admin accounts
-        if (req.user?.role !== 'admin') {
-            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
-                return res.status(403).json({
-                    message: "Access denied. Only administrators can restore admin accounts."
-                });
-            }
+        if (!canManageUser(req.user, user)) {
+            return res.status(403).json({
+                message: "Access denied. You do not have permission to restore or activate this user."
+            });
         }
 
         user.isActive = true;
@@ -648,13 +684,10 @@ export const hardDeleteUser = async (req, res) => {
         const user = await User.findById(_id);
         if (!user) return res.status(404).json({ message: "User not found!" });
 
-        // Non-admin users cannot permanently delete admin accounts
-        if (req.user?.role !== 'admin') {
-            if (user.role === 'admin' || (user.designation && user.designation.toLowerCase().includes('admin'))) {
-                return res.status(403).json({
-                    message: "Access denied. Only administrators can permanently delete admin accounts."
-                });
-            }
+        if (!canManageUser(req.user, user)) {
+            return res.status(403).json({
+                message: "Access denied. You do not have permission to permanently delete this user."
+            });
         }
 
         await User.findByIdAndDelete(_id);

@@ -47,6 +47,45 @@ const getUserRoleCategory = (user) => {
     return 'employee';
 };
 
+const canManageUser = (currentUser, targetUser) => {
+    if (!currentUser || !targetUser) return false;
+    
+    const currentRole = currentUser.role;
+    const targetRole = getUserRoleCategory(targetUser);
+    
+    if (targetRole === 'admin') {
+        return currentRole === 'admin';
+    }
+    
+    if (currentRole === 'qa' || currentRole === 'employee') {
+        return false;
+    }
+    
+    if (currentRole === 'hr') {
+        return true;
+    }
+    
+    if (currentRole === 'TL') {
+        if (targetRole === 'TL') {
+            return false;
+        }
+        
+        const myId = String(currentUser._id || currentUser.id);
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+        
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+            
+        return isDirectReport;
+    }
+    
+    return false;
+};
+
 const SearchableMultiSelectDropdown = ({ options, selectedValues, onChange, placeholder, disabled }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -254,9 +293,8 @@ export default function EmployeeFormModal({ isOpen, mode, employee, onClose, onS
             
             if (mode === "edit" && employee) {
                 const empRaw = employee.raw || employee;
-                const empRoleCategory = getUserRoleCategory(empRaw);
-                if (!isAdminRole && empRoleCategory === 'admin') {
-                    toast.error("Access denied. Only administrators can modify admin accounts.");
+                if (!canManageUser(currentUser, empRaw)) {
+                    toast.error("Access denied. You do not have permission to manage this user.");
                     onClose();
                     return;
                 }
@@ -319,6 +357,14 @@ export default function EmployeeFormModal({ isOpen, mode, employee, onClose, onS
         if (!formInput.name || !formInput.email || !formInput.designation) {
             toast.error("Please fill in all required fields!");
             return;
+        }
+
+        if (mode === "edit" && employee) {
+            const empRaw = employee.raw || employee;
+            if (!canManageUser(currentUser, empRaw)) {
+                toast.error("Access denied. You do not have permission to manage this user.");
+                return;
+            }
         }
 
         // Security role category guards for non-admins (e.g. HR)

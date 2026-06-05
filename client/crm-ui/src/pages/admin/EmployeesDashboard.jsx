@@ -211,6 +211,45 @@ const getUserRoleCategory = (user) => {
     return 'employee';
 };
 
+const canManageUser = (currentUser, targetUser) => {
+    if (!currentUser || !targetUser) return false;
+    
+    const currentRole = currentUser.role; // already resolved category in context
+    const targetRole = getUserRoleCategory(targetUser);
+    
+    if (targetRole === 'admin') {
+        return currentRole === 'admin';
+    }
+    
+    if (currentRole === 'qa' || currentRole === 'employee') {
+        return false;
+    }
+    
+    if (currentRole === 'hr') {
+        return true;
+    }
+    
+    if (currentRole === 'TL') {
+        if (targetRole === 'TL') {
+            return false;
+        }
+        
+        const myId = String(currentUser._id || currentUser.id);
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+        
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+            
+        return isDirectReport;
+    }
+    
+    return false;
+};
+
 const formatRole = (r) => {
     if (!r) return 'Employee';
     const lower = (r || '').toString();
@@ -936,22 +975,19 @@ const EmployeesDashboard = () => {
                                     </div>
 
                                     {/* Actions footer */}
-                                    <div className="px-5 pb-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); can('users.update') && handleStatusToggle(emp, e); }}
-                                            disabled={!can('users.update')}
-                                            className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors ${
-                                                !can('users.update') ? 'cursor-default opacity-60' : 'cursor-pointer'
-                                            } ${
-                                                emp.status === 'Inactive'
-                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
-                                                    : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
-                                            }`}
-                                        >
-                                            {emp.status === 'Inactive' ? 'Reactivate' : 'Mark Inactive'}
-                                        </button>
-                                        <div className="flex items-center gap-1">
-                                            {can('users.update') && (
+                                    {canManageUser(user, emp.raw) && (
+                                        <div className="px-5 pb-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleStatusToggle(emp, e); }}
+                                                className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-colors cursor-pointer ${
+                                                    emp.status === 'Inactive'
+                                                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100'
+                                                        : 'bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-100'
+                                                }`}
+                                            >
+                                                {emp.status === 'Inactive' ? 'Reactivate' : 'Mark Inactive'}
+                                            </button>
+                                            <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEditEmployee(emp, e); }}
                                                     className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -959,18 +995,18 @@ const EmployeesDashboard = () => {
                                                 >
                                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                 </button>
-                                            )}
-                                            {can('users.delete') && (
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.id, e); }}
-                                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                    title="Delete"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                </button>
-                                            )}
+                                                {can('users.delete') && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.id, e); }}
+                                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Delete"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -1019,13 +1055,10 @@ const EmployeesDashboard = () => {
                                                 <td className="px-6 py-4 text-sm font-semibold text-slate-700 truncate">{emp.dept}</td>
                                                 <td className="px-6 py-4 text-sm font-semibold text-slate-700 truncate">{emp.raw.role !== 'admin' ? emp.lead : 'N/A'}</td>
                                                 <td className="px-6 py-4 text-center">
-                                                    {!(emp.raw.role === 'admin' && user?.role !== 'admin') ? (
+                                                    {canManageUser(user, emp.raw) ? (
                                                         <button 
-                                                            onClick={(e) => { e.stopPropagation(); can('users.update') && handleStatusToggle(emp); }}
-                                                            disabled={!can('users.update')}
-                                                            className={`px-2.5 py-1 text-[10px] font-bold rounded-full border transition-colors shrink-0 ${
-                                                                !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
-                                                            } ${
+                                                            onClick={(e) => { e.stopPropagation(); handleStatusToggle(emp); }}
+                                                            className={`px-2.5 py-1 text-[10px] font-bold rounded-full border transition-colors shrink-0 cursor-pointer hover:bg-emerald-100 ${
                                                                 emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
                                                                 emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                                                 'bg-slate-50 text-slate-500 border-slate-200'
@@ -1034,12 +1067,18 @@ const EmployeesDashboard = () => {
                                                             {emp.status}
                                                         </button>
                                                     ) : (
-                                                        <span className="text-slate-350 font-bold text-sm">-</span>
+                                                        <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-full border ${
+                                                            emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                            emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                            'bg-slate-50 text-slate-500 border-slate-200'
+                                                        }`}>
+                                                            {emp.status}
+                                                        </span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
-                                                    <div className="flex items-center justify-end gap-1.5">
-                                                        {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
+                                                    {canManageUser(user, emp.raw) ? (
+                                                        <div className="flex items-center justify-end gap-1.5">
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); handleStatusToggle(emp, e); }}
                                                                 className={`p-1.5 rounded-lg transition-colors shrink-0 ${
@@ -1055,8 +1094,6 @@ const EmployeesDashboard = () => {
                                                                     <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
                                                                 )}
                                                             </button>
-                                                        )}
-                                                        {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
                                                             <button 
                                                                 onClick={(e) => { e.stopPropagation(); handleEditEmployee(emp, e); }}
                                                                 className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
@@ -1064,17 +1101,19 @@ const EmployeesDashboard = () => {
                                                             >
                                                                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                             </button>
-                                                        )}
-                                                        {can('users.delete') && (
-                                                            <button 
-                                                                onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.id, e); }}
-                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                                                                title="Delete Employee"
-                                                            >
-                                                                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                            </button>
-                                                        )}
-                                                    </div>
+                                                            {can('users.delete') && (
+                                                                <button 
+                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.id, e); }}
+                                                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                                                    title="Delete Employee"
+                                                                >
+                                                                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-slate-350 font-bold text-sm">-</span>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))}

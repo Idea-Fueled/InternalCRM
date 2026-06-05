@@ -17,6 +17,62 @@ const getInactivityDaysLeft = (inactiveUntil) => {
     return diffDays > 0 ? `${diffDays} days remaining` : "Reactivating...";
 };
 
+const getUserRoleCategory = (u) => {
+    if (!u) return 'employee';
+    const role = (u.role || '').toLowerCase();
+    const designation = (u.designation || '').toLowerCase();
+    if (role === 'admin' || designation === 'admin') {
+        return 'admin';
+    }
+    const checkText = designation || role;
+    if (checkText.includes('qa')) {
+        return 'qa';
+    }
+    if (checkText.includes('team lead') || checkText.includes('lead')) {
+        return 'TL';
+    }
+    return 'employee';
+};
+
+const canManageUser = (currentUser, targetUser) => {
+    if (!currentUser || !targetUser) return false;
+    
+    const currentRole = currentUser.role;
+    const targetRole = getUserRoleCategory(targetUser);
+    
+    if (targetRole === 'admin') {
+        return currentRole === 'admin';
+    }
+    
+    if (currentRole === 'qa' || currentRole === 'employee') {
+        return false;
+    }
+    
+    if (currentRole === 'hr') {
+        return true;
+    }
+    
+    if (currentRole === 'TL') {
+        if (targetRole === 'TL') {
+            return false;
+        }
+        
+        const myId = String(currentUser._id || currentUser.id);
+        const targetRM = targetUser.reportingManager;
+        const targetRMs = targetUser.reportingManagers || [];
+        const targetTLs = targetUser.teamLeads || [];
+        
+        const isDirectReport = 
+            (targetRM && String(targetRM._id || targetRM) === myId) ||
+            targetRMs.some(m => String(m._id || m) === myId) ||
+            targetTLs.some(tl => String(tl._id || tl) === myId);
+            
+        return isDirectReport;
+    }
+    
+    return false;
+};
+
 import EmployeeFormModal from "../../components/EmployeeFormModal";
 import EmployeeDetailsSidebar from "../../components/EmployeeDetailsSidebar";
 
@@ -80,10 +136,7 @@ const HREmployees = () => {
         loadData();
     }, []);
 
-    // Filter lists
     const filteredEmployees = employees.filter(emp => {
-        // Enforce that HR cannot see Admin cards to protect routing boundaries
-        if (emp.role === "admin" || String(emp.designation).toLowerCase().includes("admin")) return false;
 
         const matchesSearch = emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                               emp.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -305,24 +358,26 @@ const HREmployees = () => {
                                         )}
 
                                         {/* Action buttons (symmetrical and inside card bounds) */}
-                                        <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 justify-end">
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleStatusOpen(emp); }}
-                                                className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
-                                                    isInactiveState 
-                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
-                                                        : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800"
-                                                }`}
-                                            >
-                                                {isInactiveState ? "Activate" : "Deactivate"}
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
-                                                className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
-                                            >
-                                                Edit
-                                            </button>
-                                        </div>
+                                        {canManageUser(currentUser, emp) && (
+                                            <div className="flex gap-2 mt-4 pt-3 border-t border-slate-100 justify-end">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleStatusOpen(emp); }}
+                                                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
+                                                        isInactiveState 
+                                                            ? "bg-emerald-50 text-emerald-600 border-emerald-205 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                                                            : "bg-slate-55 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800"
+                                                    }`}
+                                                >
+                                                    {isInactiveState ? "Activate" : "Deactivate"}
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
+                                                    className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
+                                                >
+                                                    Edit
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -384,24 +439,28 @@ const HREmployees = () => {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
-                                                        <div className="flex items-center justify-end gap-2">
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); handleStatusOpen(emp); }}
-                                                                className={`px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
-                                                                    isInactiveState 
-                                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-250 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
-                                                                        : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800"
-                                                                }`}
-                                                            >
-                                                                {isInactiveState ? "Activate" : "Deactivate"}
-                                                            </button>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
-                                                                className="px-2.5 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                        </div>
+                                                         {canManageUser(currentUser, emp) ? (
+                                                             <div className="flex items-center justify-end gap-2">
+                                                                 <button
+                                                                     onClick={(e) => { e.stopPropagation(); handleStatusOpen(emp); }}
+                                                                     className={`px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
+                                                                         isInactiveState 
+                                                                             ? "bg-emerald-50 text-emerald-600 border-emerald-250 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                                                                             : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800"
+                                                                     }`}
+                                                                 >
+                                                                     {isInactiveState ? "Activate" : "Deactivate"}
+                                                                 </button>
+                                                                 <button
+                                                                     onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
+                                                                     className="px-2.5 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
+                                                                 >
+                                                                     Edit
+                                                                 </button>
+                                                             </div>
+                                                         ) : (
+                                                             <span className="text-slate-350 font-bold text-sm">-</span>
+                                                         )}
                                                     </td>
                                                 </tr>
                                             );
