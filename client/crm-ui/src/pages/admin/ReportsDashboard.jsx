@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import StatDetailModal from "../../components/StatDetailModal";
 import { useAuth } from "../../context/AuthContext";
+import { FileAttachmentBadge, FilePreviewModal } from "../../components/FileAttachmentUX";
 
 const getUserDesignation = (emp) => {
     if (!emp) return "Employee";
@@ -58,6 +59,8 @@ const ReportsDashboard = ({ focus }) => {
     const [activeCardFilter, setActiveCardFilter] = useState("all");
     const [performanceSidebarUser, setPerformanceSidebarUser] = useState(null);
     const [isPerformanceSidebarOpen, setIsPerformanceSidebarOpen] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -558,7 +561,8 @@ const ReportsDashboard = ({ focus }) => {
         task: t.taskName,
         action: t.status,
         note: t.description || "-",
-        file: t.attachments?.length > 0 ? `${t.attachments.length} files` : "-",
+        attachments: t.attachments || [],
+        file: t.attachments?.length > 0 ? (t.attachments.length === 1 ? "1 file" : `${t.attachments.length} files`) : "-",
         time: t.updatedAt ? new Date(t.updatedAt).toLocaleDateString() : "N/A"
     }));
 
@@ -1659,8 +1663,8 @@ const ReportsDashboard = ({ focus }) => {
                                 <table className="w-full text-left border-collapse table-fixed">
                                     <thead>
                                         <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                                            <th className="px-6 py-4 w-[18%] font-bold">User</th>
-                                            <th className="px-6 py-4 w-[22%] font-bold">Task</th>
+                                            <th className="px-6 py-4 w-[20%] font-bold">User</th>
+                                            <th className="px-6 py-4 w-[20%] font-bold">Task</th>
                                             <th className="px-6 py-4 w-[15%] font-bold">Action</th>
                                             <th className="px-6 py-4 w-[25%] font-bold">Note</th>
                                             <th className="px-6 py-4 w-[10%] font-bold">File</th>
@@ -1695,14 +1699,13 @@ const ReportsDashboard = ({ focus }) => {
                                                 </td>
                                                 <td className="px-6 py-4 text-sm text-slate-500 font-medium truncate" title={act.note}>{act.note}</td>
                                                 <td className="px-6 py-4">
-                                                    {act.file !== "-" ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg cursor-pointer hover:bg-slate-200 transition-colors whitespace-nowrap overflow-hidden max-w-full">
-                                                            <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                                            <span className="truncate">{act.file}</span>
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-slate-300 font-bold">-</span>
-                                                    )}
+                                                    <FileAttachmentBadge 
+                                                        attachments={act.attachments} 
+                                                        onPreview={(file) => {
+                                                            setPreviewFile(file);
+                                                            setIsPreviewOpen(true);
+                                                        }} 
+                                                    />
                                                 </td>
                                                 <td className="px-6 py-4 text-xs font-semibold text-slate-400 whitespace-nowrap text-right pr-6">{act.time}</td>
                                             </tr>
@@ -1724,6 +1727,12 @@ const ReportsDashboard = ({ focus }) => {
                 title={statModal.title} 
                 data={statModal.data} 
                 type={statModal.type} 
+            />
+            
+            <FilePreviewModal 
+                isOpen={isPreviewOpen} 
+                onClose={() => setIsPreviewOpen(false)} 
+                file={previewFile} 
             />
         </div>
     );

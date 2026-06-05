@@ -5,6 +5,117 @@ import { useAuth } from "../../context/AuthContext";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import Topbar from "../../components/Topbar";
 import DeleteConfirmModal from "../../components/DeleteConfirmModal";
+import { FilePreviewModal, isPreviewSupported, formatAttachmentDate, isImageFile, isPdfFile } from "../../components/FileAttachmentUX";
+
+const AttachmentRow = ({ file, onDelete = null, onPreview }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [tooltipStyle, setTooltipStyle] = useState({});
+    const triggerRef = useRef(null);
+    const timeoutRef = useRef(null);
+
+    const isImg = file.fileType?.includes("image") || isImageFile(file.fileType, file.url);
+    const isPdf = file.fileType?.includes("pdf") || isPdfFile(file.fileType, file.url);
+    const isZip = file.fileType?.includes("zip") || file.fileType?.includes("octet-stream") || file.filename?.endsWith(".zip");
+
+    const showTooltip = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setTooltipStyle({
+                position: 'fixed',
+                top: `${rect.bottom + 6}px`,
+                left: `${rect.left}px`,
+                zIndex: 999
+            });
+        }
+        setIsHovered(true);
+    };
+
+    const hideTooltip = () => {
+        timeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 100);
+    };
+
+    const handleItemClick = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (isPreviewSupported(file.fileType, file.url || file.path)) {
+            onPreview(file);
+        } else {
+            window.open(file.url || file.path, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const uploaderName = file.uploadedBy?.name || 'System';
+    const formattedDate = formatAttachmentDate(file.createdAt);
+
+    return (
+        <div 
+            ref={triggerRef}
+            onMouseEnter={showTooltip}
+            onMouseLeave={hideTooltip}
+            onClick={handleItemClick}
+            className="flex items-center justify-between p-3.5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-indigo-100 transition group cursor-pointer relative select-none"
+        >
+            <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+                    isImg ? "bg-amber-50 text-amber-600 border-amber-100" :
+                    isPdf ? "bg-rose-50 text-rose-600 border-rose-100" :
+                    isZip ? "bg-blue-50 text-blue-600 border-blue-100" :
+                    "bg-indigo-50 text-indigo-600 border-indigo-100"
+                }`}>
+                    {isImg ? <ImageIcon className="w-5 h-5" /> :
+                     isZip ? <Archive className="w-5 h-5" /> :
+                     <FileText className="w-5 h-5" />}
+                </div>
+                <div className="flex flex-col min-w-0 leading-snug">
+                    <span className="text-xs font-bold text-slate-700 truncate max-w-[150px] md:max-w-[200px]" title={file.filename}>
+                        {file.filename}
+                    </span>
+                    <span className="text-[9px] font-semibold text-slate-400">
+                        By {uploaderName}
+                    </span>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                    type="button"
+                    className="p-2 bg-white hover:bg-indigo-600 text-slate-400 hover:text-white rounded-lg shadow-sm border border-slate-100 transition border-none"
+                    title="View File"
+                >
+                    <Eye className="w-3.5 h-3.5" />
+                </button>
+                {onDelete && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete();
+                        }}
+                        className="p-2 bg-white hover:bg-rose-650 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-lg shadow-sm border border-slate-100 transition cursor-pointer border-none"
+                        title="Delete Document"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                )}
+            </div>
+
+            {isHovered && (
+                <div
+                    style={tooltipStyle}
+                    className="w-[260px] bg-slate-950/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-white/10 select-none pointer-events-none"
+                >
+                    <p className="text-xs font-bold truncate border-b border-white/10 pb-1 mb-1.5">{file.filename}</p>
+                    <p className="text-[9px] text-white/40 font-semibold">Uploaded by: <span className="text-white/70">{uploaderName}</span></p>
+                    <p className="text-[9px] text-white/40 font-semibold mt-0.5">Uploaded on: <span className="text-white/70">{formattedDate}</span></p>
+                    {file.fileSize && <p className="text-[9px] text-white/30 font-medium mt-0.5">Size: {file.fileSize}</p>}
+                </div>
+            )}
+        </div>
+    );
+};
 import { toast } from "sonner";
 import {
     ArrowLeft, Calendar, Users, CheckCircle2, Clock, AlertCircle,
@@ -76,6 +187,8 @@ const ProjectDetails = () => {
 
     // Eligible Members (for adding/removing team members)
     const [eligibleMembers, setEligibleMembers] = useState([]);
+    const [previewFile, setPreviewFile] = useState(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
     const [selectedMemberIds, setSelectedMemberIds] = useState([]);
 
@@ -930,65 +1043,26 @@ const ProjectDetails = () => {
                                             ) : (
                                                 <Plus className="w-4 h-4" />
                                             )}
-                                            {uploadingFiles ? "Uploading..." : "Add More"}
+                                            Upload Files
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {projectAttachments.map((file, idx) => {
-                                        const isImg = file.fileType?.includes("image");
-                                        const isPdf = file.fileType?.includes("pdf");
-                                        const isZip = file.fileType?.includes("zip") || file.fileType?.includes("octet-stream") || file.filename.endsWith(".zip");
-
-                                        return (
-                                            <div key={idx} className="flex items-center justify-between p-3.5 bg-slate-50/50 rounded-2xl border border-slate-100 hover:border-indigo-100 transition group">
-                                                <div className="flex items-center gap-3 min-w-0">
-                                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                                                        isImg ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                                        isPdf ? "bg-rose-50 text-rose-600 border-rose-100" :
-                                                        isZip ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                                        "bg-indigo-50 text-indigo-600 border-indigo-100"
-                                                    }`}>
-                                                        {isImg ? <ImageIcon className="w-5 h-5" /> :
-                                                         isZip ? <Archive className="w-5 h-5" /> :
-                                                         <FileText className="w-5 h-5" />}
-                                                    </div>
-                                                    <div className="flex flex-col min-w-0 leading-snug">
-                                                        <span className="text-xs font-black text-slate-700 truncate max-w-[150px] md:max-w-[200px]" title={file.filename}>
-                                                            {file.filename}
-                                                        </span>
-                                                        <span className="text-[9px] font-semibold text-slate-400">
-                                                            By {file.uploadedBy?.name || "System"} • {formatDate(file.createdAt)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <div className="flex items-center gap-1.5 shrink-0">
-                                                    <a
-                                                        href={file.url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="p-2 bg-white hover:bg-indigo-600 text-slate-400 hover:text-white rounded-lg shadow-sm border border-slate-100 transition"
-                                                    >
-                                                        <Download className="w-3.5 h-3.5" />
-                                                    </a>
-                                                    {canDeleteProjectAttachment(file) && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setDeleteTarget({ type: "attachment", id: file._id || file.id });
-                                                                setIsDeleteModalOpen(true);
-                                                            }}
-                                                            className="p-2 bg-white hover:bg-rose-650 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 rounded-lg shadow-sm border border-slate-100 transition cursor-pointer"
-                                                            title="Delete Document"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {projectAttachments.map((file, idx) => (
+                                        <AttachmentRow 
+                                            key={idx} 
+                                            file={file} 
+                                            onDelete={canDeleteProjectAttachment(file) ? () => {
+                                                setDeleteTarget({ type: "attachment", id: file._id || file.id });
+                                                setIsDeleteModalOpen(true);
+                                            } : null}
+                                            onPreview={(f) => {
+                                                setPreviewFile(f);
+                                                setIsPreviewOpen(true);
+                                            }}
+                                        />
+                                    ))}
                                     {projectAttachments.length === 0 && (
                                         <div className="sm:col-span-2 py-8 text-center bg-slate-50/20 rounded-2xl border border-dashed border-slate-100">
                                             <Paperclip className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
@@ -1797,6 +1871,13 @@ const ProjectDetails = () => {
                     </form>
                 </div>
             )}
+
+            {/* File Preview Modal */}
+            <FilePreviewModal 
+                isOpen={isPreviewOpen} 
+                onClose={() => setIsPreviewOpen(false)} 
+                file={previewFile} 
+            />
 
             {/* Deletion Confirmation Modal */}
             <DeleteConfirmModal

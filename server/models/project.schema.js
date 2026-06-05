@@ -67,6 +67,7 @@ const projectSchema = new mongoose.Schema(
                 url: { type: String, required: true },
                 filename: { type: String, required: true },
                 fileType: { type: String },
+                fileSize: { type: String },
                 uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
                 createdAt: { type: Date, default: Date.now }
             }

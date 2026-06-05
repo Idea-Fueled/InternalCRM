@@ -51,12 +51,20 @@ export const createProject = async (req, res, next) => {
             }
         }
 
+        const formatSize = (bytes) => {
+            if (!bytes) return "";
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / 1048576).toFixed(1)} MB`;
+        };
+
         let parsedAttachments = [];
         if (req.files && req.files.length > 0) {
             parsedAttachments = req.files.map(file => ({
                 url: file.path,
                 filename: file.originalname || file.filename || "Attachment",
                 fileType: file.mimetype || "",
+                fileSize: formatSize(file.size),
                 uploadedBy: req.user._id
             }));
         } else if (req.file) {
@@ -64,6 +72,7 @@ export const createProject = async (req, res, next) => {
                 url: req.file.path,
                 filename: req.file.originalname || req.file.filename || "Attachment",
                 fileType: req.file.mimetype || "",
+                fileSize: formatSize(req.file.size),
                 uploadedBy: req.user._id
             }];
         }
@@ -350,12 +359,20 @@ export const updateProject = async (req, res, next) => {
             }
         }
 
+        const formatSize = (bytes) => {
+            if (!bytes) return "";
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / 1048576).toFixed(1)} MB`;
+        };
+
         let newAttachments = [];
         if (req.files && req.files.length > 0) {
             newAttachments = req.files.map(file => ({
                 url: file.path,
                 filename: file.originalname || file.filename || "Attachment",
                 fileType: file.mimetype || "",
+                fileSize: formatSize(file.size),
                 uploadedBy: req.user._id
             }));
         } else if (req.file) {
@@ -363,6 +380,7 @@ export const updateProject = async (req, res, next) => {
                 url: req.file.path,
                 filename: req.file.originalname || req.file.filename || "Attachment",
                 fileType: req.file.mimetype || "",
+                fileSize: formatSize(req.file.size),
                 uploadedBy: req.user._id
             }];
         }
@@ -678,12 +696,20 @@ export const uploadProjectAttachments = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized to upload attachments to this project" });
         }
 
+        const formatSize = (bytes) => {
+            if (!bytes) return "";
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / 1048576).toFixed(1)} MB`;
+        };
+
         let newAttachments = [];
         if (req.files && req.files.length > 0) {
             newAttachments = req.files.map(file => ({
                 url: file.path,
                 filename: file.originalname || file.filename || "Attachment",
                 fileType: file.mimetype || "",
+                fileSize: formatSize(file.size),
                 uploadedBy: _id
             }));
         }
@@ -693,6 +719,7 @@ export const uploadProjectAttachments = async (req, res) => {
                 url: req.file.path,
                 filename: req.file.originalname || req.file.filename || "Attachment",
                 fileType: req.file.mimetype || "",
+                fileSize: formatSize(req.file.size),
                 uploadedBy: _id
             });
         }

@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     X, Calendar, Paperclip, FileText, MessageSquare, 
     ArrowRight, History, Lock, ExternalLink, Download, 
-    ChevronUp, ChevronDown, AlertTriangle, Trash2
+    ChevronUp, ChevronDown, AlertTriangle, Trash2, Eye
 } from 'lucide-react';
 import { taskService } from '../api/services';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import { FilePreviewModal, isPreviewSupported, getFileIcon, isImageFile, formatAttachmentDate } from './FileAttachmentUX';
 
 const PRIORITY_COLORS = {
     'Low':      'bg-slate-100 text-slate-600 border border-slate-200/50',
@@ -24,45 +25,59 @@ const STATUS_COLORS = {
     'Done':        'bg-emerald-100 text-emerald-700 border border-emerald-200',
 };
 
-// ─── File type helpers ────────────────────────────────────────────────────────
-const getFileIcon = (fileType = '', filename = '') => {
-    const t = (fileType + filename).toLowerCase();
-    if (t.match(/\.(jpg|jpeg|png|gif|webp|svg|avif)/) || t.startsWith('image/')) return { icon: FileText, color: 'text-emerald-500', bg: 'bg-emerald-50',  badge: 'IMG'  };
-    if (t.match(/\.pdf/) || t.includes('pdf'))                                     return { icon: FileText, color: 'text-rose-500',    bg: 'bg-rose-50',     badge: 'PDF'  };
-    if (t.match(/\.(zip|rar|7z|tar|gz)/) || t.includes('zip'))                   return { icon: FileText, color: 'text-amber-500',   bg: 'bg-amber-50',    badge: 'ZIP'  };
-    return { icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50', badge: 'FILE' };
-};
+const AttachmentCard = ({ file, onDelete = null, onPreview }) => {
+    const [isHovered, setIsHovered] = useState(false);
+    const [tooltipStyle, setTooltipStyle] = useState({});
+    const triggerRef = useRef(null);
+    const timeoutRef = useRef(null);
 
-const isImageFile = (fileType = '', url = '') => {
-    const t = (fileType + url).toLowerCase();
-    return t.match(/\.(jpg|jpeg|png|gif|webp|avif|svg)/) || t.startsWith('image/');
-};
-
-const getLinkMeta = (url = '') => {
-    const lower = url.toLowerCase();
-    if (lower.includes('loom.com'))         return { label: 'Loom',         color: 'bg-violet-100 text-violet-700', icon: ExternalLink };
-    if (lower.includes('drive.google.com')) return { label: 'Google Drive',  color: 'bg-blue-100 text-blue-700',    icon: ExternalLink };
-    return { label: 'Link', color: 'bg-indigo-100 text-indigo-700', icon: ExternalLink };
-};
-
-const formatDateTime = (dt) => {
-    if (!dt) return '';
-    try {
-        const d = new Date(dt);
-        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-            + ' · '
-            + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    } catch { return ''; }
-};
-
-const AttachmentCard = ({ file, onDelete = null }) => {
     const img = isImageFile(file.fileType, file.url);
     const meta = getFileIcon(file.fileType, file.filename);
     const Icon = meta.icon;
     const name = file.filename || 'Attachment';
 
+    const showTooltip = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (triggerRef.current) {
+            const rect = triggerRef.current.getBoundingClientRect();
+            setTooltipStyle({
+                position: 'fixed',
+                top: `${rect.bottom + 6}px`,
+                left: `${rect.left}px`,
+                zIndex: 999
+            });
+        }
+        setIsHovered(true);
+    };
+
+    const hideTooltip = () => {
+        timeoutRef.current = setTimeout(() => {
+            setIsHovered(false);
+        }, 100);
+    };
+
+    const handleCardClick = (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (isPreviewSupported(file.fileType, file.url || file.path)) {
+            onPreview(file);
+        } else {
+            window.open(file.url || file.path, '_blank', 'noopener,noreferrer');
+        }
+    };
+
+    const uploaderName = file.uploadedBy?.name || 'System';
+    const formattedDate = formatAttachmentDate(file.createdAt);
+
     return (
-        <div className="group flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:shadow-sm transition-all">
+        <div 
+            ref={triggerRef}
+            onMouseEnter={showTooltip}
+            onMouseLeave={hideTooltip}
+            onClick={handleCardClick}
+            className="group flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:shadow-sm hover:bg-slate-50/20 transition-all cursor-pointer select-none relative"
+        >
             {img ? (
                 <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-100">
                     <img src={file.url} alt={name} className="w-full h-full object-cover" />
@@ -73,27 +88,42 @@ const AttachmentCard = ({ file, onDelete = null }) => {
                 </div>
             )}
             <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-slate-700 truncate">{name}</p>
-                {file.fileType && <p className="text-[10px] text-slate-400 mt-0.5">{file.fileType}</p>}
+                <p className="text-xs font-bold text-slate-700 truncate group-hover:text-blue-600">{name}</p>
+                {file.fileType && <p className="text-[10px] text-slate-400 mt-0.5 truncate">{file.fileType}</p>}
             </div>
-            <a
-                href={file.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                title="Open / Download"
+            
+            <button
+                type="button"
+                className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors border-none"
+                title="View File"
             >
-                <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+                <Eye className="w-3.5 h-3.5" />
+            </button>
+
             {onDelete && (
                 <button
                     type="button"
-                    onClick={onDelete}
-                    className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete();
+                    }}
+                    className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border-none"
                     title="Delete Attachment"
                 >
                     <Trash2 className="w-3.5 h-3.5" />
                 </button>
+            )}
+
+            {isHovered && (
+                <div
+                    style={tooltipStyle}
+                    className="w-[260px] bg-slate-950/95 backdrop-blur-md text-white rounded-xl p-3 shadow-2xl border border-white/10 select-none pointer-events-none"
+                >
+                    <p className="text-xs font-bold truncate border-b border-white/10 pb-1 mb-1.5">{name}</p>
+                    <p className="text-[9px] text-white/40 font-semibold">Uploaded by: <span className="text-white/70">{uploaderName}</span></p>
+                    <p className="text-[9px] text-white/40 font-semibold mt-0.5">Uploaded on: <span className="text-white/70">{formattedDate}</span></p>
+                    {file.fileSize && <p className="text-[9px] text-white/30 font-medium mt-0.5">Size: {file.fileSize}</p>}
+                </div>
             )}
         </div>
     );
@@ -124,7 +154,7 @@ const ScreenshotLinkCard = ({ url }) => {
     );
 };
 
-const TimelineEntry = ({ entry, canDeleteNote = false, onDeleteNote = null, canDeleteAttachment = null, onDeleteAttachment = null }) => {
+const TimelineEntry = ({ entry, canDeleteNote = false, onDeleteNote = null, canDeleteAttachment = null, onDeleteAttachment = null, onPreview }) => {
     const [expanded, setExpanded] = useState(true);
     const isRestricted = entry.notes === '[Restricted Visibility]';
     const hasAttachments = Array.isArray(entry.attachments) && entry.attachments.length > 0;
@@ -197,6 +227,7 @@ const TimelineEntry = ({ entry, canDeleteNote = false, onDeleteNote = null, canD
                                         key={fi} 
                                         file={f} 
                                         onDelete={canDeleteAttachment && canDeleteAttachment(f) ? () => onDeleteAttachment(f) : null}
+                                        onPreview={onPreview}
                                     />
                                 ))}
                             </div>
@@ -231,6 +262,8 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState(null); // { type: 'note' | 'attachment', id: string, name?: string }
     const [isDeleting, setIsDeleting] = useState(false);
+    const [previewFile, setPreviewFile] = useState(null);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
     const fetchTaskDetails = async (silent = false) => {
         if (!taskId) return;
@@ -421,6 +454,10 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
                                                     setDeleteTarget({ type: 'attachment', id: f._id || f.id || f.url, name: f.filename });
                                                     setIsDeleteModalOpen(true);
                                                 } : null}
+                                                onPreview={(file) => {
+                                                    setPreviewFile(file);
+                                                    setIsPreviewOpen(true);
+                                                }}
                                             />
                                         ))}
                                     </div>
@@ -462,6 +499,10 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
                                                         setDeleteTarget({ type: 'attachment', id: f._id || f.id || f.url, name: f.filename });
                                                         setIsDeleteModalOpen(true);
                                                     }}
+                                                    onPreview={(file) => {
+                                                        setPreviewFile(file);
+                                                        setIsPreviewOpen(true);
+                                                    }}
                                                 />
                                             ))}
                                         </div>
@@ -480,6 +521,12 @@ const GlobalTaskDetailsSidebar = ({ taskId, onClose }) => {
                     >Close</button>
                 </div>
             </div>
+
+            <FilePreviewModal 
+                isOpen={isPreviewOpen} 
+                onClose={() => setIsPreviewOpen(false)} 
+                file={previewFile} 
+            />
 
             {/* Deletion Confirmation Modal */}
             <DeleteConfirmModal

@@ -56,6 +56,7 @@ const taskSchema = new mongoose.Schema({
             url: { type: String },
             filename: { type: String },
             fileType: { type: String },
+            fileSize: { type: String },
             uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
             createdAt: { type: Date, default: Date.now }
         }
@@ -78,6 +79,7 @@ const taskSchema = new mongoose.Schema({
                     url: { type: String },
                     filename: { type: String },
                     fileType: { type: String },
+                    fileSize: { type: String },
                     uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
                     createdAt: { type: Date, default: Date.now }
                 }

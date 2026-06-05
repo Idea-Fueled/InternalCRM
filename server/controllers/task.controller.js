@@ -93,10 +93,18 @@ export const uploadTaskAttachment = async (req, res) => {
             });
         }
 
+        const formatSize = (bytes) => {
+            if (!bytes) return "";
+            if (bytes < 1024) return `${bytes} B`;
+            if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+            return `${(bytes / 1048576).toFixed(1)} MB`;
+        };
+
         const fileData = {
             url: req.file.path,
             filename: req.file.originalname || req.file.filename || "attachment",
-            fileType: req.file.mimetype || ""
+            fileType: req.file.mimetype || "",
+            fileSize: formatSize(req.file.size)
         };
 
         return res.status(200).json({
@@ -159,7 +167,9 @@ export const createTask = async (req, res) => {
             .populate("assignedTo", "name email profilePic")
             .populate("assignedQA", "name email profilePic")
             .populate("assignedBy", "name email profilePic")
-            .populate("statusHistory.changedBy", "name role");
+            .populate("statusHistory.changedBy", "name role")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         // Send notifications
         // Notify TL of the project
@@ -275,6 +285,8 @@ export const getAllTasks = async (req, res) => {
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic")
             .sort({ createdAt: -1 });
 
         // Apply visibility filtering to each task
@@ -304,7 +316,9 @@ export const getSingleTask = async (req, res) => {
             .populate("assignedTo", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("assignedBy", "name email role profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic");
+            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         if (!task) {
             return res.status(404).json({
@@ -368,7 +382,9 @@ export const updateTask = async (req, res) => {
         .populate("project", "projectName name status teamLead")
         .populate("assignedTo", "name email role profilePic")
         .populate("assignedQA", "name email role profilePic")
-        .populate("assignedBy", "name email role profilePic");
+        .populate("assignedBy", "name email role profilePic")
+        .populate("attachments.uploadedBy", "name email role profilePic")
+        .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         if (!updatedTask) {
             return res.status(404).json({
@@ -519,7 +535,9 @@ export const updateTaskStatus = async (req, res) => {
         .populate("project", "projectName name status teamLead")
         .populate("assignedTo", "name email profilePic")
         .populate("assignedQA", "name email profilePic")
-        .populate("statusHistory.changedBy", "name role profilePic");
+        .populate("statusHistory.changedBy", "name role profilePic")
+        .populate("attachments.uploadedBy", "name email role profilePic")
+        .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         if (!task) {
             return res.status(404).json({
@@ -791,6 +809,8 @@ export const getTasksByProject = async (req, res) => {
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic")
             .sort({ createdAt: -1 });
 
         // Apply visibility filtering
@@ -821,6 +841,8 @@ export const getTasksByUser = async (req, res) => {
             .populate("assignedBy", "name email role profilePic")
             .populate("assignedQA", "name email role profilePic")
             .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic")
             .sort({ createdAt: -1 });
 
         // Apply visibility filtering
@@ -911,7 +933,9 @@ export const deleteTaskHistoryNote = async (req, res) => {
             .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email profilePic")
             .populate("assignedQA", "name email profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic");
+            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         // Record Audit Log
         const details = `Task transition comment "${deletedNoteText.substring(0, 40)}${deletedNoteText.length > 40 ? '...' : ''}" on task "${task.taskName}" was deleted by ${req.user.name} (${role})`;
@@ -1029,7 +1053,9 @@ export const deleteTaskAttachment = async (req, res) => {
             .populate("project", "projectName name status teamLead")
             .populate("assignedTo", "name email profilePic")
             .populate("assignedQA", "name email profilePic")
-            .populate("statusHistory.changedBy", "name role profilePic");
+            .populate("statusHistory.changedBy", "name role profilePic")
+            .populate("attachments.uploadedBy", "name email role profilePic")
+            .populate("statusHistory.attachments.uploadedBy", "name email role profilePic");
 
         // Record Audit Log
         const details = `Attachment "${attachment.filename}" was deleted from task "${task.taskName}" by ${req.user.name} (${role})`;
