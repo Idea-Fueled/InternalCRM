@@ -968,10 +968,10 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                             <table className="w-full text-left border-collapse table-fixed">
                                                 <thead className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                                                     <tr>
-                                                        <th className="px-6 py-4 font-bold w-[40%]">Task Summary</th>
-                                                        <th className="px-6 py-4 font-bold w-[25%]">Workflow</th>
-                                                        <th className="px-6 py-4 font-bold w-[25%]">Assignees</th>
-                                                        <th className="px-6 py-4 font-bold w-[10%] text-center">Action</th>
+                                                        <th className="pl-4 pr-2 py-3 font-bold w-[35%]">Task Summary</th>
+                                                        <th className="px-2 py-3 font-bold w-[20%]">Workflow</th>
+                                                        <th className="px-2 py-3 font-bold w-[32%]">Assignees</th>
+                                                        <th className="pl-2 pr-4 py-3 font-bold w-[13%] text-center">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -980,8 +980,8 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             key={task._id}
                                                             className="hover:bg-slate-50/50 transition-colors"
                                                         >
-                                                            <td className="px-6 py-4">
-                                                                <div className="leading-snug max-w-[200px] truncate">
+                                                            <td className="pl-4 pr-2 py-3.5">
+                                                                <div className="leading-snug w-full truncate">
                                                                     <p className="text-xs font-bold text-slate-800 transition-colors truncate">
                                                                         {task.taskName}
                                                                     </p>
@@ -991,7 +991,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-2 py-3.5">
                                                                 <div className="flex flex-col gap-1 items-start">
                                                                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                                                         task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
@@ -1011,7 +1011,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4">
+                                                            <td className="px-2 py-3.5">
                                                                 <div className="flex flex-col gap-2">
                                                                     <div className="flex items-center gap-2 min-w-0">
                                                                         <div className="w-5 h-5 rounded bg-blue-50 flex items-center justify-center text-[9px] font-black text-blue-600 border border-blue-100 overflow-hidden shrink-0">
@@ -1045,7 +1045,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-4 text-center">
+                                                            <td className="pl-2 pr-4 py-3.5 text-center">
                                                                 <button
                                                                     className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
                                                                     title="Edit Task parameters"
