@@ -284,7 +284,7 @@ const TrashDashboard = () => {
                     </div>
 
                     {/* Content Area */}
-                    <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200/60 p-1">
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                         
                         {loading ? (
                              <div className="h-full flex flex-col items-center justify-center p-8 text-center">
@@ -308,10 +308,10 @@ const TrashDashboard = () => {
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse table-fixed">
                                     <thead>
-                                        <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            <th className="p-4 pl-6 w-12">
+                                        <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 font-bold w-12">
                                                 <input 
                                                     type="checkbox" 
                                                     className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer"
@@ -319,17 +319,17 @@ const TrashDashboard = () => {
                                                     onChange={handleSelectAll}
                                                 />
                                             </th>
-                                            <th className="p-4 font-semibold">Item Details</th>
-                                            <th className="p-4 font-semibold">Type</th>
-                                            <th className="p-4 font-semibold">Deleted At</th>
-                                            <th className="p-4 font-semibold">Status</th>
-                                            <th className="p-4 pr-6 font-semibold text-right">Actions</th>
+                                            <th className="px-6 py-4 font-bold w-[30%]">Item Details</th>
+                                            <th className="px-6 py-4 font-bold w-[15%]">Type</th>
+                                            <th className="px-6 py-4 font-bold w-[20%]">Deleted At</th>
+                                            <th className="px-6 py-4 font-bold w-[15%]">Status</th>
+                                            <th className="px-6 py-4 font-bold w-[20%] text-right pr-6">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-slate-50">
+                                    <tbody className="divide-y divide-slate-100 bg-white">
                                         {filteredItems.map((item) => (
-                                            <tr key={item.id} className={`hover:bg-slate-50/80 transition-colors group ${selectedIds.includes(item.id) ? 'bg-blue-50/30' : ''}`}>
-                                                <td className="p-4 pl-6">
+                                            <tr key={item.id} className={`hover:bg-slate-50/50 transition-colors group ${selectedIds.includes(item.id) ? 'bg-blue-50/30' : ''}`}>
+                                                <td className="px-6 py-4">
                                                     <input 
                                                         type="checkbox" 
                                                         className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 cursor-pointer"
@@ -337,13 +337,13 @@ const TrashDashboard = () => {
                                                         onChange={() => handleSelect(item.id)}
                                                     />
                                                 </td>
-                                                <td className="p-4">
+                                                <td className="px-6 py-4">
                                                     <div className="flex flex-col">
-                                                        <span className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">{item.name}</span>
-                                                        <span className="text-[11px] font-semibold text-slate-400 mt-0.5">{item.info}</span>
+                                                        <span className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors truncate">{item.name}</span>
+                                                        <span className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate">{item.info}</span>
                                                     </div>
                                                 </td>
-                                                <td className="p-4">
+                                                <td className="px-6 py-4">
                                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-lg border ${
                                                         item.type === 'Task' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 
                                                         item.type === 'Project' ? 'bg-blue-50 text-blue-600 border-blue-100' :
@@ -357,17 +357,17 @@ const TrashDashboard = () => {
                                                         {item.type}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-xs font-semibold text-slate-500 whitespace-nowrap">
+                                                <td className="px-6 py-4 text-xs font-semibold text-slate-500 whitespace-nowrap">
                                                     {item.deletedAt}
                                                 </td>
-                                                <td className="p-4">
+                                                <td className="px-6 py-4">
                                                     <span className="inline-flex items-center gap-1.5 px-2 py-1 bg-slate-100 text-slate-500 font-bold text-[10px] uppercase tracking-wider rounded border border-slate-200">
                                                         <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
                                                         {item.status}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 pr-6 text-right">
-                                                    <div className="flex items-center justify-end gap-2 transition-opacity">
+                                                <td className="px-6 py-4 pr-6 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
                                                         <button 
                                                             onClick={() => handleRestore(item.id, item.type)}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white font-bold text-xs rounded-lg transition shadow-sm border border-blue-100 hover:border-blue-600"

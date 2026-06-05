@@ -164,17 +164,17 @@ const HRLeaveManagement = () => {
                         </div>
                     ) : activeTab === "Balances" ? (
                         /* Balances Matrix View */
-                        <div className="premium-card bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden">
+                        <div className="bg-white border border-slate-200/60 shadow-sm rounded-2xl overflow-hidden">
                             <div className="overflow-x-auto no-scrollbar">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse table-fixed">
                                     <thead>
-                                        <tr className="border-b border-slate-100 bg-slate-50/50 text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                                            <th className="p-4">Employee Info</th>
-                                            <th className="p-4 text-center">Casual Balance (Limited)</th>
-                                            <th className="p-4 text-center">Sick Balance (Limited)</th>
-                                            <th className="p-4 text-center">Earned Balance (Limited)</th>
-                                            <th className="p-4 text-center">Unpaid Balance (Unlimited)</th>
-                                            <th className="p-4 text-right">Actions</th>
+                                        <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 font-bold w-[25%]">Employee Info</th>
+                                            <th className="px-6 py-4 font-bold w-[18%] text-center">Casual Balance</th>
+                                            <th className="px-6 py-4 font-bold w-[18%] text-center">Sick Balance</th>
+                                            <th className="px-6 py-4 font-bold w-[18%] text-center">Earned Balance</th>
+                                            <th className="px-6 py-4 font-bold w-[11%] text-center">Unpaid Balance</th>
+                                            <th className="px-6 py-4 font-bold w-[10%] text-right pr-6">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-650 bg-white">
@@ -184,8 +184,8 @@ const HRLeaveManagement = () => {
                                             </tr>
                                         ) : (
                                             filteredEmployees.map(emp => (
-                                                <tr key={emp._id} className="hover:bg-slate-50/70 transition-colors">
-                                                    <td className="p-4">
+                                                <tr key={emp._id} className="hover:bg-slate-50/50 transition-colors">
+                                                    <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 overflow-hidden shrink-0">
                                                                 {emp.profilePic ? <img src={emp.profilePic} alt="" className="w-full h-full object-cover" /> : emp.name?.charAt(0)}
@@ -196,14 +196,14 @@ const HRLeaveManagement = () => {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 text-center font-mono text-slate-700">{emp.casualLeaveBalance ?? 12} days</td>
-                                                    <td className="p-4 text-center font-mono text-slate-700">{emp.sickLeaveBalance ?? 10} days</td>
-                                                    <td className="p-4 text-center font-mono text-slate-700">{emp.earnedLeaveBalance ?? 15} days</td>
-                                                    <td className="p-4 text-center font-mono text-slate-450 italic">Unlimited</td>
-                                                    <td className="p-4 text-right">
+                                                    <td className="px-6 py-4 text-center font-mono text-slate-700">{emp.casualLeaveBalance ?? 12} days</td>
+                                                    <td className="px-6 py-4 text-center font-mono text-slate-700">{emp.sickLeaveBalance ?? 10} days</td>
+                                                    <td className="px-6 py-4 text-center font-mono text-slate-700">{emp.earnedLeaveBalance ?? 15} days</td>
+                                                    <td className="px-6 py-4 text-center font-mono text-slate-450 italic">Unlimited</td>
+                                                    <td className="px-6 py-4 text-right pr-6">
                                                         <button
                                                             onClick={() => handleAdjustBalanceClick(emp)}
-                                                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-650 hover:bg-blue-600 hover:text-white rounded-lg border border-blue-100 hover:border-blue-600 transition-all font-black text-[10px] uppercase tracking-wider cursor-pointer"
+                                                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-655 hover:bg-blue-600 hover:text-white rounded-lg border border-blue-100 hover:border-blue-600 transition-all font-black text-[10px] uppercase tracking-wider cursor-pointer"
                                                         >
                                                             <Edit2 className="w-3 h-3" />
                                                             Adjust

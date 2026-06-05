@@ -141,16 +141,16 @@ const AuditLogs = () => {
                     {/* Logs Table */}
                     <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
+                            <table className="w-full text-left border-collapse table-fixed">
                                 <thead>
-                                    <tr className="bg-slate-50/50 border-b border-slate-100">
-                                        <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Timestamp</th>
-                                        <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Event</th>
-                                        <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Category</th>
-                                        <th className="px-6 py-4 text-[11px] font-black text-slate-400 uppercase tracking-widest">Details</th>
+                                    <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                        <th className="px-6 py-4 font-bold w-[20%]">Timestamp</th>
+                                        <th className="px-6 py-4 font-bold w-[25%]">Event</th>
+                                        <th className="px-6 py-4 font-bold w-[15%]">Category</th>
+                                        <th className="px-6 py-4 font-bold w-[40%]">Details</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-50">
+                                <tbody className="divide-y divide-slate-100 bg-white">
                                     {loading ? (
                                         <tr>
                                             <td colSpan="4" className="px-6 py-12 text-center text-slate-400 italic">Loading audit history...</td>
@@ -191,20 +191,20 @@ const AuditLogs = () => {
                                                              log.type === 'project' ? <MessageSquare className="w-4 h-4" /> :
                                                              <Clock className="w-4 h-4" />}
                                                         </div>
-                                                        <span className="text-sm font-bold text-slate-800">{log.title}</span>
+                                                        <span className="text-sm font-bold text-slate-800 truncate">{log.title}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
                                                         isApprove ? 'bg-emerald-50 text-emerald-600' :
                                                         isReject || isDeletion ? 'bg-rose-50 text-rose-600' :
-                                                        'bg-slate-100 text-slate-500'
+                                                        'bg-slate-100 text-slate-550'
                                                     }`}>
                                                         {(log.category || "System").replace(/_/g, ' ')}
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <p className="text-sm text-slate-650 max-w-md line-clamp-1 group-hover:line-clamp-none transition-all duration-300">
+                                                    <p className="text-sm text-slate-650 max-w-md line-clamp-1 group-hover:line-clamp-none transition-all duration-300 truncate">
                                                         {log.message}
                                                     </p>
                                                 </td>

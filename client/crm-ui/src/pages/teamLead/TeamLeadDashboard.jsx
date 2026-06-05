@@ -534,13 +534,13 @@ const TeamLeadDashboard = () => {
                                     </h3>
                                 </div>
                                 <div className="overflow-x-auto scrollbar-thin">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-collapse table-fixed">
                                         <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                                                <th className="px-6 py-3 font-bold">Staff Member</th>
-                                                <th className="px-6 py-3 font-bold">Workload Status</th>
-                                                <th className="px-6 py-3 font-bold text-center">Metrics</th>
-                                                <th className="px-6 py-3 font-bold">Task Completion</th>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-[28%] font-bold">Staff Member</th>
+                                                <th className="px-6 py-4 w-[22%] font-bold">Workload Status</th>
+                                                <th className="px-6 py-4 w-[20%] font-bold text-center">Metrics</th>
+                                                <th className="px-6 py-4 w-[30%] font-bold">Task Completion</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
@@ -659,13 +659,13 @@ const TeamLeadDashboard = () => {
                                     Pending QA Reviews Queue ({pendingQAReviews.length})
                                 </h3>
                                 <div className="overflow-x-auto scrollbar-thin">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-collapse table-fixed">
                                         <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                                                <th className="px-6 py-2.5 font-bold">Task Name</th>
-                                                <th className="px-6 py-2.5 font-bold">Assigned Staff</th>
-                                                <th className="px-6 py-2.5 font-bold text-center">Urgency</th>
-                                                <th className="px-6 py-2.5 font-bold">Actions</th>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-[40%] font-bold">Task Name</th>
+                                                <th className="px-6 py-4 w-[25%] font-bold">Assigned Staff</th>
+                                                <th className="px-6 py-4 w-[20%] font-bold text-center">Urgency</th>
+                                                <th className="px-6 py-4 w-[15%] font-bold text-right pr-6">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-xs">
@@ -678,20 +678,20 @@ const TeamLeadDashboard = () => {
                                             ) : (
                                                 pendingQAReviews.map((task) => (
                                                     <tr key={task._id} className="hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-6 py-3 font-semibold text-slate-800 max-w-[200px] truncate">
+                                                        <td className="px-6 py-4 font-semibold text-slate-800 max-w-[200px] truncate">
                                                             {task.taskName}
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-500 font-medium">
+                                                        <td className="px-6 py-4 text-slate-500 font-medium">
                                                             {task.assignedTo?.name || 'Unassigned'}
                                                         </td>
-                                                        <td className="px-6 py-3 text-center">
+                                                        <td className="px-6 py-4 text-center">
                                                             <span className={`inline-block px-2 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider ${
                                                                 task.priority === 'High' || task.priority === 'Critical' ? 'bg-rose-50 text-rose-600 border border-rose-100' : 'bg-slate-100 text-slate-600 border border-slate-200'
                                                             }`}>
                                                                 {task.priority || 'Normal'}
                                                             </span>
                                                         </td>
-                                                        <td className="px-6 py-3">
+                                                        <td className="px-6 py-4 text-right pr-6">
                                                             <button 
                                                                 onClick={() => setSearchParams({ taskId: task._id })}
                                                                 className="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-0.5 cursor-pointer"
@@ -754,12 +754,12 @@ const TeamLeadDashboard = () => {
                                     Critical Overdue Tasks ({overdueTasksList.length})
                                 </h3>
                                 <div className="overflow-x-auto scrollbar-thin">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-collapse table-fixed">
                                         <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                                                <th className="px-6 py-2.5 font-bold">Delayed Task</th>
-                                                <th className="px-6 py-2.5 font-bold">Assignee</th>
-                                                <th className="px-6 py-2.5 font-bold">Expired Due Date</th>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-[45%] font-bold">Delayed Task</th>
+                                                <th className="px-6 py-4 w-[30%] font-bold">Assignee</th>
+                                                <th className="px-6 py-4 w-[25%] font-bold text-right pr-6">Expired Due Date</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-xs">
@@ -772,13 +772,13 @@ const TeamLeadDashboard = () => {
                                             ) : (
                                                 overdueTasksList.slice(0, 5).map((task) => (
                                                     <tr key={task._id} className="hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-6 py-3 font-semibold text-slate-800 truncate max-w-[180px]">
+                                                        <td className="px-6 py-4 font-semibold text-slate-800 truncate max-w-[180px]">
                                                             {task.taskName}
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-500 font-semibold">
+                                                        <td className="px-6 py-4 text-slate-500 font-semibold">
                                                             {task.assignedTo?.name || 'Unassigned'}
                                                         </td>
-                                                        <td className="px-6 py-3 text-rose-600 font-bold">
+                                                        <td className="px-6 py-4 text-rose-600 font-bold text-right pr-6">
                                                             {task.endDate ? new Date(task.endDate).toLocaleDateString() : 'N/A'}
                                                         </td>
                                                     </tr>
@@ -798,12 +798,12 @@ const TeamLeadDashboard = () => {
                                     Upcoming Deadlines (Next 96 Hours)
                                 </h3>
                                 <div className="overflow-x-auto scrollbar-thin">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-collapse table-fixed">
                                         <thead>
-                                            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                                                <th className="px-6 py-2.5 font-bold">Upcoming Task</th>
-                                                <th className="px-6 py-2.5 font-bold">Assignee</th>
-                                                <th className="px-6 py-2.5 font-bold">Target Date</th>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-[45%] font-bold">Upcoming Task</th>
+                                                <th className="px-6 py-4 w-[30%] font-bold">Assignee</th>
+                                                <th className="px-6 py-4 w-[25%] font-bold text-right pr-6">Target Date</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-xs">
@@ -816,13 +816,13 @@ const TeamLeadDashboard = () => {
                                             ) : (
                                                 upcomingDeadlines.slice(0, 5).map((task) => (
                                                     <tr key={task._id} className="hover:bg-slate-50/50 transition-colors">
-                                                        <td className="px-6 py-3 font-semibold text-slate-800 truncate max-w-[180px]">
+                                                        <td className="px-6 py-4 font-semibold text-slate-800 truncate max-w-[180px]">
                                                             {task.taskName}
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-500 font-semibold">
+                                                        <td className="px-6 py-4 text-slate-500 font-semibold">
                                                             {task.assignedTo?.name || 'Unassigned'}
                                                         </td>
-                                                        <td className="px-6 py-3 text-slate-800 font-bold">
+                                                        <td className="px-6 py-4 text-slate-700 font-bold text-right pr-6">
                                                             {task.endDate ? new Date(task.endDate).toLocaleDateString() : 'N/A'}
                                                         </td>
                                                     </tr>

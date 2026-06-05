@@ -497,8 +497,8 @@ const ProjectsDashboard = () => {
                                 <p className="text-sm font-medium text-slate-500 mt-1 max-w-xs text-center">There are no projects assigned to you that match the selected criteria.</p>
                             )}
                         </div>
-                    ) : (
-                        <div className={viewType === "list" ? "space-y-3" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"}>
+                    ) : viewType === "card" ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredProjects.map((project, i) => {
                                 const totalTasks = project.tasks?.length || 0;
                                 const completedTasks = project.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
@@ -545,7 +545,7 @@ const ProjectsDashboard = () => {
                                     }
                                 }
 
-                                return viewType === "card" ? (
+                                return (
                                     <div 
                                         key={project._id || i} 
                                         onClick={() => {
@@ -639,152 +639,115 @@ const ProjectsDashboard = () => {
                                             </button>
                                         </div>
                                     </div>
-                                ) : (
-                                <div 
-                                    key={project._id || i} 
-                                    onClick={() => {
-                                        setSelectedProjectId(project._id);
-                                    }}
-                                    className={`group rounded-2xl p-5 flex flex-col xl:flex-row items-center gap-6 xl:gap-8 border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${bgClass}`}
-                                >
-                                    
-                                    {/* Left: Name & Desc */}
-                                    <div className="w-full xl:w-[30%]">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{project._id.slice(-6).toUpperCase()}</span>
-                                            <h3 className="text-base font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
-                                        </div>
-                                        <p className="text-sm font-medium text-slate-500 line-clamp-2 leading-relaxed pr-4">{project.description}</p>
-                                    </div>
-
-                                    <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase overflow-hidden">
-                                                {project.teamLead?.profilePic ? (
-                                                    <img src={project.teamLead.profilePic} alt={project.teamLead.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    leadInitial
-                                                )}
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Team Lead</span>
-                                                <span className="text-sm font-semibold text-slate-700">{leadName}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
-                                            <div className="flex items-center gap-1.5"><svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> {startDate}</div>
-                                            <span className="text-slate-300">-</span>
-                                            <div className="flex items-center gap-1.5">{endDate}</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Middle 2: Stats & Progress */}
-                                    <div className="w-full xl:w-[25%] flex flex-col gap-3 border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {project.status !== 'Active' && (
-                                                    <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${
-                                                        project.status === 'On Track' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                        project.status === 'At Risk' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                        'bg-slate-50 text-slate-500 border-slate-200'
-                                                    }`}>
-                                                        {project.status}
-                                                    </span>
-                                                )}
-                                                <span className={`px-2.5 py-1 text-[11px] font-bold rounded-full border ${timelineClass}`}>
-                                                    {timelineTag}
-                                                </span>
-                                            </div>
-                                            
-                                            <div className="flex items-center gap-3 text-xs">
-                                                <div className="relative group/badge" onClick={(e) => e.stopPropagation()}>
-                                                    <span className="flex items-center gap-1.5 font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md cursor-default hover:bg-slate-200 transition-colors">
-                                                        <svg className="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                                        {membersCount}
-                                                    </span>
-                                                    
-                                                    {membersCount > 0 && (
-                                                        <div className="absolute right-0 bottom-full mb-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl p-3 opacity-0 invisible group-hover/badge:opacity-100 group-hover/badge:visible transition-all duration-200 z-[100]">
-                                                            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1 text-left">Team Members</h4>
-                                                            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                                                                {project.teamMembers.map(m => (
-                                                                    <div key={m._id} className="flex items-center gap-2 text-left bg-slate-50/50 p-1.5 rounded-lg border border-slate-100">
-                                                                        <div className="w-8 h-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold overflow-hidden shrink-0 border border-blue-100">
-                                                                            {m.profilePic ? (
-                                                                                <img src={m.profilePic} alt={m.name} className="w-full h-full object-cover" />
-                                                                            ) : (
-                                                                                m.name?.charAt(0).toUpperCase() || 'U'
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="flex flex-col overflow-hidden">
-                                                                            <span className="text-xs font-bold text-slate-700 truncate">{m.name}</span>
-                                                                            <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider truncate">{m.role || 'Member'}</span>
-                                                                        </div>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div className="w-full">
-                                            <div className="flex justify-between text-[10px] font-bold text-slate-500 mb-1.5">
-                                                <span>PROGRESS</span>
-                                                <span>{progress}%</span>
-                                            </div>
-                                            <div className="w-full bg-slate-200 rounded-full h-1.5">
-                                                <div 
-                                                    className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
-                                                    style={{ width: `${progress}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Right: Action */}
-                                    <div className="w-full xl:w-[20%] flex items-center justify-end border-t xl:border-t-0 xl:border-l border-slate-100 pt-4 xl:pt-0 xl:pl-8">
-                                        <div className="flex items-center gap-2">
-
-                                            {(can('projects.update') || can('projects.delete')) && (
-                                                <>
-                                                    {can('projects.update') && (
-                                                        <button 
-                                                            onClick={(e) => handleEditProject(project, e)}
-                                                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                                                            title="Edit Project"
-                                                        >
-                                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                        </button>
-                                                    )}
-                                                    {can('projects.delete') && (
-                                                        <button 
-                                                            onClick={(e) => handleDeleteProject(project._id, e)}
-                                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                                            title="Delete Project"
-                                                        >
-                                                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const routeBase = role === 'TL' ? 'teamLead' : role;
-                                                    navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
-                                                }}
-                                                className="px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1.5"
-                                            >
-                                                Board <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7"/></svg>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                </div>
                                 );
                             })}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse table-fixed">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 w-[30%] font-bold">Project</th>
+                                            <th className="px-6 py-4 w-[25%] font-bold">Team Lead</th>
+                                            <th className="px-6 py-4 w-[20%] font-bold">Timeline</th>
+                                            <th className="px-6 py-4 w-[15%] font-bold">Progress</th>
+                                            <th className="px-6 py-4 w-[10%] font-bold text-right pr-6">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredProjects.map((project, i) => {
+                                            const totalTasks = project.tasks?.length || 0;
+                                            const completedTasks = project.tasks?.filter(t => t.status === "Completed" || t.status === "Done").length || 0;
+                                            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+                                            const leadName = project.teamLead?.name || "Unassigned";
+                                            const leadInitial = project.teamLead?.name?.charAt(0) || "U";
+                                            const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A";
+                                            const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString() : "N/A";
+
+                                            return (
+                                                <tr 
+                                                    key={project._id || i}
+                                                    onClick={() => setSelectedProjectId(project._id)}
+                                                    className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                                                >
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-bold tracking-wider text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{project._id.slice(-6).toUpperCase()}</span>
+                                                                <h3 className="text-sm font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{project.projectName}</h3>
+                                                            </div>
+                                                            <p className="text-xs text-slate-400 mt-1 truncate pr-4" title={project.description}>{project.description}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2.5">
+                                                            <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold shadow-sm uppercase overflow-hidden shrink-0">
+                                                                {project.teamLead?.profilePic ? (
+                                                                    <img src={project.teamLead.profilePic} alt={project.teamLead.name} className="w-full h-full object-cover" />
+                                                                ) : (
+                                                                    leadInitial
+                                                                )}
+                                                            </div>
+                                                            <span className="text-sm font-semibold text-slate-700 truncate">{leadName}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-xs font-medium text-slate-500 whitespace-nowrap">
+                                                        {startDate} - {endDate}
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-1">
+                                                            <span>{progress}%</span>
+                                                        </div>
+                                                        <div className="w-full bg-slate-200 rounded-full h-1.5">
+                                                            <div 
+                                                                className={`h-1.5 rounded-full ${progress < 30 ? 'bg-amber-400' : progress < 70 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                                                                style={{ width: `${progress}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {(can('projects.update') || can('projects.delete')) && (
+                                                                <>
+                                                                    {can('projects.update') && (
+                                                                        <button 
+                                                                            onClick={(e) => handleEditProject(project, e)}
+                                                                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
+                                                                            title="Edit Project"
+                                                                        >
+                                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                                        </button>
+                                                                    )}
+                                                                    {can('projects.delete') && (
+                                                                        <button 
+                                                                            onClick={(e) => handleDeleteProject(project._id, e)}
+                                                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                                                            title="Delete Project"
+                                                                        >
+                                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            <button 
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    const routeBase = role === 'TL' ? 'teamLead' : role;
+                                                                    navigate(`/${routeBase}/kanban?project=${encodeURIComponent(project.projectName)}`);
+                                                                }}
+                                                                className="px-2.5 py-1.5 bg-blue-600 text-white font-bold text-[10px] rounded-lg hover:bg-blue-700 transition-all flex items-center gap-1 shrink-0"
+                                                            >
+                                                                Board
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                     

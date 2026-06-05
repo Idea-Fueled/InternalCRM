@@ -29,6 +29,7 @@ const HREmployees = () => {
     const [selectedDept, setSelectedDept] = useState("All");
     const [departments, setDepartments] = useState([]);
     const [managers, setManagers] = useState([]);
+    const [viewMode, setViewMode] = useState("grid"); // 'list' | 'grid'
 
     // Modal states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -154,13 +155,39 @@ const HREmployees = () => {
                             <h1 className="text-xl sm:text-2xl font-black text-slate-800">Employee Roster</h1>
                             <p className="text-slate-500 text-xs font-semibold mt-1">Configure active staff, adjust leave allocations, and toggle availability profiles.</p>
                         </div>
-                        <button
-                            onClick={handleCreateOpen}
-                            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 shrink-0"
-                        >
-                            <UserPlus className="w-4 h-4" />
-                            Onboard Employee
-                        </button>
+                        <div className="flex items-center gap-3 self-end sm:self-auto">
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/40">
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    title="List view"
+                                    className={`p-1.5 rounded-lg transition-all ${
+                                        viewMode === 'list'
+                                            ? 'bg-white shadow-sm text-blue-600'
+                                            : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    title="Grid view"
+                                    className={`p-1.5 rounded-lg transition-all ${
+                                        viewMode === 'grid'
+                                            ? 'bg-white shadow-sm text-blue-600'
+                                            : 'text-slate-400 hover:text-slate-600'
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+                                </button>
+                            </div>
+                            <button
+                                onClick={handleCreateOpen}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-lg active:scale-95 shrink-0"
+                            >
+                                <UserPlus className="w-4 h-4" />
+                                Onboard Employee
+                            </button>
+                        </div>
                     </div>
 
                     {/* Filters panel */}
@@ -214,7 +241,7 @@ const HREmployees = () => {
                             <h3 className="text-sm font-bold text-slate-550">No staff members found</h3>
                             <p className="text-slate-450 text-xs mt-1">Try relaxing your search terms or filter constraints.</p>
                         </div>
-                    ) : (
+                    ) : viewMode === 'grid' ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredEmployees.map(emp => {
                                 const initials = emp.name?.split(" ").map(n => n[0]).join("").substring(0, 2) || "U";
@@ -261,22 +288,6 @@ const HREmployees = () => {
                                             </div>
                                         </div>
 
-                                        {/* Leave Balances Display (Temporarily Commented Out) */}
-                                        {/* <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-100 text-center">
-                                            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Casual</span>
-                                                <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.casualLeaveBalance ?? 12}</p>
-                                            </div>
-                                            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Sick</span>
-                                                <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.sickLeaveBalance ?? 10}</p>
-                                            </div>
-                                            <div className="bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                                                <span className="text-[9px] font-bold text-slate-400 uppercase">Earned</span>
-                                                <p className="text-xs font-black text-slate-700 font-mono mt-0.5">{emp.earnedLeaveBalance ?? 15}</p>
-                                            </div>
-                                        </div> */}
-
                                         {/* Inactive details block */}
                                         {isInactiveState && emp.inactiveReason && (
                                             <div className="mt-3 p-3 bg-slate-50 border border-slate-100 rounded-xl text-[10px] leading-relaxed text-slate-650">
@@ -315,6 +326,89 @@ const HREmployees = () => {
                                     </div>
                                 );
                             })}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse table-fixed">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 w-[25%] font-bold">Employee</th>
+                                            <th className="px-6 py-4 w-[20%] font-bold">Department</th>
+                                            <th className="px-6 py-4 w-[25%] font-bold">Reporting Manager</th>
+                                            <th className="px-6 py-4 w-[15%] font-bold text-center">Status</th>
+                                            <th className="px-6 py-4 w-[15%] font-bold text-right pr-6">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredEmployees.map((emp) => {
+                                            const initials = emp.name?.split(" ").map(n => n[0]).join("").substring(0, 2) || "U";
+                                            const isInactiveState = emp.status === "inactive";
+                                            const managerName = emp.reportingManagers && emp.reportingManagers.length > 0 
+                                                ? emp.reportingManagers.map(m => m.name).join(", ") 
+                                                : (emp.reportingManager?.name || emp.teamLeads?.map(tl => tl.name).join(", ") || "N/A");
+
+                                            return (
+                                                <tr 
+                                                    key={emp._id}
+                                                    onClick={() => setSelectedEmployeeForDetails(emp)}
+                                                    className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                                                >
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-xs border-2 border-white shadow-sm overflow-hidden ${
+                                                                isInactiveState ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'
+                                                            }`}>
+                                                                {emp.profilePic ? (
+                                                                    <img src={emp.profilePic} alt="" className="w-full h-full object-cover" />
+                                                                ) : initials}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-1.5 min-w-0">
+                                                                    <span className={`font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors truncate ${isInactiveState ? 'text-slate-500 line-through' : ''}`} title={emp.name}>{emp.name}</span>
+                                                                    {isInactiveState && (
+                                                                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
+                                                                    )}
+                                                                </div>
+                                                                <div className="text-[10px] font-semibold text-slate-400 mt-0.5 truncate capitalize">{emp.designation || (emp.role ? (emp.role === 'TL' ? 'Team Lead' : (emp.role === 'qa' ? 'QA' : (emp.role === 'admin' ? 'Admin' : emp.role.charAt(0).toUpperCase() + emp.role.slice(1)))) : 'Employee')}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-semibold text-slate-700 truncate">{emp.department || "Unassigned"}</td>
+                                                    <td className="px-6 py-4 text-sm font-semibold text-slate-700 truncate">{managerName}</td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-full border ${
+                                                            isInactiveState ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                        }`}>
+                                                            {isInactiveState ? 'Inactive' : 'Active'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleStatusOpen(emp); }}
+                                                                className={`px-2.5 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider border shrink-0 transition-all ${
+                                                                    isInactiveState 
+                                                                        ? "bg-emerald-50 text-emerald-600 border-emerald-250 hover:bg-emerald-600 hover:text-white hover:border-emerald-600"
+                                                                        : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-800"
+                                                                }`}
+                                                            >
+                                                                {isInactiveState ? "Activate" : "Deactivate"}
+                                                            </button>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleEditOpen(emp); }}
+                                                                className="px-2.5 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 hover:bg-blue-600 hover:text-white hover:border-blue-600 rounded-xl text-[10px] font-black uppercase tracking-wider shrink-0 transition-all"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     )}
                 </main>

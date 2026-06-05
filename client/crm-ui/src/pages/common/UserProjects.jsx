@@ -255,13 +255,13 @@ const UserProjects = ({ role = "developer" }) => {
                                         </button>
                                     </div>
                                     <div className="overflow-x-auto">
-                                        <table className="w-full text-left">
-                                            <thead className="bg-slate-50 border-b border-slate-100 text-[10px] uppercase tracking-wider text-slate-700 font-bold">
-                                                <tr>
-                                                    <th className="px-6 py-4 w-[35%]">Task Name</th>
-                                                    <th className="px-6 py-4 w-[25%]">Timeline</th>
-                                                    <th className="px-6 py-4 w-[30%]">Assignee</th>
-                                                    <th className="px-6 py-4 w-[10%] text-center">Status</th>
+                                        <table className="w-full text-left border-collapse table-fixed">
+                                            <thead>
+                                                <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 w-[35%] font-bold">Task Name</th>
+                                                    <th className="px-6 py-4 w-[25%] font-bold">Timeline</th>
+                                                    <th className="px-6 py-4 w-[30%] font-bold">Assignee</th>
+                                                    <th className="px-6 py-4 w-[10%] font-bold text-center">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50 bg-white">

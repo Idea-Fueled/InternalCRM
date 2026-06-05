@@ -904,23 +904,20 @@ const ReportsDashboard = ({ focus }) => {
 
                                 <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                                     <div className="overflow-x-auto">
-                                        <table className="w-full text-left border-collapse">
+                                        <table className="w-full text-left border-collapse table-fixed">
                                             <thead>
-                                                <tr className="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-450 uppercase tracking-wider">
-                                                    <th className="p-4 pl-6 font-semibold">Employee</th>
-                                                    <th className="p-4 font-semibold">Department</th>
-                                                    <th className="p-4 font-semibold text-center">Assigned</th>
-                                                    <th className="p-4 font-semibold text-center">Completed</th>
-                                                    <th className="p-4 font-semibold text-center">Overdue</th>
-                                                    <th className="p-4 font-semibold w-1/4">Completion Rate</th>
-                                                    {/* <th className="p-4 font-semibold text-center">Leaves</th> */}
-                                                    <th className="p-4 font-semibold text-right pr-6">Status</th>
+                                                <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                    <th className="px-6 py-4 w-[28%] font-bold">Employee</th>
+                                                    <th className="px-6 py-4 w-[15%] font-bold text-center">Tasks</th>
+                                                    <th className="px-6 py-4 w-[15%] font-bold text-center">Overdue</th>
+                                                    <th className="px-6 py-4 w-[27%] font-bold">Performance</th>
+                                                    <th className="px-6 py-4 w-[15%] font-bold text-right pr-6">Activity</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-100">
                                                 {tableFilteredPerformanceList.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan="7" className="p-8 text-center text-slate-400 font-semibold text-sm">
+                                                        <td colSpan="5" className="px-6 py-8 text-center text-slate-400 font-semibold text-sm">
                                                             No employee performance records match the active filters.
                                                         </td>
                                                     </tr>
@@ -935,7 +932,7 @@ const ReportsDashboard = ({ focus }) => {
                                                             className="hover:bg-slate-50/70 transition-colors group cursor-pointer"
                                                         >
                                                             {/* Name and Designation */}
-                                                            <td className="p-4 pl-6">
+                                                            <td className="px-6 py-4">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shadow-sm overflow-hidden flex-shrink-0">
                                                                         {item.employee.profilePic ? (
@@ -951,29 +948,16 @@ const ReportsDashboard = ({ focus }) => {
                                                                 </div>
                                                             </td>
 
-                                                            {/* Department */}
-                                                            <td className="p-4 text-xs font-semibold text-slate-500">
-                                                                {item.employee.department || "Engineering"}
-                                                            </td>
-
-                                                            {/* Assigned Tasks */}
-                                                            <td className="p-4 text-center">
-                                                                <span className="font-bold text-slate-700 text-sm">{item.assignedCount}</span>
-                                                            </td>
-
-                                                            {/* Completed Tasks */}
-                                                            <td className="p-4 text-center">
-                                                                {item.completedCount > 0 ? (
-                                                                    <span className="inline-flex px-2 py-0.5 bg-emerald-50 text-emerald-600 font-bold text-xs rounded-lg">
-                                                                        {item.completedCount}
-                                                                    </span>
-                                                                ) : (
-                                                                    <span className="text-slate-300 font-bold text-sm">-</span>
-                                                                )}
+                                                            {/* Tasks (Done/Total) */}
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="inline-flex items-baseline gap-1 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                                                                    <span className="font-bold text-slate-800 text-sm">{item.completedCount}</span>
+                                                                    <span className="text-[10px] font-semibold text-slate-400">/{item.assignedCount}</span>
+                                                                </div>
                                                             </td>
 
                                                             {/* Overdue Tasks */}
-                                                            <td className="p-4 text-center">
+                                                            <td className="px-6 py-4 text-center">
                                                                 {item.overdueCount > 0 ? (
                                                                     <span className="inline-flex px-2 py-0.5 bg-rose-50 text-rose-600 font-bold text-xs rounded-lg border border-rose-100/60">
                                                                         {item.overdueCount}
@@ -984,31 +968,22 @@ const ReportsDashboard = ({ focus }) => {
                                                             </td>
 
                                                             {/* Completion Rate progress */}
-                                                            <td className="p-4">
+                                                            <td className="px-6 py-4">
                                                                 <div className="flex items-center justify-between text-[10px] font-bold text-slate-500 mb-1">
                                                                     <span>{item.completionRate}%</span>
                                                                 </div>
-                                                                <div className="w-full bg-slate-100 rounded-full h-1.5">
+                                                                <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
                                                                     <div 
-                                                                        className={`h-1.5 rounded-full ${item.completionRate < 50 ? 'bg-rose-450' : item.completionRate < 80 ? 'bg-amber-450' : 'bg-emerald-500'}`}
+                                                                        className={`h-1.5 rounded-full ${item.completionRate < 40 ? 'bg-rose-500' : item.completionRate < 80 ? 'bg-blue-500' : 'bg-emerald-500'}`}
                                                                         style={{ width: `${item.completionRate}%` }}
                                                                     ></div>
                                                                 </div>
                                                             </td>
 
-                                                            {/* Leaves Taken (Temporarily Commented Out) */}
-                                                            {/* <td className="p-4 text-center">
-                                                                {item.leavesTakenDays > 0 ? (
-                                                                    <span className="font-bold text-amber-600 text-sm">{item.leavesTakenDays}d</span>
-                                                                ) : (
-                                                                    <span className="text-slate-300 font-bold text-sm">-</span>
-                                                                )}
-                                                            </td> */}
-
                                                             {/* Availability Status */}
-                                                            <td className="p-4 text-right pr-6">
+                                                            <td className="px-6 py-4 text-right pr-6">
                                                                 <span className={`inline-flex px-2.5 py-1 text-[10px] font-bold rounded-lg border ${
-                                                                    item.status === 'inactive' ? 'bg-slate-50 text-slate-450 border-slate-100' : 'bg-emerald-50/50 text-emerald-600 border-emerald-100/60'
+                                                                    item.status === 'inactive' ? 'bg-slate-50 text-slate-455 border-slate-100' : 'bg-emerald-50/50 text-emerald-600 border-emerald-100/60'
                                                                 }`}>
                                                                     {item.status === 'inactive' ? 'Inactive' : 'Active'}
                                                                 </span>
@@ -1490,27 +1465,27 @@ const ReportsDashboard = ({ focus }) => {
                             </div>
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
+                                    <table className="w-full text-left border-collapse table-fixed">
                                         <thead>
-                                            <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                                <th className="p-4 pl-6 font-semibold">Employee</th>
-                                                <th className="p-4 font-semibold text-center">Tasks (Done/Total)</th>
-                                                <th className="p-4 font-semibold text-center">Overdue</th>
-                                                <th className="p-4 font-semibold w-1/4">Performance %</th>
-                                                <th className="p-4 font-semibold">Activity</th>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-[28%] font-bold">Employee</th>
+                                                <th className="px-6 py-4 w-[15%] font-bold text-center">Tasks</th>
+                                                <th className="px-6 py-4 w-[15%] font-bold text-center">Overdue</th>
+                                                <th className="px-6 py-4 w-[27%] font-bold">Performance</th>
+                                                <th className="px-6 py-4 w-[15%] font-bold text-right pr-6">Activity</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {employeeReportList.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="5" className="p-8 text-center text-slate-400 font-semibold text-sm">
+                                                    <td colSpan="5" className="px-6 py-8 text-center text-slate-400 font-semibold text-sm">
                                                         No employee performance data available.
                                                     </td>
                                                 </tr>
                                             ) : (
                                                 employeeReportList.map((dev, i) => (
                                                     <tr key={i} className="hover:bg-slate-50/50 transition-colors group">
-                                                        <td className="p-4 pl-6">
+                                                        <td className="px-6 py-4">
                                                             <div className="flex items-center gap-3">
                                                                 <div className={`w-10 h-10 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-sm shadow-sm border border-white overflow-hidden ${dev.color}`}>
                                                                     {dev.profilePic ? (
@@ -1525,13 +1500,13 @@ const ReportsDashboard = ({ focus }) => {
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="p-4 text-center">
+                                                        <td className="px-6 py-4 text-center">
                                                             <div className="inline-flex items-baseline gap-1 bg-slate-50 px-2 py-1 rounded-lg">
                                                                 <span className="font-bold text-slate-800 text-sm">{dev.completed}</span>
                                                                 <span className="text-xs font-semibold text-slate-400">/{dev.total}</span>
                                                             </div>
                                                         </td>
-                                                        <td className="p-4 text-center">
+                                                        <td className="px-6 py-4 text-center">
                                                             {dev.overdue > 0 ? (
                                                                 <span className="inline-flex px-2 py-1 bg-red-50 text-red-600 font-bold text-xs rounded-lg border border-red-100">
                                                                     {dev.overdue}
@@ -1540,7 +1515,7 @@ const ReportsDashboard = ({ focus }) => {
                                                                 <span className="text-slate-300 font-bold text-sm">-</span>
                                                             )}
                                                         </td>
-                                                        <td className="p-4">
+                                                        <td className="px-6 py-4">
                                                             <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1.5">
                                                                 <span>{dev.performance}%</span>
                                                             </div>
@@ -1551,10 +1526,10 @@ const ReportsDashboard = ({ focus }) => {
                                                                 ></div>
                                                             </div>
                                                         </td>
-                                                        <td className="p-4">
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="text-xs text-slate-600 font-medium whitespace-nowrap"><span className="text-slate-400">First:</span> {dev.firstTask}</span>
-                                                                <span className="text-xs text-slate-600 font-medium whitespace-nowrap"><span className="text-slate-400">Last:</span> {dev.lastActivity}</span>
+                                                        <td className="px-6 py-4 text-right pr-6">
+                                                            <div className="flex flex-col gap-1 items-end">
+                                                                <span className="text-xs text-slate-650 font-medium whitespace-nowrap"><span className="text-slate-400">First:</span> {dev.firstTask}</span>
+                                                                <span className="text-xs text-slate-650 font-medium whitespace-nowrap"><span className="text-slate-400">Last:</span> {dev.lastActivity}</span>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -1681,21 +1656,21 @@ const ReportsDashboard = ({ focus }) => {
                         </div>
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                             <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse">
+                                <table className="w-full text-left border-collapse table-fixed">
                                     <thead>
-                                        <tr className="bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                                            <th className="p-4 pl-6 font-semibold">User</th>
-                                            <th className="p-4 font-semibold">Task</th>
-                                            <th className="p-4 font-semibold">Action</th>
-                                            <th className="p-4 font-semibold">Note</th>
-                                            <th className="p-4 font-semibold">File</th>
-                                            <th className="p-4 font-semibold">Time</th>
+                                        <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 w-[18%] font-bold">User</th>
+                                            <th className="px-6 py-4 w-[22%] font-bold">Task</th>
+                                            <th className="px-6 py-4 w-[15%] font-bold">Action</th>
+                                            <th className="px-6 py-4 w-[25%] font-bold">Note</th>
+                                            <th className="px-6 py-4 w-[10%] font-bold">File</th>
+                                            <th className="px-6 py-4 w-[10%] font-bold text-right pr-6">Time</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
                                         {activities.map((act) => (
                                             <tr key={act.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="p-4 pl-6">
+                                                <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2.5">
                                                         <div className={`w-8 h-8 rounded-full flex flex-shrink-0 items-center justify-center font-bold text-xs shadow-sm overflow-hidden ${act.user.color}`}>
                                                             {act.user.profilePic ? (
@@ -1707,8 +1682,8 @@ const ReportsDashboard = ({ focus }) => {
                                                         <span className="font-bold text-slate-700 text-sm group-hover:text-blue-600 transition-colors">{act.user.name}</span>
                                                     </div>
                                                 </td>
-                                                <td className="p-4 font-bold text-sm text-slate-800">{act.task}</td>
-                                                <td className="p-4">
+                                                <td className="px-6 py-4 font-bold text-sm text-slate-800 truncate" title={act.task}>{act.task}</td>
+                                                <td className="px-6 py-4">
                                                     <span className={`px-2.5 py-1 text-xs font-bold rounded-lg border ${
                                                         act.action.includes('QA') ? 'bg-amber-50 text-amber-600 border-amber-100' :
                                                         act.action === 'Completed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
@@ -1718,18 +1693,18 @@ const ReportsDashboard = ({ focus }) => {
                                                         {act.action}
                                                     </span>
                                                 </td>
-                                                <td className="p-4 text-sm text-slate-500 font-medium min-w-[200px]" title={act.note}>{act.note}</td>
-                                                <td className="p-4">
+                                                <td className="px-6 py-4 text-sm text-slate-500 font-medium truncate" title={act.note}>{act.note}</td>
+                                                <td className="px-6 py-4">
                                                     {act.file !== "-" ? (
-                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg cursor-pointer hover:bg-slate-200 transition-colors whitespace-nowrap">
-                                                            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                                                            {act.file}
+                                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg cursor-pointer hover:bg-slate-200 transition-colors whitespace-nowrap overflow-hidden max-w-full">
+                                                            <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                                            <span className="truncate">{act.file}</span>
                                                         </span>
                                                     ) : (
                                                         <span className="text-slate-300 font-bold">-</span>
                                                     )}
                                                 </td>
-                                                <td className="p-4 text-xs font-semibold text-slate-400 whitespace-nowrap">{act.time}</td>
+                                                <td className="px-6 py-4 text-xs font-semibold text-slate-400 whitespace-nowrap text-right pr-6">{act.time}</td>
                                             </tr>
                                         ))}
                                     </tbody>

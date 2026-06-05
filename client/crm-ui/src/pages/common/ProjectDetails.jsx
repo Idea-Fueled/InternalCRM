@@ -768,14 +768,14 @@ const ProjectDetails = () => {
 
                                 {/* Tasks Table */}
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left">
-                                        <thead className="bg-slate-50 border-b border-slate-100 text-[10px] text-slate-700 font-bold uppercase tracking-wider">
-                                            <tr>
-                                                <th className="px-6 py-3 w-[32%]">Task Parameter</th>
-                                                <th className="px-6 py-3 w-[28%]">Assignees</th>
-                                                <th className="px-6 py-3 w-[15%]">Priority</th>
-                                                <th className="px-6 py-3 w-[17%]">Workflow State</th>
-                                                <th className="px-6 py-3 w-[8%] text-center">Actions</th>
+                                    <table className="w-full text-left border-collapse table-fixed">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                                <th className="px-6 py-4 w-[32%] font-bold">Task Parameter</th>
+                                                <th className="px-6 py-4 w-[28%] font-bold">Assignees</th>
+                                                <th className="px-6 py-4 w-[15%] font-bold">Priority</th>
+                                                <th className="px-6 py-4 w-[17%] font-bold">Workflow State</th>
+                                                <th className="px-6 py-4 w-[8%] font-bold text-center">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-50 bg-white">

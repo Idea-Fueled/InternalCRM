@@ -831,14 +831,20 @@ const EmployeesDashboard = () => {
                     </div>
 
                     {/* Employee List / Grid */}
-                    <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-                        {loading ? (
-                             <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center col-span-full">
-                                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                <h3 className="text-lg font-bold text-slate-700">Loading employees...</h3>
-                            </div>
-                        ) : filteredEmployees.length > 0 ? filteredEmployees.map((emp, i) => (
-                            viewMode === 'grid' ? (
+                    {loading ? (
+                         <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center col-span-full">
+                            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                            <h3 className="text-lg font-bold text-slate-700">Loading employees...</h3>
+                        </div>
+                    ) : filteredEmployees.length === 0 ? (
+                        <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center col-span-full">
+                            <svg className="w-12 h-12 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            <h3 className="text-lg font-bold text-slate-700">No employees found</h3>
+                            <p className="text-slate-500 text-sm mt-1">Try adjusting your search or filters.</p>
+                        </div>
+                    ) : viewMode === 'grid' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            {filteredEmployees.map((emp, i) => (
                                 <div
                                     key={i}
                                     onClick={() => setSelectedEmployee(emp)}
@@ -966,162 +972,117 @@ const EmployeesDashboard = () => {
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
-                            <div 
-                                key={i} 
-                                onClick={() => setSelectedEmployee(emp)} 
-                                className={`group rounded-2xl p-4 sm:p-5 flex flex-col border shadow-sm transition-all duration-300 cursor-pointer gap-4 ${
-                                    emp.status === 'Inactive' 
-                                        ? 'bg-slate-50 border-slate-200/85 hover:shadow-md hover:border-slate-350' 
-                                        : 'bg-white border-slate-200/60 hover:shadow-md hover:border-blue-200'
-                                }`}
-                            >
-                                <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1.2fr_1.7fr] items-center gap-6 lg:gap-8 w-full">
-                                    {/* Left: Avatar, Name, Role */}
-                                    <div className="flex items-center gap-4 w-full">
-                                        <div className={`w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-lg border-2 border-white shadow-sm overflow-hidden
-                                            ${emp.status === 'Inactive' ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'}
-                                        `}>
-                                            {emp.raw.profilePic ? (
-                                                <img src={emp.raw.profilePic} alt={emp.name} className="w-full h-full object-cover" />
-                                            ) : (
-                                                emp.name.charAt(0)
-                                            )}
-                                        </div>
-                                        <div className="overflow-hidden">
-                                            <div className="flex items-center gap-2">
-                                                <h4 className={`text-base font-bold truncate ${emp.status === 'Inactive' ? 'text-slate-500' : 'text-slate-800'}`}>{emp.name}</h4>
-                                                {emp.status === 'Inactive' && (
-                                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 truncate capitalize">{emp.designation || formatRole(emp.role)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Middle: Dept, Lead, Email */}
-                                    <div className="flex flex-col gap-1.5 w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-6">
-                                        <div className="flex items-center justify-between text-sm w-full gap-4">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                                                <span className="text-slate-700 font-semibold truncate">{emp.dept}</span>
-                                            </div>
-                                            {emp.raw.role !== 'admin' && (
-                                                <span className="text-[10px] font-bold bg-slate-100 text-slate-650 px-2 py-0.5 rounded-md border border-slate-200/60 shrink-0 truncate max-w-[150px]" title={emp.lead}>
-                                                    Lead: {emp.lead}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-2 text-sm mt-1">
-                                            <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                            <span className="text-slate-500 truncate">{emp.email}</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Right: Tasks, Status, Actions */}
-                                    <div className="flex items-center justify-between w-full border-t lg:border-t-0 lg:border-l border-slate-100 pt-4 lg:pt-0 lg:pl-5 pr-3">
-                                        {emp.raw.role !== 'admin' ? (
-                                            <div className="flex gap-4 items-center shrink-0">
-                                                <div className="flex flex-col items-center">
-                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Tasks</span>
-                                                    <div className="flex items-baseline gap-1 mt-0.5">
-                                                        <span className="text-sm font-bold text-slate-800">{emp.tasks.done}</span>
-                                                        <span className="text-xs text-slate-400">/{emp.tasks.total}</span>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse table-fixed">
+                                    <thead>
+                                        <tr className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                                            <th className="px-6 py-4 w-[25%] font-bold">Employee</th>
+                                            <th className="px-6 py-4 w-[20%] font-bold">Department</th>
+                                            <th className="px-6 py-4 w-[25%] font-bold">Reporting Manager</th>
+                                            <th className="px-6 py-4 w-[15%] font-bold text-center">Status</th>
+                                            <th className="px-6 py-4 w-[15%] font-bold text-right pr-6">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {filteredEmployees.map((emp, i) => (
+                                            <tr 
+                                                key={i}
+                                                onClick={() => setSelectedEmployee(emp)}
+                                                className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+                                            >
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center font-bold text-xs border-2 border-white shadow-sm overflow-hidden ${
+                                                            emp.status === 'Inactive' ? 'bg-slate-100 text-slate-400' : 'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'
+                                                        }`}>
+                                                            {emp.raw.profilePic ? (
+                                                                <img src={emp.raw.profilePic} alt={emp.name} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                emp.name.charAt(0)
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-1.5 min-w-0">
+                                                                <span className={`font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors truncate ${emp.status === 'Inactive' ? 'text-slate-500 line-through' : ''}`} title={emp.name}>{emp.name}</span>
+                                                                {emp.status === 'Inactive' && (
+                                                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 uppercase tracking-wider shrink-0">Inactive</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-[10px] font-semibold text-slate-400 mt-0.5 truncate capitalize">{emp.designation || formatRole(emp.role)}</div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                                {emp.tasks.overdue > 0 && (
-                                                    <div className="flex flex-col items-center pl-4 border-l border-slate-100">
-                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-red-400">Overdue</span>
-                                                        <span className="text-sm font-bold text-red-600 mt-0.5">{emp.tasks.overdue}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : (
-                                            <div className="shrink-0" />
-                                        )}
-
-                                        <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                                            {!(emp.raw.role === 'admin' && user?.role !== 'admin') && (
-                                                <button 
-                                                    onClick={() => can('users.update') && handleStatusToggle(emp)}
-                                                    disabled={!can('users.update')}
-                                                    className={`px-3 py-1 text-xs font-bold rounded-full border transition-colors shrink-0 ${
-                                                        !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
-                                                    } ${
-                                                        emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                                        emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                                                        'bg-slate-50 text-slate-500 border-slate-200'
-                                                    }`}
-                                                >
-                                                    {emp.status}
-                                                </button>
-                                            )}
-                                            <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0 pr-0.5">
-                                                {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
-                                                    <button 
-                                                        onClick={(e) => handleStatusToggle(emp, e)}
-                                                        className={`p-1.5 rounded-lg transition-colors shrink-0 ${
-                                                            emp.status === "Inactive"
-                                                                ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50"
-                                                                : "text-slate-400 hover:text-amber-600 hover:bg-amber-50"
-                                                        }`}
-                                                        title={emp.status === "Inactive" ? "Reactivate Employee" : "Mark Inactive"}
-                                                    >
-                                                        {emp.status === "Inactive" ? (
-                                                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                        ) : (
-                                                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm font-semibold text-slate-700 truncate">{emp.dept}</td>
+                                                <td className="px-6 py-4 text-sm font-semibold text-slate-700 truncate">{emp.raw.role !== 'admin' ? emp.lead : 'N/A'}</td>
+                                                <td className="px-6 py-4 text-center">
+                                                    {!(emp.raw.role === 'admin' && user?.role !== 'admin') ? (
+                                                        <button 
+                                                            onClick={(e) => { e.stopPropagation(); can('users.update') && handleStatusToggle(emp); }}
+                                                            disabled={!can('users.update')}
+                                                            className={`px-2.5 py-1 text-[10px] font-bold rounded-full border transition-colors shrink-0 ${
+                                                                !can('users.update') ? 'cursor-default' : 'hover:bg-emerald-100 cursor-pointer'
+                                                            } ${
+                                                                emp.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                                                emp.status === 'Overdue' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                                                'bg-slate-50 text-slate-500 border-slate-200'
+                                                            }`}
+                                                        >
+                                                            {emp.status}
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-slate-350 font-bold text-sm">-</span>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex items-center justify-end gap-1.5">
+                                                        {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleStatusToggle(emp, e); }}
+                                                                className={`p-1.5 rounded-lg transition-colors shrink-0 ${
+                                                                    emp.status === "Inactive"
+                                                                        ? "text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50"
+                                                                        : "text-slate-400 hover:text-amber-600 hover:bg-amber-50"
+                                                                }`}
+                                                                title={emp.status === "Inactive" ? "Reactivate Employee" : "Mark Inactive"}
+                                                            >
+                                                                {emp.status === "Inactive" ? (
+                                                                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                                ) : (
+                                                                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                                                )}
+                                                            </button>
                                                         )}
-                                                    </button>
-                                                )}
-                                                {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
-                                                    <button 
-                                                        onClick={(e) => handleEditEmployee(emp, e)}
-                                                        className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
-                                                        title="Edit Employee"
-                                                    >
-                                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                                    </button>
-                                                )}
-                                                {can('users.delete') && (
-                                                    <button 
-                                                        onClick={(e) => handleDeleteEmployee(emp.id, e)}
-                                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                                                        title="Delete Employee"
-                                                    >
-                                                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {emp.status === 'Inactive' && (
-                                    <div className="mt-1 pt-3 border-t border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 bg-slate-100/50 p-2.5 rounded-xl border border-slate-200/40">
-                                        <div className="flex items-center gap-1.5 min-w-0">
-                                            <span className="font-bold text-slate-700 shrink-0">Reason:</span>
-                                            <span className="truncate italic text-slate-600">{emp.raw.inactiveReason || "None specified"}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            <span className="font-bold text-slate-700">Duration:</span>
-                                            <span className="px-2 py-0.5 rounded bg-slate-200 text-slate-700 font-semibold">
-                                                {emp.raw.inactiveUntil ? `${getInactivityDaysLeft(emp.raw.inactiveUntil)} (Until ${new Date(emp.raw.inactiveUntil).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })})` : "Indefinite"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                )}
+                                                        {can('users.update') && !(emp.raw.role === 'admin' && user?.role !== 'admin') && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleEditEmployee(emp, e); }}
+                                                                className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors shrink-0"
+                                                                title="Edit Employee"
+                                                            >
+                                                                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                            </button>
+                                                        )}
+                                                        {can('users.delete') && (
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); handleDeleteEmployee(emp.id, e); }}
+                                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                                                                title="Delete Employee"
+                                                            >
+                                                                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
-                            )
-                        )) : (
-                            <div className="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center col-span-full">
-                                <svg className="w-12 h-12 text-slate-200 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                <h3 className="text-lg font-bold text-slate-700">No employees found</h3>
-                                <p className="text-slate-500 text-sm mt-1">Try adjusting your search or filters.</p>
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </main>
             </div>
 

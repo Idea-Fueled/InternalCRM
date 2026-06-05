@@ -835,15 +835,15 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                     </div>
 
                                     {/* Task table list */}
-                                    <div className="border border-slate-100 rounded-xl overflow-hidden shadow-sm">
+                                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
                                         <div className="overflow-x-auto">
-                                            <table className="w-full text-left">
-                                                <thead className="bg-slate-50 border-b border-slate-100 text-[10px] text-slate-700 font-bold uppercase tracking-wider">
+                                            <table className="w-full text-left border-collapse table-fixed">
+                                                <thead className="bg-slate-50 border-b border-slate-100 text-[11px] font-bold text-slate-700 uppercase tracking-wider">
                                                     <tr>
-                                                        <th className="px-6 py-3 w-[32%]">Task Summary</th>
-                                                        <th className="px-6 py-3 w-[24%]">Workflow</th>
-                                                        <th className="px-6 py-3 w-[32%]">Assignees</th>
-                                                        <th className="px-6 py-3 w-[12%] text-center">Action</th>
+                                                        <th className="px-6 py-4 font-bold w-[32%]">Task Summary</th>
+                                                        <th className="px-6 py-4 font-bold w-[24%]">Workflow</th>
+                                                        <th className="px-6 py-4 font-bold w-[32%]">Assignees</th>
+                                                        <th className="px-6 py-4 font-bold w-[12%] text-center">Action</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-100 bg-white">
@@ -852,7 +852,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                             key={task._id}
                                                             className="hover:bg-slate-50/50 transition-colors"
                                                         >
-                                                            <td className="px-6 py-3.5">
+                                                            <td className="px-6 py-4">
                                                                 <div className="leading-snug max-w-[200px] truncate">
                                                                     <p className="text-xs font-bold text-slate-800 transition-colors truncate">
                                                                         {task.taskName}
@@ -863,13 +863,13 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-3.5">
+                                                            <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1 items-start">
                                                                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
                                                                         task.priority === "Critical" ? "bg-rose-50 text-rose-600 border border-rose-100" :
                                                                         task.priority === "High" ? "bg-orange-50 text-orange-600 border border-orange-100" :
-                                                                        task.priority === "Medium" ? "bg-blue-50 text-blue-600 border-blue-100" :
-                                                                        "bg-slate-50 text-slate-500 border border-slate-100"
+                                                                        task.priority === "Medium" ? "bg-blue-50 text-blue-600 border border-blue-100" :
+                                                                        "bg-slate-50 text-slate-550 border border-slate-100"
                                                                     }`}>
                                                                         {task.priority}
                                                                     </span>
@@ -883,7 +883,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     </span>
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-3.5">
+                                                            <td className="px-6 py-4">
                                                                 <div className="flex flex-col gap-1.5">
                                                                     <div className="flex items-center gap-1.5">
                                                                         <span className="text-[9px] font-bold text-slate-500 w-7 shrink-0">Dev:</span>
@@ -897,7 +897,7 @@ const ProjectDetailsSidebar = ({ projectId, onClose }) => {
                                                                     )}
                                                                 </div>
                                                             </td>
-                                                            <td className="px-6 py-3.5 text-center">
+                                                            <td className="px-6 py-4 text-center">
                                                                 <button
                                                                     className="p-1.5 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-slate-400 transition"
                                                                     title="Edit Task parameters"
