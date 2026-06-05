@@ -577,7 +577,7 @@ export default function EmployeeDetailsSidebar({ isOpen, employee, onClose }) {
                                 tasks.map(task => (
                                     <div key={task._id} className="p-4 bg-white border border-slate-200/60 rounded-2xl shadow-sm flex flex-col gap-2">
                                         <div className="flex justify-between items-start gap-2">
-                                            <h5 className="text-xs font-black text-slate-800 leading-snug">{task.title}</h5>
+                                            <h5 className="text-xs font-black text-slate-800 leading-snug">{task.taskName}</h5>
                                             <span className={`text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 ${getTaskStatusColor(task.status)}`}>
                                                 {task.status}
                                             </span>
