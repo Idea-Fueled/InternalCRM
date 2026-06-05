@@ -328,7 +328,11 @@ export const getAllUsers = async (req, res) => {
             };
         } else {
             if (!isOrgTree && targetTeamLead && targetTeamLead !== 'undefined' && targetTeamLead !== 'null') {
-                query.teamLeads = targetTeamLead;
+                query.$or = [
+                    { teamLeads: targetTeamLead },
+                    { reportingManagers: targetTeamLead },
+                    { reportingManager: targetTeamLead }
+                ];
             }
         }
         

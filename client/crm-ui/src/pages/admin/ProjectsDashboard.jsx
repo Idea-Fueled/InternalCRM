@@ -71,14 +71,25 @@ const ProjectsDashboard = () => {
             }
             try {
                 const res = await userService.getAllUsers({ teamLead: newProject.teamLead });
-                const members = (res.data.data || []).filter(u => u.role !== 'admin' && u.role !== 'TL' && u.status !== 'inactive');
+                let members = (res.data.data || []).filter(u => u.role !== 'admin' && u.role !== 'TL' && u.status !== 'inactive');
+                
+                // Ensure currently assigned team members are always included in the checklist
+                if (editingProject && editingProject.teamMembers) {
+                    editingProject.teamMembers.forEach(m => {
+                        const mId = m._id || m;
+                        const exists = members.some(u => String(u._id) === String(mId));
+                        if (!exists) {
+                            members.push(m);
+                        }
+                    });
+                }
                 setTeamMembersList(members);
             } catch (err) {
                 console.error("Failed to fetch team members", err);
             }
         };
         fetchTeamMembers();
-    }, [newProject.teamLead]);
+    }, [newProject.teamLead, editingProject]);
 
     const fetchProjects = async () => {
         try {

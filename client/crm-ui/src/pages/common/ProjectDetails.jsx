@@ -172,14 +172,27 @@ const ProjectDetails = () => {
         const fetchEligibleMembers = async () => {
             if (!project) return;
             try {
-                // If Team Lead is logged in or set, we can load team members reporting to them,
-                // or load all Developers & QAs if Admin.
                 const params = {};
-                if (project.teamLead?._id) {
+                const isUserAdminOrHR = user?.role === "admin" || user?.role === "hr";
+                if (!isUserAdminOrHR && project.teamLead?._id) {
                     params.teamLead = project.teamLead._id;
                 }
                 const res = await userService.getAllUsers(params);
-                const devsAndQas = (res.data.data || []).filter(u => (u.role === "developer" || u.role === "qa") && u.status !== "inactive");
+                let devsAndQas = (res.data.data || []).filter(u => (u.role === "developer" || u.role === "qa") && u.status !== "inactive");
+                
+                // Ensure currently assigned project members are always included in the checklist
+                const assignedMembers = project.teamMembers || [];
+                assignedMembers.forEach(member => {
+                    const memberId = member._id || member;
+                    const exists = devsAndQas.some(u => String(u._id) === String(memberId));
+                    if (!exists) {
+                        devsAndQas.push({
+                            ...member,
+                            designation: member.designation || (member.role === "qa" ? "QA" : "Developer")
+                        });
+                    }
+                });
+                
                 setEligibleMembers(devsAndQas);
             } catch (err) {
                 console.error("Failed to load eligible team members", err);
@@ -189,7 +202,7 @@ const ProjectDetails = () => {
         if (isMemberModalOpen) {
             fetchEligibleMembers();
         }
-    }, [isMemberModalOpen, project]);
+    }, [isMemberModalOpen, project, user]);
 
     // ─── Project Management Methods ──────────────────────────────────────────
 
